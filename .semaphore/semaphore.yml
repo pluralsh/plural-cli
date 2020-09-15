@@ -1,0 +1,28 @@
+version: v1.0
+name: Forge
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+- name: build
+  skip:
+    when: "branch != 'master'"
+  task:
+    secrets:
+    - name: GCP
+    - name: gcp-test
+    - name: forge
+    prologue:
+      commands:
+      # Authenticate using the file injected from the secret
+      - gcloud auth activate-service-account --key-file=.secrets/gcp-piazzaapp.json
+      # Don't forget -q to silence confirmation prompts
+      - gcloud auth configure-docker -q
+      - docker login -u mguarino46@gmail.com -p $FORGE_ACCESS_TOKEN dkr.piazza.app
+      - checkout
+    jobs:
+    - name: "Build forge"
+      commands:
+      - make build
+      - make push
