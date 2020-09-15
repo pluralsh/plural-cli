@@ -1,0 +1,11 @@
+artifact:
+  artifacts/forge-linux.yml: df4e3c4de7f80792ea016bf469dbf1f62c5258d1a4f5cd98489beed64c2cd30e
+  artifacts/forge-windows.yml: df4e3c4de7f80792ea016bf469dbf1f62c5258d1a4f5cd98489beed64c2cd30e
+  artifacts/forge.yaml: 7fd0f555b19c165d7ca38b29df9a742578812861862a51809ed660321d4dc5e5
+terraform: {}
+helm: {}
+recipe: {}
+integration: {}
+shell: {}
+database: {}
+crd: {}
