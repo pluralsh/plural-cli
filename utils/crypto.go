@@ -1,11 +1,11 @@
 package utils
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"golang.org/x/crypto/bcrypt"
-	"encoding/base64"
-	"crypto/rand"
 	"io"
 	"os"
 )
@@ -24,7 +24,6 @@ func VerifyPwd(hash, pwd string) bool {
 	return true
 }
 
-
 func GenAESKey() string {
 	key := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
@@ -42,8 +41,14 @@ func Sha256(path string) (string, error) {
 	}
 	defer f.Close()
 	if _, err := io.Copy(hasher, f); err != nil {
-			return "nil", err
+		return "nil", err
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+func Sha(bv []byte) string {
+	hasher := sha256.New()
+	hasher.Write(bv)
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 }
