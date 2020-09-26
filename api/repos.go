@@ -14,6 +14,7 @@ type ResourceDefinitionInput struct {
 type Specification struct {
 	Name     string
 	Type     string
+	Inner    string `json:"inner,omitempty"`
 	Required bool
 	Spec     []Specification `json:"spec,omitempty"`
 }
@@ -24,7 +25,8 @@ type IntegrationInput struct {
 	Icon        string
 	SourceURL   string `json:"sourceUrl,omitempty"`
 	Spec        string
-	Tags        []Tag `json:"tags,omitempty" yaml:"tags"`
+	Type        string `json:"type,omitempty"`
+	Tags        []Tag  `json:"tags,omitempty" yaml:"tags"`
 }
 
 type RepositoryInput struct {
@@ -187,6 +189,7 @@ func ConstructIntegration(marshalled []byte) (IntegrationInput, error) {
 		Description string
 		Icon        string
 		SourceURL   string `yaml:"sourceUrl"`
+		Type        string
 		Tags        []Tag
 		Spec        interface{}
 	}
@@ -202,6 +205,7 @@ func ConstructIntegration(marshalled []byte) (IntegrationInput, error) {
 		Icon:        intg.Icon,
 		Spec:        string(str),
 		Tags:        intg.Tags,
+		Type:        intg.Type,
 		SourceURL:   intg.SourceURL,
 	}, err
 }

@@ -40,7 +40,7 @@ func main() {
 			Usage: "applys the current forgefile",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "file",
+					Name:  "file, f",
 					Usage: "forgefile to use",
 				},
 			},

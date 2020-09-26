@@ -24,6 +24,7 @@ const (
 	SHELL       ComponentName = "sh"
 	DATABASE    ComponentName = "db"
 	CRD         ComponentName = "crd"
+	IRD         ComponentName = "ird"
 )
 
 type Component interface {
@@ -113,6 +114,16 @@ func Parse(f string) (*Forgefile, error) {
 			}
 
 			forge.Components = append(forge.Components, arts...)
+		case "ird":
+			irds, err := expandGlob(splitline[1], func(targ string) Component {
+				return &ResourceDefinition{File: targ}
+			})
+
+			if err != nil {
+				return forge, err
+			}
+
+			forge.Components = append(forge.Components, irds...)
 		case "recipe":
 			recipes, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Recipe{File: targ}
