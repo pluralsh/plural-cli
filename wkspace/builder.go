@@ -8,6 +8,7 @@ import (
 	"github.com/michaeljguarino/forge/api"
 	"github.com/michaeljguarino/forge/config"
 	"github.com/michaeljguarino/forge/crypto"
+	"github.com/michaeljguarino/forge/diff"
 	"github.com/michaeljguarino/forge/executor"
 	"github.com/michaeljguarino/forge/manifest"
 	"github.com/michaeljguarino/forge/provider"
@@ -88,6 +89,10 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
+	if err := wk.buildDiff(repoRoot); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -116,6 +121,15 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 	exec, _ := executor.GetExecution(filepath.Join(wkspaceRoot), "deploy")
 
 	return executor.DefaultExecution(name, exec).Flush(repoRoot)
+}
+
+func (wk *Workspace) buildDiff(repoRoot string) error {
+	name := wk.Installation.Repository.Name
+	wkspaceRoot := filepath.Join(repoRoot, name)
+
+	d, _ := diff.GetDiff(filepath.Join(wkspaceRoot), "diff")
+
+	return diff.DefaultDiff(name, d).Flush(repoRoot)
 }
 
 func mkdir(path string) error {

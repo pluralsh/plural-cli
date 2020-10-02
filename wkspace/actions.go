@@ -16,6 +16,10 @@ func (w *Workspace) Bounce() error {
 	return w.ToMinimal().BounceHelm()
 }
 
+func (w *Workspace) HelmDiff() error {
+	return w.ToMinimal().DiffHelm()
+}
+
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
 	path, err := filepath.Abs(path.Join(repo.Name, "terraform"))

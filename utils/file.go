@@ -7,6 +7,27 @@ import (
 	"path/filepath"
 )
 
+func EmptyDirectory(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		if err := os.RemoveAll(filepath.Join(dir, name)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func IsEmpty(name string) (bool, error) {
 	f, err := os.Open(name)
 	if err != nil {

@@ -2,6 +2,7 @@ package wkspace
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/michaeljguarino/forge/config"
@@ -84,4 +85,45 @@ func (m *MinimalWorkspace) BounceHelm() error {
 	utils.Warn("helm upgrade --install --namespace %s %s %s\n", m.Name, m.Name, path)
 	return utils.Cmd(m.Config,
 		"helm", "upgrade", "--install", "--skip-crds", "--namespace", m.Name, m.Name, path)
+}
+
+func (m *MinimalWorkspace) DiffHelm() error {
+	path, err := filepath.Abs(m.Name)
+	if err != nil {
+		return err
+	}
+
+	utils.Warn("helm diff upgrade --install --namespace %s %s %s\n", m.Name, m.Name, path)
+	return m.runDiff("helm", "diff", "upgrade", "--install", "--namespace", m.Name, m.Name, path)
+}
+
+func (m *MinimalWorkspace) DiffTerraform() error {
+	return m.runDiff("terraform", "plan")
+}
+
+func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
+	diffFolder, err := m.constructDiffFolder()
+	outfile, err := os.Create(filepath.Join(diffFolder, command))
+	if err != nil {
+		return err
+	}
+	defer outfile.Close()
+
+	cmd := exec.Command(command, args...)
+	cmd.Stdout = outfile
+	return cmd.Run()
+}
+
+func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
+	root, err := utils.RepoRoot()
+	if err != nil {
+		return "", err
+	}
+
+	diffFolder, _ := filepath.Abs(filepath.Join(root, "diffs", m.Name))
+	if err := os.MkdirAll(diffFolder, os.ModePerm); err != nil {
+		return diffFolder, err
+	}
+
+	return diffFolder, err
 }

@@ -35,6 +35,18 @@ func workspaceCommands() []cli.Command {
 			Action:    bounceHelm,
 		},
 		{
+			Name:      "helm-diff",
+			Usage:     "diffs the helm release for this subworkspace",
+			ArgsUsage: "NAME",
+			Action:    diffHelm,
+		},
+		{
+			Name:      "terraform-diff",
+			Usage:     "diffs the helm release for this subworkspace",
+			ArgsUsage: "NAME",
+			Action:    diffTerraform,
+		},
+		{
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "REPO",
@@ -81,6 +93,26 @@ func bounceHelm(c *cli.Context) error {
 	}
 
 	return minimal.BounceHelm()
+}
+
+func diffHelm(c *cli.Context) error {
+	name := c.Args().Get(0)
+	minimal, err := wkspace.Minimal(name)
+	if err != nil {
+		return err
+	}
+
+	return minimal.DiffHelm()
+}
+
+func diffTerraform(c *cli.Context) error {
+	name := c.Args().Get(0)
+	minimal, err := wkspace.Minimal(name)
+	if err != nil {
+		return err
+	}
+
+	return minimal.DiffTerraform()
 }
 
 func createCrds(c *cli.Context) error {

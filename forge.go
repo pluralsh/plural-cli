@@ -36,6 +36,13 @@ func main() {
 			Action:    deploy,
 		},
 		{
+			Name:      "diff",
+			Aliases:   []string{"df"},
+			Usage:     "diffs the state of  the current workspace with the deployed version and dumps results to diffs/",
+			ArgsUsage: "WKSPACE",
+			Action:    handleDiff,
+		},
+		{
 			Name:  "apply",
 			Usage: "applys the current forgefile",
 			Flags: []cli.Flag{

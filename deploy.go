@@ -7,6 +7,7 @@ import (
 
 	"github.com/michaeljguarino/forge/api"
 	"github.com/michaeljguarino/forge/executor"
+	"github.com/michaeljguarino/forge/diff"
 	"github.com/michaeljguarino/forge/scaffold"
 	"github.com/michaeljguarino/forge/utils"
 	"github.com/michaeljguarino/forge/wkspace"
@@ -98,6 +99,39 @@ func deploy(c *cli.Context) error {
 		}
 
 		if err := execution.Execute(); err != nil {
+			return err
+		}
+		fmt.Printf("\n")
+	}
+	return nil
+}
+
+func handleDiff(c *cli.Context) error {
+	client := api.NewClient()
+	installations, _ := client.GetInstallations()
+	repoName := c.Args().Get(0)
+	sorted, err := wkspace.Dependencies(repoName, installations)
+	if err != nil {
+		return err
+	}
+
+	repoRoot, err := utils.RepoRoot()
+	if err != nil {
+		return err
+	}
+
+	for _, installation := range sorted {
+		name := installation.Repository.Name
+		if name != repoName && repoName != "" {
+			continue
+		}
+
+		d, err := diff.GetDiff(filepath.Join(repoRoot, name), "diff")
+		if err != nil {
+			return err
+		}
+
+		if err := d.Execute(); err != nil {
 			return err
 		}
 		fmt.Printf("\n")
