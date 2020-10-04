@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/michaeljguarino/forge/config"
+	"github.com/michaeljguarino/forge/diff"
 	"github.com/michaeljguarino/forge/manifest"
 	"github.com/michaeljguarino/forge/provider"
 	"github.com/michaeljguarino/forge/utils"
@@ -94,7 +95,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	}
 
 	utils.Warn("helm diff upgrade --install --namespace %s %s %s\n", m.Name, m.Name, path)
-	return m.runDiff("helm", "diff", "upgrade", "--install", "--namespace", m.Name, m.Name, path)
+	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--install", "--namespace", m.Name, m.Name, path)
 }
 
 func (m *MinimalWorkspace) DiffTerraform() error {
@@ -110,7 +111,7 @@ func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
 	defer outfile.Close()
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = outfile
+	cmd.Stdout = &diff.TeeWriter{File: outfile}
 	return cmd.Run()
 }
 
