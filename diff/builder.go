@@ -91,6 +91,14 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 	byName := make(map[string]*executor.Step)
 	steps := []*executor.Step{
 		{
+			Name:    "terraform-init",
+			Wkdir:   filepath.Join(path, "terraform"),
+			Target:  filepath.Join(path, "terraform"),
+			Command: "terraform",
+			Args:    []string{"init"},
+			Sha:     "",
+		},
+		{
 			Name:    "terraform",
 			Wkdir:   filepath.Join(path, "terraform"),
 			Target:  filepath.Join(path, "terraform"),

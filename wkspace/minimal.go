@@ -94,7 +94,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		return err
 	}
 
-	utils.Warn("helm diff upgrade --install --namespace %s %s %s\n", m.Name, m.Name, path)
+	utils.Warn("helm diff upgrade --install --show-secrets --namespace %s %s %s\n", m.Name, m.Name, path)
 	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--install", "--namespace", m.Name, m.Name, path)
 }
 
@@ -112,6 +112,7 @@ func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
 
 	cmd := exec.Command(command, args...)
 	cmd.Stdout = &diff.TeeWriter{File: outfile}
+	cmd.Stderr = os.Stdout
 	return cmd.Run()
 }
 
