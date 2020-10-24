@@ -15,11 +15,13 @@ type Publisher struct {
 }
 
 type Repository struct {
-	Id        string
-	Name      string
-	Publisher Publisher
-	Database  *Database
-	Shell     *Shell
+	Id          string
+	Name        string
+	Description string
+	Icon			  string
+	Publisher   Publisher
+	Database    *Database
+	Shell       *Shell
 }
 
 type Database struct {
@@ -221,6 +223,8 @@ var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id
 		name
+		description
+		icon
 		publisher {
 			name
 		}

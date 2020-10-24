@@ -130,6 +130,7 @@ func prevValues(filename string) (map[string]map[string]interface{}, error) {
 }
 
 func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
+	repo := w.Installation.Repository
 	files := []struct {
 		path    string
 		content []byte
@@ -159,6 +160,12 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		if err := utils.WriteFile(file.path, file.content); err != nil {
 			return err
 		}
+	}
+
+	application := fmt.Sprintf(defaultApplication, repo.Name, repo.Name, repo.Description, repo.Icon)
+
+	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), []byte(application)); err != nil {
+		return err
 	}
 
 	// Need to add the ChartsDir explicitly as it does not contain any file OOTB

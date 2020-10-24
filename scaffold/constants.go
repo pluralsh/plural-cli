@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	defaultNotes = `Placeholder for now`
-	sep = string(filepath.Separator)
+	defaultNotes     = `Placeholder for now`
+	sep              = string(filepath.Separator)
 	defaultChartfile = `apiVersion: v1
 name: %s
 description: A Helm chart for Kubernetes
@@ -36,6 +36,28 @@ appVersion: 1.16.0
 *.tmproj
 .vscode/
 `
+	defaultApplication = `apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: %s
+spec:
+  componentKinds:
+  - group: v1
+    kind: Service
+  - group: networking.k8s.io
+    kind: Ingress
+  - group: apps
+    kind: StatefulSet
+  - group: apps
+    kind: Deployment
+  addOwnerRef: true
+  descriptor:
+    type: %s
+    version: "1.0.0"
+    description: %s
+    icons:
+    - src: %s
+`
 	// ChartfileName is the default Chart file name.
 	ChartfileName = "Chart.yaml"
 	// ValuesfileName is the default values file name.
@@ -46,4 +68,6 @@ appVersion: 1.16.0
 	IgnorefileName = ".helmignore"
 	// NotesName is the name of the example NOTES.txt file.
 	NotesName = TemplatesDir + sep + "NOTES.txt"
+	// file to put the default application resource in
+	ApplicationName = TemplatesDir + sep + "application.yaml"
 )
