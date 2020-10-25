@@ -41,6 +41,9 @@ kind: Application
 metadata:
   name: %s
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: Helm
   componentKinds:
   - group: v1
     kind: Service
@@ -50,7 +53,6 @@ spec:
     kind: StatefulSet
   - group: apps
     kind: Deployment
-  addOwnerRef: true
   descriptor:
     type: %s
     version: "1.0.0"
