@@ -53,6 +53,8 @@ spec:
     kind: StatefulSet
   - group: apps
     kind: Deployment
+  - group: batch
+    kind: CronJob
   descriptor:
     type: %s
     version: "1.0.0"
