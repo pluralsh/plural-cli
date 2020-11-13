@@ -28,3 +28,6 @@ build: ## Build the Docker image
 push: ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
 	docker push $(DKR_HOST)/forge/${APP_NAME}:$(APP_VSN)
+
+generate:
+	go generate ./...

@@ -25,13 +25,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rodaine/hclencoder v0.0.0-20190213202847-fb9757bb536e
 	github.com/urfave/cli v1.22.1
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/mod v0.1.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/mod v0.3.0
 	google.golang.org/api v0.13.0
 	gopkg.in/oleiade/reflections.v1 v1.0.0
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v0.18.8
+	k8s.io/code-generator v0.19.3 // indirect
 	k8s.io/utils v0.0.0-20200731180307-f00132d28269 // indirect
 )

@@ -115,6 +115,11 @@ func main() {
 			Action:    connectDatabase,
 		},
 		{
+			Name:        "proxy",
+			Usage:       "proxies into running processes in your cluster",
+			Subcommands: proxyCommands(),
+		},
+		{
 			Name:        "crypto",
 			Usage:       "forge encryption utilities",
 			Subcommands: cryptoCommands(),

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/michaeljguarino/forge/clientset/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -19,7 +20,8 @@ func InKubernetes() bool {
 }
 
 type Kube struct {
-	Kube *kubernetes.Clientset
+	Kube  *kubernetes.Clientset
+	Forge v1alpha1.Clientset
 }
 
 func Kubernetes() (*Kube, error) {
@@ -35,7 +37,12 @@ func Kubernetes() (*Kube, error) {
 		return nil, err
 	}
 
-	return &Kube{Kube: clientset}, nil
+	forgeclient, err := v1alpha1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Kube{Kube: clientset, Forge: forgeclient}, nil
 }
 
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
