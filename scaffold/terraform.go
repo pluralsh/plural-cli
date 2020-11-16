@@ -3,22 +3,23 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
-	"github.com/michaeljguarino/forge/api"
-	"github.com/michaeljguarino/forge/template"
-	"github.com/michaeljguarino/forge/utils"
-	"github.com/michaeljguarino/forge/wkspace"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/michaeljguarino/forge/api"
+	"github.com/michaeljguarino/forge/template"
+	"github.com/michaeljguarino/forge/utils"
+	"github.com/michaeljguarino/forge/wkspace"
 )
 
 const moduleTemplate = `module "{{ .Values.name }}" {
-	source = "{{ .Values.path }}"
+  source = "{{ .Values.path }}"
 
 {{ .Values.conf | nindent 2 }}
 {{ range $key, $val := .Values.deps }}
-	{{ $key }} = module.{{ $val }}
+  {{ $key }} = module.{{ $val }}
 {{- end }}
 }
 `

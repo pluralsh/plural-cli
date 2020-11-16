@@ -101,20 +101,6 @@ func main() {
 			Action: testTemplate,
 		},
 		{
-			Name:      "shell",
-			Aliases:   []string{"sh"},
-			ArgsUsage: "REPO",
-			Usage:     "opens a ssh connection to a running deployed pod",
-			Action:    handleShell,
-		},
-		{
-			Name:      "database",
-			Aliases:   []string{"db"},
-			ArgsUsage: "REPO",
-			Usage:     "opens a ssh connection to a running deployed pod",
-			Action:    connectDatabase,
-		},
-		{
 			Name:        "proxy",
 			Usage:       "proxies into running processes in your cluster",
 			Subcommands: proxyCommands(),
