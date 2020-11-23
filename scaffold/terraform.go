@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/michaeljguarino/forge/api"
@@ -16,6 +17,10 @@ import (
 
 const moduleTemplate = `module "{{ .Values.name }}" {
   source = "{{ .Values.path }}"
+
+### BEGIN MANUAL SECTION <<{{ .Values.name }}>>
+{{ .Values.Manual }}
+### END MANUAL SECTION <<{{ .Values.name }}>>
 
 {{ .Values.conf | nindent 2 }}
 {{ range $key, $val := .Values.deps }}
@@ -35,6 +40,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 	if err := scaffold.untarModules(wk); err != nil {
 		return err
+	}
+	mainFile := filepath.Join(scaffold.Root, "main.tf")
+	contents, err := utils.ReadFile(mainFile)
+	if err != nil {
+		contents = ""
 	}
 
 	modules[0] = backend
@@ -57,6 +67,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		module["path"] = "./" + tf.Name
 		module["conf"] = buf.String()
 		module["deps"] = tf.Dependencies.Wirings.Terraform
+		module["Manual"] = manualSection(contents, tf.Name)
 
 		var moduleBuf bytes.Buffer
 		moduleBuf.Grow(1024)
@@ -73,7 +84,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		buf.Reset()
 	}
 
-	if err := utils.WriteFile(filepath.Join(scaffold.Root, "main.tf"), []byte(strings.Join(modules, "\n\n"))); err != nil {
+	if err := utils.WriteFile(mainFile, []byte(strings.Join(modules, "\n\n"))); err != nil {
 		return err
 	}
 
@@ -85,13 +96,14 @@ func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
 	utils.Highlight("unpacking %d module(s)", len(wk.Terraform))
 	for _, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
+		v := tfInst.Version
 		path := filepath.Join(scaffold.Root, tf.Name)
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			fmt.Print("\n")
 			return err
 		}
 
-		if err := untar(&tf, path); err != nil {
+		if err := untar(&v, &tf, path); err != nil {
 			fmt.Print("\n")
 			return err
 		}
@@ -102,11 +114,21 @@ func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
 	return nil
 }
 
-func untar(tf *api.Terraform, dir string) error {
-	resp, err := http.Get(tf.Package)
+func untar(v *api.Version, tf *api.Terraform, dir string) error {
+	resp, err := http.Get(v.Package)
 	if err != nil {
 		return err
 	}
 
 	return utils.Untar(resp.Body, dir, tf.Name)
+}
+
+func manualSection(contents, name string) string {
+	re := regexp.MustCompile(fmt.Sprintf(`(?s)### BEGIN MANUAL SECTION <<%s>>(.*)### END MANUAL SECTION <<%s>>`, name, name))
+	matches := re.FindStringSubmatch(contents)
+	if len(matches) > 0 {
+		return strings.TrimSpace(matches[1])
+	}
+
+	return ""
 }

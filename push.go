@@ -131,7 +131,7 @@ func handleHelmUpload(c *cli.Context) error {
 }
 
 func tmpValuesFile(path string) (f *os.File, err error) {
-	valuesTmpl, err := utils.ReadFile(filepath.Join(path, "values.yaml.gotpl"))
+	valuesTmpl, err := utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
 	if err != nil {
 		return
 	}

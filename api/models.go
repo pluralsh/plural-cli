@@ -18,7 +18,7 @@ type Repository struct {
 	Id          string
 	Name        string
 	Description string
-	Icon			  string
+	Icon        string
 	Publisher   Publisher
 	Database    *Database
 	Shell       *Shell
@@ -74,6 +74,7 @@ type Version struct {
 	Id             string
 	Version        string
 	Readme         string
+	Package        string
 	ValuesTemplate string
 	Crds           []Crd
 }
@@ -108,6 +109,7 @@ type TerraformInstallation struct {
 	Id           string
 	Installation Installation
 	Terraform    Terraform
+	Version      Version
 }
 
 type Installation struct {
@@ -193,7 +195,7 @@ type Crd struct {
 }
 
 type ChartName struct {
-	Repo string
+	Repo  string
 	Chart string
 }
 
@@ -225,15 +227,9 @@ var RepositoryFragment = fmt.Sprintf(`
 		name
 		description
 		icon
-		publisher {
-			name
-		}
-		database {
-			...DatabaseFragment
-		}
-		shell {
-			...ShellFragment
-		}
+		publisher { name }
+		database { ...DatabaseFragment }
+		shell { ...ShellFragment }
 	}
 	%s
 	%s
@@ -244,9 +240,7 @@ var InstallationFragment = fmt.Sprintf(`
 		id
 		context
 		license
-		repository {
-			...RepositoryFragment
-		}
+		repository { ...RepositoryFragment }
 	}
 	%s
 `, RepositoryFragment)
@@ -274,9 +268,8 @@ var VersionFragment = fmt.Sprintf(`
 		version
 		readme
 		valuesTemplate
-		crds {
-			...CrdFragment
-		}
+		package
+		crds { ...CrdFragment }
 	}
 	%s
 `, CrdFragment)
@@ -297,13 +290,9 @@ var ChartInstallationFragment = fmt.Sprintf(`
 		id
 		chart {
 			...ChartFragment
-			dependencies {
-				...DependenciesFragment
-			}
+			dependencies { ...DependenciesFragment }
 		}
-		version {
-			...VersionFragment
-		}
+		version { ...VersionFragment }
 	}
 	%s
 	%s
@@ -318,10 +307,7 @@ var TerraformFragment = fmt.Sprintf(`
 		description
 		dependencies {
 			...DependenciesFragment
-			wirings {
-				terraform
-				helm
-			}
+			wirings { terraform helm }
 		}
 		valuesTemplate
 	}
@@ -331,12 +317,12 @@ var TerraformFragment = fmt.Sprintf(`
 var TerraformInstallationFragment = fmt.Sprintf(`
 	fragment TerraformInstallationFragment on TerraformInstallation {
 		id
-		terraform {
-			...TerraformFragment
-		}
+		terraform { ...TerraformFragment }
+		version { ...VersionFragment }
 	}
 	%s
-`, TerraformFragment)
+	%s
+`, TerraformFragment, VersionFragment)
 
 const TokenFragment = `
 	fragment TokenFragment on PersistedToken {
