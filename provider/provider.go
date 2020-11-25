@@ -15,7 +15,7 @@ type Provider interface {
 	Region() string
 	Bucket() string
 	KubeConfig() error
-	CreateBackend(prefix string) (string, error)
+	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
 }
 
 func Select() (Provider, error) {

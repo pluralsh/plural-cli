@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"context"
-
 	"github.com/michaeljguarino/forge/types/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,7 +28,7 @@ func (c *proxyClient) List(opts metav1.ListOptions) (*v1alpha1.ProxyList, error)
 		Namespace(c.ns).
 		Resource("proxies").
 		VersionedParams(&opts, runtime.NewParameterCodec(c.scheme)).
-		Do(context.Background()).
+		Do().
 		Into(&result)
 	return &result, err
 }
@@ -43,7 +41,7 @@ func (c *proxyClient) Get(name string, opts metav1.GetOptions) (*v1alpha1.Proxy,
 		Resource("proxies").
 		Name(name).
 		VersionedParams(&opts, runtime.NewParameterCodec(c.scheme)).
-		Do(context.Background()).
+		Do().
 		Into(&result)
 	return &result, err
 }
@@ -55,7 +53,7 @@ func (c *proxyClient) Create(prxy *v1alpha1.Proxy) (*v1alpha1.Proxy, error) {
 		Namespace(c.ns).
 		Resource("proxies").
 		Body(prxy).
-		Do(context.Background()).
+		Do().
 		Into(&result)
 	return &result, err
 }
@@ -67,5 +65,5 @@ func (c *proxyClient) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 		Namespace(c.ns).
 		Resource("proxies").
 		VersionedParams(&opts, runtime.NewParameterCodec(c.scheme)).
-		Watch(context.Background())
+		Watch()
 }

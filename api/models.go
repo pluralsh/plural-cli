@@ -89,9 +89,10 @@ type Terraform struct {
 }
 
 type Dependencies struct {
-	Dependencies []Dependency
-	Providers    []string
-	Wirings      Wirings
+	Dependencies    []Dependency
+	Providers       []string
+	Wirings         Wirings
+	ProviderWirings map[string]interface{}
 }
 
 type Dependency struct {
@@ -262,18 +263,6 @@ const CrdFragment = `
 	}
 `
 
-var VersionFragment = fmt.Sprintf(`
-	fragment VersionFragment on Version {
-		id
-		version
-		readme
-		valuesTemplate
-		package
-		crds { ...CrdFragment }
-	}
-	%s
-`, CrdFragment)
-
 const DependenciesFragment = `
 	fragment DependenciesFragment on Dependencies {
 		dependencies {
@@ -282,8 +271,22 @@ const DependenciesFragment = `
 			repo
 		}
 		providers
+		wirings { terraform helm }
+		providerWirings
 	}
 `
+
+var VersionFragment = fmt.Sprintf(`
+	fragment VersionFragment on Version {
+		id
+		readme
+		version
+		valuesTemplate
+		package
+		crds { ...CrdFragment }
+	}
+	%s
+`, CrdFragment)
 
 var ChartInstallationFragment = fmt.Sprintf(`
 	fragment ChartInstallationFragment on ChartInstallation {
@@ -305,10 +308,7 @@ var TerraformFragment = fmt.Sprintf(`
 		name
 		package
 		description
-		dependencies {
-			...DependenciesFragment
-			wirings { terraform helm }
-		}
+		dependencies { ...DependenciesFragment }
 		valuesTemplate
 	}
 	%s

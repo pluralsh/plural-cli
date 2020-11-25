@@ -33,7 +33,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	repo := wk.Installation.Repository
 	ctx := wk.Installation.Context
 	var modules = make([]string, len(wk.Terraform)+1)
-	backend, err := wk.Provider.CreateBackend(repo.Name)
+	backend, err := wk.Provider.CreateBackend(repo.Name, buildContext(wk.Terraform))
 	if err != nil {
 		return err
 	}
@@ -131,4 +131,16 @@ func manualSection(contents, name string) string {
 	}
 
 	return ""
+}
+
+func buildContext(installations []api.TerraformInstallation) map[string]interface{} {
+	ctx := make(map[string]interface{})
+	for _, inst := range installations {
+		tf := inst.Terraform
+		for k, v := range tf.Dependencies.ProviderWirings {
+			ctx[k] = v
+		}
+	}
+
+	return ctx
 }

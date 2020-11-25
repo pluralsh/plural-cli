@@ -1,10 +1,12 @@
 package template
 
 import (
-	"github.com/Masterminds/sprig"
-	"github.com/michaeljguarino/forge/utils"
+	"bytes"
 	"io"
 	"text/template"
+
+	"github.com/Masterminds/sprig"
+	"github.com/michaeljguarino/forge/utils"
 )
 
 func MakeTemplate(tmplate string) (*template.Template, error) {
@@ -32,4 +34,10 @@ func RenderTemplate(wr io.Writer, tmplate string, ctx map[string]interface{}) er
 		return err
 	}
 	return tmpl.Execute(wr, map[string]interface{}{"Values": ctx})
+}
+
+func RenderString(tmplate string, ctx map[string]interface{}) (string, error) {
+	var buffer bytes.Buffer
+	err := RenderTemplate(&buffer, tmplate, ctx)
+	return buffer.String(), err
 }

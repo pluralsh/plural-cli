@@ -1,4 +1,4 @@
-.PHONY: help
+.PHONY: # ignore
 
 GCP_PROJECT ?= piazzaapp
 APP_NAME ?= forge-cli
@@ -17,7 +17,7 @@ release:
 	GOOS=darwin go build -o build/forge.darwin
 	GOOS=windows go build -o build/forge.exe
 
-build: ## Build the Docker image
+build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		-t $(APP_NAME):$(APP_VSN) \

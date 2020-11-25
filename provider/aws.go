@@ -80,7 +80,7 @@ func getClient(region string) (*s3.S3, error) {
 	return s3.New(sess), nil
 }
 
-func (aws *AWSProvider) CreateBackend(prefix string) (string, error) {
+func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
 		return "", err
 	}

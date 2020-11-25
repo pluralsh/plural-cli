@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/michaeljguarino/forge/manifest"
+	"github.com/michaeljguarino/forge/template"
 	"github.com/michaeljguarino/forge/utils"
 	"google.golang.org/api/option"
 )
@@ -24,9 +25,36 @@ type GCPProvider struct {
 
 const backendTemplate = `terraform {
 	backend "gcs" {
-		bucket = "%s"
-		prefix = "%s"
+		bucket = {{ .Values.Bucket | quote }}
+		prefix = {{ .Values.Prefix | quote }}
 	}
+}
+
+locals {
+	gcp_location  = {{ .Values.Location | quote }}
+  gcp_location_parts = split("-", local.gcp_location)
+  gcp_region         = "${local.gcp_location_parts[0]}-${local.gcp_location_parts[1]}"
+}
+
+provider "google" {
+  version = "2.5.1"
+  project = {{ .Values.Project | quote }}
+  region  = local.gcp_region
+}
+
+data "google_client_config" "current" {}
+
+data "google_container_cluster" "cluster" {
+  name = {{ .Values.Cluster }}
+  location = local.gcp_location
+}
+
+provider "kubernetes" {
+  version          = " ~> 1.10.0"
+  load_config_file = false
+  host = data.google_container_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)
+  token = data.google_client_config.current.access_token
 }
 `
 
@@ -72,7 +100,12 @@ func gcpFromManifest(man *manifest.Manifest) (*GCPProvider, error) {
 		return nil, err
 	}
 
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, ctx}, nil
+	region := man.Region
+	if region == "" {
+		region = "us-east1-b"
+	}
+
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, region, client, ctx}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -90,11 +123,21 @@ func (gcp *GCPProvider) KubeConfig() error {
 	return cmd.Run()
 }
 
-func (gcp *GCPProvider) CreateBackend(prefix string) (string, error) {
+func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(backendTemplate, gcp.bucket, prefix), nil
+
+	ctx["Project"] = gcp.Project()
+	ctx["Location"] = gcp.Region()
+	ctx["Bucket"] = gcp.Bucket()
+	ctx["Prefix"] = prefix
+	if cluster, ok := ctx["cluster"]; ok {
+		ctx["Cluster"] = cluster
+	} else {
+		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
+	}
+	return template.RenderString(backendTemplate, ctx)
 }
 
 func (gcp *GCPProvider) mkBucket(name string) error {
@@ -106,6 +149,7 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 }
 
 func getRegion() string {
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GOOGLE_CREDENTIALS"))
 	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
 	res, err := cmd.CombinedOutput()
 	if err != nil {

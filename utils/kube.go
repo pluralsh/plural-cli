@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 
@@ -46,5 +45,5 @@ func Kubernetes() (*Kube, error) {
 }
 
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
-	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	return k.Kube.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
 }
