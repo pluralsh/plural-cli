@@ -75,8 +75,12 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		}
 
 		vals := map[string]interface{}{
-			"Values":  ctx,
-			"License": w.Installation.License,
+			"Values":   ctx,
+			"License":  w.Installation.License,
+			"Region":   w.Provider.Region(),
+			"Project":  w.Provider.Project(),
+			"Cluster":  w.Provider.Cluster(),
+			"Provider": w.Provider.Name(),
 		}
 		for k, v := range prevVals {
 			vals[k] = v

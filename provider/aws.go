@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/michaeljguarino/forge/manifest"
+	"github.com/michaeljguarino/forge/template"
 	"github.com/michaeljguarino/forge/utils"
 )
 
@@ -22,10 +23,26 @@ type AWSProvider struct {
 
 const awsBackendTemplate = `terraform {
 	backend "s3" {
-		bucket = "%s"
-		prefix = "%s"
-		region = "%s"
+		bucket = {{ .Values.Bucket | quote }}
+		prefix = {{ .Values.Prefix | quote }}
+		region = {{ .Values.Region | quote }}
 	}
+}
+
+data "aws_eks_cluster" "cluster" {
+  name = {{ .Values.Cluster }}
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = {{ .Values.Cluster }}
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+  load_config_file       = false
+  version                = "~> 1.9"
 }
 `
 
@@ -84,7 +101,17 @@ func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	if err := aws.mkBucket(aws.bucket); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(awsBackendTemplate, aws.bucket, prefix, aws.region), nil
+
+	ctx["Region"] = aws.Region()
+	ctx["Bucket"] = aws.Bucket()
+	ctx["Prefix"] = prefix
+	if cluster, ok := ctx["cluster"]; ok {
+		ctx["Cluster"] = cluster
+	} else {
+		ctx["Cluster"] = fmt.Sprintf(`"%s"`, aws.Cluster())
+	}
+
+	return template.RenderString(awsBackendTemplate, ctx)
 }
 
 func (aws *AWSProvider) KubeConfig() error {
