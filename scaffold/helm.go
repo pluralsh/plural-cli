@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/imdario/mergo"
+	"github.com/michaeljguarino/forge/config"
 	"github.com/michaeljguarino/forge/template"
 	"github.com/michaeljguarino/forge/utils"
 	"github.com/michaeljguarino/forge/wkspace"
@@ -67,6 +68,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 
 	valuesFile := filepath.Join(s.Root, "values.yaml")
 	prevVals, _ := prevValues(valuesFile)
+	conf := config.Read()
 
 	for _, chartInst := range w.Charts {
 		tmpl, err := template.MakeTemplate(chartInst.Version.ValuesTemplate)
@@ -80,6 +82,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Region":   w.Provider.Region(),
 			"Project":  w.Provider.Project(),
 			"Cluster":  w.Provider.Cluster(),
+			"Config":   conf,
 			"Provider": w.Provider.Name(),
 		}
 		for k, v := range prevVals {

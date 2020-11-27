@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -56,16 +57,21 @@ func mkAWS() (*AWSProvider, error) {
 		return nil, err
 	}
 
+	account, err := getAccount()
+	if err != nil {
+		return nil, err
+	}
+
 	provider := &AWSProvider{
 		cluster,
-		"",
+		account,
 		bucket,
 		region,
 		client,
 	}
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  cluster,
-		Project:  "",
+		Project:  account,
 		Bucket:   bucket,
 		Provider: AWS,
 		Region:   provider.Region(),
@@ -156,4 +162,19 @@ func (aws *AWSProvider) Bucket() string {
 
 func (aws *AWSProvider) Region() string {
 	return aws.region
+}
+
+func getAccount() (string, error) {
+	cmd := exec.Command("aws", "sts", "get-caller-identity")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	var res struct {
+		Account string
+	}
+
+	json.Unmarshal(out, &res)
+	return res.Account, nil
 }

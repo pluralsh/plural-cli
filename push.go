@@ -110,7 +110,7 @@ func handleHelmUpload(c *cli.Context) error {
 	conf := config.Read()
 	pth, repo := c.Args().Get(0), c.Args().Get(1)
 
-	f, err := tmpValuesFile(pth)
+	f, err := tmpValuesFile(pth, &conf)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func handleHelmUpload(c *cli.Context) error {
 	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, repo)
 }
 
-func tmpValuesFile(path string) (f *os.File, err error) {
+func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	valuesTmpl, err := utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
 	if err != nil {
 		return
@@ -141,8 +141,13 @@ func tmpValuesFile(path string) (f *os.File, err error) {
 	}
 
 	vals := map[string]interface{}{
-		"Values":  map[string]interface{}{},
-		"License": "example-license",
+		"Values":   map[string]interface{}{},
+		"License":  "example-license",
+		"Region":   "region",
+		"Project":  "example",
+		"Cluster":  "cluster",
+		"Provider": "provider",
+		"Config":   conf,
 	}
 
 	var buf bytes.Buffer

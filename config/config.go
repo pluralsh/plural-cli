@@ -11,8 +11,8 @@ import (
 )
 
 type Config struct {
-	Email string
-	Token string `yaml:"token"`
+	Email string `json:"email"`
+	Token string `yaml:"token" json:"token"`
 }
 
 func configFile() string {
