@@ -29,6 +29,7 @@ type ArtifactAttributes struct {
 	Type string
 	Platform string
 	Blob string
+	Arch string
 }
 
 type artifactsResponse struct {

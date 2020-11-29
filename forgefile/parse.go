@@ -2,6 +2,7 @@ package forgefile
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -25,6 +26,7 @@ const (
 	DATABASE    ComponentName = "db"
 	CRD         ComponentName = "crd"
 	IRD         ComponentName = "ird"
+	COMMAND     ComponentName = "run"
 )
 
 type Component interface {
@@ -40,6 +42,7 @@ func (forge *Forgefile) Execute(f string, lock *Lockfile) (err error) {
 		sha := lock.getSha(t, key)
 		newsha, err := component.Push(forge.Repo, sha)
 		if err != nil {
+			fmt.Println(err)
 			break
 		}
 		lock.addSha(t, key, newsha)
@@ -106,7 +109,7 @@ func Parse(f string) (*Forgefile, error) {
 			forge.Components = append(forge.Components, shells...)
 		case "artifact":
 			arts, err := expandGlob(splitline[1], func(targ string) Component {
-				return &Artifact{File: targ}
+				return &Artifact{File: targ, Platform: splitline[2], Arch: splitline[3]}
 			})
 
 			if err != nil {
@@ -164,6 +167,10 @@ func Parse(f string) (*Forgefile, error) {
 				return forge, err
 			}
 			forge.Components = append(forge.Components, crds...)
+		case "run":
+			cmd := splitline[1]
+			args := splitline[2:]
+			forge.Components = append(forge.Components, &Command{Command: cmd, Args: args})
 		default:
 			continue
 		}

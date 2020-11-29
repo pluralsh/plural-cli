@@ -12,7 +12,9 @@ import (
 )
 
 type Artifact struct {
-	File string
+	File     string
+	Platform string
+	Arch     string
 }
 
 func (a *Artifact) Type() ComponentName {
@@ -20,7 +22,7 @@ func (a *Artifact) Type() ComponentName {
 }
 
 func (a *Artifact) Key() string {
-	return a.File
+	return fmt.Sprintf("%s_%s_%s", a.File, a.Platform, a.Arch)
 }
 
 func (a *Artifact) Push(repo string, sha string) (string, error) {
@@ -30,8 +32,8 @@ func (a *Artifact) Push(repo string, sha string) (string, error) {
 		return sha, err
 	}
 
-	utils.Highlight("pushing artifact %s\n", a.File)
-	cmd := exec.Command("forge", "push", "artifact", a.File, repo)
+	utils.Highlight("pushing artifact %s\n [plat=%s,arch=%s]", a.File, a.Platform, a.Arch)
+	cmd := exec.Command("forge", "push", "artifact", a.File, repo, "--platform", a.Platform, "--arch", a.Arch)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

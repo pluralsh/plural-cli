@@ -1,7 +1,6 @@
 package forgefile
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -36,7 +35,6 @@ func lock() *Lockfile {
 
 func Lock(path string) *Lockfile {
 	lockfile := lockPath(path)
-	fmt.Println(lockfile)
 	lock := lock()
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
