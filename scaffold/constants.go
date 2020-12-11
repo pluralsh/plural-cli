@@ -57,7 +57,7 @@ spec:
     kind: CronJob
   descriptor:
     type: %s
-    version: "1.0.0"
+    version: %s
     description: %s
     icons:
     - src: %s

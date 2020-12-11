@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/imdario/mergo"
+	"github.com/michaeljguarino/forge/api"
 	"github.com/michaeljguarino/forge/config"
 	"github.com/michaeljguarino/forge/template"
 	"github.com/michaeljguarino/forge/utils"
@@ -169,7 +170,8 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		}
 	}
 
-	application := fmt.Sprintf(defaultApplication, repo.Name, repo.Name, repo.Description, repo.Icon)
+	appVersion := appVersion(w.Charts)
+	application := fmt.Sprintf(defaultApplication, repo.Name, repo.Name, appVersion, repo.Description, repo.Icon)
 
 	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), []byte(application)); err != nil {
 		return err
@@ -185,4 +187,14 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 
 func repoUrl(repo string) string {
 	return "cm://forge.piazza.app/cm/" + repo
+}
+
+func appVersion(charts []api.ChartInstallation) string {
+	for _, inst := range charts {
+		if inst.Chart.Dependencies.Application {
+			return inst.Version.Version
+		}
+	}
+
+	return "0.1.0"
 }
