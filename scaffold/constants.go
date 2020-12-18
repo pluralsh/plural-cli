@@ -55,6 +55,8 @@ spec:
     kind: Deployment
   - group: batch
     kind: CronJob
+  - group: batch
+    kind: Job
   descriptor:
     type: %s
     version: %s
