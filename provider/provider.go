@@ -49,9 +49,11 @@ func Select() (Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if i >= len(available) {
 		return nil, fmt.Errorf("Invalid index, must be < %d", len(available))
 	}
+
 	utils.Success("Using provider %s\n", available[i])
 	return New(available[i])
 }

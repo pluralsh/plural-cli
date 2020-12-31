@@ -23,25 +23,25 @@ type Dependency struct {
 }
 
 type Manifest struct {
-	Id        string
-	Name      string
-	Cluster   string
-	Project   string
-	Bucket    string
-	Provider  string
-	Region    string
-	License   string
-	Charts    []ChartManifest
-	Terraform []TerraformManifest
+	Id           string
+	Name         string
+	Cluster      string
+	Project      string
+	Bucket       string
+	Provider     string
+	Region       string
+	License      string
+	Charts       []ChartManifest
+	Terraform    []TerraformManifest
 	Dependencies []Dependency
 }
 
 type ProjectManifest struct {
-	Cluster string
-	Bucket string
-	Project string
+	Cluster  string
+	Bucket   string
+	Project  string
 	Provider string
-	Region string
+	Region   string
 }
 
 func ProjectManifestPath() string {
@@ -58,17 +58,14 @@ func (m *ProjectManifest) Write(path string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
-func ReadProject(path string) (*ProjectManifest, error) {
+func ReadProject(path string) (man *ProjectManifest, err error) {
 	contents, err := ioutil.ReadFile(path)
-	man := ProjectManifest{}
 	if err != nil {
-		return &man, err
-	}
-	if err := yaml.Unmarshal(contents, &man); err != nil {
-		return &man, err
+		return
 	}
 
-	return &man, nil
+	err = yaml.Unmarshal(contents, man)
+	return
 }
 
 func (m *Manifest) Write(path string) error {
@@ -80,15 +77,12 @@ func (m *Manifest) Write(path string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
-func Read(path string) (*Manifest, error) {
+func Read(path string) (man *Manifest, err error) {
 	contents, err := ioutil.ReadFile(path)
-	man := Manifest{}
 	if err != nil {
-		return &man, err
-	}
-	if err := yaml.Unmarshal(contents, &man); err != nil {
-		return &man, err
+		return
 	}
 
-	return &man, nil
+	err = yaml.Unmarshal(contents, man)
+	return
 }
