@@ -3,9 +3,8 @@
 *.exe~
 *.dll
 *.so
+*.o
 *.dylib
-forge
-build
 
 # Test binary, built with `go test -c`
 *.test

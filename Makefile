@@ -12,10 +12,10 @@ help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 install:
-	go install
+	GOBIN=/usr/local/bin go install -ldflags '-s -w' ./cmd/forge/
 
 release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o forge.o
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o forge.o ./cmd/forge/
 
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
