@@ -31,9 +31,9 @@ type Manifest struct {
 	Provider     string
 	Region       string
 	License      string
-	Charts       []ChartManifest
-	Terraform    []TerraformManifest
-	Dependencies []Dependency
+	Charts       []*ChartManifest
+	Terraform    []*TerraformManifest
+	Dependencies []*Dependency
 }
 
 type ProjectManifest struct {
@@ -82,7 +82,8 @@ func Read(path string) (man *Manifest, err error) {
 	if err != nil {
 		return
 	}
-
+	
+	man = &Manifest{}
 	err = yaml.Unmarshal(contents, man)
 	return
 }

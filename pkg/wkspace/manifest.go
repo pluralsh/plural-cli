@@ -7,15 +7,16 @@ import (
 
 func (wk *Workspace) BuildManifest() *manifest.Manifest {
 	repository := wk.Installation.Repository
-	charts := make([]manifest.ChartManifest, len(wk.Charts))
-	terraform := make([]manifest.TerraformManifest, len(wk.Terraform))
+	charts := make([]*manifest.ChartManifest, len(wk.Charts))
+	terraform := make([]*manifest.TerraformManifest, len(wk.Terraform))
 
 	for i, ci := range wk.Charts {
-		charts[i] = *buildChartManifest(&ci)
+		charts[i] = buildChartManifest(&ci)
 	}
 	for i, ti := range wk.Terraform {
-		terraform[i] = *buildTerraformManifest(&ti)
+		terraform[i] = buildTerraformManifest(&ti)
 	}
+
 	return &manifest.Manifest{
 		repository.Id,
 		repository.Name,
@@ -31,8 +32,8 @@ func (wk *Workspace) BuildManifest() *manifest.Manifest {
 	}
 }
 
-func buildDependencies(repo string, charts []api.ChartInstallation, tfs []api.TerraformInstallation) []manifest.Dependency {
-	var deps []manifest.Dependency
+func buildDependencies(repo string, charts []api.ChartInstallation, tfs []api.TerraformInstallation) []*manifest.Dependency {
+	var deps []*manifest.Dependency
 	var seen = make(map[string]bool)
 
 	for _, chart := range charts {
@@ -43,7 +44,7 @@ func buildDependencies(repo string, charts []api.ChartInstallation, tfs []api.Te
 			}
 
 			if dep.Repo != repo {
-				deps = append(deps, manifest.Dependency{dep.Repo})
+				deps = append(deps, &manifest.Dependency{dep.Repo})
 				seen[dep.Repo] = true
 			}
 		}
@@ -57,7 +58,7 @@ func buildDependencies(repo string, charts []api.ChartInstallation, tfs []api.Te
 			}
 
 			if dep.Repo != repo {
-				deps = append(deps, manifest.Dependency{dep.Repo})
+				deps = append(deps, &manifest.Dependency{dep.Repo})
 				seen[dep.Repo] = true
 			}
 		}
