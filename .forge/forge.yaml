@@ -2,4 +2,4 @@ name: forge
 readme: CLI for building and deploying forge workspaces
 type: cli
 blob: forge.o
-readme: .forge/artifacts/forge-readme.md
+readme: .forge/forge-readme.md

@@ -1,5 +1,0 @@
-REPO forge
-
-ARTIFACT artifacts/forge.yaml
-ARTIFACT artifacts/forge-linux.yml
-ARTIFACT artifacts/forge-windows.yml

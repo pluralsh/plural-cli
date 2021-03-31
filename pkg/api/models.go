@@ -202,6 +202,10 @@ type ChartName struct {
 	Chart string
 }
 
+type Upgrade struct {
+	Id string
+}
+
 const DatabaseFragment = `
 	fragment DatabaseFragment on Database {
 		engine

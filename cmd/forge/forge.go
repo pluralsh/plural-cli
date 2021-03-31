@@ -148,6 +148,22 @@ func main() {
 			},
 			Action: handleWebhook,
 		},
+		{
+			Name: "upgrade",
+			Aliases: []string{"up"},
+			Usage: "Creates an upgrade for a repository",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name",
+					Usage: "the repository name",
+				},
+				cli.StringFlag{
+					Name:  "message",
+					Usage: "a message describing the upgrade",
+				},
+			},
+			Action: handleUpgrade,
+		},
 	}
 
 	err := app.Run(os.Args)

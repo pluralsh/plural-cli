@@ -37,6 +37,18 @@ const createWebhookMut = `
 	}
 `
 
+const createUpgradeMut = `
+	mutation Upgrade($name: String, $attributes: UpgradeAttributes!) {
+		createUpgrade(name: $name, attributes: $attributes) {
+			id
+		}
+	} 
+`
+
+type UpgradeAttributes struct {
+	Message string
+}
+
 type login struct {
 	Login struct {
 		Jwt string `json:"jwt"`
@@ -104,4 +116,20 @@ func (client *Client) CreateWebhook(url string) (Webhook, error) {
 	}
 
 	return resp.CreateWebhook, nil
+}
+
+func (client *Client) CreateUpgrade(name string, message string) (id string, err error) {
+	var resp struct {
+		CreateUpgrade *Upgrade
+	}
+
+	req := client.Build(createUpgradeMut)
+	req.Var("name", name)
+	req.Var("attributes", UpgradeAttributes{Message: message})
+	err = client.Run(req, &resp)
+	if err == nil {
+		id = resp.CreateUpgrade.Id
+	}
+
+	return
 }

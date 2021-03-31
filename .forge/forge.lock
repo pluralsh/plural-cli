@@ -9,3 +9,4 @@ integration: {}
 shell: {}
 database: {}
 crd: {}
+ird: {}

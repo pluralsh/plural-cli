@@ -17,6 +17,9 @@ install:
 release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o forge.o ./cmd/forge/
 
+forge: .PHONY ## uploads to forge
+	forge apply
+
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \

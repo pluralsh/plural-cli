@@ -1,0 +1,6 @@
+REPO forge
+
+RUN make release GOOS=linux GOARCH=amd64
+ARTIFACT .forge/forge.yaml linux amd64
+RUN make release GOOS=darwin GOARCH=amd64
+ARTIFACT .forge/forge.yaml mac amd64
