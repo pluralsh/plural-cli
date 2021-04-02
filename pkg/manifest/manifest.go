@@ -22,6 +22,11 @@ type Dependency struct {
 	Repo string
 }
 
+type Metadata struct {
+	Name   string
+	Labels map[string]string `yaml:",omitempty"`
+}
+
 type Manifest struct {
 	Id           string
 	Name         string
@@ -42,6 +47,21 @@ type ProjectManifest struct {
 	Project  string
 	Provider string
 	Region   string
+	Prefix   string
+}
+
+type VersionedManifest struct {
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string
+	Metadata   *Metadata
+	Spec       *Manifest
+}
+
+type VersionedProjectManifest struct {
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string
+	Metadata   *Metadata
+	Spec       *ProjectManifest
 }
 
 func ProjectManifestPath() string {
@@ -50,7 +70,14 @@ func ProjectManifestPath() string {
 }
 
 func (m *ProjectManifest) Write(path string) error {
-	io, err := yaml.Marshal(&m)
+	versioned := &VersionedProjectManifest{
+		ApiVersion: "plural.sh/v1alpha1",
+		Kind: "ProjectManifest",
+		Metadata: &Metadata{Name: m.Cluster},
+		Spec: m,
+	}
+
+	io, err := yaml.Marshal(&versioned)
 	if err != nil {
 		return err
 	}
@@ -64,12 +91,26 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 		return
 	}
 
-	err = yaml.Unmarshal(contents, man)
+	versioned := &VersionedProjectManifest{}
+	err = yaml.Unmarshal(contents, versioned)
+	if err != nil || versioned.Spec == nil {
+		err = yaml.Unmarshal(contents, man)
+		return
+	}
+
+	man = versioned.Spec
 	return
 }
 
 func (m *Manifest) Write(path string) error {
-	io, err := yaml.Marshal(&m)
+	versioned := &VersionedManifest{
+		ApiVersion: "plural.sh/v1alpha1",
+		Kind: "Manifest",
+		Metadata: &Metadata{Name: m.Name},
+		Spec: m,
+	}
+
+	io, err := yaml.Marshal(&versioned)
 	if err != nil {
 		return err
 	}
@@ -82,8 +123,15 @@ func Read(path string) (man *Manifest, err error) {
 	if err != nil {
 		return
 	}
-	
-	man = &Manifest{}
-	err = yaml.Unmarshal(contents, man)
+
+	versioned := &VersionedManifest{}
+	err = yaml.Unmarshal(contents, versioned)
+	if err != nil || versioned.Spec == nil {
+		man = &Manifest{}
+		err = yaml.Unmarshal(contents, man)
+		return
+	}
+
+	man = versioned.Spec
 	return
 }
