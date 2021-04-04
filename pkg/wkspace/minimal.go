@@ -16,6 +16,7 @@ type MinimalWorkspace struct {
 	Name     string
 	Provider provider.Provider
 	Config   *config.Config
+	Manifest *manifest.ProjectManifest
 }
 
 func Minimal(name string) (*MinimalWorkspace, error) {
@@ -43,8 +44,9 @@ func Minimal(name string) (*MinimalWorkspace, error) {
 		}
 	}
 
+	project, _ := manifest.ReadProject(filepath.Join(root, "workspace.yaml"))
 	conf := config.Read()
-	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf}, nil
+	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf, Manifest: project}, nil
 }
 
 func (m *MinimalWorkspace) HelmInit(clientOnly bool) error {
@@ -83,9 +85,10 @@ func (m *MinimalWorkspace) BounceHelm() error {
 		return err
 	}
 
-	utils.Warn("helm upgrade --install --namespace %s %s %s\n", m.Name, m.Name, path)
+	namespace := m.Config.Namespace(m.Name)
+	utils.Warn("helm upgrade --install --namespace %s %s %s\n", namespace, m.Name, path)
 	return utils.Cmd(m.Config,
-		"helm", "upgrade", "--install", "--skip-crds", "--namespace", m.Name, m.Name, path)
+		"helm", "upgrade", "--install", "--skip-crds", "--namespace", namespace, m.Name, path)
 }
 
 func (m *MinimalWorkspace) DiffHelm() error {
@@ -94,8 +97,9 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		return err
 	}
 
-	utils.Warn("helm diff upgrade --install --show-secrets --namespace %s %s %s\n", m.Name, m.Name, path)
-	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--install", "--namespace", m.Name, m.Name, path)
+	namespace := m.Config.Namespace(m.Name)
+	utils.Warn("helm diff upgrade --install --show-secrets --namespace %s %s %s\n", namespace, m.Name, path)
+	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--install", "--namespace", namespace, m.Name, path)
 }
 
 func (m *MinimalWorkspace) DiffTerraform() error {

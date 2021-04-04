@@ -47,7 +47,6 @@ type ProjectManifest struct {
 	Project  string
 	Provider string
 	Region   string
-	Prefix   string
 }
 
 type VersionedManifest struct {
@@ -94,6 +93,7 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 	versioned := &VersionedProjectManifest{}
 	err = yaml.Unmarshal(contents, versioned)
 	if err != nil || versioned.Spec == nil {
+		man = &ProjectManifest{}
 		err = yaml.Unmarshal(contents, man)
 		return
 	}

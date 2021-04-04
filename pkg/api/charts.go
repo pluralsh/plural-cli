@@ -61,15 +61,24 @@ const createCrdQuery = `
 var chartInstallationsQuery = fmt.Sprintf(`
 	query CIQuery($id: ID!) {
 		chartInstallations(repositoryId: $id, first: %d) {
-			edges {
-				node {
-					...ChartInstallationFragment
-				}
-			}
+			edges { node { ...ChartInstallationFragment } }
 		}
 	}
 	%s
 `, pageSize, ChartInstallationFragment)
+
+var packageInstallationsQuery = fmt.Sprintf(`
+	query Packages($id: ID!) {
+		chartInstallations(repositoryId: $id, first: %d) {
+			edges { node { ...ChartInstallationFragment } }
+		}
+		terraformInstallations(repositoryId: $id, first: %d) {
+			edges { node { ...TerraformInstallationFragment } }
+		}
+	}
+	%s
+	%s
+`, pageSize, pageSize, ChartInstallationFragment, TerraformInstallationFragment)
 
 func (client *Client) GetCharts(repoId string) ([]Chart, error) {
 	var resp chartsResponse
@@ -105,6 +114,36 @@ func (client *Client) GetChartInstallations(repoId string) ([]ChartInstallation,
 		insts[i] = edge.Node
 	}
 	return insts, err
+}
+
+func (client *Client) GetPackageInstallations(repoId string) (charts []ChartInstallation, tfs []TerraformInstallation, err error) {
+	var resp struct {
+		ChartInstallations struct {
+			Edges []ChartInstallationEdge
+		}
+		TerraformInstallations struct {
+			Edges []TerraformInstallationEdge
+		}
+	}
+
+	req := client.Build(packageInstallationsQuery)
+	req.Var("id", repoId)
+	err = client.Run(req, &resp)
+	if err != nil {
+		return
+	}
+
+	charts = make([]ChartInstallation, len(resp.ChartInstallations.Edges))
+	for i, edge := range resp.ChartInstallations.Edges {
+		charts[i] = edge.Node
+	}
+
+	tfs = make([]TerraformInstallation, len(resp.TerraformInstallations.Edges))
+	for i, edge := range resp.TerraformInstallations.Edges {
+		tfs[i] = edge.Node
+	}
+	
+	return
 }
 
 func (client *Client) CreateCrd(repo string, chart string, file string) error {

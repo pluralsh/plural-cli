@@ -117,10 +117,12 @@ func handleDecrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	
 	result, err := key.Decrypt(data[len(prefix):])
 	if err != nil {
 		return err
 	}
+	
 	os.Stdout.Write(result)
 	return nil
 }

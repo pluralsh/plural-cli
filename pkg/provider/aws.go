@@ -28,14 +28,29 @@ const awsBackendTemplate = `terraform {
 		prefix = {{ .Values.Prefix | quote }}
 		region = {{ .Values.Region | quote }}
 	}
+
+	required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.35"
+    }
+		kubernetes = {
+			source  = "hashicorp/kubernetes"
+			version = "~> 2.0"
+		}
+  }
+}
+
+provider "aws" {
+  region = {{ .Region | quote }}
 }
 
 data "aws_eks_cluster" "cluster" {
-  name = {{ .Values.Cluster }}
+  name = {{ .Cluster | quote }}
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = {{ .Values.Cluster }}
+  name = {{ .Cluster | quote }}
 }
 
 provider "kubernetes" {
@@ -43,14 +58,13 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
   load_config_file       = false
-  version                = "~> 1.9"
 }
 `
 
 func mkAWS() (*AWSProvider, error) {
 	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
 	bucket, _ := utils.ReadLine("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")
-	region, _ := utils.ReadLine("Enter the region you want to deploy to eg us-east-1: ")
+	region, _ := utils.ReadLine("Enter the region you want to deploy to eg us-east-2: ")
 
 	client, err := getClient(region)
 	if err != nil {

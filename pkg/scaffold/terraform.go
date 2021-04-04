@@ -57,8 +57,12 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		if err != nil {
 			return err
 		}
-		if err := tmpl.Execute(
-			&buf, map[string]interface{}{"Values": ctx, "Cluster": wk.Provider.Cluster()}); err != nil {
+		values := map[string]interface{}{
+			"Values": ctx, 
+			"Cluster": wk.Provider.Cluster(),
+			"Namespace": wk.Config.Namespace(repo.Name),
+		}
+		if err := tmpl.Execute(&buf, values); err != nil {
 			return err
 		}
 

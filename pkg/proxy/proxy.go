@@ -21,10 +21,12 @@ func Exec(namespace string, name string) error {
 	if err != nil {
 		return err
 	}
+
 	proxy, err := kube.Forge.Proxies(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
+	
 	t := proxy.Spec.Type
 	switch t {
 	case "db":

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/michaeljguarino/forge/pkg/proxy"
+	"github.com/michaeljguarino/forge/pkg/config"
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 )
@@ -27,10 +28,12 @@ func proxyCommands() []cli.Command {
 
 func handleProxyList(c *cli.Context) error {
 	repo := c.Args().Get(0)
-	proxies, err := proxy.List(repo)
+	conf := config.Read()
+	proxies, err := proxy.List(conf.Namespace(repo))
 	if err != nil {
 		return err
 	}
+	
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Type", "Target"})
 	for _, p := range proxies.Items {
@@ -43,5 +46,6 @@ func handleProxyList(c *cli.Context) error {
 func handleProxyConnect(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	name := c.Args().Get(1)
-	return proxy.Exec(repo, name)
+	conf := config.Read()
+	return proxy.Exec(conf.Namespace(repo), name)
 }

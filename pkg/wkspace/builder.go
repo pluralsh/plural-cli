@@ -21,14 +21,17 @@ type Workspace struct {
 	Charts       []api.ChartInstallation
 	Terraform    []api.TerraformInstallation
 	Config       *config.Config
+	Manifest     *manifest.ProjectManifest
 }
 
 func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
-	ci, err := client.GetChartInstallations(inst.Repository.Id)
+	ci, ti, err := client.GetPackageInstallations(inst.Repository.Id)
 	if err != nil {
 		return nil, err
 	}
-	ti, err := client.GetTerraformInstallations(inst.Repository.Id)
+
+	projPath, _ := filepath.Abs("workspace.yaml")
+	project, err := manifest.ReadProject(projPath)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +39,12 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	var prov provider.Provider
 	manifestPath := manifestPath(&inst.Repository)
 	if utils.Exists(manifestPath) {
-		manifest, err := manifest.Read(manifestPath)
+		man, err := manifest.Read(manifestPath)
 		if err != nil {
 			return nil, err
-		}
+		} 
 
-		prov, err = provider.FromManifest(manifest)
+		prov, err = provider.FromManifest(man)
 		if err != nil {
 			return nil, err
 		}
@@ -51,14 +54,17 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 			return nil, err
 		}
 	}
+
 	conf := config.Read()
-	return &Workspace{
-		prov,
-		inst,
-		ci,
-		ti,
-		&conf,
-	}, nil
+	wk := &Workspace{
+		Provider: prov,
+		Installation: inst,
+		Charts: ci,
+		Terraform: ti,
+		Config: &conf,
+		Manifest: project,
+	}
+	return wk, nil
 }
 
 func (wk *Workspace) ToMinimal() *MinimalWorkspace {
@@ -66,6 +72,7 @@ func (wk *Workspace) ToMinimal() *MinimalWorkspace {
 		Name:     wk.Installation.Repository.Name,
 		Provider: wk.Provider,
 		Config:   wk.Config,
+		Manifest: wk.Manifest,
 	}
 }
 

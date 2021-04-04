@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"gopkg.in/oleiade/reflections.v1"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 type Config struct {
 	Email string `json:"email"`
 	Token string `yaml:"token" json:"token"`
+	NamespacePrefix string
 }
 
 func configFile() string {
@@ -42,6 +44,14 @@ func Amend(key string, value string) error {
 
 func (conf *Config) Marshal() ([]byte, error) {
 	return yaml.Marshal(conf)
+}
+
+func (c *Config) Namespace(ns string) string {
+	if (len(c.NamespacePrefix) > 0) {
+		return fmt.Sprintf("%s%s", c.NamespacePrefix, ns)
+	}
+
+	return ns
 }
 
 func Flush(c *Config) error {
