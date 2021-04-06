@@ -91,6 +91,11 @@ func main() {
 			Action: handleInit,
 		},
 		{
+			Name:   "install",
+			Usage:  "installs forge cli dependencies",
+			Action: handleInstall,
+		},
+		{
 			Name:   "import",
 			Usage:  "imports forge config from another file",
 			Action: handleImport,

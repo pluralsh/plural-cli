@@ -38,7 +38,7 @@ func Minimal(name string) (*MinimalWorkspace, error) {
 			return nil, err
 		}
 	} else {
-		prov, err = provider.Select()
+		prov, err = provider.Select(false)
 		if err != nil {
 			return nil, err
 		}

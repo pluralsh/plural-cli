@@ -3,14 +3,24 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"github.com/mholt/archiver/v3"
 
 	"github.com/michaeljguarino/forge/pkg/api"
 	"github.com/michaeljguarino/forge/pkg/config"
 	"github.com/michaeljguarino/forge/pkg/crypto"
 	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/michaeljguarino/forge/pkg/provider"
 	"github.com/urfave/cli"
+)
+
+const (
+	KUBECTL_VERSION = "1.16.14"
+	HELM_VERSION = "3.3.1"
+	TF_VERSION = "0.14.8"
 )
 
 func handleInit(c *cli.Context) error {
@@ -81,4 +91,63 @@ func initHelm(success string) error {
 	}
 	utils.Success(success)
 	return nil
+}
+
+func handleInstall(c *cli.Context) (err error) {
+	root, found := utils.ProjectRoot()
+	err = os.MkdirAll(filepath.Join(root, "bin"), os.ModePerm)
+	if err != nil { return }
+
+	if !found {
+		err = fmt.Errorf("You must install within a workspace")
+		return 
+	}
+
+	root = filepath.Join(root, "bin")
+
+	goos := runtime.GOOS
+	arch := runtime.GOARCH
+	kubectl := fmt.Sprintf("https://storage.googleapis.com/kubernetes-release/release/v%s/bin/%s/%s/kubectl", KUBECTL_VERSION, goos, arch)
+	err = utils.Install("kubectl", kubectl, filepath.Join(root, "kubectl"), func(dest string) (string, error) { return dest, nil })
+	if err != nil {
+		return
+	}
+
+	helm := fmt.Sprintf("https://get.helm.sh/helm-v%s-%s-%s.tar.gz", HELM_VERSION, goos, arch)
+	err = utils.Install("helm", helm, filepath.Join(root, "helm-root.tar.gz"), func(dest string) (bin string, err error) {
+		bin = filepath.Join(root, "helm")
+		err = archiver.Unarchive(dest, filepath.Join(root, "helm-root"))
+		if err != nil {
+			return 
+		}
+
+		err = os.Rename(filepath.Join(dest, "helm"), bin)
+		if err != nil {
+			return
+		}
+
+		err = os.RemoveAll(dest)
+		return
+	})
+
+	if err != nil { return }
+
+	tf := fmt.Sprintf("https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_%s.zip", TF_VERSION, TF_VERSION, goos, arch)
+	err = utils.Install("terraform", tf, filepath.Join(root, "terraform.zip"), func(dest string) (bin string, err error) {
+		bin = filepath.Join(root, "terraform")
+		err = archiver.Unarchive(dest, bin)
+		if err != nil {
+			return 
+		}
+
+		err = os.Remove(dest)
+		return 
+	})
+	
+	if err != nil { return }
+
+	prov, err := provider.Select(true)
+	if err != nil { return }
+	err = prov.Install()
+	return
 }

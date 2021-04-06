@@ -16,24 +16,31 @@ type Provider interface {
 	Bucket() string
 	KubeConfig() error
 	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
+	Install() error
 }
 
-func Select() (Provider, error) {
+func Select(force bool) (Provider, error) {
 	available := []string{GCP, AWS}
 	path := manifest.ProjectManifestPath()
 	if utils.Exists(path) {
 		if project, err := manifest.ReadProject(path); err == nil {
+			prov, err := FromManifest(&manifest.Manifest{
+				Cluster:  project.Cluster,
+				Project:  project.Project,
+				Bucket:   project.Bucket,
+				Provider: project.Provider,
+			})
+
+			if force {
+				return prov, err
+			}
+
 			line := fmt.Sprintf("Reuse existing manifest {provider: %s, cluster: %s, bucket: %s} [(y)/n]:",
 				project.Provider, project.Cluster, project.Bucket)
 			val, _ := utils.ReadLine(line)
 
 			if val != "n" {
-				return FromManifest(&manifest.Manifest{
-					Cluster:  project.Cluster,
-					Project:  project.Project,
-					Bucket:   project.Bucket,
-					Provider: project.Provider,
-				})
+				return prov, err
 			}
 		}
 	}

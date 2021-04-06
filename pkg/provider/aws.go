@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -156,6 +157,22 @@ func (p *AWSProvider) mkBucket(name string) error {
 	}
 
 	return nil
+}
+
+func (aws *AWSProvider) Install() (err error) {
+	if exists, _ := utils.Which("aws"); exists {
+		utils.Success("aws cli already installed!\n")
+		return
+	}
+
+	fmt.Println("AWS requires you to manually pkg install the aws cli")
+	osName := runtime.GOOS
+	if osName == "darwin" {
+		osName = "mac"
+	}
+
+	fmt.Printf("Visit https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-%s.html to install\n", osName)
+	return
 }
 
 func (aws *AWSProvider) Name() string {
