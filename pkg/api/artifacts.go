@@ -32,25 +32,21 @@ type ArtifactAttributes struct {
 	Arch string
 }
 
-type artifactsResponse struct {
-	Repository struct {
-		Artifacts []Artifact
-	}
-}
-
 var artifactsQuery = fmt.Sprintf(`
 	query ArtifactsQuery($id: ID!) {
 		repository(id: $id) {
-			artifacts {
-				...ArtifactFragment
-			}
+			artifacts { ...ArtifactFragment }
 		}
 	}
 	%s
 `, ArtifactFragment)
 
 func (client *Client) ListArtifacts(repo string) ([]Artifact, error) {
-	var resp artifactsResponse
+	var resp struct {
+		Repository struct {
+			Artifacts []Artifact
+		}
+	}
 	req := client.Build(artifactsQuery)
 	req.Var("id", repo)
 	err := client.Run(req, &resp)

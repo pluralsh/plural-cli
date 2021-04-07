@@ -6,22 +6,28 @@ import (
 	"os"
 	"path/filepath"
 	"net/http"
+	"github.com/schollz/progressbar/v3"
 )
 
-func DownloadFile(url string, filepath string) error {
+func DownloadFile(url string, path string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create(filepath)
+	bar := progressbar.DefaultBytes(
+    resp.ContentLength,
+    path,
+	)
+
+	out, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
 	return err
 }
 
