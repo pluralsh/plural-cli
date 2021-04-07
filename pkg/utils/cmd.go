@@ -50,7 +50,7 @@ func ProjectRoot() (root string, found bool) {
     return
 }
 
-func Install(command string, url string, dest string, post func(string) (string, error)) error {
+func Install(command string, url string, dest string, postprocess func(string) (string, error)) error {
 	if exists, _ := Which(command); exists {
 		Success("%s is already installed\n", command)
 		return nil
@@ -61,7 +61,7 @@ func Install(command string, url string, dest string, post func(string) (string,
 		return err
 	}
 
-	bin, err := post(dest)
+	bin, err := postprocess(dest)
 	if err != nil {
 		return err
 	}
