@@ -25,6 +25,7 @@ const gitattributes = `/**/helm/**/values.yaml filter=forge-crypt diff=forge-cry
 const gitignore = `/**/.terraform
 /**/.terraform*
 /**/terraform.tfstate*
+/bin
 `
 
 func cryptoCommands() []cli.Command {

@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	KUBECTL_VERSION = "1.16.14"
-	HELM_VERSION = "3.3.1"
+	KUBECTL_VERSION = "1.20.5"
+	HELM_VERSION = "3.5.3"
 	TF_VERSION = "0.14.8"
 )
 
@@ -107,7 +107,7 @@ func handleInstall(c *cli.Context) (err error) {
 
 	goos := runtime.GOOS
 	arch := runtime.GOARCH
-	kubectl := fmt.Sprintf("https://storage.googleapis.com/kubernetes-release/release/v%s/bin/%s/%s/kubectl", KUBECTL_VERSION, goos, arch)
+	kubectl := fmt.Sprintf("https://dl.k8s.io/release/%s/bin/%s/%s/kubectl", KUBECTL_VERSION, goos, arch)
 	err = utils.Install("kubectl", kubectl, filepath.Join(root, "kubectl"), func(dest string) (string, error) { return dest, nil })
 	if err != nil {
 		return
