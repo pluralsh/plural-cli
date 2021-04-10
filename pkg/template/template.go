@@ -15,6 +15,7 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["repoRoot"] = repoRoot
 	funcs["repoName"] = repoName
 	funcs["repoUrl"] = repoUrl
+	funcs["branchName"] = branchName
 	funcs["createWebhook"] = createWebhook
 	funcs["dumpConfig"] = dumpConfig
 	funcs["dumpAesKey"] = dumpAesKey

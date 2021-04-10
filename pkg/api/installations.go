@@ -13,11 +13,7 @@ type instResponse struct {
 var instQuery = fmt.Sprintf(`
 	query {
 		installations(first: %d) {
-			edges {
-				node {
-					...InstallationFragment
-				}
-			}
+			edges { node { ...InstallationFragment } }
 		}
 	}
 	%s

@@ -30,6 +30,12 @@ func repoUrl() (string, error) {
 	return strings.TrimSpace(string(res)), err
 }
 
+func branchName() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	res, err := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res)), err
+}
+
 func createWebhook(domain string) (api.Webhook, error) {
 	client := api.NewClient()
 	url := fmt.Sprintf("https://%s/v1/webhook", domain)
