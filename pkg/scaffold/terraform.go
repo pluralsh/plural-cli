@@ -31,9 +31,8 @@ const moduleTemplate = `module "{{ .Values.name }}" {
 
 func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	repo := wk.Installation.Repository
-	ctx := wk.Installation.Context
-	var modules = make([]string, len(wk.Terraform)+1)
-	backend, err := wk.Provider.CreateBackend(repo.Name, buildContext(wk.Terraform))
+	providerCtx := buildContext(wk, repo.Name, wk.Terraform)
+	backend, err := wk.Provider.CreateBackend(repo.Name, providerCtx)
 	if err != nil {
 		return err
 	}
@@ -41,13 +40,16 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	if err := scaffold.untarModules(wk); err != nil {
 		return err
 	}
+
 	mainFile := filepath.Join(scaffold.Root, "main.tf")
 	contents, err := utils.ReadFile(mainFile)
 	if err != nil {
 		contents = ""
 	}
 
+	var modules = make([]string, len(wk.Terraform)+1)
 	modules[0] = backend
+	ctx := wk.Installation.Context
 	for i, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
 
@@ -60,6 +62,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		values := map[string]interface{}{
 			"Values": ctx, 
 			"Cluster": wk.Provider.Cluster(),
+			"Project": wk.Provider.Project(),
 			"Namespace": wk.Config.Namespace(repo.Name),
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {
@@ -70,7 +73,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		module["name"] = tf.Name
 		module["path"] = "./" + tf.Name
 		module["conf"] = buf.String()
-		module["deps"] = tf.Dependencies.Wirings.Terraform
+		if tf.Dependencies != nil && tf.Dependencies.Wirings != nil {
+			module["deps"] = tf.Dependencies.Wirings.Terraform
+		} else {
+			module["deps"] = map[string]interface{}{}
+		}
 		module["Manual"] = manualSection(contents, tf.Name)
 
 		var moduleBuf bytes.Buffer
@@ -97,7 +104,8 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 // TODO: move to some sort of scaffold util?
 func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
-	utils.Highlight("unpacking %d module(s)", len(wk.Terraform))
+	length := len(wk.Terraform)
+	utils.Highlight("unpacking %d %s", len(wk.Terraform), utils.Pluralize("module", "modules", length))
 	for _, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
 		v := tfInst.Version
@@ -107,7 +115,7 @@ func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
 			return err
 		}
 
-		if err := untar(&v, &tf, path); err != nil {
+		if err := untar(v, tf, path); err != nil {
 			fmt.Print("\n")
 			return err
 		}
@@ -137,11 +145,16 @@ func manualSection(contents, name string) string {
 	return ""
 }
 
-func buildContext(installations []api.TerraformInstallation) map[string]interface{} {
-	ctx := make(map[string]interface{})
+func buildContext(wk *wkspace.Workspace, repo string, installations []*api.TerraformInstallation) map[string]interface{} {
+	ctx := map[string]interface{}{
+		"Namespace": wk.Config.Namespace(repo),
+	}
+
 	for _, inst := range installations {
-		tf := inst.Terraform
-		for k, v := range tf.Dependencies.ProviderWirings {
+		for k, v := range inst.Version.Dependencies.ProviderWirings {
+			if k == "cluster" {
+				ctx["Cluster"] = v
+			}
 			ctx[k] = v
 		}
 	}

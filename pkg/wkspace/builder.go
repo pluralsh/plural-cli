@@ -18,8 +18,8 @@ import (
 type Workspace struct {
 	Provider     provider.Provider
 	Installation *api.Installation
-	Charts       []api.ChartInstallation
-	Terraform    []api.TerraformInstallation
+	Charts       []*api.ChartInstallation
+	Terraform    []*api.TerraformInstallation
 	Config       *config.Config
 	Manifest     *manifest.ProjectManifest
 }
@@ -30,14 +30,8 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
-	projPath, _ := filepath.Abs("workspace.yaml")
-	project, err := manifest.ReadProject(projPath)
-	if err != nil {
-		return nil, err
-	}
-
 	var prov provider.Provider
-	manifestPath := manifestPath(&inst.Repository)
+	manifestPath := manifestPath(inst.Repository)
 	if utils.Exists(manifestPath) {
 		man, err := manifest.Read(manifestPath)
 		if err != nil {
@@ -53,6 +47,12 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	projPath, _ := filepath.Abs("workspace.yaml")
+	project, err := manifest.ReadProject(projPath)
+	if err != nil {
+		return nil, err
 	}
 
 	conf := config.Read()
@@ -88,7 +88,7 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
-	if err := manifest.Write(manifestPath(&repo)); err != nil {
+	if err := manifest.Write(manifestPath(repo)); err != nil {
 		return err
 	}
 

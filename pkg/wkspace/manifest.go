@@ -11,10 +11,10 @@ func (wk *Workspace) BuildManifest() *manifest.Manifest {
 	terraform := make([]*manifest.TerraformManifest, len(wk.Terraform))
 
 	for i, ci := range wk.Charts {
-		charts[i] = buildChartManifest(&ci)
+		charts[i] = buildChartManifest(ci)
 	}
 	for i, ti := range wk.Terraform {
-		terraform[i] = buildTerraformManifest(&ti)
+		terraform[i] = buildTerraformManifest(ti)
 	}
 
 	return &manifest.Manifest{
@@ -32,7 +32,7 @@ func (wk *Workspace) BuildManifest() *manifest.Manifest {
 	}
 }
 
-func buildDependencies(repo string, charts []api.ChartInstallation, tfs []api.TerraformInstallation) []*manifest.Dependency {
+func buildDependencies(repo string, charts []*api.ChartInstallation, tfs []*api.TerraformInstallation) []*manifest.Dependency {
 	var deps []*manifest.Dependency
 	var seen = make(map[string]bool)
 

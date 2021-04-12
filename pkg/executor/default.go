@@ -31,14 +31,6 @@ func defaultSteps(path string) []*Step {
 			Sha:     "",
 		},
 		{
-			Name:    "docker-credentials",
-			Wkdir:   path,
-			Target:  forgefile(path, "ONCE"),
-			Command: "forge",
-			Args:    []string{"wkspace", "docker-credentials", path},
-			Sha:     "",
-		},
-		{
 			Name:    "crds",
 			Wkdir:   path,
 			Target:  filepath.Join(path, "crds"),

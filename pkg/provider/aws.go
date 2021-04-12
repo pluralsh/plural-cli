@@ -26,39 +26,38 @@ type AWSProvider struct {
 const awsBackendTemplate = `terraform {
 	backend "s3" {
 		bucket = {{ .Values.Bucket | quote }}
-		prefix = {{ .Values.Prefix | quote }}
+		key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
 		region = {{ .Values.Region | quote }}
 	}
 
 	required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.35"
+      version = "~> 3.36.0"
     }
 		kubernetes = {
 			source  = "hashicorp/kubernetes"
-			version = "~> 2.0"
+			version = "~> 2.0.3"
 		}
   }
 }
 
 provider "aws" {
-  region = {{ .Region | quote }}
+  region = {{ .Values.Region | quote }}
 }
 
 data "aws_eks_cluster" "cluster" {
-  name = {{ .Cluster | quote }}
+  name = {{ .Values.Cluster }}
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = {{ .Cluster | quote }}
+  name = {{ .Values.Cluster }}
 }
 
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-  load_config_file       = false
 }
 `
 
@@ -84,6 +83,7 @@ func mkAWS() (*AWSProvider, error) {
 		region,
 		client,
 	}
+
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  cluster,
 		Project:  account,
@@ -126,12 +126,10 @@ func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	ctx["Region"] = aws.Region()
 	ctx["Bucket"] = aws.Bucket()
 	ctx["Prefix"] = prefix
-	if cluster, ok := ctx["cluster"]; ok {
-		ctx["Cluster"] = cluster
-	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, aws.Cluster())
+	ctx["__CLUSTER__"] = aws.Cluster()
+	if _, ok := ctx["Cluster"]; !ok {
+		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
 	}
-
 	return template.RenderString(awsBackendTemplate, ctx)
 }
 
@@ -199,6 +197,7 @@ func getAccount() (string, error) {
 	cmd := exec.Command("aws", "sts", "get-caller-identity")
 	out, err := cmd.Output()
 	if err != nil {
+		fmt.Println(out)
 		return "", err
 	}
 

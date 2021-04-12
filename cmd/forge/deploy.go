@@ -29,7 +29,7 @@ func build(c *cli.Context) error {
 
 		repoName := installation.Repository.Name
 		fmt.Printf("Building workspace for %s\n", repoName)
-		workspace, err := wkspace.New(client, &installation)
+		workspace, err := wkspace.New(client, installation)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func validate(c *cli.Context) error {
 		}
 
 		utils.Highlight("Validating repository %s\n", installation.Repository.Name)
-		workspace, err := wkspace.New(client, &installation)
+		workspace, err := wkspace.New(client, installation)
 		if err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func bounce(c *cli.Context) error {
 		}
 
 		utils.Warn("bouncing deployments in %s\n", installation.Repository.Name)
-		workspace, err := wkspace.New(client, &installation)
+		workspace, err := wkspace.New(client, installation)
 		if err != nil {
 			return err
 		}
@@ -186,7 +186,7 @@ func destroy(c *cli.Context) error {
 		}
 		os.Chdir(dir)
 		utils.Warn("Destroying workspace %s\n", installation.Repository.Name)
-		workspace, err := wkspace.New(client, &installation)
+		workspace, err := wkspace.New(client, installation)
 		if err != nil {
 			return err
 		}

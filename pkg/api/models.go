@@ -19,36 +19,15 @@ type Repository struct {
 	Name        string
 	Description string
 	Icon        string
-	Publisher   Publisher
-	Database    *Database
-	Shell       *Shell
+	Publisher   *Publisher
 }
 
-type Database struct {
-	Target      string
-	Engine      string
-	Name        string
-	Port        int32
-	Credentials *Credentials
-}
-
-type Credentials struct {
-	User   string
-	Secret string
-	Key    string
-}
-
-type Shell struct {
-	Target  string
-	Command string
-	Args    []string
-}
 
 type User struct {
 	Id        string
 	Name      string
 	Email     string
-	Publisher Publisher
+	Publisher *Publisher
 }
 
 type Chart struct {
@@ -56,14 +35,14 @@ type Chart struct {
 	Name          string
 	Description   string
 	LatestVersion string
-	Dependencies  Dependencies
+	Dependencies  *Dependencies
 }
 
 type ChartInstallation struct {
 	Id           string
-	Chart        Chart
-	Version      Version
-	Installation Installation
+	Chart        *Chart
+	Version      *Version
+	Installation *Installation
 }
 
 type Tag struct {
@@ -77,6 +56,7 @@ type Version struct {
 	Package        string
 	ValuesTemplate string
 	Crds           []Crd
+	Dependencies   *Dependencies
 }
 
 type Terraform struct {
@@ -84,14 +64,14 @@ type Terraform struct {
 	Name           string
 	Description    string
 	ValuesTemplate string
-	Dependencies   Dependencies
+	Dependencies   *Dependencies
 	Package        string
 }
 
 type Dependencies struct {
-	Dependencies    []Dependency
+	Dependencies    []*Dependency
 	Providers       []string
-	Wirings         Wirings
+	Wirings         *Wirings
 	Application     bool
 	ProviderWirings map[string]interface{}
 }
@@ -109,40 +89,40 @@ type Wirings struct {
 
 type TerraformInstallation struct {
 	Id           string
-	Installation Installation
-	Terraform    Terraform
-	Version      Version
+	Installation *Installation
+	Terraform    *Terraform
+	Version      *Version
 }
 
 type Installation struct {
-	Repository Repository
-	User       User
+	Repository *Repository
+	User       *User
 	License    string
 	Context    map[string]interface{}
 }
 
 type InstallationEdge struct {
-	Node Installation
+	Node *Installation
 }
 
 type ChartEdge struct {
-	Node Chart
+	Node *Chart
 }
 
 type TerraformEdge struct {
-	Node Terraform
+	Node *Terraform
 }
 
 type VersionEdge struct {
-	Node Version
+	Node *Version
 }
 
 type ChartInstallationEdge struct {
-	Node ChartInstallation
+	Node *ChartInstallation
 }
 
 type TerraformInstallationEdge struct {
-	Node TerraformInstallation
+	Node *TerraformInstallation
 }
 
 type Token struct {
@@ -158,20 +138,20 @@ type Webhook struct {
 type Recipe struct {
 	Id             string
 	Name           string
-	RecipeSections []RecipeSection
+	RecipeSections []*RecipeSection
 }
 
 type RecipeSection struct {
 	Id          string
-	Repository  Repository
-	RecipeItems []RecipeItem
+	Repository  *Repository
+	RecipeItems []*RecipeItem
 }
 
 type RecipeItem struct {
 	Id            string
-	Terraform     Terraform
-	Chart         Chart
-	Configuration []ConfigurationItem
+	Terraform     *Terraform
+	Chart         *Chart
+	Configuration []*ConfigurationItem
 }
 
 type ConfigurationItem struct {
@@ -206,28 +186,6 @@ type Upgrade struct {
 	Id string
 }
 
-const DatabaseFragment = `
-	fragment DatabaseFragment on Database {
-		engine
-		port
-		target
-		name
-		credentials {
-			user
-			secret
-			key
-		}
-	}
-`
-
-const ShellFragment = `
-	fragment ShellFragment on Shell {
-		target
-		command
-		args
-	}
-`
-
 var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id
@@ -235,12 +193,8 @@ var RepositoryFragment = fmt.Sprintf(`
 		description
 		icon
 		publisher { name }
-		database { ...DatabaseFragment }
-		shell { ...ShellFragment }
 	}
-	%s
-	%s
-`, DatabaseFragment, ShellFragment)
+`)
 
 var InstallationFragment = fmt.Sprintf(`
 	fragment InstallationFragment on Installation {
@@ -291,6 +245,7 @@ var VersionFragment = fmt.Sprintf(`
 		valuesTemplate
 		package
 		crds { ...CrdFragment }
+		dependencies { ...DependenciesFragment }
 	}
 	%s
 `, CrdFragment)

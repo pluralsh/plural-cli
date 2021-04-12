@@ -7,14 +7,14 @@ import (
 	toposort "github.com/philopon/go-toposort"
 )
 
-func TopSort(installations []api.Installation) ([]api.Installation, error) {
-	var repoMap = make(map[string]api.Installation)
+func TopSort(installations []*api.Installation) ([]*api.Installation, error) {
+	var repoMap = make(map[string]*api.Installation)
 	graph := toposort.NewGraph(len(installations))
 	for _, installation := range installations {
 		repo := installation.Repository.Name
 		repoMap[repo] = installation
 		graph.AddNode(repo)
-		path := manifestPath(&installation.Repository)
+		path := manifestPath(installation.Repository)
 		man, err := manifest.Read(path)
 		if err != nil {
 			return nil, err
@@ -29,7 +29,7 @@ func TopSort(installations []api.Installation) ([]api.Installation, error) {
 	}
 
 	result, ok := graph.Toposort()
-	var sorted = make([]api.Installation, len(result))
+	var sorted = make([]*api.Installation, len(result))
 	if !ok {
 		return sorted, fmt.Errorf("Cycle detected in dependency graph")
 	}
@@ -40,7 +40,7 @@ func TopSort(installations []api.Installation) ([]api.Installation, error) {
 	return sorted, nil
 }
 
-func Dependencies(repo string, installations []api.Installation) ([]api.Installation, error) {
+func Dependencies(repo string, installations []*api.Installation) ([]*api.Installation, error) {
 	topsorted, err := TopSort(installations)
 	if err != nil {
 		return topsorted, err

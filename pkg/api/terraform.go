@@ -10,13 +10,13 @@ import (
 
 type terraformResponse struct {
 	Terraform struct {
-		Edges []TerraformEdge
+		Edges []*TerraformEdge
 	}
 }
 
 type terraformInstallationResponse struct {
 	TerraformInstallations struct {
-		Edges []TerraformInstallationEdge
+		Edges []*TerraformInstallationEdge
 	}
 }
 
@@ -55,24 +55,24 @@ var terraformUpload = fmt.Sprintf(`
 	%s
 `, TerraformFragment)
 
-func (client *Client) GetTerraforma(repoId string) ([]Terraform, error) {
+func (client *Client) GetTerraforma(repoId string) ([]*Terraform, error) {
 	var resp terraformResponse
 	req := client.Build(terraformQuery)
 	req.Var("id", repoId)
 	err := client.Run(req, &resp)
-	terraform := make([]Terraform, len(resp.Terraform.Edges))
+	terraform := make([]*Terraform, len(resp.Terraform.Edges))
 	for i, edge := range resp.Terraform.Edges {
 		terraform[i] = edge.Node
 	}
 	return terraform, err
 }
 
-func (client *Client) GetTerraformInstallations(repoId string) ([]TerraformInstallation, error) {
+func (client *Client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
 	var resp terraformInstallationResponse
 	req := client.Build(terraformInstallationQuery)
 	req.Var("id", repoId)
 	err := client.Run(req, &resp)
-	inst := make([]TerraformInstallation, len(resp.TerraformInstallations.Edges))
+	inst := make([]*TerraformInstallation, len(resp.TerraformInstallations.Edges))
 	for i, edge := range resp.TerraformInstallations.Edges {
 		inst[i] = edge.Node
 	}

@@ -73,18 +73,6 @@ func pushCommands() []cli.Command {
 			Action:    handleDashboard,
 		},
 		{
-			Name:      "database",
-			Usage:     "registers a new database for a repository",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleDatabase,
-		},
-		{
-			Name:      "shell",
-			Usage:     "registers a new shell for a repository",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    createShell,
-		},
-		{
 			Name:      "crd",
 			Usage:     "registers a new crd for a chart",
 			ArgsUsage: "path/to/def.yaml REPO CHART",
@@ -228,40 +216,6 @@ func handleIntegration(c *cli.Context) error {
 	}
 
 	_, err = client.CreateIntegration(c.Args().Get(1), input)
-	return err
-}
-
-func createShell(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructShellInput(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.CreateShell(c.Args().Get(1), input)
-	return err
-}
-
-func handleDatabase(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructDatabaseInput(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.CreateDatabase(c.Args().Get(1), input)
 	return err
 }
 

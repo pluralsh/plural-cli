@@ -8,19 +8,19 @@ import (
 
 type chartsResponse struct {
 	Charts struct {
-		Edges []ChartEdge
+		Edges []*ChartEdge
 	}
 }
 
 type versionsResponse struct {
 	Versions struct {
-		Edges []VersionEdge
+		Edges []*VersionEdge
 	}
 }
 
 type chartInstallationsResponse struct {
 	ChartInstallations struct {
-		Edges []ChartInstallationEdge
+		Edges []*ChartInstallationEdge
 	}
 }
 
@@ -80,49 +80,49 @@ var packageInstallationsQuery = fmt.Sprintf(`
 	%s
 `, pageSize, pageSize, ChartInstallationFragment, TerraformInstallationFragment)
 
-func (client *Client) GetCharts(repoId string) ([]Chart, error) {
+func (client *Client) GetCharts(repoId string) ([]*Chart, error) {
 	var resp chartsResponse
 	req := client.Build(chartsQuery)
 	req.Var("id", repoId)
 	err := client.Run(req, &resp)
-	charts := make([]Chart, len(resp.Charts.Edges))
+	charts := make([]*Chart, len(resp.Charts.Edges))
 	for i, edge := range resp.Charts.Edges {
 		charts[i] = edge.Node
 	}
 	return charts, err
 }
 
-func (client *Client) GetVersions(chartId string) ([]Version, error) {
+func (client *Client) GetVersions(chartId string) ([]*Version, error) {
 	var resp versionsResponse
 	req := client.Build(versionsQuery)
 	req.Var("id", chartId)
 	err := client.Run(req, &resp)
-	versions := make([]Version, len(resp.Versions.Edges))
+	versions := make([]*Version, len(resp.Versions.Edges))
 	for i, edge := range resp.Versions.Edges {
 		versions[i] = edge.Node
 	}
 	return versions, err
 }
 
-func (client *Client) GetChartInstallations(repoId string) ([]ChartInstallation, error) {
+func (client *Client) GetChartInstallations(repoId string) ([]*ChartInstallation, error) {
 	var resp chartInstallationsResponse
 	req := client.Build(chartInstallationsQuery)
 	req.Var("id", repoId)
 	err := client.Run(req, &resp)
-	insts := make([]ChartInstallation, len(resp.ChartInstallations.Edges))
+	insts := make([]*ChartInstallation, len(resp.ChartInstallations.Edges))
 	for i, edge := range resp.ChartInstallations.Edges {
 		insts[i] = edge.Node
 	}
 	return insts, err
 }
 
-func (client *Client) GetPackageInstallations(repoId string) (charts []ChartInstallation, tfs []TerraformInstallation, err error) {
+func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error) {
 	var resp struct {
 		ChartInstallations struct {
-			Edges []ChartInstallationEdge
+			Edges []*ChartInstallationEdge
 		}
 		TerraformInstallations struct {
-			Edges []TerraformInstallationEdge
+			Edges []*TerraformInstallationEdge
 		}
 	}
 
@@ -133,12 +133,12 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []ChartInst
 		return
 	}
 
-	charts = make([]ChartInstallation, len(resp.ChartInstallations.Edges))
+	charts = make([]*ChartInstallation, len(resp.ChartInstallations.Edges))
 	for i, edge := range resp.ChartInstallations.Edges {
 		charts[i] = edge.Node
 	}
 
-	tfs = make([]TerraformInstallation, len(resp.TerraformInstallations.Edges))
+	tfs = make([]*TerraformInstallation, len(resp.TerraformInstallations.Edges))
 	for i, edge := range resp.TerraformInstallations.Edges {
 		tfs[i] = edge.Node
 	}

@@ -13,8 +13,6 @@ type Lockfile struct {
 	Helm        map[string]string
 	Recipe      map[string]string
 	Integration map[string]string
-	Shell       map[string]string
-	Database    map[string]string
 	Crd         map[string]string
 	Ird         map[string]string
 }
@@ -26,8 +24,6 @@ func lock() *Lockfile {
 		Helm:        map[string]string{},
 		Recipe:      map[string]string{},
 		Integration: map[string]string{},
-		Shell:       map[string]string{},
-		Database:    map[string]string{},
 		Crd:         map[string]string{},
 		Ird:         map[string]string{},
 	}
@@ -71,12 +67,6 @@ func (lock *Lockfile) getSha(name ComponentName, key string) string {
 	case ARTIFACT:
 		sha, _ := lock.Artifact[key]
 		return sha
-	case SHELL:
-		sha, _ := lock.Shell[key]
-		return sha
-	case DATABASE:
-		sha, _ := lock.Database[key]
-		return sha
 	case INTEGRATION:
 		sha, _ := lock.Integration[key]
 		return sha
@@ -102,10 +92,6 @@ func (lock *Lockfile) addSha(name ComponentName, key string, sha string) {
 		lock.Recipe[key] = sha
 	case ARTIFACT:
 		lock.Artifact[key] = sha
-	case SHELL:
-		lock.Shell[key] = sha
-	case DATABASE:
-		lock.Database[key] = sha
 	case INTEGRATION:
 		lock.Integration[key] = sha
 	case CRD:

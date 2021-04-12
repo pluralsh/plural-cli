@@ -8,8 +8,10 @@ import (
 )
 
 func (w *Workspace) DestroyHelm() error {
+	// ensure current kubeconfig is correct before destroying stuff
 	w.Provider.KubeConfig()
-	return utils.Cmd(w.Config, "helm", "del", "--purge", w.Installation.Repository.Name)
+	name := w.Installation.Repository.Name
+	return utils.Cmd(w.Config, "helm", "del", name, "-n", w.Config.Namespace(name))
 }
 
 func (w *Workspace) Bounce() error {

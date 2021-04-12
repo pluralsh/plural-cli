@@ -29,14 +29,15 @@ func Select(force bool) (Provider, error) {
 				Project:  project.Project,
 				Bucket:   project.Bucket,
 				Provider: project.Provider,
+				Region:   project.Region,
 			})
 
 			if force {
 				return prov, err
 			}
 
-			line := fmt.Sprintf("Reuse existing manifest {provider: %s, cluster: %s, bucket: %s} [(y)/n]:",
-				project.Provider, project.Cluster, project.Bucket)
+			line := fmt.Sprintf("Reuse existing manifest {provider: %s, cluster: %s, bucket: %s, region: %s} [(y)/n]:",
+				project.Provider, project.Cluster, project.Bucket, project.Region)
 			val, _ := utils.ReadLine(line)
 
 			if val != "n" {

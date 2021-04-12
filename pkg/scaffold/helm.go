@@ -189,7 +189,7 @@ func repoUrl(repo string) string {
 	return "cm://forge.piazza.app/cm/" + repo
 }
 
-func appVersion(charts []api.ChartInstallation) string {
+func appVersion(charts []*api.ChartInstallation) string {
 	for _, inst := range charts {
 		if inst.Chart.Dependencies.Application {
 			return inst.Version.Version

@@ -2,7 +2,6 @@ package forgefile
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,8 +21,6 @@ const (
 	HELM        ComponentName = "helm"
 	RECIPE      ComponentName = "recipe"
 	INTEGRATION ComponentName = "integration"
-	SHELL       ComponentName = "sh"
-	DATABASE    ComponentName = "db"
 	CRD         ComponentName = "crd"
 	IRD         ComponentName = "ird"
 	COMMAND     ComponentName = "run"
@@ -36,20 +33,16 @@ type Component interface {
 }
 
 func (forge *Forgefile) Execute(f string, lock *Lockfile) (err error) {
+	defer lock.Flush(f)
 	for _, component := range forge.Components {
 		key := component.Key()
 		t := component.Type()
 		sha := lock.getSha(t, key)
 		newsha, err := component.Push(forge.Repo, sha)
 		if err != nil {
-			fmt.Println(err)
-			break
+			return err
 		}
 		lock.addSha(t, key, newsha)
-	}
-
-	if flusherr := lock.Flush(f); flusherr != nil {
-		return flusherr
 	}
 
 	return
@@ -97,16 +90,6 @@ func Parse(f string) (*Forgefile, error) {
 			}
 
 			forge.Components = append(forge.Components, tfs...)
-		case "sh":
-			shells, err := expandGlob(splitline[1], func(targ string) Component {
-				return &Shell{File: targ}
-			})
-
-			if err != nil {
-				return forge, err
-			}
-
-			forge.Components = append(forge.Components, shells...)
 		case "artifact":
 			arts, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Artifact{File: targ, Platform: splitline[2], Arch: splitline[3]}
@@ -147,16 +130,6 @@ func Parse(f string) (*Forgefile, error) {
 			}
 
 			forge.Components = append(forge.Components, integs...)
-		case "db":
-			dbs, err := expandGlob(splitline[1], func(targ string) Component {
-				return &Database{File: targ}
-			})
-
-			if err != nil {
-				return forge, err
-			}
-
-			forge.Components = append(forge.Components, dbs...)
 		case "crd":
 			chart := splitline[2]
 			crds, err := expandGlob(splitline[1], func(targ string) Component {
