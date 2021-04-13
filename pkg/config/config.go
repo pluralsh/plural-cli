@@ -13,26 +13,34 @@ import (
 type Config struct {
 	Email string `json:"email"`
 	Token string `yaml:"token" json:"token"`
-	NamespacePrefix string
+	NamespacePrefix string `yaml:"namespacePrefix"`
+	Endpoint string `yaml:"endpoint"`
+}
+
+type VersionedConfig struct {
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+	Spec       *Config `yaml:"spec"`
 }
 
 func configFile() string {
 	folder, _ := os.UserHomeDir()
-	return path.Join(folder, ".forge", "config.yml")
+	return path.Join(folder, ".plural", "config.yml")
 }
 
 func Read() Config {
 	return Import(configFile())
 }
 
-func Import(file string) (conf Config) {
+func Import(file string) Config {
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
 		return conf
 	}
 
-	yaml.Unmarshal(contents, &conf)
-	return conf
+	versioned := &VersionedConfig{}
+	yaml.Unmarshal(contents, versioned)
+	return *versioned.Spec
 }
 
 func Amend(key string, value string) error {
@@ -43,7 +51,12 @@ func Amend(key string, value string) error {
 }
 
 func (conf *Config) Marshal() ([]byte, error) {
-	return yaml.Marshal(conf)
+	versioned = &VersionedConfig{
+		ApiVersion: "platform.plural.sh/v1alpha1",
+		Kind: "Config"
+		Spec: conf
+	}
+	return yaml.Marshal(&versioned)
 }
 
 func (c *Config) Namespace(ns string) string {
@@ -54,6 +67,15 @@ func (c *Config) Namespace(ns string) string {
 	return ns
 }
 
+func (c *Config) Url() string {
+	host := "https://forge.piazza.app"
+	if (c.Endpoint != "") {
+		host = c.Endpoint
+	}
+
+	return host + "/gql"
+}
+
 func Flush(c *Config) error {
 	io, err := c.Marshal()
 	if err != nil {
@@ -61,7 +83,7 @@ func Flush(c *Config) error {
 	}
 
 	folder, _ := os.UserHomeDir()
-	if err := os.MkdirAll(path.Join(folder, ".forge"), os.ModePerm); err != nil {
+	if err := os.MkdirAll(path.Join(folder, ".plural"), os.ModePerm); err != nil {
 		return err
 	}
 

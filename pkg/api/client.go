@@ -22,12 +22,12 @@ func NewClient() *Client {
 }
 
 func FromConfig(conf *config.Config) *Client {
-	return &Client{graphql.NewClient(endpoint), *conf}
+	return &Client{graphql.NewClient(conf.Url()), *conf}
 }
 
 func NewUploadClient() *Client {
-	client := graphql.NewClient(endpoint, graphql.UseMultipartForm())
 	conf := config.Read()
+	client := graphql.NewClient(conf.Url(), graphql.UseMultipartForm())
 	return &Client{client, conf}
 }
 

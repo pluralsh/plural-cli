@@ -12,8 +12,8 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	app := cli.NewApp()
-	app.Name = "forge"
-	app.Usage = "Tooling to manage your installed forge applications"
+	app.Name = "plural"
+	app.Usage = "Tooling to manage your installed plural applications"
 
 	app.Commands = []cli.Command{
 		{

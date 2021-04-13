@@ -1,7 +1,7 @@
 .PHONY: # ignore
 
 GCP_PROJECT ?= piazzaapp
-APP_NAME ?= forge-cli
+APP_NAME ?= plural-cli
 APP_VSN ?= `cat VERSION`
 BUILD ?= `git rev-parse --short HEAD`
 DKR_HOST ?= dkr.piazza.app
@@ -12,12 +12,12 @@ help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 install:
-	GOBIN=/usr/local/bin go install -ldflags '-s -w' ./cmd/forge/
+	GOBIN=/usr/local/bin go install -ldflags '-s -w' ./cmd/plural/
 
 release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o forge.o ./cmd/forge/
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o plural.o ./cmd/plural/
 
-forge: .PHONY ## uploads to forge
+plural: .PHONY ## uploads to plural
 	forge apply
 
 build: .PHONY ## Build the Docker image
@@ -26,11 +26,11 @@ build: .PHONY ## Build the Docker image
 		-t $(APP_NAME):$(APP_VSN) \
 		-t $(APP_NAME):latest \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
-		-t $(DKR_HOST)/forge/$(APP_NAME):$(APP_VSN) .
+		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
 push: ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
-	docker push $(DKR_HOST)/forge/${APP_NAME}:$(APP_VSN)
+	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
 
 generate:
 	go generate ./...
