@@ -1,0 +1,2 @@
+/**/helm/**/values.yaml filter=forge-crypt diff=forge-crypt
+/**/manifest.yaml filter=forge-crypt diff=forge-crypt

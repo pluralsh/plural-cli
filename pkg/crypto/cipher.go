@@ -45,7 +45,7 @@ func Materialize() (*AESKey, error) {
 
 func getKeyPath() string {
 	folder, _ := os.UserHomeDir()
-	return path.Join(folder, ".forge", "key")
+	return path.Join(folder, ".plural", "key")
 }
 
 func gen() *AESKey {

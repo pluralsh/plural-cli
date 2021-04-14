@@ -124,7 +124,7 @@ func handleHelmUpload(c *cli.Context) error {
 		return err
 	}
 
-	if err := utils.Cmd(&conf, "helm", "repo", "add", repo, fmt.Sprintf("cm://forge.piazza.app/cm/%s", repo)); err != nil {
+	if err := utils.Cmd(&conf, "helm", "repo", "add", repo, fmt.Sprintf("cm://app.plural.sh/cm/%s", repo)); err != nil {
 		return err
 	}
 	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, repo)

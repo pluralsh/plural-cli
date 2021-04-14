@@ -28,7 +28,7 @@ func (a *Crd) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing crd %s for %s\n", a.File, a.Chart)
-	cmd := exec.Command("forge", "push", "crd", a.File, repo, a.Chart)
+	cmd := exec.Command("plural", "push", "crd", a.File, repo, a.Chart)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return newsha, cmd.Run()

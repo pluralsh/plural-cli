@@ -116,7 +116,7 @@ func DefaultExecution(path string, prev *Execution) (e *Execution) {
 	}
 
 	for i := 0; i < len(prev.Steps)-1; i++ {
-		graph.AddEdge(steps[i].Name, steps[i+1].Name)
+		graph.AddEdge(prev.Steps[i].Name, prev.Steps[i+1].Name)
 	}
 
 	finalizedSteps := []*Step{}

@@ -33,7 +33,7 @@ func (a *Artifact) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing artifact %s\n [plat=%s,arch=%s]", a.File, a.Platform, a.Arch)
-	cmd := exec.Command("forge", "push", "artifact", a.File, repo, "--platform", a.Platform, "--arch", a.Arch)
+	cmd := exec.Command("plural", "push", "artifact", a.File, repo, "--platform", a.Platform, "--arch", a.Arch)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

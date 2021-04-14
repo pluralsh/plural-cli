@@ -25,7 +25,7 @@ func (a *Integration) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing integration %s", a.File)
-	cmd, output := executor.SuppressedCommand("forge", "push", "integration", a.File, repo)
+	cmd, output := executor.SuppressedCommand("plural", "push", "integration", a.File, repo)
 
 	err = executor.RunCommand(cmd, output)
 	return newsha, err

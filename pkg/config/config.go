@@ -32,15 +32,15 @@ func Read() Config {
 	return Import(configFile())
 }
 
-func Import(file string) Config {
+func Import(file string) (conf Config) {
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
-		return conf
+		return
 	}
 
-	versioned := &VersionedConfig{}
+	versioned := &VersionedConfig{Spec: &conf}
 	yaml.Unmarshal(contents, versioned)
-	return *versioned.Spec
+	return
 }
 
 func Amend(key string, value string) error {
@@ -51,10 +51,10 @@ func Amend(key string, value string) error {
 }
 
 func (conf *Config) Marshal() ([]byte, error) {
-	versioned = &VersionedConfig{
+	versioned := &VersionedConfig{
 		ApiVersion: "platform.plural.sh/v1alpha1",
-		Kind: "Config"
-		Spec: conf
+		Kind: "Config",
+		Spec: conf,
 	}
 	return yaml.Marshal(&versioned)
 }
@@ -68,7 +68,7 @@ func (c *Config) Namespace(ns string) string {
 }
 
 func (c *Config) Url() string {
-	host := "https://forge.piazza.app"
+	host := "https://app.plural.sh"
 	if (c.Endpoint != "") {
 		host = c.Endpoint
 	}

@@ -25,7 +25,7 @@ func (a *Helm) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing helm %s", a.File)
-	cmd, output := executor.SuppressedCommand("forge", "push", "helm", a.File, repo)
+	cmd, output := executor.SuppressedCommand("plural", "push", "helm", a.File, repo)
 
 	err = executor.RunCommand(cmd, output)
 	return newsha, err

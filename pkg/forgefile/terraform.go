@@ -30,7 +30,7 @@ func (a *Terraform) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing terraform %s\n", a.File)
-	cmd := exec.Command("forge", "push", "terraform", a.File, repo)
+	cmd := exec.Command("plural", "push", "terraform", a.File, repo)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

@@ -25,7 +25,7 @@ func (a *ResourceDefinition) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing integration definition %s", a.File)
-	cmd, output := executor.SuppressedCommand("forge", "push", "resourcedefinition", a.File, repo)
+	cmd, output := executor.SuppressedCommand("plural", "push", "resourcedefinition", a.File, repo)
 
 	err = executor.RunCommand(cmd, output)
 	return newsha, err

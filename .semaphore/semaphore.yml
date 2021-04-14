@@ -1,5 +1,5 @@
 version: v1.0
-name: Forge
+name: plural-cli
 agent:
   machine:
     type: e1-standard-2
@@ -13,16 +13,17 @@ blocks:
     - name: GCP
     - name: gcp-test
     - name: forge
+    - name: plural
     prologue:
       commands:
       # Authenticate using the file injected from the secret
       - gcloud auth activate-service-account --key-file=.secrets/gcp-piazzaapp.json
       # Don't forget -q to silence confirmation prompts
       - gcloud auth configure-docker -q
-      - docker login -u mguarino46@gmail.com -p $FORGE_ACCESS_TOKEN dkr.piazza.app
+      - docker login -u mjg@plural.sh -p $PLURAL_ACCESS_TOKEN dkr.plural.sh
       - checkout
     jobs:
-    - name: "Build forge"
+    - name: "Build plural"
       commands:
       - make build
       - make push

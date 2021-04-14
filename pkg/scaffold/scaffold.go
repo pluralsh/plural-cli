@@ -78,7 +78,7 @@ func merge(build *Build, base *Build) *Build {
 	}
 
 	for i := 0; i < len(base.Scaffolds)-1; i++ {
-		graph.AddEdge(build.Scaffolds[i].Name, build.Scaffolds[i+1].Name)
+		graph.AddEdge(base.Scaffolds[i].Name, base.Scaffolds[i+1].Name)
 	}
 
 	sorted, ok := graph.Topsort()

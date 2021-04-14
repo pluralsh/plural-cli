@@ -25,7 +25,7 @@ func (a *Recipe) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("pushing recipe %s", a.File)
-	cmd, output := executor.SuppressedCommand("forge", "push", "recipe", a.File, repo)
+	cmd, output := executor.SuppressedCommand("plural", "push", "recipe", a.File, repo)
 
 	err = executor.RunCommand(cmd, output)
 	return newsha, err
