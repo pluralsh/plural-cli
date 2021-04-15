@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/michaeljguarino/forge/pkg/api"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 	"os"

@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils"
 	"os"
 	"path"
 	"path/filepath"

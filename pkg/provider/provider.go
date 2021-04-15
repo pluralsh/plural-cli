@@ -2,8 +2,8 @@ package provider
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/manifest"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"strconv"
 	"strings"
 )

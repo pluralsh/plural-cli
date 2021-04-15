@@ -1,5 +1,0 @@
-name: forge
-readme: CLI for building and deploying forge workspaces
-type: cli
-blob: forge.o
-readme: .forge/forge-readme.md

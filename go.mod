@@ -1,4 +1,4 @@
-module github.com/michaeljguarino/forge
+module github.com/pluralsh/plural
 
 go 1.13
 

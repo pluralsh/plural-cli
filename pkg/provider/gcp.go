@@ -11,9 +11,9 @@ import (
 	"github.com/mholt/archiver/v3"
 
 	"cloud.google.com/go/storage"
-	"github.com/michaeljguarino/forge/pkg/manifest"
-	"github.com/michaeljguarino/forge/pkg/template"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
 	"google.golang.org/api/option"
 )
 

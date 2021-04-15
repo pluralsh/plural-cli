@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 

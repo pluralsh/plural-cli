@@ -7,9 +7,9 @@ import (
 
 	"github.com/rodaine/hclencoder"
 
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/utils"
-	"github.com/michaeljguarino/forge/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
 type Scaffold struct {

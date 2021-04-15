@@ -7,8 +7,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/docker/libtrust"
-	"github.com/michaeljguarino/forge/pkg/crypto"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 	"io"
 	"io/ioutil"
@@ -130,10 +130,10 @@ func handleDecrypt(c *cli.Context) error {
 
 func cryptoInit(c *cli.Context) error {
 	encryptConfig := [][]string{
-		{"filter.forge-crypt.smudge", "forge crypto decrypt"},
-		{"filter.forge-crypt.clean", "forge crypto encrypt"},
-		{"filter.forge-crypt.required", "true"},
-		{"diff.forge-crypt.textconv", "forge crypto decrypt"},
+		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
+		{"filter.plural-crypt.clean", "plural crypto encrypt"},
+		{"filter.plural-crypt.required", "true"},
+		{"diff.plural-crypt.textconv", "plural crypto decrypt"},
 	}
 
 	utils.Highlight("Creating git encryption filters\n\n")

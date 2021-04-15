@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/template"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/template"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"os"

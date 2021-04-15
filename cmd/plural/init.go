@@ -9,11 +9,11 @@ import (
 	"runtime"
 	"github.com/mholt/archiver/v3"
 
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/config"
-	"github.com/michaeljguarino/forge/pkg/crypto"
-	"github.com/michaeljguarino/forge/pkg/utils"
-	"github.com/michaeljguarino/forge/pkg/provider"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/urfave/cli"
 )
 

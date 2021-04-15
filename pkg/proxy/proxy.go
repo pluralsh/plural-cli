@@ -3,8 +3,8 @@ package proxy
 import (
 	"fmt"
 
-	"github.com/michaeljguarino/forge/pkg/types/v1alpha1"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/types/v1alpha1"
+	"github.com/pluralsh/plural/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -1,8 +1,8 @@
 package wkspace
 
 import (
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
 )
 
 func (wk *Workspace) BuildManifest() *manifest.Manifest {

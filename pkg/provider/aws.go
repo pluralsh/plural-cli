@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/michaeljguarino/forge/pkg/manifest"
-	"github.com/michaeljguarino/forge/pkg/template"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type AWSProvider struct {

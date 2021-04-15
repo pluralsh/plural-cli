@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"io/ioutil"
 	"github.com/hashicorp/hcl"
-	"github.com/michaeljguarino/forge/pkg/executor"
+	"github.com/pluralsh/plural/pkg/executor"
 )
 
 func Read(path string) (*Build, error) {

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl"
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/rodaine/hclencoder"
 )
 

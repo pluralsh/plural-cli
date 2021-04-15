@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/config"
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/forgefile"
-	"github.com/michaeljguarino/forge/pkg/template"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/forgefile"
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
 

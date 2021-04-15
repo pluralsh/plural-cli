@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/types/v1alpha1"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/types/v1alpha1"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func fetchSecret(namespace string, k *utils.Kube, creds *v1alpha1.Credentials) (string, error) {

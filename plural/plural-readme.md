@@ -1,16 +1,16 @@
-**forge**
+**plural**
 
-cli for managing forge.  Includes utilities for creating workspaces, validating dependencies are satisfied and deploying workspaces.
+cli for managing plural.  Includes utilities for creating workspaces, validating dependencies are satisfied and deploying workspaces.
 
 
 ```bash
-> forge --help
+> plural --help
 
 NAME:
-   forge - Tooling to manage your installed forge applications
+   plural - Tooling to manage your installed plural applications
 
 USAGE:
-   forge [global options] command [command options] [arguments...]
+   plural [global options] command [command options] [arguments...]
 
 VERSION:
    0.0.0
@@ -23,11 +23,11 @@ COMMANDS:
    bounce, b     redeploys the charts in a workspace
    destroy, b    iterates through all installations in reverse topological order, deleting helm installations and terraform
    init          initializes charmart
-   import        imports forge config from another file
+   import        imports plural config from another file
    test          validate a values templace
-   crypto        forge encryption utilities
+   crypto        plural encryption utilities
    push          utilities for pushing tf or helm packages
-   api           inspect the forge api
+   api           inspect the plural api
    config, conf  reads/modifies cli configuration
    help, h       Shows a list of commands or help for one command
 

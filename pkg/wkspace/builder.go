@@ -5,14 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/config"
-	"github.com/michaeljguarino/forge/pkg/crypto"
-	"github.com/michaeljguarino/forge/pkg/diff"
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/manifest"
-	"github.com/michaeljguarino/forge/pkg/provider"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/diff"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type Workspace struct {

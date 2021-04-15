@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/michaeljguarino/forge/pkg/config"
+	"github.com/pluralsh/plural/pkg/config"
 	"os"
 	"fmt"
 	"os/exec"

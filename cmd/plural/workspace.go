@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/michaeljguarino/forge/pkg/utils"
-	"github.com/michaeljguarino/forge/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 	"os"
 	"os/exec"

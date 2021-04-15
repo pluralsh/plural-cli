@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/diff"
-	"github.com/michaeljguarino/forge/pkg/scaffold"
-	"github.com/michaeljguarino/forge/pkg/utils"
-	"github.com/michaeljguarino/forge/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/diff"
+	"github.com/pluralsh/plural/pkg/scaffold"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 

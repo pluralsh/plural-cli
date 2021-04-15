@@ -6,7 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func MakeTemplate(tmplate string) (*template.Template, error) {

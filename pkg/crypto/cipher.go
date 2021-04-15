@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"

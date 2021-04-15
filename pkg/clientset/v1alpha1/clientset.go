@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/michaeljguarino/forge/pkg/types/v1alpha1"
+	"github.com/pluralsh/plural/pkg/types/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"

@@ -4,8 +4,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/michaeljguarino/forge/pkg/executor"
-	"github.com/michaeljguarino/forge/pkg/utils"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type Terraform struct {

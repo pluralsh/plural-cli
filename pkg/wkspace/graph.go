@@ -2,8 +2,8 @@ package wkspace
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
 	toposort "github.com/philopon/go-toposort"
 )
 

@@ -2,7 +2,7 @@ package wkspace
 
 import (
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/provider"
+	"github.com/pluralsh/plural/pkg/provider"
 )
 
 func (wk *Workspace) Validate() error {

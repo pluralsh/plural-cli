@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/michaeljguarino/forge/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"net/http"

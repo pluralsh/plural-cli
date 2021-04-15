@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/michaeljguarino/forge/pkg/proxy"
-	"github.com/michaeljguarino/forge/pkg/config"
+	"github.com/pluralsh/plural/pkg/proxy"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 )

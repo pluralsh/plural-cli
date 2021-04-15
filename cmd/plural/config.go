@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/michaeljguarino/forge/pkg/config"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
 	"os"
 )

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/michaeljguarino/forge/pkg/api"
-	"github.com/michaeljguarino/forge/pkg/utils"
-	"github.com/michaeljguarino/forge/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
 func (s *Scaffold) buildCrds(wk *wkspace.Workspace) error {

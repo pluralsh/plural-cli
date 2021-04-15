@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/michaeljguarino/forge/pkg/config"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/michaeljguarino/graphql"
 )
 
-const endpoint = "https://forge.piazza.app/gql"
 const pageSize = 100
 
 type Client struct {
