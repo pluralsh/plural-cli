@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
@@ -48,7 +49,7 @@ func (s *Scaffold) createChartDependencies(w *wkspace.Workspace, name string) er
 		dependencies[i] = dependency{
 			chartInstallation.Chart.Name,
 			chartInstallation.Version.Version,
-			repoUrl(repo.Name),
+			repoUrl(w, repo.Name),
 		}
 	}
 
@@ -185,8 +186,9 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	return nil
 }
 
-func repoUrl(repo string) string {
-	return "cm://app.plural.sh/cm/" + repo
+func repoUrl(w *wkspace.Workspace, repo string) string {
+	url := strings.ReplaceAll(w.Config.BaseUrl(), "https", "cm")
+	return fmt.Sprintf("%s/cm/%s", url, repo)
 }
 
 func appVersion(charts []*api.ChartInstallation) string {

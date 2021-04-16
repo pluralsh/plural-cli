@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -124,7 +125,8 @@ func handleHelmUpload(c *cli.Context) error {
 		return err
 	}
 
-	if err := utils.Cmd(&conf, "helm", "repo", "add", repo, fmt.Sprintf("cm://app.plural.sh/cm/%s", repo)); err != nil {
+	cmUrl := strings.ReplaceAll(conf.BaseUrl(), "https", "cm")
+	if err := utils.Cmd(&conf, "helm", "repo", "add", repo, fmt.Sprintf("%s/cm/%s", cmUrl, repo)); err != nil {
 		return err
 	}
 	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, repo)

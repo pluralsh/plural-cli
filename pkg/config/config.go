@@ -68,12 +68,15 @@ func (c *Config) Namespace(ns string) string {
 }
 
 func (c *Config) Url() string {
+	return c.BaseUrl() + "/gql"
+}
+
+func (c *Config) BaseUrl() string {
 	host := "https://app.plural.sh"
 	if (c.Endpoint != "") {
 		host = c.Endpoint
 	}
-
-	return host + "/gql"
+	return host
 }
 
 func Flush(c *Config) error {

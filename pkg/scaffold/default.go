@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"github.com/hashicorp/hcl"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
 func Read(path string) (*Build, error) {
@@ -23,7 +24,7 @@ func Read(path string) (*Build, error) {
 	return &build, nil
 }
 
-func Default(name string) (b *Build) {
+func Default(w *wkspace.Workspace, name string) (b *Build) {
 	return &Build{
 		Metadata: &Metadata{Name: name},
 		Scaffolds: []*Scaffold{
@@ -45,7 +46,7 @@ func Default(name string) (b *Build) {
 					{
 						Name:    "add-repo",
 						Command: "helm",
-						Args:    []string{"repo", "add", name, repoUrl(name)},
+						Args:    []string{"repo", "add", name, repoUrl(w, name)},
 						Target:  "requirements.yaml",
 						Sha:     "",
 					},

@@ -46,7 +46,7 @@ func Scaffolds(wk *wkspace.Workspace) (*Build, error) {
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
 	build, err := Read(wkspaceRoot)
-	def := Default(name)
+	def := Default(wk, name)
 	if err != nil {
 		return def, nil
 	}
