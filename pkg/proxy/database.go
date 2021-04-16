@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural/pkg/types/v1alpha1"
+	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/utils"
 	"os"
 	"os/exec"

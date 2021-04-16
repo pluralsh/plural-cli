@@ -3,13 +3,14 @@ package utils
 import (
 	"os"
 	"path/filepath"
+	"context"
 
-	"github.com/pluralsh/plural/pkg/clientset/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
+	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
 )
 
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -20,7 +21,7 @@ func InKubernetes() bool {
 
 type Kube struct {
 	Kube  *kubernetes.Clientset
-	Forge v1alpha1.Clientset
+	Plural *pluralv1alpha1.Clientset
 }
 
 func Kubernetes() (*Kube, error) {
@@ -36,14 +37,14 @@ func Kubernetes() (*Kube, error) {
 		return nil, err
 	}
 
-	forgeclient, err := v1alpha1.NewForConfig(config)
+	plural, err := pluralv1alpha1.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Kube{Kube: clientset, Forge: forgeclient}, nil
+	return &Kube{Kube: clientset, Plural: plural}, nil
 }
 
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
-	return k.Kube.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }

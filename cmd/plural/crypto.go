@@ -18,8 +18,8 @@ import (
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
 
-const gitattributes = `/**/helm/**/values.yaml filter=forge-crypt diff=forge-crypt
-/**/manifest.yaml filter=forge-crypt diff=forge-crypt
+const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
+/**/manifest.yaml filter=plural-crypt diff=plural-crypt
 `
 
 const gitignore = `/**/.terraform
@@ -139,7 +139,7 @@ func cryptoInit(c *cli.Context) error {
 	utils.Highlight("Creating git encryption filters\n\n")
 	for _, conf := range encryptConfig {
 		if err := gitConfig(conf[0], conf[1]); err != nil {
-			panic(err)
+			return err
 		}
 	}
 

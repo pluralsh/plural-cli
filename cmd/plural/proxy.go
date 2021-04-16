@@ -37,7 +37,7 @@ func handleProxyList(c *cli.Context) error {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Type", "Target"})
 	for _, p := range proxies.Items {
-		table.Append([]string{p.Name, p.Spec.Type, p.Spec.Target})
+		table.Append([]string{p.Name, string(p.Spec.Type), p.Spec.Target})
 	}
 	table.Render()
 	return nil
