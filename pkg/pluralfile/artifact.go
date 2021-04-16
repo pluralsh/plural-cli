@@ -1,4 +1,4 @@
-package forgefile
+package pluralfile
 
 import (
 	"fmt"

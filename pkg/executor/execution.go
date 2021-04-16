@@ -146,6 +146,6 @@ func (e *Execution) Flush(root string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
-func forgefile(base, name string) string {
+func pluralfile(base, name string) string {
 	return filepath.Join(base, ".forge", name)
 }

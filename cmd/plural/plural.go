@@ -44,11 +44,11 @@ func main() {
 		},
 		{
 			Name:  "apply",
-			Usage: "applys the current forgefile",
+			Usage: "applys the current pluralfile",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "file, f",
-					Usage: "forgefile to use",
+					Usage: "pluralfile to use",
 				},
 			},
 			Action: apply,

@@ -109,7 +109,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 		{
 			Name:    "kube-init",
 			Wkdir:   path,
-			Target:  forgefile(path, "NONCE"),
+			Target:  pluralfile(path, "NONCE"),
 			Command: "forge",
 			Args:    []string{"wkspace", "kube-init", path},
 			Sha:     "",
@@ -177,6 +177,6 @@ func (d *Diff) Flush(root string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
-func forgefile(base, name string) string {
+func pluralfile(base, name string) string {
 	return filepath.Join(base, ".forge", name)
 }

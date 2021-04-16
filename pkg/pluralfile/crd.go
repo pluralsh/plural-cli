@@ -1,4 +1,4 @@
-package forgefile
+package pluralfile
 
 import (
 	"github.com/pluralsh/plural/pkg/executor"

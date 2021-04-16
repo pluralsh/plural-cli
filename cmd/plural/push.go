@@ -10,7 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/forgefile"
+	"github.com/pluralsh/plural/pkg/pluralfile"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
@@ -83,7 +83,7 @@ func pushCommands() []cli.Command {
 
 func apply(c *cli.Context) error {
 	path, _ := os.Getwd()
-	var file = filepath.Join(path, "Forgefile")
+	var file = filepath.Join(path, "Pluralfile")
 	if c.IsSet("file") {
 		file, _ = filepath.Abs(c.String("file"))
 	}
@@ -92,12 +92,12 @@ func apply(c *cli.Context) error {
 		return err
 	}
 
-	forge, err := forgefile.Parse(file)
+	plrl, err := pluralfile.Parse(file)
 	if err != nil {
 		return err
 	}
-	lock := forgefile.Lock(file)
-	return forge.Execute(file, lock)
+	lock := pluralfile.Lock(file)
+	return plrl.Execute(file, lock)
 }
 
 func handleTerraformUpload(c *cli.Context) error {

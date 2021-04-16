@@ -1,4 +1,4 @@
-package forgefile
+package pluralfile
 
 import (
 	"io/ioutil"
@@ -42,7 +42,7 @@ func Lock(path string) *Lockfile {
 }
 
 func lockPath(path string) string {
-	return filepath.Join(filepath.Dir(path), "forge.lock")
+	return filepath.Join(filepath.Dir(path), "plural.lock")
 }
 
 func (lock *Lockfile) Flush(path string) error {

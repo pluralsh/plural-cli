@@ -25,7 +25,7 @@ func defaultSteps(path string) []*Step {
 		{
 			Name:    "kube-init",
 			Wkdir:   path,
-			Target:  forgefile(path, "NONCE"),
+			Target:  pluralfile(path, "NONCE"),
 			Command: "forge",
 			Args:    []string{"wkspace", "kube-init", path},
 			Sha:     "",

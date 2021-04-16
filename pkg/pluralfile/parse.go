@@ -1,4 +1,4 @@
-package forgefile
+package pluralfile
 
 import (
 	"bufio"
@@ -49,14 +49,14 @@ func (forge *Forgefile) Execute(f string, lock *Lockfile) (err error) {
 }
 
 func Parse(f string) (*Forgefile, error) {
-	forgefile, err := os.Open(f)
+	pluralfile, err := os.Open(f)
 	forge := &Forgefile{}
 	if err != nil {
 		return forge, err
 	}
-	defer forgefile.Close()
+	defer pluralfile.Close()
 
-	scanner := bufio.NewScanner(forgefile)
+	scanner := bufio.NewScanner(pluralfile)
 	for scanner.Scan() {
 		line := scanner.Text()
 		ignore, _ := regexp.MatchString(`^\s*$`, line)
