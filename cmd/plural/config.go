@@ -23,6 +23,23 @@ func configCommands() []cli.Command {
 	}
 }
 
+func profileCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "use",
+			Usage:     "moves the config in PROFILE to the current config",
+			ArgsUsage: "PROFILE",
+			Action:    handleUseProfile,
+		},
+		{
+			Name:      "save",
+			Usage:     "saves the current config as PROFILE",
+			ArgsUsage: "PROFILE",
+			Action:    handleSaveProfile,
+		},
+	}
+}
+
 func handleAmend(c *cli.Context) error {
 	return config.Amend(c.Args().Get(0), c.Args().Get(1))
 }
@@ -36,4 +53,13 @@ func handleRead(c *cli.Context) error {
 
 	os.Stdout.Write(d)
 	return nil
+}
+
+func handleUseProfile(c *cli.Context) error {
+	return config.Profile(c.Args().Get(0))
+}
+
+func handleSaveProfile(c *cli.Context) error {
+	conf := config.Read()
+	return conf.SaveProfile(c.Args().Get(0))
 }

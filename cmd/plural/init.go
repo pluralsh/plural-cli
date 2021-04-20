@@ -24,9 +24,24 @@ const (
 )
 
 func handleInit(c *cli.Context) error {
-	conf := config.Read()
+	if err := handleLogin(c); err != nil {
+		return err
+	}
+
+	if err := cryptoInit(c); err != nil {
+		return err
+	}
+
+	utils.Success("Workspace is properly configured!\n")
+	return nil
+}
+
+func handleLogin(c *cli.Context) error {
+	conf := &config.Config{}
 	conf.Token = ""
-	client := api.FromConfig(&conf)
+	conf.Endpoint = c.String("endpoint")
+	client := api.FromConfig(conf)
+
 	email, _ := utils.ReadLine("Enter your email: ")
 	pwd, _ := utils.ReadPwd("Enter password: ")
 	result, err := client.Login(email, pwd)
@@ -38,20 +53,14 @@ func handleInit(c *cli.Context) error {
 	conf.Email = email
 	conf.Token = result
 
-	client = api.FromConfig(&conf)
+	client = api.FromConfig(conf)
 	accessToken, err := client.GrabAccessToken()
 	if err != nil {
 		return err
 	}
+
 	conf.Token = accessToken
-	config.Flush(&conf)
-
-	if err := cryptoInit(c); err != nil {
-		return err
-	}
-
-	utils.Success("Workspace is properly configured!\n")
-	return nil
+	return conf.Flush()
 }
 
 func handleImport(c *cli.Context) error {
@@ -61,7 +70,9 @@ func handleImport(c *cli.Context) error {
 	}
 
 	conf := config.Import(filepath.Join(dir, "config.yml"))
-	config.Flush(&conf)
+	if err := conf.Flush(); err != nil {
+		return err
+	}
 
 	if err := cryptoInit(c); err != nil {
 		return err
@@ -144,6 +155,12 @@ func handleInstall(c *cli.Context) (err error) {
 		return 
 	})
 	
+	if err != nil { return }
+
+	conf := config.Read()
+	err = utils.Cmd(&conf, "helm", "plugin" , "install" , "https://github.com/chartmuseum/helm-push")
+	if err != nil { return }
+	err = utils.Cmd(&conf, "helm", "plugin" , "install" , "https://github.com/databus23/helm-diff")
 	if err != nil { return }
 
 	prov, err := provider.Select(true)

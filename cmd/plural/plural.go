@@ -87,8 +87,19 @@ func main() {
 		},
 		{
 			Name:   "init",
-			Usage:  "initializes forge",
+			Usage:  "initializes plural within a git repo",
 			Action: handleInit,
+		},
+		{
+			Name:   "login",
+			Usage:  "logs into plural and saves credentials to the current config profile",
+			Action: handleLogin,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "endpoint",
+					Usage: "the endpoint for the plural installation you're working with",
+				},
+			},
 		},
 		{
 			Name:   "install",
@@ -138,20 +149,9 @@ func main() {
 			Subcommands: workspaceCommands(),
 		},
 		{
-			Name:    "webhook",
-			Aliases: []string{"wh"},
-			Usage:   "Posts to a watchman webhook",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "secret",
-					Usage: "the hmac secret to use",
-				},
-				cli.StringFlag{
-					Name:  "url",
-					Usage: "the url for your watchman instance",
-				},
-			},
-			Action: handleWebhook,
+			Name:        "profile",
+			Usage:       "Commands for managing config profiles for plural",
+			Subcommands: profileCommands(),
 		},
 		{
 			Name: "upgrade",

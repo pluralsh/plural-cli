@@ -32,6 +32,12 @@ func Read() Config {
 	return Import(configFile())
 }
 
+func Profile(name string) error {
+	folder, _ := os.UserHomeDir()
+	conf := Import(path.Join(folder, ".plural", name + ".yml"))
+	return conf.Flush()
+}
+
 func Import(file string) (conf Config) {
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -47,7 +53,7 @@ func Amend(key string, value string) error {
 	key = strings.Title(key)
 	conf := Read()
 	reflections.SetField(&conf, key, value)
-	return Flush(&conf)
+	return conf.Flush()
 }
 
 func (conf *Config) Marshal() ([]byte, error) {
@@ -74,12 +80,16 @@ func (c *Config) Url() string {
 func (c *Config) BaseUrl() string {
 	host := "https://app.plural.sh"
 	if (c.Endpoint != "") {
-		host = c.Endpoint
+		host = fmt.Sprintf("https://%s", c.Endpoint)
 	}
 	return host
 }
 
-func Flush(c *Config) error {
+func (c *Config) SaveProfile(name string) error {
+	return c.Save(fmt.Sprintf("%s.yml", name))
+}
+
+func (c *Config) Save(filename string) error {
 	io, err := c.Marshal()
 	if err != nil {
 		return err
@@ -90,5 +100,9 @@ func Flush(c *Config) error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFile(), io, 0644)
+	return ioutil.WriteFile(path.Join(folder, ".plural", filename), io, 0644)
+}
+
+func (c *Config) Flush() error {
+	return c.Save("config.yml")
 }
