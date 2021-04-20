@@ -10,16 +10,23 @@ import (
 	"strings"
 )
 
+
+type Metadata struct {
+	Name string `yaml:"name"`
+}
+
 type Config struct {
 	Email string `json:"email"`
 	Token string `yaml:"token" json:"token"`
 	NamespacePrefix string `yaml:"namespacePrefix"`
 	Endpoint string `yaml:"endpoint"`
+	metadata *Metadata ``
 }
 
 type VersionedConfig struct {
 	ApiVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
+	Metadata   *Metadata `yaml:"metadata"`
 	Spec       *Config `yaml:"spec"`
 }
 
@@ -38,6 +45,31 @@ func Profile(name string) error {
 	return conf.Flush()
 }
 
+func Profiles() ([]*VersionedConfig, error) {
+	folder, _ := os.UserHomeDir()
+	confDir := path.Join(folder, ".plural")
+	files, err := ioutil.ReadDir(confDir)
+	confs := []*VersionedConfig{}
+	if err != nil {
+			return confs, err
+	}
+
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), "config.yml") && strings.HasSuffix(f.Name(), ".yml") {
+			contents, err := ioutil.ReadFile(path.Join(confDir, f.Name()))
+			if err != nil {
+				return confs, err
+			}
+
+			versioned := &VersionedConfig{}
+			yaml.Unmarshal(contents, versioned)
+			confs = append(confs, versioned)
+		}
+	}
+
+	return confs, nil
+}
+
 func Import(file string) (conf Config) {
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -46,6 +78,7 @@ func Import(file string) (conf Config) {
 
 	versioned := &VersionedConfig{Spec: &conf}
 	yaml.Unmarshal(contents, versioned)
+	conf.metadata = versioned.Metadata
 	return
 }
 
@@ -61,6 +94,7 @@ func (conf *Config) Marshal() ([]byte, error) {
 		ApiVersion: "platform.plural.sh/v1alpha1",
 		Kind: "Config",
 		Spec: conf,
+		Metadata: conf.metadata,
 	}
 	return yaml.Marshal(&versioned)
 }
@@ -86,6 +120,7 @@ func (c *Config) BaseUrl() string {
 }
 
 func (c *Config) SaveProfile(name string) error {
+	c.metadata = &Metadata{Name: name}
 	return c.Save(fmt.Sprintf("%s.yml", name))
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
+	"github.com/olekukonko/tablewriter"
 	"os"
 )
 
@@ -37,6 +38,12 @@ func profileCommands() []cli.Command {
 			ArgsUsage: "PROFILE",
 			Action:    handleSaveProfile,
 		},
+		{
+			Name:      "list",
+			Usage:     "lists all saved profiles",
+			ArgsUsage: "",
+			Action:    listProfiles,
+		},
 	}
 }
 
@@ -62,4 +69,20 @@ func handleUseProfile(c *cli.Context) error {
 func handleSaveProfile(c *cli.Context) error {
 	conf := config.Read()
 	return conf.SaveProfile(c.Args().Get(0))
+}
+
+func listProfiles(c *cli.Context) error {
+	profiles, err := config.Profiles()
+	if err != nil {
+		return err
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Email", "Endpoint"})
+	for _, profile := range profiles {
+		table.Append([]string{profile.Metadata.Name, profile.Spec.Email, profile.Spec.BaseUrl()})
+	}
+
+	table.Render()
+	return nil
 }
