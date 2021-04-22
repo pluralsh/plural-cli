@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -107,11 +108,25 @@ func handleTerraformUpload(c *cli.Context) error {
 	return err
 }
 
+func handleHelmTemplate(c *cli.Context) error {
+	conf := config.Read()
+	f, err := tmpValuesFile(c.String("values"), &conf)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+
+	cmd := exec.Command("helm", "template", c.Args().Get(0), "-f", f.Name())
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
+}
+
 func handleHelmUpload(c *cli.Context) error {
 	conf := config.Read()
 	pth, repo := c.Args().Get(0), c.Args().Get(1)
 
-	f, err := tmpValuesFile(pth, &conf)
+	f, err := tmpValuesFile(filepath.Join(pth, "values.yaml.tpl"), &conf)
 	if err != nil {
 		return err
 	}
@@ -133,7 +148,7 @@ func handleHelmUpload(c *cli.Context) error {
 }
 
 func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
-	valuesTmpl, err := utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
+	valuesTmpl, err := utils.ReadFile(path)
 	if err != nil {
 		return
 	}

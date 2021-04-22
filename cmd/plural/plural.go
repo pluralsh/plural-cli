@@ -154,6 +154,18 @@ func main() {
 			Subcommands: profileCommands(),
 		},
 		{
+			Name: "template",
+			Aliases: []string{"tpl"},
+			Usage: "templates a helm chart to be uploaded to plural",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "values",
+					Usage: "the values file",
+				},
+			},
+			Action: handleHelmTemplate,
+		},
+		{
 			Name: "upgrade",
 			Aliases: []string{"up"},
 			Usage: "Creates an upgrade for a repository",
