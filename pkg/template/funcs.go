@@ -90,7 +90,8 @@ func knownHosts() (string, error) {
 		return "", err
 	}
 
-	return utils.ReadFile(known_hosts)
+	res, _ := utils.ReadFile(known_hosts)
+	return res, nil
 }
 
 func probe(obj interface{}, path string) (interface{}, error) {

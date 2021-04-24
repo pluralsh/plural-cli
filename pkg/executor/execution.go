@@ -22,12 +22,12 @@ type Metadata struct {
 }
 
 const (
-	forgeIgnore = `terraform/.terraform`
+	pluralIgnore = `terraform/.terraform`
 )
 
 func Ignore(root string) error {
-	ignoreFile := filepath.Join(root, ".forgeignore")
-	return ioutil.WriteFile(ignoreFile, []byte(forgeIgnore), 0644)
+	ignoreFile := filepath.Join(root, ".pluralignore")
+	return ioutil.WriteFile(ignoreFile, []byte(pluralIgnore), 0644)
 }
 
 func GetExecution(path, name string) (*Execution, error) {
@@ -71,7 +71,7 @@ func (e *Execution) Execute() error {
 }
 
 func (e *Execution) IgnoreFile(root string) ([]string, error) {
-	ignorePath := filepath.Join(root, e.Metadata.Path, ".forgeignore")
+	ignorePath := filepath.Join(root, e.Metadata.Path, ".pluralignore")
 	contents, err := ioutil.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
@@ -147,5 +147,5 @@ func (e *Execution) Flush(root string) error {
 }
 
 func pluralfile(base, name string) string {
-	return filepath.Join(base, ".forge", name)
+	return filepath.Join(base, ".plural", name)
 }

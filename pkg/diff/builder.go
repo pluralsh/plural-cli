@@ -69,7 +69,7 @@ func (e *Diff) Execute() error {
 }
 
 func (e *Diff) IgnoreFile(root string) ([]string, error) {
-	ignorePath := filepath.Join(root, e.Metadata.Path, ".forgeignore")
+	ignorePath := filepath.Join(root, e.Metadata.Path, ".pluralignore")
 	contents, err := ioutil.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
@@ -102,7 +102,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 			Name:    "terraform",
 			Wkdir:   filepath.Join(path, "terraform"),
 			Target:  filepath.Join(path, "terraform"),
-			Command: "forge",
+			Command: "plural",
 			Args:    []string{"wkspace", "terraform-diff", path},
 			Sha:     "",
 		},
@@ -110,7 +110,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 			Name:    "kube-init",
 			Wkdir:   path,
 			Target:  pluralfile(path, "NONCE"),
-			Command: "forge",
+			Command: "plural",
 			Args:    []string{"wkspace", "kube-init", path},
 			Sha:     "",
 		},
@@ -118,7 +118,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 			Name:    "helm",
 			Wkdir:   filepath.Join(path, "helm"),
 			Target:  filepath.Join(path, "helm"),
-			Command: "forge",
+			Command: "plural",
 			Args:    []string{"wkspace", "helm-diff", path},
 			Sha:     "",
 		},
@@ -178,5 +178,5 @@ func (d *Diff) Flush(root string) error {
 }
 
 func pluralfile(base, name string) string {
-	return filepath.Join(base, ".forge", name)
+	return filepath.Join(base, ".plural", name)
 }

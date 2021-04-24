@@ -107,16 +107,16 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
-	if err := mkdir(filepath.Join(wkspaceRoot, ".forge")); err != nil {
+	if err := mkdir(filepath.Join(wkspaceRoot, ".plural")); err != nil {
 		return err
 	}
 
-	onceFile := filepath.Join(wkspaceRoot, ".forge", "ONCE")
+	onceFile := filepath.Join(wkspaceRoot, ".plural", "ONCE")
 	if err := ioutil.WriteFile(onceFile, []byte("once"), 0644); err != nil {
 		return err
 	}
 
-	nonceFile := filepath.Join(wkspaceRoot, ".forge", "NONCE")
+	nonceFile := filepath.Join(wkspaceRoot, ".plural", "NONCE")
 	if err := ioutil.WriteFile(nonceFile, []byte(crypto.RandString(32)), 0644); err != nil {
 		return err
 	}
