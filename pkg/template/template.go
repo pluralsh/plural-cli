@@ -21,7 +21,7 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["dumpAesKey"] = dumpAesKey
 	funcs["readLine"] = readLine
 	funcs["readLineDefault"] = readLineDefault
-	funcs["readFile"] = utils.ReadFile
+	funcs["readFile"] = readFile
 	funcs["homeDir"] = homeDir
 	funcs["knownHosts"] = knownHosts
 	funcs["dedupe"] = dedupe

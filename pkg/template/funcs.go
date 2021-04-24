@@ -13,27 +13,27 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func repoRoot() (string, error) {
+func repoRoot() string {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	res, err := cmd.CombinedOutput()
-	return strings.TrimSpace(string(res)), err
+	res, _ := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res))
 }
 
-func repoName() (string, error) {
-	root, err := repoRoot()
-	return path.Base(root), err
+func repoName() string {
+	root := repoRoot()
+	return path.Base(root)
 }
 
-func repoUrl() (string, error) {
+func repoUrl() string {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
-	res, err := cmd.CombinedOutput()
-	return strings.TrimSpace(string(res)), err
+	res, _ := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res))
 }
 
-func branchName() (string, error) {
+func branchName() string {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	res, err := cmd.CombinedOutput()
-	return strings.TrimSpace(string(res)), err
+	res, _ := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res))
 }
 
 func createWebhook(domain string) (api.Webhook, error) {
@@ -56,6 +56,14 @@ func dumpAesKey() (string, error) {
 
 	io, err := key.Marshal()
 	return string(io), err
+}
+
+func readFile(path string) string {
+	res, err := utils.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return res
 }
 
 func readLine(prompt string) (string, error) {
