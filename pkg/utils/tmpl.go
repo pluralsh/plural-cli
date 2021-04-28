@@ -45,6 +45,10 @@ func cleanUpMapValue(v interface{}) interface{} {
 		return CleanUpInterfaceMap(v)
 	case string:
 		return v
+	case bool:
+		return v
+	case int:
+		return v
 	default:
 		return fmt.Sprintf("%v", v)
 	}

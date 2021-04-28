@@ -14,7 +14,6 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"google.golang.org/api/option"
 )
 
 type GCPProvider struct {
@@ -29,8 +28,19 @@ type GCPProvider struct {
 const backendTemplate = `terraform {
 	backend "gcs" {
 		bucket = {{ .Values.Bucket | quote }}
-		prefix = {{ .Values.Prefix | quote }}
+		prefix = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}"
 	}
+
+	required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 3.65.0"
+    }
+		kubernetes = {
+			source  = "hashicorp/kubernetes"
+			version = "~> 2.0.3"
+		}
+  }
 }
 
 locals {
@@ -40,25 +50,30 @@ locals {
 }
 
 provider "google" {
-  version = "2.5.1"
   project = {{ .Values.Project | quote }}
   region  = local.gcp_region
 }
 
 data "google_client_config" "current" {}
 
+{{ if .Values.ClusterCreated }}
+provider "kubernetes" {
+  host = {{ .Values.Cluster }}.endpoint
+  cluster_ca_certificate = base64decode({{ .Values.Cluster }}.ca_certificate)
+  token = data.google_client_config.current.access_token
+}
+{{ else }}
 data "google_container_cluster" "cluster" {
   name = {{ .Values.Cluster }}
-  location = local.gcp_location
+  location = local.gcp_region
 }
 
 provider "kubernetes" {
-  version          = " ~> 1.10.0"
-  load_config_file = false
   host = data.google_container_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)
   token = data.google_client_config.current.access_token
 }
+{{ end }}
 `
 
 func mkGCP() (*GCPProvider, error) {
@@ -92,8 +107,7 @@ func mkGCP() (*GCPProvider, error) {
 
 func storageClient() (*storage.Client, context.Context, error) {
 	ctx := context.Background()
-	opt := option.WithCredentialsFile(os.Getenv("GOOGLE_CREDENTIALS"))
-	client, err := storage.NewClient(ctx, opt)
+	client, err := storage.NewClient(ctx)
 	return client, ctx, err
 }
 
@@ -120,7 +134,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GOOGLE_CREDENTIALS"))
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.cluster,
-		"--region", gcp.region, "--project", gcp.project)
+		"--region", getZone(gcp.region), "--project", gcp.project)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -135,8 +149,11 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	ctx["Location"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
 	ctx["Prefix"] = prefix
+	ctx["ClusterCreated"] = false
+	ctx["__CLUSTER__"] = gcp.Cluster()
 	if cluster, ok := ctx["cluster"]; ok {
 		ctx["Cluster"] = cluster
+		ctx["ClusterCreated"] = true
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
@@ -158,7 +175,13 @@ func getRegion() string {
 	if err != nil {
 		return "us-east1-b"
 	}
+
 	return strings.Split(string(res), "\n")[1]
+}
+
+func getZone(region string) string {
+	split := strings.Split(region, "-")
+	return strings.Join(split[:2], "-")
 }
 
 func (gcp *GCPProvider) Install() (err error) {

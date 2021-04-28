@@ -64,6 +64,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Cluster": wk.Provider.Cluster(),
 			"Project": wk.Provider.Project(),
 			"Namespace": wk.Config.Namespace(repo.Name),
+			"Region": wk.Provider.Region(),
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {
 			return err

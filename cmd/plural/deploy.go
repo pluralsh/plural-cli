@@ -16,7 +16,10 @@ import (
 
 func build(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
 	sorted, err := wkspace.Dependencies("", installations)
 	if err != nil {
 		sorted = installations // we don't know all the dependencies yet
@@ -54,7 +57,11 @@ func build(c *cli.Context) error {
 
 func validate(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
 	for _, installation := range installations {
 		if c.IsSet("only") && c.String("only") != installation.Repository.Name {
 			continue
@@ -75,7 +82,11 @@ func validate(c *cli.Context) error {
 
 func deploy(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
 	repoName := c.Args().Get(0)
 	sorted, err := wkspace.Dependencies(repoName, installations)
 	if err != nil {
@@ -108,7 +119,11 @@ func deploy(c *cli.Context) error {
 
 func handleDiff(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
 	repoName := c.Args().Get(0)
 	sorted, err := wkspace.Dependencies(repoName, installations)
 	if err != nil {
@@ -141,7 +156,11 @@ func handleDiff(c *cli.Context) error {
 
 func bounce(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
 	repoName := c.Args().Get(0)
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
@@ -170,7 +189,11 @@ func bounce(c *cli.Context) error {
 
 func destroy(c *cli.Context) error {
 	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+	installations, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
 	repoName := c.Args().Get(0)
 	dir, _ := os.Getwd()
 
