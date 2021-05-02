@@ -5,6 +5,12 @@ go 1.13
 require (
 	cloud.google.com/go v0.72.0 // indirect
 	cloud.google.com/go/storage v1.12.0
+	github.com/Azure/azure-sdk-for-go v53.4.0+incompatible
+	github.com/Azure/azure-storage-blob-go v0.13.0
+	github.com/Azure/go-autorest/autorest v0.11.17
+	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
+	github.com/Azure/go-autorest/autorest/to v0.4.0
+	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -31,7 +37,6 @@ require (
 	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58 // indirect
 	golang.org/x/tools v0.0.0-20201125220014-2e53cd670342 // indirect
-	google.golang.org/api v0.35.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201119123407-9b1e624d6bc4 // indirect
 	gopkg.in/oleiade/reflections.v1 v1.0.0

@@ -71,7 +71,7 @@ func mkAWS() (*AWSProvider, error) {
 		return nil, err
 	}
 
-	account, err := getAccount()
+	account, err := getAwsAccount()
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,11 @@ func (aws *AWSProvider) Region() string {
 	return aws.region
 }
 
-func getAccount() (string, error) {
+func (aws *AWSProvider) Context() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+func getAwsAccount() (string, error) {
 	cmd := exec.Command("aws", "sts", "get-caller-identity")
 	out, err := cmd.Output()
 	if err != nil {

@@ -241,3 +241,7 @@ func (gcp *GCPProvider) Bucket() string {
 func (gcp *GCPProvider) Region() string {
 	return gcp.region
 }
+
+func (gcp *GCPProvider) Context() map[string]interface{} {
+	return map[string]interface{}{}
+}

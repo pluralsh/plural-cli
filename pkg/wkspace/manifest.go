@@ -29,6 +29,7 @@ func (wk *Workspace) BuildManifest() *manifest.Manifest {
 		charts,
 		terraform,
 		buildDependencies(repository.Name, wk.Charts, wk.Terraform),
+		wk.Provider.Context(),
 	}
 }
 

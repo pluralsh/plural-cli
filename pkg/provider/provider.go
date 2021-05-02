@@ -17,19 +17,20 @@ type Provider interface {
 	KubeConfig() error
 	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
 	Install() error
+	Context() map[string]interface{}
 }
 
 func Select(force bool) (Provider, error) {
-	available := []string{GCP, AWS}
+	available := []string{GCP, AWS, AZURE}
 	path := manifest.ProjectManifestPath()
 	if utils.Exists(path) {
 		if project, err := manifest.ReadProject(path); err == nil {
 			prov, err := FromManifest(&manifest.Manifest{
-				Cluster:  project.Cluster,
-				Project:  project.Project,
-				Bucket:   project.Bucket,
-				Provider: project.Provider,
-				Region:   project.Region,
+				Project: project.Project,
+				Cluster: project.Cluster,
+				Region: project.Region,
+				Bucket: project.Bucket,
+				Context: project.Context,
 			})
 
 			if force {
@@ -46,7 +47,7 @@ func Select(force bool) (Provider, error) {
 		}
 	}
 
-	fmt.Println("Select on of the following providers:")
+	fmt.Println("Select one of the following providers:")
 	for i, name := range available {
 		fmt.Printf("[%d] %s\n", i, name)
 	}
@@ -72,6 +73,8 @@ func FromManifest(man *manifest.Manifest) (Provider, error) {
 		return gcpFromManifest(man)
 	case AWS:
 		return awsFromManifest(man)
+	case AZURE:
+		return azureFromManifest(man)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
 	}
@@ -83,6 +86,8 @@ func New(provider string) (Provider, error) {
 		return mkGCP()
 	case AWS:
 		return mkAWS()
+	case AZURE:
+		return mkAzure()
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)
 	}

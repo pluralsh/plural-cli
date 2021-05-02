@@ -39,6 +39,7 @@ type Manifest struct {
 	Charts       []*ChartManifest
 	Terraform    []*TerraformManifest
 	Dependencies []*Dependency
+	Context      map[string]interface{}
 }
 
 type ProjectManifest struct {
@@ -47,6 +48,7 @@ type ProjectManifest struct {
 	Project  string
 	Provider string
 	Region   string
+	Context  map[string]interface{}
 }
 
 type VersionedManifest struct {
