@@ -106,14 +106,13 @@ func initHelm(success string) error {
 
 func handleInstall(c *cli.Context) (err error) {
 	root, found := utils.ProjectRoot()
-	err = os.MkdirAll(filepath.Join(root, "bin"), os.ModePerm)
-	if err != nil { return }
-
 	if !found {
-		err = fmt.Errorf("You must install within a workspace")
-		return 
+		root, err = utils.RepoRoot()
+		if err != nil { return }
 	}
 
+	err = os.MkdirAll(filepath.Join(root, "bin"), os.ModePerm)
+	if err != nil { return }
 	root = filepath.Join(root, "bin")
 
 	goos := runtime.GOOS
