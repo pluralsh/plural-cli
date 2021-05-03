@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type Forgefile struct {
+type Pluralfile struct {
 	Components []Component
 	Repo       string
 }
@@ -32,7 +32,7 @@ type Component interface {
 	Push(repo string, sha string) (string, error)
 }
 
-func (forge *Forgefile) Execute(f string, lock *Lockfile) (err error) {
+func (forge *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
 	defer lock.Flush(f)
 	for _, component := range forge.Components {
 		key := component.Key()
@@ -48,9 +48,9 @@ func (forge *Forgefile) Execute(f string, lock *Lockfile) (err error) {
 	return
 }
 
-func Parse(f string) (*Forgefile, error) {
+func Parse(f string) (*Pluralfile, error) {
 	pluralfile, err := os.Open(f)
-	forge := &Forgefile{}
+	forge := &Pluralfile{}
 	if err != nil {
 		return forge, err
 	}
