@@ -165,6 +165,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 		"Cluster":  "cluster",
 		"Provider": "provider",
 		"Config":   conf,
+		"Context":  map[string]interface{}{},
 	}
 
 	var buf bytes.Buffer

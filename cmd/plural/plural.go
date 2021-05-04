@@ -154,6 +154,11 @@ func main() {
 			Subcommands: profileCommands(),
 		},
 		{
+			Name:        "output",
+			Usage:       "Commands for generating outputs from supported tools",
+			Subcommands: outputCommands(),
+		},
+		{
 			Name: "template",
 			Aliases: []string{"tpl"},
 			Usage: "templates a helm chart to be uploaded to plural",

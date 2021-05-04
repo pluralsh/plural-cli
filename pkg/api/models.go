@@ -74,6 +74,7 @@ type Dependencies struct {
 	Wirings         *Wirings
 	Application     bool
 	ProviderWirings map[string]interface{}
+	Outputs         map[string]string
 }
 
 type Dependency struct {
@@ -234,6 +235,7 @@ const DependenciesFragment = `
 		providers
 		wirings { terraform helm }
 		providerWirings
+		outputs
 	}
 `
 

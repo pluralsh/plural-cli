@@ -86,6 +86,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Cluster":  w.Provider.Cluster(),
 			"Config":   conf,
 			"Provider": w.Provider.Name(),
+			"Context":  w.Provider.Context(),
 		}
 		for k, v := range prevVals {
 			vals[k] = v

@@ -2,14 +2,17 @@ package wkspace
 
 import (
 	"os"
+	"fmt"
 	"os/exec"
 	"path/filepath"
+	"text/template"
 
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/output"
 )
 
 type MinimalWorkspace struct {
@@ -79,10 +82,38 @@ func (m *MinimalWorkspace) EnsurePullCredentials() error {
 	return nil
 }
 
+func templateVals(app, path string) (backup string, err error) {
+	root, _ := utils.ProjectRoot()
+	valsFile := filepath.Join(path, "values.yaml")
+	vals, err := utils.ReadFile(valsFile)
+	if err != nil { return }
+
+	tmpl, err := template.New("gotpl").Parse(vals)
+	if err != nil { return }
+
+	out, err := output.Read(filepath.Join(root, app, "output.yaml"))
+	if err != nil { return }
+
+	backup = fmt.Sprintf("%s.bak", valsFile)
+	err = os.Rename(valsFile, backup)
+	if err != nil { return }
+
+	f, err := os.Create(valsFile)
+	if err != nil { return }
+	defer f.Close()
+
+	err = tmpl.Execute(f, map[string]interface{}{"Import": *out})
+	return
+}
+
 func (m *MinimalWorkspace) BounceHelm() error {
 	path, err := filepath.Abs(filepath.Join("helm", m.Name))
 	if err != nil {
 		return err
+	}
+	backup, err := templateVals(m.Name, path)
+	if err == nil {
+		defer os.Rename(backup, filepath.Join(path, "values.yaml"))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
@@ -95,6 +126,10 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	path, err := filepath.Abs(m.Name)
 	if err != nil {
 		return err
+	}
+	backup, err := templateVals(m.Name, path)
+	if err == nil {
+		defer os.Rename(backup, filepath.Join(path, "values.yaml"))
 	}
 
 	namespace := m.Config.Namespace(m.Name)

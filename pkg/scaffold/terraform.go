@@ -29,6 +29,12 @@ const moduleTemplate = `module "{{ .Values.name }}" {
 }
 `
 
+const outputTemplate = `output "{{ .Name }}" {
+	value = module.{{ .Module }}.{{ .Value }}
+	sensitive = true
+}
+`
+
 func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	repo := wk.Installation.Repository
 	providerCtx := buildContext(wk, repo.Name, wk.Terraform)
@@ -101,6 +107,10 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		return err
 	}
 
+	if err := scaffold.buildOutputs(wk); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -126,6 +136,26 @@ func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
 
 	utils.Success("\u2713\n")
 	return nil
+}
+
+func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
+	var buf bytes.Buffer
+	buf.Grow(5 * 1024)
+
+	tmp, err := template.MakeTemplate(outputTemplate)
+	if err != nil { return err }
+
+	for _, tfInst := range wk.Terraform {
+		tfName := tfInst.Terraform.Name
+		for name, value := range tfInst.Version.Dependencies.Outputs {
+			err = tmp.Execute(&buf, map[string]interface{}{"Name": name, "Value": value, "Module": tfName})
+			if err != nil { return err }
+			buf.WriteString("\n\n")
+		}
+	}
+
+	outputFile := filepath.Join(scaffold.Root, "outputs.tf")
+	return utils.WriteFile(outputFile, buf.Bytes())
 }
 
 func untar(v *api.Version, tf *api.Terraform, dir string) error {

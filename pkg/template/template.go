@@ -26,6 +26,7 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["knownHosts"] = knownHosts
 	funcs["dedupe"] = dedupe
 	funcs["probe"] = probe
+	funcs["importValue"] = importValue
 	return template.New("gotpl").Funcs(funcs).Parse(tmplate)
 }
 
