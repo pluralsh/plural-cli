@@ -5,6 +5,8 @@ import (
 )
 
 func defaultSteps(path string) []*Step {
+	app := filepath.Base(path)
+
 	return []*Step{
 		{
 			Name:    "terraform-init",
@@ -20,6 +22,14 @@ func defaultSteps(path string) []*Step {
 			Target:  filepath.Join(path, "terraform"),
 			Command: "terraform",
 			Args:    []string{"apply", "-auto-approve"},
+			Sha:     "",
+		},
+		{
+			Name:    "terraform-output",
+			Wkdir:   app,
+			Target:  filepath.Join(path, "terraform"),
+			Command: "plural",
+			Args:    []string{"output", "terraform", app},
 			Sha:     "",
 		},
 		{
