@@ -118,5 +118,5 @@ func dedupe(obj interface{}, path string, val string) string {
 }
 
 func importValue(tool, path string) string {
-	return fmt.Sprintf("'{{ .Import.%s.%s }}'", tool, path)
+	return fmt.Sprintf("{{ .Import.%s.%s }}", tool, path)
 }

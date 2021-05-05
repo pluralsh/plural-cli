@@ -15,6 +15,8 @@ import (
 	"github.com/pluralsh/plural/pkg/pluralfile"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/output"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 
@@ -178,12 +180,9 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	if err != nil {
 		return
 	}
+	defer f.Close()
 
-	_, err = f.Write(buf.Bytes())
-	if err != nil {
-		return
-	}
-	err = f.Close()
+	err = wkspace.FormatValues(f, string(buf.Bytes()), output.New())
 	return
 }
 

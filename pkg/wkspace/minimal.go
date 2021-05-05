@@ -3,6 +3,7 @@ package wkspace
 import (
 	"os"
 	"fmt"
+	"io"
 	"os/exec"
 	"path/filepath"
 	"text/template"
@@ -82,17 +83,23 @@ func (m *MinimalWorkspace) EnsurePullCredentials() error {
 	return nil
 }
 
+func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
+	tmpl, err := template.New("gotpl").Parse(vals)
+	if err != nil { return }
+	err = tmpl.Execute(w, map[string]interface{}{"Import": *output})
+	return
+}
+
 func templateVals(app, path string) (backup string, err error) {
 	root, _ := utils.ProjectRoot()
 	valsFile := filepath.Join(path, "values.yaml")
 	vals, err := utils.ReadFile(valsFile)
 	if err != nil { return }
 
-	tmpl, err := template.New("gotpl").Parse(vals)
-	if err != nil { return }
-
 	out, err := output.Read(filepath.Join(root, app, "output.yaml"))
-	if err != nil { return }
+	if err != nil { 
+		out = output.New()
+	}
 
 	backup = fmt.Sprintf("%s.bak", valsFile)
 	err = os.Rename(valsFile, backup)
@@ -102,7 +109,7 @@ func templateVals(app, path string) (backup string, err error) {
 	if err != nil { return }
 	defer f.Close()
 
-	err = tmpl.Execute(f, map[string]interface{}{"Import": *out})
+	err = FormatValues(f, vals, out)
 	return
 }
 
