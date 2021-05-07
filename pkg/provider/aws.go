@@ -23,44 +23,6 @@ type AWSProvider struct {
 	storageClient *s3.S3
 }
 
-const awsBackendTemplate = `terraform {
-	backend "s3" {
-		bucket = {{ .Values.Bucket | quote }}
-		key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
-		region = {{ .Values.Region | quote }}
-	}
-
-	required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.36.0"
-    }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
-  }
-}
-
-provider "aws" {
-  region = {{ .Values.Region | quote }}
-}
-
-data "aws_eks_cluster" "cluster" {
-  name = {{ .Values.Cluster }}
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = {{ .Values.Cluster }}
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
-`
-
 func mkAWS() (*AWSProvider, error) {
 	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
 	bucket, _ := utils.ReadLine("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")

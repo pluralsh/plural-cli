@@ -26,6 +26,7 @@ func Select(force bool) (Provider, error) {
 	if utils.Exists(path) {
 		if project, err := manifest.ReadProject(path); err == nil {
 			prov, err := FromManifest(&manifest.Manifest{
+				Provider: project.Provider,
 				Project: project.Project,
 				Cluster: project.Cluster,
 				Region: project.Region,

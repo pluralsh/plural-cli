@@ -25,57 +25,6 @@ type GCPProvider struct {
 	ctx           context.Context
 }
 
-const backendTemplate = `terraform {
-	backend "gcs" {
-		bucket = {{ .Values.Bucket | quote }}
-		prefix = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}"
-	}
-
-	required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 3.65.0"
-    }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
-  }
-}
-
-locals {
-	gcp_location  = {{ .Values.Location | quote }}
-  gcp_location_parts = split("-", local.gcp_location)
-  gcp_region         = "${local.gcp_location_parts[0]}-${local.gcp_location_parts[1]}"
-}
-
-provider "google" {
-  project = {{ .Values.Project | quote }}
-  region  = local.gcp_region
-}
-
-data "google_client_config" "current" {}
-
-{{ if .Values.ClusterCreated }}
-provider "kubernetes" {
-  host = {{ .Values.Cluster }}.endpoint
-  cluster_ca_certificate = base64decode({{ .Values.Cluster }}.ca_certificate)
-  token = data.google_client_config.current.access_token
-}
-{{ else }}
-data "google_container_cluster" "cluster" {
-  name = {{ .Values.Cluster }}
-  location = local.gcp_region
-}
-
-provider "kubernetes" {
-  host = data.google_container_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)
-  token = data.google_client_config.current.access_token
-}
-{{ end }}
-`
-
 func mkGCP() (*GCPProvider, error) {
 	client, ctx, err := storageClient()
 	if err != nil {
@@ -157,7 +106,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
-	return template.RenderString(backendTemplate, ctx)
+	return template.RenderString(gcpBackendTemplate, ctx)
 }
 
 func (gcp *GCPProvider) mkBucket(name string) error {

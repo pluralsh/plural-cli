@@ -20,7 +20,7 @@ import (
 const (
 	KUBECTL_VERSION = "1.20.5"
 	HELM_VERSION = "3.5.3"
-	TF_VERSION = "0.14.8"
+	TF_VERSION = "0.15.2"
 )
 
 func handleInit(c *cli.Context) error {

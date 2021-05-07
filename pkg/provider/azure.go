@@ -26,42 +26,6 @@ type AzureProvider struct {
 	ctx 			     map[string]interface{}
 }
 
-const azureBackendTemplate = `terraform {
-	backend "azurerm" {
-		storage_account_name = {{ .Values.Context.StorageAccount | quote }}
-		container_name = {{ .Values.Bucket | quote }}
-		key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
-	}
-
-	required_providers {
-    azurerm = {
-      source = "hashicorp/azurerm"
-      version = "2.57.0"
-    }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-
-data "azurerm_kubernetes_cluster" "cluster" {
-  name = {{ .Values.Cluster | quote }}
-	resource_group_name = {{ .Values.Project | quote }}
-}
-
-provider "kubernetes" {
-  host                   = azurerm_kubernetes_cluster.host
-  client_certificate     = base64decode(azurerm_kubernetes_cluster.client_certificate)
-  client_key             = base64decode(azurerm_kubernetes_cluster.client_key)
-  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.cluster_ca_certificate)
-}
-`
-
 func mkAzure() (prov *AzureProvider, err error) {
 	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
 	storAcct, _ := utils.ReadLine("Enter the name of the storage account to use for your stage, must be globally unique or owned by your subscription: ")
@@ -110,10 +74,14 @@ func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interfac
 	ctx["Region"] = azure.Region()
 	ctx["Bucket"] = azure.Bucket()
 	ctx["Prefix"] = prefix
-	ctx["Project"] = azure.Project()
+	ctx["ResourceGroup"] = azure.Project()
 	ctx["__CLUSTER__"] = azure.Cluster()
-	if _, ok := ctx["Cluster"]; !ok {
-		ctx["Cluster"] = fmt.Sprintf("\"%s\"", azure.Cluster())
+	ctx["Context"] = azure.Context()
+	if cluster, ok := ctx["cluster"]; ok {
+		ctx["Cluster"] = cluster
+		ctx["ClusterCreated"] = true
+	} else {
+		ctx["Cluster"] = fmt.Sprintf(`"%s"`, azure.Cluster())
 	}
 
 	return template.RenderString(azureBackendTemplate, ctx)
@@ -138,7 +106,7 @@ func (azure *AzureProvider) KubeConfig() error {
 	}
 
 	cmd := exec.Command(
-		"az", "eks", "get-credentials", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
+		"az", "aks", "get-credentials", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -247,7 +215,10 @@ func (az *AzureProvider) upsertStorageContainer(acc storage.Account, name string
 	service := azblob.NewServiceURL(*u, p)
 
 	container := service.NewContainerURL(name)
-	_, err = container.Create(ctx, azblob.Metadata{}, azblob.PublicAccessContainer)
+	_, err = container.GetProperties(ctx, azblob.LeaseAccessConditions{})
+	if err == nil { return err }
+
+	_, err = container.Create(ctx, azblob.Metadata{}, azblob.PublicAccessNone)
 	return err
 }
 
