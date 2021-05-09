@@ -72,6 +72,7 @@ type Dependencies struct {
 	Dependencies    []*Dependency
 	Providers       []string
 	Wirings         *Wirings
+	Secrets         []string
 	Application     bool
 	ProviderWirings map[string]interface{}
 	Outputs         map[string]string
@@ -233,6 +234,7 @@ const DependenciesFragment = `
 		}
 		application
 		providers
+		secrets
 		wirings { terraform helm }
 		providerWirings
 		outputs

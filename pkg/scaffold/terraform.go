@@ -111,6 +111,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		return err
 	}
 
+	secrets := buildTfSecrets(wk.Terraform)
+	if err := buildSecrets(filepath.Join(scaffold.Root, ".gitattributes"), secrets); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -175,6 +180,14 @@ func manualSection(contents, name string) string {
 	}
 
 	return ""
+}
+
+func buildTfSecrets(installations []*api.TerraformInstallation) []string {
+	res := []string{}
+	for _, inst := range installations {
+		res = append(res, inst.Version.Dependencies.Secrets...)
+	}
+	return res
 }
 
 func buildContext(wk *wkspace.Workspace, repo string, installations []*api.TerraformInstallation) map[string]interface{} {
