@@ -88,6 +88,16 @@ func main() {
 		{
 			Name:   "init",
 			Usage:  "initializes plural within a git repo",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "endpoint",
+					Usage: "the endpoint for the plural installation you're working with",
+				},
+				cli.StringFlag{
+					Name:  "service-account",
+					Usage: "email for the service account you'd like to use for this workspace",
+				},
+			},
 			Action: handleInit,
 		},
 		{
@@ -98,6 +108,10 @@ func main() {
 				cli.StringFlag{
 					Name:  "endpoint",
 					Usage: "the endpoint for the plural installation you're working with",
+				},
+				cli.StringFlag{
+					Name:  "service-account",
+					Usage: "email for the service account you'd like to use for this workspace",
 				},
 			},
 		},

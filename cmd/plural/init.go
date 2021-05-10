@@ -52,8 +52,20 @@ func handleLogin(c *cli.Context) error {
 	fmt.Printf("\nlogged in as %s\n", email)
 	conf.Email = email
 	conf.Token = result
-
 	client = api.FromConfig(conf)
+
+	saEmail := c.String("service-account")
+	if saEmail != "" {
+		jwt, email, err := client.ImpersonateServiceAccount(email)
+		if err != nil {
+			return err
+		}
+
+		conf.Email = email
+		conf.Token = jwt
+		client = api.FromConfig(conf)
+	}
+
 	accessToken, err := client.GrabAccessToken()
 	if err != nil {
 		return err

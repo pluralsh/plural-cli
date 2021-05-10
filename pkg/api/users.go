@@ -8,6 +8,15 @@ const loginQuery = `
 	}
 `
 
+const impersonationQuery = `
+	mutation Impersonate($email: String) {
+		impersonateServiceAccount(email: $email) { 
+			jwt 
+			email
+		}
+	}
+`
+
 const createTokenQuery = `
 	mutation {
 		createToken {
@@ -53,6 +62,10 @@ type login struct {
 	Login struct {
 		Jwt string `json:"jwt"`
 	}
+	ImpersonateServiceAccount struct {
+		Jwt string `json:"jwt"`
+		Email string `json:"email"`
+	}
 }
 
 type createToken struct {
@@ -84,6 +97,13 @@ func (client *Client) Login(email, pwd string) (string, error) {
 	return resp.Login.Jwt, err
 }
 
+func (client *Client) ImpersonateServiceAccount(email string) (string, string, error) {
+	var resp login
+	req := client.Build(loginQuery)
+	req.Var("email", email)
+	err := client.Run(req, &resp)
+	return resp.ImpersonateServiceAccount.Jwt, resp.ImpersonateServiceAccount.Email, err
+}
 
 func (client *Client) CreateAccessToken() (string, error) {
 	var resp createToken
