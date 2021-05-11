@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -126,9 +127,14 @@ func dedupeObj(obj interface{}, path string, val interface{}) interface{} {
 	return probed
 }
 
-func secret(namespace, name string) map[string]string {
+func namespace(name string) string {
+	conf := config.Read()
+	return conf.Namespace(name)
+}
+
+func secret(namespace, name string) map[string]interface{} {
 	kube, _ := utils.Kubernetes()
-	res := map[string]string{}
+	res := map[string]interface{}{}
 	secret, err := kube.Secret(namespace, name)
 	if err != nil {
 		return res
@@ -142,4 +148,9 @@ func secret(namespace, name string) map[string]string {
 
 func importValue(tool, path string) string {
 	return fmt.Sprintf("'{{ .Import.%s.%s }}'", tool, path)
+}
+
+func toYaml(val interface{}) (string, error) {
+	res, err := yaml.Marshal(val)
+	return string(res), err
 }

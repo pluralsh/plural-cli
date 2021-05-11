@@ -29,6 +29,8 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["secret"] = secret
 	funcs["probe"] = probe
 	funcs["importValue"] = importValue
+	funcs["namespace"] = namespace
+	funcs["toYaml"] = toYaml
 	return template.New("gotpl").Funcs(funcs).Parse(tmplate)
 }
 
