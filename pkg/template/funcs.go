@@ -117,6 +117,29 @@ func dedupe(obj interface{}, path string, val string) string {
 	return fmt.Sprintf("%s", probed)
 }
 
+func dedupeObj(obj interface{}, path string, val interface{}) interface{} {
+	probed, err := probe(obj, path)
+	if err != nil {
+		return val
+	}
+
+	return probed
+}
+
+func secret(namespace, name string) map[string]string {
+	kube, _ := utils.Kubernetes()
+	res := map[string]string{}
+	secret, err := kube.Secret(namespace, name)
+	if err != nil {
+		return res
+	}
+
+	for k, v := range secret.Data {
+		res[k] = string(v)
+	}
+	return res
+}
+
 func importValue(tool, path string) string {
 	return fmt.Sprintf("'{{ .Import.%s.%s }}'", tool, path)
 }

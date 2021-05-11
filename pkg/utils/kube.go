@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/rest"
 	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
 )
 
@@ -24,7 +25,20 @@ type Kube struct {
 	Plural *pluralv1alpha1.Clientset
 }
 
+func InClusterKubernetes() (*Kube, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return buildKubeFromConfig(config)
+}
+
 func Kubernetes() (*Kube, error) {
+	if InKubernetes() {
+		return InClusterKubernetes()
+	}
+
 	homedir, _ := os.UserHomeDir()
 	conf := filepath.Join(homedir, ".kube", "config")
 	config, err := clientcmd.BuildConfigFromFlags("", conf)
@@ -32,6 +46,10 @@ func Kubernetes() (*Kube, error) {
 		return nil, err
 	}
 
+	return buildKubeFromConfig(config)
+}
+
+func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
