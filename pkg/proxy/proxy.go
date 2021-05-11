@@ -45,6 +45,8 @@ func Exec(namespace string, name string) error {
 		return conn.Connect(namespace)
 	case v1alpha1.Sh:
 		return execShell(namespace, proxy)
+	case v1alpha1.Web:
+		return execWeb(namespace, proxy, kube)
 	default:
 		return fmt.Errorf("Unhandled proxy type %s", t)
 	}

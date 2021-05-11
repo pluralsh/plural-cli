@@ -28,7 +28,7 @@ func buildConnection(secret string, proxy *v1alpha1.Proxy) (dbConnection, error)
 }
 
 func (pg *postgres) Connect(namespace string) error {
-	fwd, err := portForward(namespace, pg.Proxy)
+	fwd, err := portForward(namespace, pg.Proxy, pg.Proxy.Spec.DbConfig.Port)
 	if err != nil {
 		return err
 	}
@@ -45,8 +45,8 @@ func (pg *postgres) Connect(namespace string) error {
 	return cmd.Run()
 }
 
-func portForward(namespace string, proxy *v1alpha1.Proxy) (cmd *exec.Cmd, err error) {
-	cmd = exec.Command("kubectl", "port-forward", proxy.Spec.Target, fmt.Sprint(proxy.Spec.DbConfig.Port), "-n", namespace)
+func portForward(namespace string, proxy *v1alpha1.Proxy, port int32) (cmd *exec.Cmd, err error) {
+	cmd = exec.Command("kubectl", "port-forward", proxy.Spec.Target, fmt.Sprint(port), "-n", namespace)
 	err = cmd.Start()
 	return
 }

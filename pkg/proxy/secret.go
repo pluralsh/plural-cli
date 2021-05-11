@@ -4,7 +4,13 @@ import (
 	"fmt"
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/utils"
+	v1 "k8s.io/api/core/v1"
 )
+
+type UserCredentials struct {
+	User string
+	Password string
+}
 
 func fetchSecret(namespace string, k *utils.Kube, creds *v1alpha1.Credentials) (string, error) {
 	secret, err := k.Secret(namespace, creds.Secret)
@@ -18,4 +24,30 @@ func fetchSecret(namespace string, k *utils.Kube, creds *v1alpha1.Credentials) (
 	}
 
 	return string(val), nil
+}
+
+func fetchUserPassword(secret *v1.Secret, creds *v1alpha1.Credentials) (user *UserCredentials, err error) {
+	pwd, ok := secret.Data[creds.Key]
+	if !ok {
+		err = fmt.Errorf("Could not find password key")
+		return 
+	}
+	
+	username := creds.User
+	if creds.UserKey != "" {
+		uname, ok := secret.Data[creds.UserKey]
+		if !ok {
+			err = fmt.Errorf("Could not find password key")
+			return
+		}
+		username = string(uname)
+	}
+
+	if username == "" {
+		err = fmt.Errorf("No username found")
+		return
+	}
+
+	user = &UserCredentials{User: username, Password: string(pwd)}
+	return
 }
