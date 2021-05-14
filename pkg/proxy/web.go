@@ -8,14 +8,7 @@ import (
 )
 
 func execWeb(namespace string, proxy *v1alpha1.Proxy, kube *utils.Kube) error {
-	creds := proxy.Spec.Credentials
 	config := proxy.Spec.WebConfig
-	secret, err := kube.Secret(namespace, creds.Secret)
-	if err != nil {
-		return err
-	}
-	user, err := fetchUserPassword(secret, creds)
-
 	fwd, err := portForward(namespace, proxy, config.Port)
 	if err != nil {
 		return err
@@ -25,10 +18,30 @@ func execWeb(namespace string, proxy *v1alpha1.Proxy, kube *utils.Kube) error {
 	utils.Highlight("Wait a bit while the port-forward boots up\n\n")
 	time.Sleep(5 * time.Second)
 
-	highlightedEntry("Username", user.User)
-	highlightedEntry("Password", user.Password)
+	printCredentials(proxy, namespace, kube)
 	fmt.Printf("\nVisit http://localhost:%d%s\n", config.Port, config.Path)
 	utils.ReadLine("Press enter to close the proxy")
+	return nil
+}
+
+func printCredentials(proxy *v1alpha1.Proxy, namespace string, kube *utils.Kube) error {
+	creds := proxy.Spec.Credentials
+	if creds == nil { 
+		return nil 
+	}
+
+	secret, err := kube.Secret(namespace, creds.Secret)
+	if err != nil {
+		return err
+	}
+	user, err := fetchUserPassword(secret, creds)
+	if err != nil {
+		return err
+	}
+
+	highlightedEntry("Username", user.User)
+	highlightedEntry("Password", user.Password)
+
 	return nil
 }
 
