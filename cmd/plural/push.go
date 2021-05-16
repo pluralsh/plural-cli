@@ -114,13 +114,14 @@ func handleHelmTemplate(c *cli.Context) error {
 	conf := config.Read()
 	f, err := tmpValuesFile(c.String("values"), &conf)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to template vals: %w", err)
 	}
 	defer os.Remove(f.Name())
 
 	cmd := exec.Command("helm", "template", c.Args().Get(0), "-f", f.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
