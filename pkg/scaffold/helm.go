@@ -71,6 +71,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	valuesFile := filepath.Join(s.Root, "values.yaml")
 	prevVals, _ := prevValues(valuesFile)
 	conf := config.Read()
+	globals := map[string]interface{}{}
 
 	for _, chartInst := range w.Charts {
 		tmpl, err := template.MakeTemplate(chartInst.Version.ValuesTemplate)
@@ -101,12 +102,22 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			return err
 		}
 
+		// need to handle globals in a dedicated way
+		if glob, ok := subVals["global"]; ok {
+			mergo.Merge(&globals, glob)
+			delete(subVals, "global")
+		}
+
 		values[chartInst.Chart.Name] = subVals
 		buf.Reset()
 	}
 
 	if err := mergo.Merge(&values, prevVals); err != nil {
 		return err
+	}
+
+	if len(globals) > 0 {
+		values["global"] = globals
 	}
 
 	io, err := yaml.Marshal(values)
