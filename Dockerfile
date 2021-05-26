@@ -1,4 +1,4 @@
-FROM golang:alpine AS cmd
+FROM gcr.io/pluralsh/golang:alpine AS cmd
 
 RUN apk update && apk add --no-cache git
 

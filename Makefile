@@ -1,6 +1,6 @@
 .PHONY: # ignore
 
-GCP_PROJECT ?= piazzaapp
+GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
 APP_VSN ?= `cat VERSION`
 BUILD ?= `git rev-parse --short HEAD`
