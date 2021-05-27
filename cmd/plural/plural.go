@@ -173,6 +173,11 @@ func main() {
 			Subcommands: outputCommands(),
 		},
 		{
+			Name:        "logs",
+			Usage:       "Commands for tailing logs for specific apps",
+			Subcommands: logsCommands(),
+		},
+		{
 			Name: "template",
 			Aliases: []string{"tpl"},
 			Usage: "templates a helm chart to be uploaded to plural",

@@ -28,7 +28,7 @@ require (
 	github.com/oleiade/reflections v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
-	github.com/pluralsh/plural-operator v0.1.2
+	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.7.6
