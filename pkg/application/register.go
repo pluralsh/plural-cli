@@ -2,21 +2,37 @@ package application
 
 import (
 	"sigs.k8s.io/application/api/v1beta1"
-    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-    "k8s.io/apimachinery/pkg/runtime"
+    v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
-var (
-    SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-    AddToScheme   = SchemeBuilder.AddToScheme
-)
+var Scheme = runtime.NewScheme()
+var Codecs = serializer.NewCodecFactory(Scheme)
+var ParameterCodec = runtime.NewParameterCodec(Scheme)
+var localSchemeBuilder = runtime.SchemeBuilder{
+	v1beta1.AddToScheme,
+}
 
-func addKnownTypes(scheme *runtime.Scheme) error {
-    scheme.AddKnownTypes(v1beta1.GroupVersion,
-        &v1beta1.Application{},
-        &v1beta1.ApplicationList{},
-    )
+// AddToScheme adds all types of this clientset into the given scheme. This allows composition
+// of clientsets, like in:
+//
+//   import (
+//     "k8s.io/client-go/kubernetes"
+//     clientsetscheme "k8s.io/client-go/kubernetes/scheme"
+//     aggregatorclientsetscheme "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/scheme"
+//   )
+//
+//   kclientset, _ := kubernetes.NewForConfig(c)
+//   _ = aggregatorclientsetscheme.AddToScheme(clientsetscheme.Scheme)
+//
+// After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
+// correctly.
+var AddToScheme = localSchemeBuilder.AddToScheme
 
-    metav1.AddToGroupVersion(scheme, v1beta1.GroupVersion)
-    return nil
+func init() {
+	v1.AddToGroupVersion(Scheme, schema.GroupVersion{Version: "v1"})
+	utilruntime.Must(AddToScheme(Scheme))
 }

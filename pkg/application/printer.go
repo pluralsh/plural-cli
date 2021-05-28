@@ -3,12 +3,13 @@ package application
 import (
 	"fmt"
 	"sigs.k8s.io/application/api/v1beta1"
-	"github.com/fatih/color"
+	"strings"
+	tm "github.com/buger/goterm"
 	// corev1 "k8s.io/api/core/v1"
 )
 
 func Print(app *v1beta1.Application) (err error) {
-	fmt.Printf("Application: %s (%s)  ", app.Name, app.Spec.Descriptor.Version)
+	tm.Printf("Application: %s (%s)  ", app.Name, app.Spec.Descriptor.Version)
 	cond := findReadiness(app)
 	if cond != nil {
 		if cond.Status == "True" {
@@ -20,13 +21,20 @@ func Print(app *v1beta1.Application) (err error) {
 		}
 	}
 
-	fmt.Println("")
+	tm.Println("")
 
-	fmt.Println(app.Spec.Descriptor.Description)
-	fmt.Printf("\nComponents Ready: %s\n", app.Status.ComponentsReady)
+	tm.Println(app.Spec.Descriptor.Description)
+	tm.Printf("\nComponents Ready: %s\n", app.Status.ComponentsReady)
+	first := true
 	for _, comp := range app.Status.ComponentList.Objects {
 		if comp.Status != "Ready" {
-			fmt.Println("%s/%s :: %s", comp.Kind, comp.Name, comp.Status)
+			if first {
+				tm.Println("\nUnready Components:")
+			}
+			kind := strings.ToLower(comp.Kind)
+			tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status)
+			tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate", kind, comp.Name, app.Namespace)
+			first = false
 		}
 	}
 	return
@@ -51,13 +59,13 @@ func findReadiness(app *v1beta1.Application) (condition *v1beta1.Condition) {
 }
 
 func warn(line string, args... interface{}) {
-	color.New(color.FgYellow, color.Bold).Printf(line, args...)
+	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW))
 }
 
 func success(line string, args... interface{}) {
-	color.New(color.FgGreen, color.Bold).Printf(line, args...)
+	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN))
 }
 
 func highlight(line string, args... interface{}) {
-	color.New(color.Bold).Printf(line, args...)
+	tm.Print(tm.Bold(fmt.Sprintf(line, args...)))
 }

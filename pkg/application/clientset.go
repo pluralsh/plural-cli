@@ -3,7 +3,7 @@ package application
 import (
     "sigs.k8s.io/application/api/v1beta1"
     "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
+	// "k8s.io/apimachinery/pkg/runtime/serializer"
     "k8s.io/client-go/rest"
 )
 
@@ -20,7 +20,7 @@ func NewForConfig(c *rest.Config) (*ApplicationV1Beta1Client, error) {
     config := *c
     config.ContentConfig.GroupVersion = &v1beta1.GroupVersion
     config.APIPath = "/apis"
-    config.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
+    config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
     config.UserAgent = rest.DefaultKubernetesUserAgent()
 
     client, err := rest.RESTClientFor(&config)

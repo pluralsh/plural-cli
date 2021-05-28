@@ -28,7 +28,9 @@ func handleWatch(c *cli.Context) error {
 	}
 
 	tm.Clear()
+	tm.MoveCursor(1,1)
 	application.Print(app)
+	tm.Flush()
 
 	watcher, err := application.WatchNamespace(ctx, appClient)
 	if err != nil {
@@ -38,12 +40,12 @@ func handleWatch(c *cli.Context) error {
 	ch := watcher.ResultChan()
 	for {
 		event := <-ch
+		tm.Clear()
 		app, ok := event.Object.(*v1beta1.Application)
 		if !ok {
 			return fmt.Errorf("Failed to parse watch event")
 		}
 		tm.MoveCursor(1,1)
-		fmt.Println("from watch event!")
 		application.Print(app)
 		tm.Flush()
 	}
