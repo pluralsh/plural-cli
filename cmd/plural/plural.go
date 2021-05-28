@@ -43,6 +43,12 @@ func main() {
 			Action:    handleDiff,
 		},
 		{
+			Name: "watch",
+			Usage: "watches applications until they become ready",
+			ArgsUsage: "REPO",
+			Action: handleWatch,
+		},
+		{
 			Name:  "apply",
 			Usage: "applys the current pluralfile",
 			Flags: []cli.Flag{

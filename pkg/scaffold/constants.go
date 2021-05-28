@@ -49,6 +49,8 @@ spec:
     kind: Service
   - group: networking.k8s.io
     kind: Ingress
+  - group: cert-manager.io
+    kind: Certificate
   - group: apps
     kind: StatefulSet
   - group: apps

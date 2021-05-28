@@ -11,6 +11,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/rest"
+	"github.com/pluralsh/plural/pkg/application"
 	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
 )
 
@@ -23,6 +24,7 @@ func InKubernetes() bool {
 type Kube struct {
 	Kube  *kubernetes.Clientset
 	Plural *pluralv1alpha1.Clientset
+	Application *application.ApplicationV1Beta1Client
 }
 
 func InClusterKubernetes() (*Kube, error) {
@@ -60,7 +62,12 @@ func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 		return nil, err
 	}
 
-	return &Kube{Kube: clientset, Plural: plural}, nil
+	app, err := application.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Kube{Kube: clientset, Plural: plural, Application: app}, nil
 }
 
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
