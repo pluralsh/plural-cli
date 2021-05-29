@@ -8,7 +8,6 @@ import (
 	"strings"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -37,12 +36,6 @@ func branchName() string {
 	return strings.TrimSpace(string(res))
 }
 
-func createWebhook(domain string) (api.Webhook, error) {
-	client := api.NewClient()
-	url := fmt.Sprintf("https://%s/v1/webhook", domain)
-	return client.CreateWebhook(url)
-}
-
 func dumpConfig() (string, error) {
 	conf := config.Read()
 	io, err := conf.Marshal()
@@ -69,6 +62,10 @@ func readFile(path string) string {
 
 func readLine(prompt string) (string, error) {
 	return utils.ReadLine(prompt + ": ")
+}
+
+func readPassword(prompt string) (string, error) {
+	return utils.ReadPwd(prompt + ": ")
 }
 
 func readLineDefault(prompt string, def string) (string, error) {

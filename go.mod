@@ -11,9 +11,9 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
-	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
 	github.com/buger/goterm v1.0.0
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7
@@ -24,7 +24,6 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/michaeljguarino/graphql v0.2.5
-	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oleiade/reflections v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
