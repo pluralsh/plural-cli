@@ -47,6 +47,7 @@ func main() {
 			Usage: "watches applications until they become ready",
 			ArgsUsage: "REPO",
 			Action: handleWatch,
+			Category: "Debugging",
 		},
 		{
 			Name:  "apply",
@@ -58,6 +59,7 @@ func main() {
 				},
 			},
 			Action: apply,
+			Category: "Publishing",
 		},
 		{
 			Name:    "validate",
@@ -70,12 +72,14 @@ func main() {
 				},
 			},
 			Action: validate,
+			Category: "Workspace",
 		},
 		{
 			Name:    "topsort",
 			Aliases: []string{"d"},
 			Usage:   "renders a dependency-inferred topological sort of the installations in a workspace",
 			Action:  topsort,
+			Category: "Workspace", 
 		},
 		{
 			Name:      "bounce",
@@ -120,68 +124,81 @@ func main() {
 					Usage: "email for the service account you'd like to use for this workspace",
 				},
 			},
+			Category: "User Profile",
 		},
 		{
 			Name:   "install",
 			Usage:  "installs forge cli dependencies",
 			Action: handleInstall,
+			Category: "Workspace",
 		},
 		{
 			Name:   "import",
 			Usage:  "imports forge config from another file",
 			Action: handleImport,
+			Category: "User Profile",
 		},
 		{
 			Name:   "test",
 			Usage:  "validate a values templace",
 			Action: testTemplate,
+			Category: "Publishing",
 		},
 		{
 			Name:        "proxy",
 			Usage:       "proxies into running processes in your cluster",
 			Subcommands: proxyCommands(),
+			Category: "Debugging",
 		},
 		{
 			Name:        "crypto",
 			Usage:       "forge encryption utilities",
 			Subcommands: cryptoCommands(),
+			Category: "User Profile",
 		},
 		{
 			Name:        "push",
 			Usage:       "utilities for pushing tf or helm packages",
 			Subcommands: pushCommands(),
+			Category: "Publishing",
 		},
 		{
 			Name:        "api",
 			Usage:       "inspect the forge api",
 			Subcommands: apiCommands(),
+			Category: "API",
 		},
 		{
 			Name:        "config",
 			Aliases:     []string{"conf"},
 			Usage:       "reads/modifies cli configuration",
 			Subcommands: configCommands(),
+			Category: "User Profile",
 		},
 		{
 			Name:        "workspace",
 			Aliases:     []string{"wkspace"},
 			Usage:       "Commands for managing installations in your workspace",
 			Subcommands: workspaceCommands(),
+			Category: "Workspace",
 		},
 		{
 			Name:        "profile",
 			Usage:       "Commands for managing config profiles for plural",
 			Subcommands: profileCommands(),
+			Category: "User Profile",
 		},
 		{
 			Name:        "output",
 			Usage:       "Commands for generating outputs from supported tools",
 			Subcommands: outputCommands(),
+			Category: "Workspace",
 		},
 		{
 			Name:        "logs",
 			Usage:       "Commands for tailing logs for specific apps",
 			Subcommands: logsCommands(),
+			Category: "Debugging",
 		},
 		{
 			Name: "template",
@@ -194,6 +211,7 @@ func main() {
 				},
 			},
 			Action: handleHelmTemplate,
+			Category: "Publishing",
 		},
 		{
 			Name: "upgrade",
@@ -210,6 +228,7 @@ func main() {
 				},
 			},
 			Action: handleUpgrade,
+			Category: "API",
 		},
 	}
 
