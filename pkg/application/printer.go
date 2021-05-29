@@ -33,11 +33,36 @@ func Print(app *v1beta1.Application) (err error) {
 			}
 			kind := strings.ToLower(comp.Kind)
 			tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status)
-			tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate", kind, comp.Name, app.Namespace)
+			tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate\n", kind, comp.Name, app.Namespace)
+			first = false
+		}
+	}
+
+	first = true
+	for _, comp := range app.Status.ComponentList.Objects {
+		if comp.Status == "Ready" {
+			if first {
+				tm.Println("\nReady Components:")
+			}
+			tm.Printf("- %s/%s :: %s\n", strings.ToLower(comp.Kind), comp.Name, comp.Status)
 			first = false
 		}
 	}
 	return
+}
+
+func Flush() {
+	for idx, str := range strings.SplitAfter(tm.Screen.String(), "\n") {
+		if idx == tm.Height() - 1 {
+			tm.Output.WriteString("...")
+			break
+		}
+
+		tm.Output.WriteString(str)
+	}
+
+	tm.Output.Flush()
+	tm.Screen.Reset()
 }
 
 func Ready(app *v1beta1.Application) bool {

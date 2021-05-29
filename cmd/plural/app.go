@@ -30,7 +30,7 @@ func handleWatch(c *cli.Context) error {
 	tm.Clear()
 	tm.MoveCursor(1,1)
 	application.Print(app)
-	tm.Flush()
+	application.Flush()
 
 	watcher, err := application.WatchNamespace(ctx, appClient)
 	if err != nil {
@@ -47,6 +47,6 @@ func handleWatch(c *cli.Context) error {
 		}
 		tm.MoveCursor(1,1)
 		application.Print(app)
-		tm.Flush()
+		application.Flush()
 	}
 }
