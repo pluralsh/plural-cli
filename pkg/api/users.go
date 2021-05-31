@@ -37,15 +37,6 @@ const listTokenQuery = `
 	}
 `
 
-const createWebhookMut = `
-	mutation CreateWebhook($url: String!) {
-		createWebhook(attributes: {url: $url}) {
-			url
-			secret
-		}
-	}
-`
-
 const createUpgradeMut = `
 	mutation Upgrade($name: String, $attributes: UpgradeAttributes!) {
 		createUpgrade(name: $name, attributes: $attributes) {
@@ -84,9 +75,6 @@ type listToken struct {
 	}
 }
 
-type createWebhook struct {
-	CreateWebhook Webhook
-}
 
 func (client *Client) Login(email, pwd string) (string, error) {
 	var resp login
@@ -124,18 +112,6 @@ func (client *Client) GrabAccessToken() (string, error) {
 	}
 
 	return client.CreateAccessToken()
-}
-
-func (client *Client) CreateWebhook(url string) (Webhook, error) {
-	var resp createWebhook
-	req := client.Build(createWebhookMut)
-	req.Var("url", url)
-	err := client.Run(req, &resp)
-	if err != nil {
-		return resp.CreateWebhook, err
-	}
-
-	return resp.CreateWebhook, nil
 }
 
 func (client *Client) CreateUpgrade(name string, message string) (id string, err error) {
