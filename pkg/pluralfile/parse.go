@@ -32,13 +32,13 @@ type Component interface {
 	Push(repo string, sha string) (string, error)
 }
 
-func (forge *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
+func (plrl *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
 	defer lock.Flush(f)
-	for _, component := range forge.Components {
+	for _, component := range plrl.Components {
 		key := component.Key()
 		t := component.Type()
 		sha := lock.getSha(t, key)
-		newsha, err := component.Push(forge.Repo, sha)
+		newsha, err := component.Push(plrl.Repo, sha)
 		if err != nil {
 			return err
 		}
@@ -50,9 +50,9 @@ func (forge *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
 
 func Parse(f string) (*Pluralfile, error) {
 	pluralfile, err := os.Open(f)
-	forge := &Pluralfile{}
+	plrl := &Pluralfile{}
 	if err != nil {
-		return forge, err
+		return plrl, err
 	}
 	defer pluralfile.Close()
 
@@ -69,67 +69,67 @@ func Parse(f string) (*Pluralfile, error) {
 
 		switch strings.ToLower(splitline[0]) {
 		case "repo":
-			forge.Repo = splitline[1]
+			plrl.Repo = splitline[1]
 		case "helm":
 			helms, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Helm{File: targ}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, helms...)
+			plrl.Components = append(plrl.Components, helms...)
 		case "tf":
 			tfs, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Terraform{File: targ}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, tfs...)
+			plrl.Components = append(plrl.Components, tfs...)
 		case "artifact":
 			arts, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Artifact{File: targ, Platform: splitline[2], Arch: splitline[3]}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, arts...)
+			plrl.Components = append(plrl.Components, arts...)
 		case "ird":
 			irds, err := expandGlob(splitline[1], func(targ string) Component {
 				return &ResourceDefinition{File: targ}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, irds...)
+			plrl.Components = append(plrl.Components, irds...)
 		case "recipe":
 			recipes, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Recipe{File: targ}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, recipes...)
+			plrl.Components = append(plrl.Components, recipes...)
 		case "integration":
 			integs, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Integration{File: targ}
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
 
-			forge.Components = append(forge.Components, integs...)
+			plrl.Components = append(plrl.Components, integs...)
 		case "crd":
 			chart := splitline[2]
 			crds, err := expandGlob(splitline[1], func(targ string) Component {
@@ -137,19 +137,18 @@ func Parse(f string) (*Pluralfile, error) {
 			})
 
 			if err != nil {
-				return forge, err
+				return plrl, err
 			}
-			forge.Components = append(forge.Components, crds...)
+			plrl.Components = append(plrl.Components, crds...)
 		case "run":
-			cmd := splitline[1]
-			args := splitline[2:]
-			forge.Components = append(forge.Components, &Command{Command: cmd, Args: args})
+			cmd, args := splitline[1],  splitline[2:]
+			plrl.Components = append(plrl.Components, &Command{Command: cmd, Args: args})
 		default:
 			continue
 		}
 	}
 
-	return forge, nil
+	return plrl, nil
 }
 
 func expandGlob(relpath string, toComponent func(path string) Component) ([]Component, error) {

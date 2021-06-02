@@ -18,7 +18,7 @@ release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o plural.o ./cmd/plural/
 
 plural: .PHONY ## uploads to plural
-	forge apply
+	plural apply
 
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \

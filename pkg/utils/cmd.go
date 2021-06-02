@@ -30,26 +30,6 @@ func MkCmd(conf *config.Config, program string, args ...string) *exec.Cmd {
 	return cmd
 }
 
-func ProjectRoot() (root string, found bool) {
-		root, _ = os.Getwd()
-		found = false
-
-    for {
-			if root == "/" {
-        break
-      }
-
-      if Exists(filepath.Join(root, "workspace.yaml")) {
-        found = true
-        return
-      }
-
-      root = filepath.Dir(root)
-    }
-
-    return
-}
-
 func Install(command string, url string, dest string, postprocess func(string) (string, error)) error {
 	if exists, _ := Which(command); exists {
 		Success("%s is already installed\n", command)
