@@ -2,11 +2,6 @@ package main
 
 import (
 	"bytes"
-	crypt "crypto"
-	"crypto/x509"
-	"encoding/pem"
-	"fmt"
-	"github.com/docker/libtrust"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
@@ -20,7 +15,7 @@ var prefix = []byte("CHARTMART-ENCRYPTED")
 
 const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
-/diffs/** filter=plural-crypt diff=plural-crypt
+/diffs/**/* filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
 
@@ -54,13 +49,36 @@ func cryptoCommands() []cli.Command {
 		},
 		{
 			Name:   "import",
-			Usage:  "imports an aes key for forge to use",
+			Usage:  "imports an aes key for plural to use",
 			Action: importKey,
 		},
 		{
 			Name:   "export",
 			Usage:  "dumps the current aes key to stdout",
 			Action: exportKey,
+		},
+		{
+			Name: "share",
+			Usage: "allows a list of plural users to decrypt this repository",
+			ArgsUsage: "",
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:  "email",
+					Usage: "a email to share with (multiple allowed)",
+				},
+			},
+			Action: handleCryptoShare,
+		},
+		{
+			Name: "setup-keys",
+			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name",
+					Usage: "a name for the key",
+				},
+			},
+			Action: handleSetupKeys,
 		},
 	}
 }
@@ -75,11 +93,13 @@ func handleEncrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	key, err := crypto.Materialize()
+
+	prov, err := crypto.Build()
 	if err != nil {
 		return err
 	}
-	result, err := key.Encrypt(data)
+
+	result, err := crypto.Encrypt(prov, data)
 	if err != nil {
 		return err
 	}
@@ -111,12 +131,12 @@ func handleDecrypt(c *cli.Context) error {
 		return nil
 	}
 
-	key, err := crypto.Materialize()
+	prov, err := crypto.Build()
 	if err != nil {
 		return err
 	}
 	
-	result, err := key.Decrypt(data[len(prefix):])
+	result, err := crypto.Decrypt(prov, data[len(prefix):])
 	if err != nil {
 		return err
 	}
@@ -140,11 +160,32 @@ func cryptoInit(c *cli.Context) error {
 		}
 	}
 
-	provider, err := crypto.Build()
-
 	utils.WriteFileIfNotPresent(".gitattributes", gitattributes)
 	utils.WriteFileIfNotPresent(".gitignore", gitignore)
-	return provider.Flush()
+	return nil
+}
+
+func handleCryptoShare(c *cli.Context) error {
+	emails := c.StringSlice("email")
+	if err := crypto.SetupAge(emails); err != nil {
+		return err
+	}
+
+	prov, err := crypto.BuildAgeProvider()
+	if err != nil {
+		return err
+	}
+
+	return crypto.Flush(prov)
+}
+
+func handleSetupKeys(c *cli.Context) error {
+	if err := crypto.SetupIdentity(c.String("name")); err != nil {
+		return err
+	}
+
+	utils.Success("Public key uploaded successfully\n")
+	return nil
 }
 
 func handleUnlock(c *cli.Context) error {

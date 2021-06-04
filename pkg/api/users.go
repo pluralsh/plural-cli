@@ -1,5 +1,9 @@
 package api
 
+import (
+	"fmt"
+)
+
 const loginQuery = `
 	mutation Login($email: String!, $pwd: String!) {
 		login(email: $email, password: $pwd) {
@@ -43,6 +47,21 @@ const createUpgradeMut = `
 			id
 		}
 	} 
+`
+
+var listKeys = fmt.Sprintf(`
+	query ListKeys($emails: [String]) {
+		publicKeys(emails: $emails, first: 1000) {
+			edges { node { ...PublicKeyFragment } }
+		}
+	}
+	%s
+`, PublicKeyFragment)
+
+const createKey = `
+	mutation Create($key: String!, $name: String!) {
+		createPublicKey(attributes: {content: $key, name: $name}) { id }
+	}
 `
 
 type UpgradeAttributes struct {
@@ -128,4 +147,34 @@ func (client *Client) CreateUpgrade(name string, message string) (id string, err
 	}
 
 	return
+}
+
+func (client *Client) ListKeys(emails []string) (keys []*PublicKey, err error) {
+	var resp struct {
+		PublicKeys struct {
+			Edges []*PublicKeyEdge
+		}
+	}
+
+	req := client.Build(listKeys)
+	req.Var("emails", emails)
+	err  = client.Run(req, &resp)
+	keys = []*PublicKey{}
+	for _, edge := range resp.PublicKeys.Edges {
+		keys = append(keys, edge.Node)
+	}
+	return
+}
+
+func (client *Client) CreateKey(name, content string) error {
+	var resp struct {
+		CreatePublicKey struct {
+			Id string
+		}
+	}
+
+	req := client.Build(createKey)
+	req.Var("key", content)
+	req.Var("name", name)
+	return client.Run(req, &resp)
 }

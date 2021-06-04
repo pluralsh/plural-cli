@@ -31,6 +31,8 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["importValue"] = importValue
 	funcs["namespace"] = namespace
 	funcs["toYaml"] = toYaml
+	funcs["fileExists"] = fileExists
+	funcs["pathJoin"] = pathJoin
 	return template.New("gotpl").Funcs(funcs).Parse(tmplate)
 }
 

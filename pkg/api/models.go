@@ -22,14 +22,6 @@ type Repository struct {
 	Publisher   *Publisher
 }
 
-
-type User struct {
-	Id        string
-	Name      string
-	Email     string
-	Publisher *Publisher
-}
-
 type Chart struct {
 	Id            string
 	Name          string
@@ -188,6 +180,22 @@ type Upgrade struct {
 	Id string
 }
 
+type User struct {
+	Id    string
+	Email string
+	Name  string
+}
+
+type PublicKey struct {
+	Id string
+	Content string
+	User *User
+}
+
+type PublicKeyEdge struct {
+	Node *PublicKey
+}
+
 var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id
@@ -316,3 +324,20 @@ const ArtifactFragment = `
 		filesize
 	}
 `
+
+const UserFragment = `
+	fragment UserFragment on User {
+		id
+		name
+		email
+	}
+`
+
+var PublicKeyFragment = fmt.Sprintf(`
+	fragment PublicKeyFragment on PublicKey {
+		id
+		content
+		user { ...UserFragment }
+	}
+	%s
+`, UserFragment)

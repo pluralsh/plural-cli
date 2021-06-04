@@ -13,6 +13,14 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
+func fileExists(path string) bool {
+	return utils.Exists(path)
+}
+
+func pathJoin(parts ...string) string {
+	return path.Join(parts...)
+}
+
 func repoRoot() string {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	res, _ := cmd.CombinedOutput()

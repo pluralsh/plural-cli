@@ -14,12 +14,10 @@ type Provider interface {
 
 const (
 	KEY IdentityType = "key"
-	AWS IdentityType = "aws"
-	GCP IdentityType = "gcp"
-	AZ  IdentityType = "azure"
+	AGE IdentityType = "age"
 )
 
-func (prov Provider) Encrypt(text []byte) ([]byte, error) {
+func Encrypt(prov Provider, text []byte) ([]byte, error) {
 	key, err := prov.SymmetricKey()
 	if err != nil {
 		return nil, err
@@ -28,7 +26,7 @@ func (prov Provider) Encrypt(text []byte) ([]byte, error) {
 	return encrypt(key, text)
 }
 
-func (prov Provider) Decrypt(text []byte) ([]byte, error) {
+func Decrypt(prov Provider, text []byte) ([]byte, error) {
 	key, err := prov.SymmetricKey()
 	if err != nil {
 		return nil, err
@@ -37,16 +35,11 @@ func (prov Provider) Decrypt(text []byte) ([]byte, error) {
 	return decrypt(key, text)
 }
 
-func (prov Provider) Flush() error {
+func Flush(prov Provider) error {
 	io, err := prov.Marshall()
 	if err != nil {
 		return err
 	}
 
-	p, err := getConfigPath()
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(p, io, 0644)
+	return ioutil.WriteFile(configPath(), io, 0644)
 }

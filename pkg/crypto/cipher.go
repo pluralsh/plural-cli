@@ -3,16 +3,8 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"errors"
-	"github.com/pluralsh/plural/pkg/utils"
-	"gopkg.in/yaml.v2"
-	"io"
-	"io/ioutil"
-	"os"
-	"path"
 )
 
 func encrypt(key, text []byte) ([]byte, error) {

@@ -3,6 +3,8 @@ package crypto
 import (
 	"fmt"
 	"encoding/base64"
+	"crypto/rand"
+	"crypto/sha256"
 	"io"
 	"path/filepath"
 	"os"
@@ -20,18 +22,19 @@ func (prov *KeyProvider) SymmetricKey() ([]byte, error) {
 }
 
 func (prov *KeyProvider) ID() string {
-	return "SHA256:" + sha256.Sum256(prov.key)
+	sha := sha256.Sum256([]byte(prov.key))
+	return "SHA256:" + base64.StdEncoding.EncodeToString(sha[:])
 }
 
 func (prov *KeyProvider) Marshall() ([]byte, error) {
 	conf := Config{
 		Version: "crypto.plural.sh/v1",
-		Type: RAW,
+		Type: KEY,
 		Id: prov.ID(),
-		Context: map[string]interface{}{}
+		Context: map[string]interface{}{},
 	}
 
-	return yaml.Marshal(k)
+	return yaml.Marshal(conf)
 }
 
 func buildKeyProvider(conf *Config) (prov *KeyProvider, err error) {
@@ -62,13 +65,7 @@ func Materialize() (*AESKey, error) {
 			return nil, err
 		}
 
-		conf := AESKey{}
-		err = yaml.Unmarshal(contents, &conf)
-		if err != nil {
-			return nil, err
-		}
-
-		return &conf, nil
+		return DeserializeKey(contents)
 	}
 
 	key := make([]byte, 32)
@@ -89,6 +86,11 @@ func Import(buf []byte) (*AESKey, error) {
 	key := AESKey{}
 	err := yaml.Unmarshal(buf, &key)
 	return &key, err
+}
+
+func DeserializeKey(contents []byte) (k *AESKey, err error) {
+  err = yaml.Unmarshal(contents, &k)
+	return
 }
 
 func (k *AESKey) Marshal() ([]byte, error) {

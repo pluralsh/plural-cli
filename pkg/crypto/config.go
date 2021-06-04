@@ -1,10 +1,8 @@
 package crypto
 
 import (
-	"fmt"
+	"io/ioutil"
 	"path/filepath"
-	"encoding/base64"
-	"crypto/sha256"
 	"gopkg.in/yaml.v2"
 	"github.com/pluralsh/plural/pkg/utils"
 )
@@ -21,7 +19,7 @@ func configPath() string {
 	return filepath.Join(root, "crypto.yml")
 }
 
-func Config() (conf *Config, err error) {
+func ReadConfig() (conf *Config, err error) {
 	conf = &Config{}
 	contents, err := ioutil.ReadFile(configPath())
 	if err != nil {
@@ -32,17 +30,27 @@ func Config() (conf *Config, err error) {
 	return
 }
 
-func Build() (prov Provider, err error) {
+func Build() (Provider, error) {
+	fallback, err := fallbackProvider()
 	if utils.Exists(configPath()) {
-		conf, err := Config()
+		conf, err := ReadConfig()
+
+		if err != nil {
+			return fallback, err
+		}
+
 		switch (conf.Type) {
 		case KEY:
-			prov, err = buildKeyProvider(conf)
-			return
+			return buildKeyProvider(conf)
+		case AGE:
+			return BuildAgeProvider()
 		}
 	}
 
+	return fallback, err
+}
+
+func fallbackProvider() (*KeyProvider, error) {
 	key, err := Materialize()
-	prov = &KeyProvider{key: key.Key}
-	return
+	return &KeyProvider{key: key.Key}, err
 }

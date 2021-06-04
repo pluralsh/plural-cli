@@ -13,7 +13,7 @@ func ProjectRoot() (root string, found bool) {
 
 	for {
 		if root == "/" {
-			root, _ := RepoRoot()
+			root, _ = RepoRoot()
 			break
 		}
 

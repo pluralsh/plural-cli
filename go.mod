@@ -5,6 +5,7 @@ go 1.13
 require (
 	cloud.google.com/go v0.72.0 // indirect
 	cloud.google.com/go/storage v1.12.0
+	filippo.io/age v1.0.0-rc.2
 	github.com/Azure/azure-sdk-for-go v53.4.0+incompatible
 	github.com/Azure/azure-storage-blob-go v0.13.0
 	github.com/Azure/go-autorest/autorest v0.11.17
@@ -16,7 +17,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
 	github.com/buger/goterm v1.0.0
-	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7
 	github.com/fatih/color v1.10.0
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0
