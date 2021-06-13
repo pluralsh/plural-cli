@@ -63,7 +63,7 @@ func (s *Scaffold) createChartDependencies(w *wkspace.Workspace, name string) er
 }
 
 func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
-	ctx := w.Installation.Context
+	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
 	var buf bytes.Buffer
 	values := make(map[string]map[string]interface{})
 	buf.Grow(5 * 1024)

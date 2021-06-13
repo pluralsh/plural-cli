@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/urfave/cli"
 )
 
@@ -279,4 +280,15 @@ func doDestroy(client *api.Client, installation *api.Installation) error {
 	}
 
 	return workspace.DestroyTerraform()
+}
+
+func buildContext(c *cli.Context) error {
+	client := api.NewClient()
+	insts, err := client.GetInstallations()
+	if err != nil {
+		return err
+	}
+
+	path := manifest.ContextPath()
+	return manifest.BuildContext(path, insts)
 }

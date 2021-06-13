@@ -22,6 +22,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11
+	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/michaeljguarino/graphql v0.2.5
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect

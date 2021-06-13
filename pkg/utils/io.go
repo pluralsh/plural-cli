@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh/terminal"
+	"fmt"
 	"os"
 	"syscall"
 	"strings"
@@ -12,8 +13,17 @@ import (
 func ReadLine(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	color.New(color.Bold).Printf(prompt)
-	email, err := reader.ReadString('\n')
-	return strings.TrimSpace(string(email)), err
+	res, err := reader.ReadString('\n')
+	return strings.TrimSpace(string(res)), err
+}
+
+func ReadLineDefault(prompt string, def string) (string, error) {
+	result, err := ReadLine(fmt.Sprintf("%s [%s]: ", prompt, def))
+	if result == "" {
+		return def, nil
+	}
+
+	return result, err
 }
 
 func ReadPwd(prompt string) (string, error) {

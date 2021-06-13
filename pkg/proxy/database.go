@@ -36,7 +36,7 @@ func (pg *postgres) Connect(namespace string) error {
 
 	utils.Highlight("Wait a bit while the port-forward boots up\n")
 	time.Sleep(5 * time.Second)
-	cmd := exec.Command("psql", "-U", pg.Proxy.Spec.Credentials.User, "-h", "127.0.0.1", pg.Proxy.Spec.DbConfig.Name)
+	cmd := exec.Command("psql", fmt.Sprintf("host=127.0.0.1 sslmode=allow user=%s dbname=%s", pg.Proxy.Spec.Credentials.User, pg.Proxy.Spec.DbConfig.Name))
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", pg.Pwd))
 	cmd.Stdout = os.Stdout

@@ -201,6 +201,11 @@ func main() {
 			Category: "Debugging",
 		},
 		{
+			Name: "bundle",
+			Usage: "Commands for installing and discovering installation bundles",
+			Subcommands: bundleCommands(),
+		},
+		{
 			Name: "template",
 			Aliases: []string{"tpl"},
 			Usage: "templates a helm chart to be uploaded to plural",
@@ -229,6 +234,12 @@ func main() {
 			},
 			Action: handleUpgrade,
 			Category: "API",
+		},
+		{
+			Name: "build-context",
+			Usage: "creates a fresh context.yaml for legacy repos",
+			Action: buildContext,
+			Category: "Workspace",
 		},
 	}
 

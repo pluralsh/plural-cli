@@ -132,6 +132,8 @@ type Webhook struct {
 type Recipe struct {
 	Id             string
 	Name           string
+	Provider       string
+	Description    string
 	RecipeSections []*RecipeSection
 }
 
@@ -151,7 +153,9 @@ type RecipeItem struct {
 type ConfigurationItem struct {
 	Name    string
 	Default string
+	Documentation string
 	Type    string
+	Placeholder string
 }
 
 type Artifact struct {
@@ -341,3 +345,39 @@ var PublicKeyFragment = fmt.Sprintf(`
 	}
 	%s
 `, UserFragment)
+
+const RecipeFragment = `
+	fragment RecipeFragment on Recipe {
+		id
+    name
+    description
+    provider
+	}
+`
+
+var RecipeItemFragment = fmt.Sprintf(`
+	fragment RecipeItemFragment on RecipeItem {
+		id
+		chart { ...ChartFragment }
+		terraform { ...TerraformFragment }
+		configuration {
+			name
+			type
+			default
+			documentation
+			placeholder
+		}
+	}
+	%s
+	%s
+`, ChartFragment, TerraformFragment)
+
+var RecipeSectionFragment = fmt.Sprintf(`
+fragment RecipeSectionFragment on RecipeSection {
+	index
+	repository { ...RepositoryFragment }
+	recipeItems { ...RecipeItemFragment }
+}
+%s
+%s
+`, RepositoryFragment, RecipeItemFragment)

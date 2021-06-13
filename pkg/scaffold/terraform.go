@@ -55,7 +55,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 	var modules = make([]string, len(wk.Terraform)+1)
 	modules[0] = backend
-	ctx := wk.Installation.Context
+	ctx, _ := wk.Context.Repo(repo.Name)
 	for i, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
 

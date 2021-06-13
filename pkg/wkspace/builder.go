@@ -22,6 +22,7 @@ type Workspace struct {
 	Terraform    []*api.TerraformInstallation
 	Config       *config.Config
 	Manifest     *manifest.ProjectManifest
+	Context      *manifest.Context
 }
 
 func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
@@ -36,7 +37,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		man, err := manifest.Read(manifestPath)
 		if err != nil {
 			return nil, err
-		} 
+		}
 
 		prov, err = provider.FromManifest(man)
 		if err != nil {
@@ -56,12 +57,18 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	}
 
 	conf := config.Read()
+	ctx, err := manifest.ReadContext(manifest.ContextPath())
+	if err != nil {
+		return nil, err
+	}
+
 	wk := &Workspace{
 		Provider: prov,
 		Installation: inst,
 		Charts: ci,
 		Terraform: ti,
 		Config: &conf,
+		Context: ctx,
 		Manifest: project,
 	}
 	return wk, nil
