@@ -24,6 +24,7 @@ const (
 	CRD         ComponentName = "crd"
 	IRD         ComponentName = "ird"
 	COMMAND     ComponentName = "run"
+	TAG         ComponentName = "tag"
 )
 
 type Component interface {
@@ -143,6 +144,15 @@ func Parse(f string) (*Pluralfile, error) {
 		case "run":
 			cmd, args := splitline[1],  splitline[2:]
 			plrl.Components = append(plrl.Components, &Command{Command: cmd, Args: args})
+		case "tag":
+			tags, err := expandGlob(splitline[1], func(tag string) Component {
+				return &Tags{File: tag}
+			})
+
+			if err != nil {
+				return plrl, err
+			}
+			plrl.Components = append(plrl.Components, tags...)
 		default:
 			continue
 		}
