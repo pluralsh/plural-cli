@@ -19,6 +19,7 @@ type Repository struct {
 	Name        string
 	Description string
 	Icon        string
+	DarkIcon    string
 	Publisher   *Publisher
 }
 
@@ -206,6 +207,7 @@ var RepositoryFragment = fmt.Sprintf(`
 		name
 		description
 		icon
+		darkIcon
 		publisher { name }
 	}
 `)

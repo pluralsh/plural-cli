@@ -39,7 +39,7 @@ appVersion: 1.16.0
 	defaultApplication = `apiVersion: app.k8s.io/v1beta1
 kind: Application
 metadata:
-  name: %s
+  name: {{ .Name }}
 spec:
   selector:
     matchLabels:
@@ -60,11 +60,14 @@ spec:
   - group: batch
     kind: Job
   descriptor:
-    type: %s
-    version: %s
-    description: %s
+    type: {{ .Name }}
+    version: {{ .Version }}
+    description: {{ .Description }}
     icons:
-    - src: %s
+    - src: {{ .Icon }}
+    {{ if .DarkIcon }}
+    - src: {{ .DarkIcon }}
+    {{ end }}
 `
 	// ChartfileName is the default Chart file name.
 	ChartfileName = "Chart.yaml"

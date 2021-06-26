@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	ttpl "text/template"
 	"strings"
 
 	"github.com/imdario/mergo"
@@ -185,9 +186,25 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	}
 
 	appVersion := appVersion(w.Charts)
-	application := fmt.Sprintf(defaultApplication, repo.Name, repo.Name, appVersion, repo.Description, repo.Icon)
+	tpl, err := ttpl.New("gotpl").Parse(defaultApplication)
+	if err != nil {
+		return err
+	}
 
-	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), []byte(application)); err != nil {
+	var appBuffer bytes.Buffer
+	vars := map[string]string{
+		"Name": repo.Name,
+		"Version": appVersion,
+		"Description": repo.Description,
+		"Icon": repo.Icon,
+		"DarkIcon": repo.DarkIcon,
+	}
+	if err := tpl.Execute(&appBuffer, vars); err != nil {
+		return err
+	}
+
+
+	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), appBuffer.Bytes()); err != nil {
 		return err
 	}
 
