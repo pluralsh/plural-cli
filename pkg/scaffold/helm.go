@@ -124,6 +124,8 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 
 	io, err := yaml.Marshal(values)
 	if err != nil {
+		fmt.Println("Invalid yaml:\n")
+		fmt.Println(values)
 		return err
 	}
 
