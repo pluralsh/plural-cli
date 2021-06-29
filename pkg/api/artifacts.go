@@ -9,13 +9,14 @@ import (
 )
 
 var createArtifact = fmt.Sprintf(`
-	mutation CreateArtifact($repoName: String!, $name: String!, $readme: String!, $type: String!, $platform: String!, $blob: UploadOrUrl!) {
+	mutation CreateArtifact($repoName: String!, $name: String!, $readme: String!, $type: String!, $platform: String!, $blob: UploadOrUrl!, $arch: String) {
 		createArtifact(repositoryName: $repoName, attributes: {
 			name: $name,
 			blob: $blob,
 			readme: $readme,
 			type: $type,
-			platform: $platform
+			platform: $platform,
+			arch: $arch
 		}) {
 			...ArtifactFragment
 		}
@@ -77,6 +78,7 @@ func (client *Client) CreateArtifact(repo string, attrs ArtifactAttributes) (Art
 	req.Var("readme", readme)
 	req.Var("type", attrs.Type)
 	req.Var("platform", attrs.Platform)
+	req.Var("arch", attrs.Arch)
 	req.Var("blob", "blob")
 	req.File("blob", attrs.Blob, rf)
 	err = client.Run(req, &artifact)
