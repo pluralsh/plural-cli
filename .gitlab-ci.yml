@@ -21,11 +21,45 @@ stages:
   - gcloud auth configure-docker -q
   - docker login -u mjg@plural.sh -p $PLURAL_ACCESS_TOKEN dkr.plural.sh
 
+.ignore-cond: &ignore-cond
+  except:
+    variables:
+    - $CI_COMMIT_MESSAGE =~ /pushed to plural/
+
 build-console:
   stage: push
   <<: *push-globs
+  <<: *ignore-cond
+  except:
+    variables:
+    - $CI_COMMIT_MESSAGE =~ /pushed to plural/
   only:
   - master
   script:
   - make build
   - make push
+
+plural-apply:
+  stage: push
+  image: gcr.io/pluralsh/golang:1.16-stretch
+  <<: *ignore-cond
+  before_script:
+    - 'which ssh-agent || ( apt-get update -qy && apt-get install openssh-client -qqy )'
+    - 'which git || ( apt-get update -qy && apt-get install git -qqy )'
+    - eval `ssh-agent -s`
+    - echo "${GIT_SSH_KEY}" | tr -d '\r' | ssh-add - > /dev/null # add ssh ke
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$GIT_SSH_KEY" >> ~/.ssh/id_rsa.pub
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - mkdir -p ~/.plural
+    - cp $PLURAL_CONF ~/.plural/config.yml
+  script:
+    - make install
+    - plural apply
+    - git config --global user.email mjg@plural.sh
+    - git config --global user.name mjg
+    - git add .
+    - git commit -m "pushed to plural"
+    - git remote rm origin && git remote add origin git@gitlab.plural.sh:$CI_PROJECT_PATH.git
+    - git push origin HEAD:$CI_COMMIT_REF_NAME # Pushes to the same branch as the trigger

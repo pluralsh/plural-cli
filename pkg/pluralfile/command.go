@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type Command struct {
@@ -21,7 +22,7 @@ func (c *Command) Key() string {
 
 func (c *Command) Push(repo string, sha string) (string, error) {
 	fmt.Println("")
-	cmd := exec.Command(c.Command, c.Args...)
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("%s %s", c.Command, strings.Join(c.Args, " ")))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return "", cmd.Run()

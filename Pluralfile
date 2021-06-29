@@ -1,6 +1,15 @@
 REPO plural
 
+RUN rm plural/readme.md
+RUN echo '```bash' >> plural/readme.md
+RUN plural --help >> plural/readme.md
+RUN echo '```' >> plural/readme.md
+
 RUN make release GOOS=linux GOARCH=amd64
 ARTIFACT plural/plural.yaml linux amd64
+
 RUN make release GOOS=darwin GOARCH=amd64
 ARTIFACT plural/plural.yaml mac amd64
+
+RUN make release GOOS=darwin GOARCH=arm64
+ARTIFACT plural/plural.yaml mac arm64

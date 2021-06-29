@@ -1,0 +1,4 @@
+plural/
+.gitlab-ci.yml
+Pluralfile
+plural.lock
