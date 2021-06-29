@@ -20,6 +20,19 @@ type Provider interface {
 	Context() map[string]interface{}
 }
 
+func Bootstrap(manifestPath string, force bool) (Provider, error) {
+	if utils.Exists(manifestPath) {
+		man, err := manifest.Read(manifestPath)
+		if err != nil {
+			return nil, err
+		}
+
+		return FromManifest(man)
+	}
+
+	return Select(force)
+}
+
 func Select(force bool) (Provider, error) {
 	available := []string{GCP, AWS, AZURE}
 	path := manifest.ProjectManifestPath()

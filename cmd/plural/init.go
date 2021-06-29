@@ -32,6 +32,11 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
+	manifestPath, _ := filepath.Abs("manifest.yaml")
+	if _, err := provider.Bootstrap(manifestPath, false); err != nil {
+		return err
+	}
+
 	utils.Success("Workspace is properly configured!\n")
 	return nil
 }

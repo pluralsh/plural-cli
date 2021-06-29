@@ -30,22 +30,9 @@ func Minimal(name string) (*MinimalWorkspace, error) {
 	}
 
 	path, _ := filepath.Abs(filepath.Join(root, name, "manifest.yaml"))
-	var prov provider.Provider
-	if utils.Exists(path) {
-		manifest, err := manifest.Read(path)
-		if err != nil {
-			return nil, err
-		}
-
-		prov, err = provider.FromManifest(manifest)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		prov, err = provider.Select(false)
-		if err != nil {
-			return nil, err
-		}
+	prov, err := provider.Bootstrap(path, false)
+	if err != nil {
+		return nil, err
 	}
 
 	project, _ := manifest.ReadProject(filepath.Join(root, "workspace.yaml"))

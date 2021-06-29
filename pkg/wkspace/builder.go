@@ -31,23 +31,10 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
-	var prov provider.Provider
 	manifestPath := manifestPath(inst.Repository)
-	if utils.Exists(manifestPath) {
-		man, err := manifest.Read(manifestPath)
-		if err != nil {
-			return nil, err
-		}
-
-		prov, err = provider.FromManifest(man)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		prov, err = provider.Select(false)
-		if err != nil {
-			return nil, err
-		}
+	prov, err := provider.Bootstrap(manifestPath, false)
+	if err != nil {
+		return nil, err
 	}
 
 	projPath, _ := filepath.Abs("workspace.yaml")
