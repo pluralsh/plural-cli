@@ -44,6 +44,7 @@ COMMANDS:
      workspace, wkspace  Commands for managing installations in your workspace
      output              Commands for generating outputs from supported tools
      build-context       creates a fresh context.yaml for legacy repos
+     changed             shows repos with pending changes
 
 GLOBAL OPTIONS:
    --help, -h  show help
