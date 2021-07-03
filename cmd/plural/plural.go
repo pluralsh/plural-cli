@@ -241,6 +241,12 @@ func main() {
 			Action: buildContext,
 			Category: "Workspace",
 		},
+		{
+			Name: "changed",
+			Usage: "shows repos with pending changes",
+			Action: diffed,
+			Category: "Workspace",
+		},
 	}
 
 	err := app.Run(os.Args)

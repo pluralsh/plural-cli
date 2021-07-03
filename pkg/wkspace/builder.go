@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -31,7 +32,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
-	manifestPath := manifestPath(inst.Repository)
+	manifestPath := manifestPath(inst.Repository.Name)
 	prov, err := provider.Bootstrap(manifestPath, false)
 	if err != nil {
 		return nil, err
@@ -82,7 +83,7 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
-	if err := manifest.Write(manifestPath(repo)); err != nil {
+	if err := manifest.Write(manifestPath(repo.Name)); err != nil {
 		return err
 	}
 
@@ -133,6 +134,30 @@ func (wk *Workspace) buildDiff(repoRoot string) error {
 	return diff.DefaultDiff(name, d).Flush(repoRoot)
 }
 
+func DiffedRepos() ([]string, error) {
+	files, err := utils.ChangedFiles()
+	repos := make(map[string]bool)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		parts := strings.Split(file, string([]byte{ filepath.Separator }))
+		maybeRepo := parts[0]
+		if utils.Exists(manifestPath(maybeRepo)) {
+			repos[maybeRepo] = true
+		}
+	}
+
+	result := make([]string, len(repos))
+	count := 0
+	for repo, _ := range repos {
+		result[count] = repo
+		count++
+	}
+	return result, nil
+}
+
 func mkdir(path string) error {
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
@@ -140,7 +165,7 @@ func mkdir(path string) error {
 	return nil
 }
 
-func manifestPath(repo *api.Repository) string {
-	path, _ := filepath.Abs(filepath.Join(repo.Name, "manifest.yaml"))
+func manifestPath(repo string) string {
+	path, _ := filepath.Abs(filepath.Join(repo, "manifest.yaml"))
 	return path
 }

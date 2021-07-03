@@ -9,35 +9,60 @@ import (
 
 func TopSort(installations []*api.Installation) ([]*api.Installation, error) {
 	var repoMap = make(map[string]*api.Installation)
-	graph := toposort.NewGraph(len(installations))
-	for _, installation := range installations {
+	names := make([]string, len(installations))
+	for i, installation := range installations {
 		repo := installation.Repository.Name
 		repoMap[repo] = installation
-		graph.AddNode(repo)
-		path := manifestPath(installation.Repository)
-		man, err := manifest.Read(path)
+		names[i] = repo
+	}
+
+	sortedNames, err := TopSortNames(names)
+	if err != nil {
+		return nil, err
+	}
+
+	sorted := make([]*api.Installation, len(installations))
+	for i, name := range sortedNames {
+		sorted[i] = repoMap[name]
+	}
+	return sorted, nil
+}
+
+func TopSortNames(repos []string) ([]string, error) {
+	seen := make(map[string]bool)
+	graph := toposort.NewGraph(len(repos))
+	for _, repo := range repos {
+		if _, ok := seen[repo]; !ok {
+			graph.AddNode(repo)
+		}
+		seen[repo] = true
+
+		man, err := manifest.Read(manifestPath(repo))
 		if err != nil {
 			return nil, err
 		}
 
 		for _, dep := range man.Dependencies {
-			if _, ok := repoMap[dep.Repo]; !ok {
+			if _, ok := seen[dep.Repo]; !ok {
 				graph.AddNode(dep.Repo)
+				seen[dep.Repo] = true
 			}
 			graph.AddEdge(repo, dep.Repo)
 		}
 	}
 
-	result, ok := graph.Toposort()
-	var sorted = make([]*api.Installation, len(result))
+	sorted, ok := graph.Toposort()
 	if !ok {
-		return sorted, fmt.Errorf("Cycle detected in dependency graph")
+		return nil, fmt.Errorf("Cycle detected in dependency graph")
 	}
 
-	for j := 1; j <= len(result); j++ {
-		sorted[len(result)-j] = repoMap[result[j-1]]
+	// need to reverse the order
+	result := make([]string, len(sorted))
+	for i := 1; i <= len(result); i++ {
+		result[len(result) - i] = sorted[i - 1]
 	}
-	return sorted, nil
+
+	return result, nil
 }
 
 func Dependencies(repo string, installations []*api.Installation) ([]*api.Installation, error) {

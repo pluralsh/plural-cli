@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -27,6 +28,50 @@ func getSortedInstallations(repo string, client *api.Client) ([]*api.Installatio
 	}
 
 	return sorted, nil
+}
+
+func getSortedNames(filter bool) ([]string, error) {
+	diffed, err := wkspace.DiffedRepos()
+	if err != nil {
+		return nil, err
+	}
+
+	sorted, err := wkspace.TopSortNames(diffed)
+	if err != nil {
+		return nil, err
+	}
+
+	if filter {
+		result := make([]string, 0)
+		isRepo := map[string]bool{}
+		for _, repo := range diffed {
+			isRepo[repo] = true
+		}
+
+		for _, repo := range sorted {
+			if isRepo[repo] {
+				result = append(result, repo)
+			}
+		}
+
+		return result, nil
+	}
+
+	return sorted, nil
+}
+
+
+func diffed(c *cli.Context) error {
+	diffed, err := wkspace.DiffedRepos()
+	if err != nil {
+		return err
+	}
+
+	for _, diff := range diffed {
+		fmt.Println(diff)
+	}
+
+	return nil
 }
 
 func build(c *cli.Context) error {
@@ -113,86 +158,60 @@ func doValidate(client *api.Client, installation *api.Installation) error {
 }
 
 func deploy(c *cli.Context) error {
-	client := api.NewClient()
 	repoRoot, err := utils.RepoRoot()
-	repoName := c.Args().Get(0)
 	if err != nil {
 		return err
 	}
 
-	if repoName != "" {
-		installation, err := client.GetInstallation(repoName)
+	sorted, err := getSortedNames(true)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
+
+	for _, repo := range sorted {
+		execution, err := executor.GetExecution(filepath.Join(repoRoot, repo), "deploy")
 		if err != nil {
 			return err
 		}
 
-		return doDeploy(repoRoot, installation)
-	}
-
-	installations, err := getSortedInstallations(repoName, client)
-	if err != nil {
-		return err
-	}
-
-	for _, installation := range installations {
-		if err := doDeploy(repoRoot, installation); err != nil {
+		if err := execution.Execute(); err != nil {
 			return err
 		}
 		fmt.Printf("\n")
 	}
+
 	return nil
 }
 
-func doDeploy(repoRoot string, installation *api.Installation) error {
-	name := installation.Repository.Name
-	execution, err := executor.GetExecution(filepath.Join(repoRoot, name), "deploy")
-	if err != nil {
-		return err
-	}
-
-	return execution.Execute()
-}
 
 func handleDiff(c *cli.Context) error {
-	client := api.NewClient()
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
 		return err
 	}
 
-	repoName := c.Args().Get(0)
-	if repoName != "" {
-		installation, err := client.GetInstallation(repoName)
+	sorted, err := getSortedNames(true)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Diffing applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
+
+	for _, repo := range sorted {
+		d, err := diff.GetDiff(filepath.Join(repoRoot, repo), "diff")
 		if err != nil {
 			return err
 		}
 
-		return doDiff(repoRoot, installation)
-	}
-
-	installations, err := getSortedInstallations("", client)
-	if err != nil {
-		return err
-	}
-	
-	for _, installation := range installations {
-		if err := doDiff(repoRoot, installation); err != nil {
+		if err := d.Execute(); err != nil {
 			return err
 		}
+
 		fmt.Printf("\n")
 	}
 	return nil
-}
-
-func doDiff(repoRoot string, installation *api.Installation) error {
-	name := installation.Repository.Name
-
-	d, err := diff.GetDiff(filepath.Join(repoRoot, name), "diff")
-	if err != nil {
-		return err
-	}
-
-	return d.Execute()
 }
 
 func bounce(c *cli.Context) error {

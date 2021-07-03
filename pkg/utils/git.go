@@ -37,3 +37,18 @@ func RepoRoot() (string, error) {
 
 	return strings.TrimSpace(string(res)), nil
 }
+
+func ChangedFiles() ([]string, error) {
+	cmd := exec.Command("git", "status", "--porcelain")
+	res, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0)
+	for _, line := range strings.Split(strings.TrimSpace(string(res)), "\n") {
+		cols := strings.Split(strings.TrimSpace(line), " ")
+		result = append(result, cols[1])
+	}
+	return result, nil
+}
