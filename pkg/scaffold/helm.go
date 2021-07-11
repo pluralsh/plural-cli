@@ -84,6 +84,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Values":        ctx,
 			"Configuration": w.Context.Configuration,
 			"License":       w.Installation.License,
+			"OIDC":          w.Installation.OIDCProvider,
 			"Region":        w.Provider.Region(),
 			"Project":       w.Provider.Project(),
 			"Cluster":       w.Provider.Cluster(),
@@ -91,6 +92,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Provider":      w.Provider.Name(),
 			"Context":       w.Provider.Context(),
 		}
+
 		for k, v := range prevVals {
 			vals[k] = v
 		}

@@ -89,11 +89,19 @@ type TerraformInstallation struct {
 	Version      *Version
 }
 
+type OIDCProvider struct {
+	ID           string
+	ClientId     string
+	ClientSecret string
+	RedirectUris []string
+}
+
 type Installation struct {
-	Repository *Repository
-	User       *User
-	License    string
-	Context    map[string]interface{}
+	Repository    *Repository
+	User          *User
+	OIDCProvider *OIDCProvider `json:"oidcProvider"`
+	License       string
+	Context       map[string]interface{}
 }
 
 type InstallationEdge struct {
@@ -212,15 +220,25 @@ var RepositoryFragment = fmt.Sprintf(`
 	}
 `)
 
+const OIDCFragment = `
+	fragment OIDCProvider on OidcProvider {
+		id
+		clientId
+		clientSecret
+		redirectUris
+	}
+`
+
 var InstallationFragment = fmt.Sprintf(`
 	fragment InstallationFragment on Installation {
 		id
 		context
 		license
 		repository { ...RepositoryFragment }
+		oidcProvider { ...OIDCProvider }
 	}
-	%s
-`, RepositoryFragment)
+	%s %s
+`, RepositoryFragment, OIDCFragment)
 
 const ChartFragment = `
 	fragment ChartFragment on Chart {
