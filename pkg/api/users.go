@@ -4,48 +4,52 @@ import (
 	"fmt"
 )
 
+const (
+	PASSWORD = "PASSWORD"
+	PASSWORDLESS = "PASSWORDLESS"
+)
+
 const loginQuery = `
 	mutation Login($email: String!, $pwd: String!) {
-		login(email: $email, password: $pwd) {
-			jwt
-		}
+		login(email: $email, password: $pwd) { jwt }
+	}
+`
+
+const loginMethodQuery = `
+	query LoginMethod($email: String!) {
+		loginMethod(email: $email) { loginMethod token }
+	}
+`
+
+const pollLogin = `
+	mutation Poll($token: String!) {
+		loginToken(token: $token) { jwt }
 	}
 `
 
 const impersonationQuery = `
 	mutation Impersonate($email: String) {
-		impersonateServiceAccount(email: $email) { 
-			jwt 
-			email
-		}
+		impersonateServiceAccount(email: $email) { jwt email }
 	}
 `
 
 const createTokenQuery = `
 	mutation {
-		createToken {
-			token
-		}
+		createToken { token }
 	}
 `
 
 const listTokenQuery = `
 	query {
 		tokens(first: 3) {
-			edges {
-				node {
-					token
-				}
-			}
+			edges { node { token } }
 		}
 	}
 `
 
 const createUpgradeMut = `
 	mutation Upgrade($name: String, $attributes: UpgradeAttributes!) {
-		createUpgrade(name: $name, attributes: $attributes) {
-			id
-		}
+		createUpgrade(name: $name, attributes: $attributes) {	id }
 	} 
 `
 
@@ -94,6 +98,33 @@ type listToken struct {
 	}
 }
 
+type LoginMethod struct {
+	LoginMethod string
+	Token string
+}
+
+func (client *Client) LoginMethod(email string) (*LoginMethod, error) {
+	var resp struct {
+		LoginMethod LoginMethod
+	}
+	req := client.Build(loginMethodQuery)
+	req.Var("email", email)
+	err := client.Run(req, &resp)
+	return &resp.LoginMethod, err
+}
+
+func (client *Client) PollLoginToken(token string) (string, error) {
+	var resp struct {
+		LoginToken struct {
+			Jwt string
+		}
+	}
+
+	req := client.Build(pollLogin)
+	req.Var("token", token)
+	err := client.Run(req, &resp)
+	return resp.LoginToken.Jwt, err
+}
 
 func (client *Client) Login(email, pwd string) (string, error) {
 	var resp login

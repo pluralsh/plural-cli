@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,15 +49,36 @@ func handleLogin(c *cli.Context) error {
 	client := api.FromConfig(conf)
 
 	email, _ := utils.ReadLine("Enter your email: ")
-	pwd, _ := utils.ReadPwd("Enter password: ")
-	result, err := client.Login(email, pwd)
+
+	method, err := client.LoginMethod(email)
 	if err != nil {
 		return err
 	}
 
+	var jwt string
+	if method.LoginMethod == api.PASSWORD {
+		pwd, _ := utils.ReadPwd("Enter password: ")
+		result, err := client.Login(email, pwd)
+		if err != nil {
+			return err
+		}
+		jwt = result
+	} else if method.LoginMethod == api.PASSWORDLESS {
+		fmt.Println("Check your email to complete your passwordless login")
+		for {
+			result, err := client.PollLoginToken(method.Token)
+			if err == nil {
+				jwt = result
+				break
+			}
+
+			time.Sleep(2 * time.Second)
+		}
+	}
+
 	fmt.Printf("\nlogged in as %s\n", email)
 	conf.Email = email
-	conf.Token = result
+	conf.Token = jwt
 	client = api.FromConfig(conf)
 
 	saEmail := c.String("service-account")
