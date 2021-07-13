@@ -89,11 +89,20 @@ type TerraformInstallation struct {
 	Version      *Version
 }
 
+type OAuthConfiguration struct {
+	Issuer                string
+	AuthorizationEndpoint string
+	TokenEndpoint         string
+	JwksUri               string
+	UserinfoEndpoint      string
+}
+
 type OIDCProvider struct {
-	ID           string
-	ClientId     string
-	ClientSecret string
-	RedirectUris []string
+	ID            string
+	ClientId      string
+	ClientSecret  string
+	RedirectUris  []string
+	Configuration *OAuthConfiguration
 }
 
 type Installation struct {
@@ -226,6 +235,13 @@ const OIDCFragment = `
 		clientId
 		clientSecret
 		redirectUris
+		configuration {
+			issuer
+      authorizationEndpoint
+      tokenEndpoint
+      jwksUri
+      userinfoEndpoint
+		}
 	}
 `
 
