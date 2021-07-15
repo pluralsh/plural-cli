@@ -47,5 +47,5 @@ func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem) (strin
 		return utils.ReadLineDefault("Enter the value", def)
 	}
 
-	return utils.ReadLine("Enter the value")
+	return utils.ReadLine("Enter the value ")
 }

@@ -143,6 +143,9 @@ func DiffedRepos() ([]string, error) {
 
 	for _, file := range files {
 		parts := strings.Split(file, string([]byte{ filepath.Separator }))
+		if len(parts) <= 1 {
+			continue
+		}
 		maybeRepo := parts[0]
 		if utils.Exists(manifestPath(maybeRepo)) {
 			repos[maybeRepo] = true
