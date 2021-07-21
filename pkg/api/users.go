@@ -68,8 +68,25 @@ const createKey = `
 	}
 `
 
+const deviceLogin = `
+	mutation {
+		deviceLogin { loginUrl deviceToken }
+	}
+`
+
+const meQuery = `
+	query {
+		me { email }
+	}
+`
+
 type UpgradeAttributes struct {
 	Message string
+}
+
+type DeviceLogin struct {
+	LoginUrl string
+	DeviceToken string
 }
 
 type login struct {
@@ -103,6 +120,20 @@ type LoginMethod struct {
 	Token string
 }
 
+type Me struct {
+	Email string
+}
+
+func (client *Client) Me() (*Me, error) {
+	var resp struct {
+		Me *Me
+	}
+
+	req := client.Build(meQuery)
+	err := client.Run(req, &resp)
+	return resp.Me, err
+}
+
 func (client *Client) LoginMethod(email string) (*LoginMethod, error) {
 	var resp struct {
 		LoginMethod LoginMethod
@@ -124,6 +155,16 @@ func (client *Client) PollLoginToken(token string) (string, error) {
 	req.Var("token", token)
 	err := client.Run(req, &resp)
 	return resp.LoginToken.Jwt, err
+}
+
+func (client *Client) DeviceLogin() (*DeviceLogin, error) {
+	var resp struct {
+		DeviceLogin *DeviceLogin
+	}
+
+	req := client.Build(deviceLogin)
+	err := client.Run(req, &resp)
+	return resp.DeviceLogin, err
 }
 
 func (client *Client) Login(email, pwd string) (string, error) {

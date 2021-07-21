@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"github.com/pkg/browser"
 	"github.com/mholt/archiver/v3"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -48,42 +49,38 @@ func handleLogin(c *cli.Context) error {
 	conf.Endpoint = c.String("endpoint")
 	client := api.FromConfig(conf)
 
-	email, _ := utils.ReadLine("Enter your email: ")
-
-	method, err := client.LoginMethod(email)
+	device, err := client.DeviceLogin()
 	if err != nil {
 		return err
 	}
 
-	var jwt string
-	if method.LoginMethod == api.PASSWORD {
-		pwd, _ := utils.ReadPwd("Enter password: ")
-		result, err := client.Login(email, pwd)
-		if err != nil {
-			return err
-		}
-		jwt = result
-	} else if method.LoginMethod == api.PASSWORDLESS {
-		fmt.Println("Check your email to complete your passwordless login")
-		for {
-			result, err := client.PollLoginToken(method.Token)
-			if err == nil {
-				jwt = result
-				break
-			}
-
-			time.Sleep(2 * time.Second)
-		}
+	fmt.Printf("logging in at %s\n", device.LoginUrl)
+	if err := browser.OpenURL(device.LoginUrl); err != nil {
+		fmt.Println("Open %s in your browser to proceed")
 	}
 
-	fmt.Printf("\nlogged in as %s\n", email)
-	conf.Email = email
+	var jwt string
+	for {
+		result, err := client.PollLoginToken(device.DeviceToken)
+		if err == nil {
+			jwt = result
+			break
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
 	conf.Token = jwt
+	client = api.FromConfig(conf)
+	me, err := client.Me()
+
+	fmt.Printf("\nlogged in as %s!\n", me.Email)
+	conf.Email = me.Email
 	client = api.FromConfig(conf)
 
 	saEmail := c.String("service-account")
 	if saEmail != "" {
-		jwt, email, err := client.ImpersonateServiceAccount(email)
+		jwt, email, err := client.ImpersonateServiceAccount(saEmail)
 		if err != nil {
 			return err
 		}
