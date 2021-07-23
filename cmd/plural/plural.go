@@ -247,6 +247,12 @@ func main() {
 			Action: diffed,
 			Category: "Workspace",
 		},
+		{
+			Name: "from-grafana",
+			Usage: "imports a grafana dashboard to a plural crd",
+			Action: formatDashboard,
+			Category: "Publishing",
+		},
 	}
 
 	err := app.Run(os.Args)
