@@ -29,6 +29,7 @@ COMMANDS:
      test           validate a values templace
      push           utilities for pushing tf or helm packages
      template, tpl  templates a helm chart to be uploaded to plural
+     from-grafana   imports a grafana dashboard to a plural crd
 
    User Profile:
      login         logs into plural and saves credentials to the current config profile
