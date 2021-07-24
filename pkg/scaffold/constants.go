@@ -8,10 +8,16 @@ const (
 	defaultNotes     = `Placeholder for now`
 	sep              = string(filepath.Separator)
 	defaultChartfile = `apiVersion: v1
-name: %s
+name: {{ .Values.name }}
 description: A Helm chart for Kubernetes
 version: 0.1.0
 appVersion: 1.16.0
+dependencies:
+{{ range $_ind, $dep := .Values.dependencies }}
+- name: {{ $dep.Name }}
+  repository: {{ $dep.Repository }}
+  version: {{ $dep.Version }}
+{{ end }}
 `
 	defaultIgnore = `# Patterns to ignore when building packages.
 # This supports shell glob matching, relative path matching, and

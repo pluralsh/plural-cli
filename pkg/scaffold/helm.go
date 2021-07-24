@@ -24,15 +24,20 @@ type dependency struct {
 	Repository string
 }
 
+type chart struct {
+	ApiVersion  string `yaml:"apiVersion"`
+	Name 			  string
+	Description string
+	Version 		string
+	AppVersion  string `yaml:"appVersion"`
+	Dependencies []dependency
+}
+
 func (s *Scaffold) handleHelm(wk *wkspace.Workspace) error {
 	repo := wk.Installation.Repository
 
 	err := s.createChart(wk, repo.Name)
 	if err != nil {
-		return err
-	}
-
-	if err := s.createChartDependencies(wk, repo.Name); err != nil {
 		return err
 	}
 
@@ -44,6 +49,17 @@ func (s *Scaffold) handleHelm(wk *wkspace.Workspace) error {
 }
 
 func (s *Scaffold) createChartDependencies(w *wkspace.Workspace, name string) error {
+	dependencies := s.chartDependencies(w, name)
+	io, err := yaml.Marshal(map[string][]dependency{"dependencies": dependencies})
+	if err != nil {
+		return err
+	}
+
+	requirementsFile := filepath.Join(s.Root, "requirements.yaml")
+	return utils.WriteFile(requirementsFile, io)
+}
+
+func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []dependency {
 	dependencies := make([]dependency, len(w.Charts))
 	repo := w.Installation.Repository
 	for i, chartInstallation := range w.Charts {
@@ -53,14 +69,7 @@ func (s *Scaffold) createChartDependencies(w *wkspace.Workspace, name string) er
 			repoUrl(w, repo.Name),
 		}
 	}
-
-	io, err := yaml.Marshal(map[string][]dependency{"dependencies": dependencies})
-	if err != nil {
-		return err
-	}
-
-	requirementsFile := filepath.Join(s.Root, "requirements.yaml")
-	return utils.WriteFile(requirementsFile, io)
+	return dependencies
 }
 
 func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
@@ -159,15 +168,29 @@ func prevValues(filename string) (map[string]map[string]interface{}, error) {
 
 func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	repo := w.Installation.Repository
+	appVersion := appVersion(w.Charts)
+	chart := &chart{
+		ApiVersion: "v2",
+		Name: repo.Name,
+		Description: fmt.Sprintf("A helm chart for %s", repo.Name),
+		Version: "0.1.0",
+		AppVersion: appVersion,
+		Dependencies: s.chartDependencies(w, name),
+	}
+
+	chartFile, err := yaml.Marshal(chart)
+	if err != nil {
+		return err
+	}
+
+	if err := utils.WriteFile(filepath.Join(s.Root, ChartfileName), chartFile); err != nil {
+		return err
+	}
+
 	files := []struct {
 		path    string
 		content []byte
 	}{
-		{
-			// Chart.yaml
-			path:    filepath.Join(s.Root, ChartfileName),
-			content: []byte(fmt.Sprintf(defaultChartfile, name)),
-		},
 		{
 			// .helmignore
 			path:    filepath.Join(s.Root, IgnorefileName),
@@ -190,7 +213,12 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		}
 	}
 
-	appVersion := appVersion(w.Charts)
+	// remove old requirements.yaml files to fully migrate to helm v3
+	reqsFile := filepath.Join(s.Root, "requirements.yaml")
+	if utils.Exists(reqsFile) {
+		os.Remove(reqsFile)
+	}
+
 	tpl, err := ttpl.New("gotpl").Parse(defaultApplication)
 	if err != nil {
 		return err

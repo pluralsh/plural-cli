@@ -44,17 +44,10 @@ func Default(w *wkspace.Workspace, name string) (b *Build) {
 				Path: filepath.Join("helm", name),
 				Preflight: []*executor.Step{
 					{
-						Name:    "add-repo",
-						Command: "helm",
-						Args:    []string{"repo", "add", name, repoUrl(w, name)},
-						Target:  "requirements.yaml",
-						Sha:     "",
-					},
-					{
 						Name:    "update-deps",
 						Command: "helm",
 						Args:    []string{"dependency", "update"},
-						Target:  "requirements.yaml",
+						Target:  "Chart.yaml",
 						Sha:     "",
 					},
 				},
