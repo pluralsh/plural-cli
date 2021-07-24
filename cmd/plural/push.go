@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -143,11 +142,8 @@ func handleHelmUpload(c *cli.Context) error {
 		return err
 	}
 
-	cmUrl := strings.ReplaceAll(conf.BaseUrl(), "https", "cm")
-	if err := utils.Cmd(&conf, "helm", "repo", "add", repo, fmt.Sprintf("%s/cm/%s", cmUrl, repo)); err != nil {
-		return err
-	}
-	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, repo)
+	cmUrl := fmt.Sprintf("%s/cm/%s", conf.BaseUrl(), repo)
+	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, cmUrl)
 }
 
 func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
