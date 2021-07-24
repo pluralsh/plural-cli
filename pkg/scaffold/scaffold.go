@@ -67,6 +67,9 @@ func merge(build *Build, base *Build) *Build {
 		byName[scaffold.Name] = scaffold
 	}
 
+	// to handle helm v3 transition
+	delete(byName, "add-repo")
+
 	graph := utils.Graph(len(byName))
 
 	for key := range byName {
