@@ -31,6 +31,11 @@ func TopSort(installations []*api.Installation) ([]*api.Installation, error) {
 func TopSortNames(repos []string) ([]string, error) {
 	seen := make(map[string]bool)
 	graph := toposort.NewGraph(len(repos))
+	isRepo := make(map[string]bool)
+	for _, repo := range repos {
+		isRepo[repo] = true
+	}
+
 	for _, repo := range repos {
 		if _, ok := seen[repo]; !ok {
 			graph.AddNode(repo)
@@ -43,6 +48,10 @@ func TopSortNames(repos []string) ([]string, error) {
 		}
 
 		for _, dep := range man.Dependencies {
+			if _, ok := isRepo[dep.Repo]; !ok {
+				continue
+			}
+
 			if _, ok := seen[dep.Repo]; !ok {
 				graph.AddNode(dep.Repo)
 				seen[dep.Repo] = true
