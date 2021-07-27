@@ -178,7 +178,7 @@ func (client *Client) Login(email, pwd string) (string, error) {
 
 func (client *Client) ImpersonateServiceAccount(email string) (string, string, error) {
 	var resp login
-	req := client.Build(loginQuery)
+	req := client.Build(impersonationQuery)
 	req.Var("email", email)
 	err := client.Run(req, &resp)
 	return resp.ImpersonateServiceAccount.Jwt, resp.ImpersonateServiceAccount.Email, err
