@@ -20,6 +20,7 @@ type Config struct {
 	Token string `yaml:"token" json:"token"`
 	NamespacePrefix string `yaml:"namespacePrefix"`
 	Endpoint string `yaml:"endpoint"`
+	LockProfile string `yaml:"lockProfile"`
 	metadata *Metadata ``
 }
 

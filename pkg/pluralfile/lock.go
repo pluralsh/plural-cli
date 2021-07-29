@@ -1,10 +1,12 @@
 package pluralfile
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
+	"github.com/pluralsh/plural/pkg/config"
 )
 
 type Lockfile struct {
@@ -32,7 +34,8 @@ func lock() *Lockfile {
 }
 
 func Lock(path string) *Lockfile {
-	lockfile := lockPath(path)
+	conf := config.Read()
+	lockfile := lockPath(path, conf.LockProfile)
 	lock := lock()
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
@@ -43,16 +46,21 @@ func Lock(path string) *Lockfile {
 	return lock
 }
 
-func lockPath(path string) string {
-	return filepath.Join(filepath.Dir(path), "plural.lock")
+func lockPath(path string, profile string) string {
+	if profile == "" {
+		return filepath.Join(filepath.Dir(path), "plural.lock")
+	}
+
+	return filepath.Join(filepath.Dir(path), fmt.Sprintf("plural.%s.lock", profile))
 }
 
 func (lock *Lockfile) Flush(path string) error {
+	conf := config.Read()
 	io, err := yaml.Marshal(lock)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(lockPath(path), io, 0644)
+	return ioutil.WriteFile(lockPath(path, conf.LockProfile), io, 0644)
 }
 
 func (lock *Lockfile) getSha(name ComponentName, key string) string {

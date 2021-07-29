@@ -3,9 +3,12 @@ package main
 import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/urfave/cli"
 	"os"
+	"fmt"
 	"os/exec"
+	"path/filepath"
 )
 
 func workspaceCommands() []cli.Command {
@@ -76,13 +79,18 @@ func helmInit(c *cli.Context) error {
 }
 
 func kubeInit(c *cli.Context) error {
-	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
+	root, found := utils.ProjectRoot()
+	if !found {
+		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
+	}
+
+	manifestPath := filepath.Join(root, "manifest.yaml")
+	prov, err := provider.Bootstrap(manifestPath, true)
 	if err != nil {
 		return err
 	}
 
-	return minimal.Provider.KubeConfig()
+	return prov.KubeConfig()
 }
 
 func bounceHelm(c *cli.Context) error {
