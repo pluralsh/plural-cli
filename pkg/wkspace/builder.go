@@ -33,7 +33,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	}
 
 	manifestPath := manifestPath(inst.Repository.Name)
-	prov, err := provider.Bootstrap(manifestPath, false)
+	prov, err := provider.Bootstrap(manifestPath, true)
 	if err != nil {
 		return nil, err
 	}
