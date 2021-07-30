@@ -37,7 +37,7 @@ func defaultSteps(path string) []*Step {
 			Wkdir:   path,
 			Target:  pluralfile(path, "NONCE"),
 			Command: "plural",
-			Args:    []string{"wkspace", "kube-init", path},
+			Args:    []string{"wkspace", "kube-init"},
 			Sha:     "",
 		},
 		{

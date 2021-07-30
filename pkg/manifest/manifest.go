@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type ChartManifest struct {
@@ -66,8 +67,13 @@ type VersionedProjectManifest struct {
 }
 
 func ProjectManifestPath() string {
-	path, _ := filepath.Abs("workspace.yaml")
-	return path
+	root, found := utils.ProjectRoot()
+	if !found {
+		path, _ := filepath.Abs("workspace.yaml")
+		return path
+	}
+
+	return filepath.Join(root, "workspace.yaml")
 }
 
 func (m *ProjectManifest) Write(path string) error {
