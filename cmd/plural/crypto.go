@@ -2,19 +2,21 @@ package main
 
 import (
 	"bytes"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
 
 const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
+/**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
@@ -58,8 +60,8 @@ func cryptoCommands() []cli.Command {
 			Action: exportKey,
 		},
 		{
-			Name: "share",
-			Usage: "allows a list of plural users to decrypt this repository",
+			Name:      "share",
+			Usage:     "allows a list of plural users to decrypt this repository",
 			ArgsUsage: "",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
@@ -70,7 +72,7 @@ func cryptoCommands() []cli.Command {
 			Action: handleCryptoShare,
 		},
 		{
-			Name: "setup-keys",
+			Name:  "setup-keys",
 			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -135,12 +137,12 @@ func handleDecrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	result, err := crypto.Decrypt(prov, data[len(prefix):])
 	if err != nil {
 		return err
 	}
-	
+
 	os.Stdout.Write(result)
 	return nil
 }
