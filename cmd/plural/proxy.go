@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/pluralsh/plural/pkg/proxy"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/olekukonko/tablewriter"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/proxy"
 	"github.com/urfave/cli"
 )
 
@@ -33,7 +33,7 @@ func handleProxyList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Type", "Target"})
 	for _, p := range proxies.Items {

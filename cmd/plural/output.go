@@ -1,10 +1,10 @@
 package main
 
 import (
-	"path/filepath"
-	"github.com/urfave/cli"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
+	"path/filepath"
 )
 
 func outputCommands() []cli.Command {

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/urfave/cli"
 	"os"
-	"fmt"
 	"os/exec"
 	"path/filepath"
 )

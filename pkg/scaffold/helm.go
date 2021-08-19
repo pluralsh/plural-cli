@@ -168,6 +168,10 @@ func prevValues(filename string) (map[string]map[string]interface{}, error) {
 
 func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	repo := w.Installation.Repository
+	if len(w.Charts) == 0 {
+		return utils.HighlightError(fmt.Errorf("No charts installed for this repository, you might need to run `plural bundle install %s <bundle-name>`", repo.Name))
+	}
+
 	appVersion := appVersion(w.Charts)
 	chart := &chart{
 		ApiVersion: "v2",

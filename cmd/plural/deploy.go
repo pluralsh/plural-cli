@@ -3,16 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/diff"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/urfave/cli"
 )
 
@@ -59,7 +59,6 @@ func getSortedNames(filter bool) ([]string, error) {
 
 	return sorted, nil
 }
-
 
 func diffed(c *cli.Context) error {
 	diffed, err := wkspace.DiffedRepos()
@@ -185,7 +184,6 @@ func deploy(c *cli.Context) error {
 	return nil
 }
 
-
 func handleDiff(c *cli.Context) error {
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
@@ -268,7 +266,7 @@ func destroy(c *cli.Context) error {
 
 		return doDestroy(client, installation)
 	}
-	
+
 	installations, err := getSortedInstallations(repoName, client)
 	if err != nil {
 		return err

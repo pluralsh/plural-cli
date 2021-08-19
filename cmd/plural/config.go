@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
-	"github.com/olekukonko/tablewriter"
 	"os"
 )
 

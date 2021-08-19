@@ -43,3 +43,10 @@ func Success(line string, args... interface{}) {
 func Highlight(line string, args... interface{}) {
 	color.New(color.Bold).Printf(line, args...)
 }
+
+func HighlightError(err error) error {
+	if err != nil {
+		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error()))
+	}
+	return err
+}

@@ -2,16 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/urfave/cli"
 	"io/ioutil"
-	"encoding/json"
-	"os"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes/scheme"
+	"os"
 )
 
 func testTemplate(c *cli.Context) error {
@@ -57,11 +57,11 @@ func testTemplate(c *cli.Context) error {
 }
 
 type GrafanaDashboard struct {
-	Title string
+	Title  string
 	Panels []struct {
-		Title string
+		Title   string
 		Targets []struct {
-			Expr string
+			Expr         string
 			LegendFormat string
 		}
 	}
@@ -88,7 +88,7 @@ func formatDashboard(c *cli.Context) error {
 		graph.Queries = make([]*v1alpha1.GraphQuery, 0)
 		for _, target := range panel.Targets {
 			query := &v1alpha1.GraphQuery{
-				Query: target.Expr,
+				Query:  target.Expr,
 				Legend: target.LegendFormat,
 			}
 			graph.Queries = append(graph.Queries, query)

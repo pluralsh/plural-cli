@@ -11,10 +11,10 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/pluralfile"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )

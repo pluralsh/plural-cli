@@ -3,18 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/fatih/color"
 
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/michaeljguarino/graphql"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 const (
 	pageSize = 100
-)
-
-var (
-	red = color.New(color.FgRed, color.Bold)
 )
 
 type Client struct {
@@ -45,11 +41,7 @@ func (client *Client) Build(doc string) *graphql.Request {
 
 func (client *Client) Run(req *graphql.Request, resp interface{}) error {
 	err := client.gqlClient.Run(context.Background(), req, &resp)
-	if err != nil {
-		return fmt.Errorf(red.Sprint(err.Error()))
-	}
-
-	return nil
+	return utils.HighlightError(err)
 }
 
 func (client *Client) EnableLogging() {

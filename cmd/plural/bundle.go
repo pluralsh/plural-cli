@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/urfave/cli"
-	"github.com/olekukonko/tablewriter"
 	"os"
 )
 
@@ -31,7 +31,7 @@ func bundleList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Description", "Provider"})
 	for _, recipe := range recipes {

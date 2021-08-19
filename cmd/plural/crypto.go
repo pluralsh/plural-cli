@@ -58,8 +58,8 @@ func cryptoCommands() []cli.Command {
 			Action: exportKey,
 		},
 		{
-			Name: "share",
-			Usage: "allows a list of plural users to decrypt this repository",
+			Name:      "share",
+			Usage:     "allows a list of plural users to decrypt this repository",
 			ArgsUsage: "",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
@@ -70,7 +70,7 @@ func cryptoCommands() []cli.Command {
 			Action: handleCryptoShare,
 		},
 		{
-			Name: "setup-keys",
+			Name:  "setup-keys",
 			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -135,12 +135,12 @@ func handleDecrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	result, err := crypto.Decrypt(prov, data[len(prefix):])
 	if err != nil {
 		return err
 	}
-	
+
 	os.Stdout.Write(result)
 	return nil
 }

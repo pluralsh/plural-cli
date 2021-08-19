@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/urfave/cli"
-	"fmt"
 )
 
 func handleUpgrade(c *cli.Context) error {
