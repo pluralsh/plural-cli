@@ -48,8 +48,7 @@ metadata:
   name: {{ .Name }}
 spec:
   selector:
-    matchLabels:
-      app.kubernetes.io/managed-by: Helm
+    matchLabels: {}
   componentKinds:
   - group: v1
     kind: Service
