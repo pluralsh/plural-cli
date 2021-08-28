@@ -17,13 +17,14 @@ type SMTP struct {
 	Service  string
 	Server   string
 	Port     int
+	Sender   string
 	User     string
 	Password string
 }
 
 type Context struct {
-	Bundles []*Bundle
-	SMTP    *SMTP `yaml:"smtp"`
+	Bundles       []*Bundle
+	SMTP          *SMTP `yaml:"smtp"`
 	Configuration map[string]map[string]interface{}
 }
 
@@ -124,5 +125,6 @@ func (smtp *SMTP) Configuration() map[string]interface{} {
 		"User": smtp.User,
 		"Password": smtp.Password,
 		"Service": smtp.Service,
+		"Sender": smtp.Sender,
 	}
 }
