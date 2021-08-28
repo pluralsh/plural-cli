@@ -13,8 +13,17 @@ type Bundle struct {
 	Name string
 }
 
+type SMTP struct {
+	Service  string
+	Server   string
+	Port     int
+	User     string
+	Password string
+}
+
 type Context struct {
 	Bundles []*Bundle
+	SMTP    *SMTP `yaml:"smtp"`
 	Configuration map[string]map[string]interface{}
 }
 
@@ -88,4 +97,32 @@ func (c *Context) Write(path string) error {
 	}
 
 	return ioutil.WriteFile(path, io, 0644)
+}
+
+func (smtp *SMTP) GetServer() string {
+	if smtp.Service != "" {
+		if val, ok := smtpConfig[smtp.Service]; ok {
+			return val.Server
+		}
+	}
+	return smtp.Server
+}
+
+func (smtp *SMTP) GetPort() int {
+	if smtp.Service != "" {
+		if val, ok := smtpConfig[smtp.Service]; ok {
+			return val.Port
+		}
+	}
+	return smtp.Port
+}
+
+func (smtp *SMTP) Configuration() map[string]interface{} {
+	return map[string]interface{}{
+		"Server": smtp.GetServer(),
+		"Port": smtp.GetPort(),
+		"User": smtp.User,
+		"Password": smtp.Password,
+		"Service": smtp.Service,
+	}
 }

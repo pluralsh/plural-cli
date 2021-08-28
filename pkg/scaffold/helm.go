@@ -100,6 +100,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Config":        conf,
 			"Provider":      w.Provider.Name(),
 			"Context":       w.Provider.Context(),
+			"SMTP":          w.Context.SMTP.Configuration(),
 		}
 
 		for k, v := range prevVals {
