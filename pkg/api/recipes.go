@@ -29,12 +29,19 @@ type RecipeItemInput struct {
 	Configuration []ConfigurationItemInput
 }
 
+type ConditionInput struct {
+	Field     string
+	Value     string
+	Operation string
+}
+
 type ConfigurationItemInput struct {
 	Name          string
 	Default       string
 	Type          string
 	Documentation string
 	Placeholder   string
+	Condition     *ConditionInput
 }
 
 type RecipeEdge struct {

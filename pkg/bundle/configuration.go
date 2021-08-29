@@ -7,7 +7,25 @@ import (
 	"strconv"
 )
 
+func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
+	if cond == nil {
+		return true
+	}
+
+	switch (cond.Operation) {
+	case "NOT":
+		val, _ := ctx[cond.Field]
+		return !(val.(bool))
+	}
+
+	return true
+}
+
 func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
+	if !evaluateCondition(ctx, item.Condition) {
+		return nil
+	}
+	
 	res, err := fetchResult(ctx, item)
 	if err != nil {
 		return err

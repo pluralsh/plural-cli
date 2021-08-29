@@ -168,12 +168,19 @@ type RecipeItem struct {
 	Configuration []*ConfigurationItem
 }
 
+type Condition struct {
+	Field     string
+	Operation string
+	Value     string
+}
+
 type ConfigurationItem struct {
 	Name    string
 	Default string
 	Documentation string
 	Type    string
 	Placeholder string
+	Condition   *Condition
 }
 
 type Artifact struct {
@@ -402,6 +409,7 @@ var RecipeItemFragment = fmt.Sprintf(`
 			default
 			documentation
 			placeholder
+			condition { field operation value }
 		}
 	}
 	%s
