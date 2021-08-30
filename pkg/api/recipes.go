@@ -68,8 +68,8 @@ query Recipe($repo: String, $name: String) {
 `, RecipeFragment, RecipeSectionFragment)
 
 var listRecipes = fmt.Sprintf(`
-query Recipes($repo: String) {
-	recipes(repositoryName: $repo, first: 500) {
+query Recipes($repo: String, $provider: Provider) {
+	recipes(repositoryName: $repo, provider: $provider, first: 500) {
 		edges { node { ...RecipeFragment } }
 	}
 }
@@ -107,7 +107,7 @@ func (client *Client) GetRecipe(repo, name string) (recipe *Recipe, err error) {
 	return
 }
 
-func (client *Client) ListRecipes(repo string) (recipes []*Recipe, err error) {
+func (client *Client) ListRecipes(repo, provider string) (recipes []*Recipe, err error) {
 	var resp struct {
 		Recipes struct {
 			Edges []*RecipeEdge
@@ -116,6 +116,7 @@ func (client *Client) ListRecipes(repo string) (recipes []*Recipe, err error) {
 
 	req := client.Build(listRecipes)
 	req.Var("repo", repo)
+	req.Var("provider", provider)
 	err = client.Run(req, &resp)
 	if err != nil {
 		return

@@ -98,6 +98,11 @@ func (m *ProjectManifest) Write(path string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
+func FetchProject() (*ProjectManifest, error) {
+	path := ProjectManifestPath()
+	return ReadProject(path)
+}
+
 func ReadProject(path string) (man *ProjectManifest, err error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {

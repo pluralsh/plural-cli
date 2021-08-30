@@ -4,8 +4,10 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/urfave/cli"
 	"os"
+	"strings"
 )
 
 func bundleCommands() []cli.Command {
@@ -27,7 +29,12 @@ func bundleCommands() []cli.Command {
 
 func bundleList(c *cli.Context) error {
 	client := api.NewClient()
-	recipes, err := client.ListRecipes(c.Args().Get(0))
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	} 
+
+	recipes, err := client.ListRecipes(c.Args().Get(0), strings.ToUpper(man.Provider))
 	if err != nil {
 		return err
 	}
