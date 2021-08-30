@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/config"
 	"strconv"
 	"strings"
 )
@@ -95,13 +96,14 @@ func FromManifest(man *manifest.Manifest) (Provider, error) {
 }
 
 func New(provider string) (Provider, error) {
+	conf := config.Read()
 	switch provider {
 	case GCP:
-		return mkGCP()
+		return mkGCP(conf)
 	case AWS:
-		return mkAWS()
+		return mkAWS(conf)
 	case AZURE:
-		return mkAzure()
+		return mkAzure(conf)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)
 	}

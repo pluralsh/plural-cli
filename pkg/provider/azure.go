@@ -16,6 +16,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/config"
 )
 
 type AzureProvider struct {
@@ -26,7 +27,7 @@ type AzureProvider struct {
 	ctx 			     map[string]interface{}
 }
 
-func mkAzure() (prov *AzureProvider, err error) {
+func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
 	storAcct, _ := utils.ReadLine("Enter the name of the storage account to use for your stage, must be globally unique or owned by your subscription: ")
 	bucket, _ := utils.ReadLine("Enter the name of a storage container to use for state, eg: <yourprojectname>-tf-state: ")
@@ -57,6 +58,7 @@ func mkAzure() (prov *AzureProvider, err error) {
 		Provider: AZURE,
 		Region:   prov.Region(),
 		Context:  prov.Context(),
+		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 	err = projectManifest.Write(manifest.ProjectManifestPath())
 	return

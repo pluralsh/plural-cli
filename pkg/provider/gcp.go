@@ -14,6 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/config"
 )
 
 type GCPProvider struct {
@@ -25,7 +26,7 @@ type GCPProvider struct {
 	ctx           context.Context
 }
 
-func mkGCP() (*GCPProvider, error) {
+func mkGCP(conf config.Config) (*GCPProvider, error) {
 	client, ctx, err := storageClient()
 	if err != nil {
 		return nil, err
@@ -47,6 +48,7 @@ func mkGCP() (*GCPProvider, error) {
 		Bucket:   bucket,
 		Provider: GCP,
 		Region:   provider.Region(),
+		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 	path := manifest.ProjectManifestPath()
 	projectManifest.Write(path)

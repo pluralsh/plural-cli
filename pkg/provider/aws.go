@@ -13,6 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/config"
 )
 
 type AWSProvider struct {
@@ -23,7 +24,7 @@ type AWSProvider struct {
 	storageClient *s3.S3
 }
 
-func mkAWS() (*AWSProvider, error) {
+func mkAWS(conf config.Config) (*AWSProvider, error) {
 	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
 	bucket, _ := utils.ReadLine("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")
 	region, _ := utils.ReadLine("Enter the region you want to deploy to eg us-east-2: ")
@@ -52,6 +53,7 @@ func mkAWS() (*AWSProvider, error) {
 		Bucket:   bucket,
 		Provider: AWS,
 		Region:   provider.Region(),
+		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 	path := manifest.ProjectManifestPath()
 	projectManifest.Write(path)

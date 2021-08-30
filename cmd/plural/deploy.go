@@ -13,6 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
 )
 
@@ -74,6 +75,10 @@ func diffed(c *cli.Context) error {
 }
 
 func build(c *cli.Context) error {
+	if err := validateOwner(); err != nil {
+		return err
+	} 
+
 	client := api.NewClient()
 	if c.IsSet("only") {
 		installation, err := client.GetInstallation(c.String("only"))
@@ -157,6 +162,10 @@ func doValidate(client *api.Client, installation *api.Installation) error {
 }
 
 func deploy(c *cli.Context) error {
+	if err := validateOwner(); err != nil {
+		return err
+	}
+
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
 		return err
@@ -181,6 +190,7 @@ func deploy(c *cli.Context) error {
 		fmt.Printf("\n")
 	}
 
+	utils.Highlight("\n==> Commit and push your changes to record your deployment\n")
 	return nil
 }
 
@@ -297,6 +307,27 @@ func doDestroy(client *api.Client, installation *api.Installation) error {
 	}
 
 	return workspace.DestroyTerraform()
+}
+
+func validateOwner() error {
+	path := manifest.ProjectManifestPath()
+	project, err := manifest.ReadProject(path)
+	conf := config.Read()
+	if err != nil {
+		return fmt.Errorf("Your workspace hasn't been configured, try running `plural init`")
+	} 
+
+	if owner := project.Owner; owner != nil { 
+		if owner.Email != conf.Email || owner.Endpoint != conf.Endpoint {
+			return fmt.Errorf(
+				"The owner of this project is actually %s; plural environemnt = %s", 
+				owner.Email, 
+				config.PluralUrl(owner.Endpoint),
+			)
+		}
+	}
+
+	return nil
 }
 
 func buildContext(c *cli.Context) error {

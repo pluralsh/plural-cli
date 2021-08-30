@@ -112,12 +112,16 @@ func (c *Config) Url() string {
 	return c.BaseUrl() + "/gql"
 }
 
-func (c *Config) BaseUrl() string {
+func PluralUrl(endpoint string) string {
 	host := "https://app.plural.sh"
-	if (c.Endpoint != "") {
-		host = fmt.Sprintf("https://%s", c.Endpoint)
+	if (endpoint != "") {
+		host = fmt.Sprintf("https://%s", endpoint)
 	}
 	return host
+}
+
+func (c *Config) BaseUrl() string {
+	return PluralUrl(c.Endpoint)
 }
 
 func (c *Config) SaveProfile(name string) error {

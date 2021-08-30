@@ -43,12 +43,18 @@ type Manifest struct {
 	Context      map[string]interface{}
 }
 
+type Owner struct {
+	Email    string
+	Endpoint string `yaml:"endpoint,omitempty"`
+}
+
 type ProjectManifest struct {
 	Cluster  string
 	Bucket   string
 	Project  string
 	Provider string
 	Region   string
+	Owner    *Owner
 	Context  map[string]interface{}
 }
 
