@@ -24,7 +24,7 @@ type SMTP struct {
 
 type Context struct {
 	Bundles       []*Bundle
-	SMTP          *SMTP `yaml:"smtp"`
+	SMTP          *SMTP `yaml:"smtp,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
 
