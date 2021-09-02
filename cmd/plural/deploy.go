@@ -267,6 +267,10 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 func destroy(c *cli.Context) error {
 	client := api.NewClient()
 	repoName := c.Args().Get(0)
+	repoRoot, err := utils.RepoRoot()
+	if err != nil {
+		return err
+	}
 
 	if repoName != "" {
 		installation, err := client.GetInstallation(repoName)
@@ -274,7 +278,7 @@ func destroy(c *cli.Context) error {
 			return err
 		}
 
-		return doDestroy(client, installation)
+		return doDestroy(repoRoot, client, installation)
 	}
 
 	installations, err := getSortedInstallations(repoName, client)
@@ -284,7 +288,7 @@ func destroy(c *cli.Context) error {
 
 	for i := len(installations) - 1; i >= 0; i-- {
 		installation := installations[i]
-		if err := doDestroy(client, installation); err != nil {
+		if err := doDestroy(repoRoot, client, installation); err != nil {
 			return err
 		}
 	}
@@ -293,9 +297,8 @@ func destroy(c *cli.Context) error {
 	return nil
 }
 
-func doDestroy(client *api.Client, installation *api.Installation) error {
-	dir, _ := os.Getwd()
-	os.Chdir(dir)
+func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
+	os.Chdir(repoRoot)
 	utils.Warn("Destroying workspace %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(client, installation)
 	if err != nil {
