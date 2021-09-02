@@ -111,6 +111,8 @@ type Installation struct {
 	OIDCProvider *OIDCProvider `json:"oidcProvider"`
 	License       string
 	Context       map[string]interface{}
+	AcmeKeyId     string
+	AcmeSecret    string
 }
 
 type InstallationEdge struct {
@@ -257,6 +259,8 @@ var InstallationFragment = fmt.Sprintf(`
 		id
 		context
 		license
+		acmeKeyId
+		acmeSecret
 		repository { ...RepositoryFragment }
 		oidcProvider { ...OIDCProvider }
 	}

@@ -104,6 +104,12 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		if (w.Context.SMTP != nil) {
 			vals["SMTP"] = w.Context.SMTP.Configuration()
 		}
+		if (w.Installation.AcmeKeyId != "") {
+			vals["Acme"] = map[string]string{
+				"KeyId": w.Installation.AcmeKeyId,
+				"Secret": w.Installation.AcmeSecret,
+			}
+		}
 
 		for k, v := range prevVals {
 			vals[k] = v
