@@ -73,3 +73,16 @@ func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
 	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
+
+func (k *Kube) FinalizeNamespace(namespace string) error {
+	ctx := context.Background()
+	client := k.Kube.CoreV1().Namespaces()
+	ns, err := client.Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	ns.Spec.Finalizers = []v1.FinalizerName{}
+	_, err = client.Finalize(ctx, ns, metav1.UpdateOptions{})
+	return err
+}
