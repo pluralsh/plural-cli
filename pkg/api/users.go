@@ -76,7 +76,7 @@ const deviceLogin = `
 
 const meQuery = `
 	query {
-		me { email }
+		me { id email }
 	}
 `
 
@@ -121,6 +121,7 @@ type LoginMethod struct {
 }
 
 type Me struct {
+	Id    string
 	Email string
 }
 

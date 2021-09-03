@@ -11,6 +11,7 @@ type RecipeInput struct {
 	Provider     string
 	Sections     []RecipeSectionInput
 	Dependencies []DependencyInput
+	OidcSettings *OIDCSettings `yaml:"oidcSettings,omitempty"`
 }
 
 type DependencyInput struct {
@@ -84,10 +85,11 @@ mutation Install($id: ID!, $ctx: Map!) {
 }
 `
 
-func (client *Client) CreateRecipe(repoName string, attrs RecipeInput) (string, error) {
+func (client *Client) CreateRecipe(repoName string, attrs *RecipeInput) (string, error) {
 	var resp struct {
 		Id string
 	}
+	fmt.Printf("%+v", attrs.OidcSettings)
 	req := client.Build(createRecipe)
 	req.Var("attributes", attrs)
 	req.Var("name", repoName)
@@ -142,8 +144,7 @@ func (client *Client) InstallRecipe(id string) error {
 	return client.Run(req, &resp)
 } 
 
-func ConstructRecipe(marshalled []byte) (RecipeInput, error) {
-	var recipe RecipeInput
-	err := yaml.Unmarshal(marshalled, &recipe)
-	return recipe, err
+func ConstructRecipe(marshalled []byte) (recipe RecipeInput, err error) {
+	err = yaml.Unmarshal(marshalled, &recipe)
+	return
 }

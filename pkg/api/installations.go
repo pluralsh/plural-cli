@@ -10,6 +10,16 @@ type instResponse struct {
 	}
 }
 
+type Binding struct {
+	UserId string
+}
+
+type OidcProviderAttributes struct {
+	RedirectUris []string
+	AuthMethod   string
+	Bindings     []Binding
+}
+
 var instQuery = fmt.Sprintf(`
 	query Installation($name: String!) {
 		installation(name: $name) {
@@ -27,6 +37,14 @@ var instsQuery = fmt.Sprintf(`
 	}
 	%s
 `, pageSize, InstallationFragment)
+
+const oidcProviderMut = `
+	mutation OIDCProvider($id: ID!, $attributes: OidcProviderAttributes!) {
+		upsertOidcProvider(installationId: $id, attributes: $attributes) {
+			id
+		}
+	}
+`
 
 func (client *Client) GetInstallation(name string) (inst *Installation, err error) {
 	var resp struct {
@@ -47,4 +65,16 @@ func (client *Client) GetInstallations() ([]*Installation, error) {
 		insts[i] = edge.Node
 	}
 	return insts, err
+}
+
+func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
+	var resp struct {
+		UpsertOidcProvider struct {
+			Id string
+		}
+	}
+	req := client.Build(oidcProviderMut)
+	req.Var("id", id)
+	req.Var("attributes", attributes)
+	return client.Run(req, &resp)
 }

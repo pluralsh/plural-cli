@@ -196,7 +196,7 @@ func handleRecipeUpload(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateRecipe(c.Args().Get(1), recipeInput)
+	_, err = client.CreateRecipe(c.Args().Get(1), &recipeInput)
 	return err
 }
 

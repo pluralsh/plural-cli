@@ -49,7 +49,12 @@ func Install(repo, name string) error {
 		return err
 	}
 
-	return client.InstallRecipe(recipe.Id)
+	err = client.InstallRecipe(recipe.Id)
+	if err != nil {
+		return err
+	}
+
+	return configureOidc(repo, client, recipe, context.Configuration[repo])
 }
 
 func getName(item *api.RecipeItem) string {

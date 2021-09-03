@@ -38,7 +38,7 @@ func (w *Workspace) DestroyTerraform() error {
 		return err
 	}
 
-	time.AfterFunc(45 * time.Second, func() {
+	time.AfterFunc(1 * time.Minute, func() {
 		kube, err := utils.Kubernetes()
 		if err != nil {
 			fmt.Println("could not set up k8s client due to %s", err)

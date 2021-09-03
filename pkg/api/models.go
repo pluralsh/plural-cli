@@ -98,7 +98,7 @@ type OAuthConfiguration struct {
 }
 
 type OIDCProvider struct {
-	ID            string
+	Id            string
 	ClientId      string
 	ClientSecret  string
 	RedirectUris  []string
@@ -106,6 +106,7 @@ type OIDCProvider struct {
 }
 
 type Installation struct {
+	Id						string
 	Repository    *Repository
 	User          *User
 	OIDCProvider *OIDCProvider `json:"oidcProvider"`
@@ -155,6 +156,13 @@ type Recipe struct {
 	Provider       string
 	Description    string
 	RecipeSections []*RecipeSection
+	OidcSettings   *OIDCSettings
+}
+
+type OIDCSettings struct {
+	DomainKey  string `yaml:"domainKey"`
+	UriFormat  string `yaml:"uriFormat"`
+	AuthMethod string `yaml:"authMethod"`
 }
 
 type RecipeSection struct {
@@ -399,6 +407,11 @@ const RecipeFragment = `
     name
     description
     provider
+		oidcSettings {
+			uriFormat
+			authMethod
+			domainKey
+		}
 	}
 `
 
