@@ -47,9 +47,13 @@ func (w *Workspace) DestroyTerraform() error {
 
 		ns := w.Config.Namespace(repo.Name)
 		if err := kube.FinalizeNamespace(ns); err != nil {
-			fmt.Printf("Failed to delete namespace %s due to %s", ns, err)
+			fmt.Printf("namespace finalization ignored for %s, due to %s", ns, err)
 		}
 	})
+
 	os.Chdir(path)
+	if err := utils.Cmd(w.Config, "terraform", "init"); err != nil {
+		return err
+	}
 	return utils.Cmd(w.Config, "terraform", "destroy", "-auto-approve")
 }
