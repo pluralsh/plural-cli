@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 )
 
 const (
@@ -267,7 +268,7 @@ func (client *Client) GetEabCredential(cluster, provider string) (*EabCredential
 	}
 	req := client.Build(getEabCredential)
 	req.Var("cluster", cluster)
-	req.Var("provider", provider)
+	req.Var("provider", strings.ToUpper(provider))
 	err := client.Run(req, &resp)
 	return resp.EabCredential, err
 }
