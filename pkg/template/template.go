@@ -33,6 +33,7 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["toYaml"] = toYaml
 	funcs["fileExists"] = fileExists
 	funcs["pathJoin"] = pathJoin
+	funcs["eabCredential"] = eabCredential
 	return template.New("gotpl").Funcs(funcs).Parse(tmplate)
 }
 

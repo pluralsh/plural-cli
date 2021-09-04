@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/api"
 )
 
 func fileExists(path string) bool {
@@ -158,4 +159,9 @@ func importValue(tool, path string) string {
 func toYaml(val interface{}) (string, error) {
 	res, err := yaml.Marshal(val)
 	return string(res), err
+}
+
+func eabCredential(cluster, provider string) (*api.EabCredential, error) {
+	client := api.NewClient()
+	return client.GetEabCredential(cluster, provider)
 }

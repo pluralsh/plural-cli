@@ -235,6 +235,14 @@ type PublicKeyEdge struct {
 	Node *PublicKey
 }
 
+type EabCredential struct {
+	Id       string
+	KeyId    string
+	HmacKey  string
+	Cluster  string
+	Provider string
+}
+
 var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id
@@ -442,3 +450,13 @@ fragment RecipeSectionFragment on RecipeSection {
 %s
 %s
 `, RepositoryFragment, RecipeItemFragment)
+
+const EabCredentialFragment = `
+fragment EabCredentialFragment on EabCredential {
+	id
+	keyId
+	hmacKey
+	cluster
+	provider
+}
+`

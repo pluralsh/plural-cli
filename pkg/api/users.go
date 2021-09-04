@@ -80,6 +80,15 @@ const meQuery = `
 	}
 `
 
+var getEabCredential = fmt.Sprintf(`
+	query Eab($cluster: String!, $provider: Provider!) {
+		eabCredential(cluster: $cluster, provider: $provider) {
+			...EabCredentialFragment
+		}
+	}
+	%s
+`, EabCredentialFragment)
+
 type UpgradeAttributes struct {
 	Message string
 }
@@ -250,4 +259,15 @@ func (client *Client) CreateKey(name, content string) error {
 	req.Var("key", content)
 	req.Var("name", name)
 	return client.Run(req, &resp)
+}
+
+func (client *Client) GetEabCredential(cluster, provider string) (*EabCredential, error) {
+	var resp struct {
+		EabCredential *EabCredential
+	}
+	req := client.Build(getEabCredential)
+	req.Var("cluster", cluster)
+	req.Var("provider", provider)
+	err := client.Run(req, &resp)
+	return resp.EabCredential, err
 }
