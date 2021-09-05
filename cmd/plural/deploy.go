@@ -223,6 +223,10 @@ func handleDiff(c *cli.Context) error {
 }
 
 func bounce(c *cli.Context) error {
+	if err := validateOwner(); err != nil {
+		return err
+	}
+
 	client := api.NewClient()
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
@@ -265,6 +269,10 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 }
 
 func destroy(c *cli.Context) error {
+	if err := validateOwner(); err != nil {
+		return err
+	}
+
 	client := api.NewClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := utils.RepoRoot()
