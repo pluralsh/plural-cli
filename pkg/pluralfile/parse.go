@@ -25,6 +25,7 @@ const (
 	IRD         ComponentName = "ird"
 	COMMAND     ComponentName = "run"
 	TAG         ComponentName = "tag"
+	REPO_ATTRS  ComponentName = "attrs"
 )
 
 type Component interface {
@@ -153,6 +154,10 @@ func Parse(f string) (*Pluralfile, error) {
 				return plrl, err
 			}
 			plrl.Components = append(plrl.Components, tags...)
+		case "attributes":
+			pub, file := splitline[1], splitline[2]
+	
+			plrl.Components = append(plrl.Components, &RepoAttrs{File: file, Publisher: pub})
 		default:
 			continue
 		}

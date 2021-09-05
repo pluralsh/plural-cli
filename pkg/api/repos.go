@@ -2,8 +2,11 @@ package api
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
+	"github.com/michaeljguarino/graphql"
 )
 
 type ResourceDefinitionInput struct {
@@ -30,10 +33,12 @@ type IntegrationInput struct {
 }
 
 type RepositoryInput struct {
-	Dashboards []struct {
-		Name string
-		UID  string `json:"uid"`
-	}
+	Name        string
+	Description string
+	Tags        []Tag  `json:"tags,omitempty" yaml:"tags"`
+	Icon        string `json:"icon,omitempty" yaml:"icon"`
+	DarkIcon    string `json:"darkIcon,omitempty" yaml:"darkIcon"`
+	Category    string
 }
 
 const updateRepository = `
@@ -41,6 +46,12 @@ const updateRepository = `
 		updateRepository(repositoryName: $name, attributes: {integrationResourceDefinition: $input}) {
 			id
 		}
+	}
+`
+
+const upsertRepository = `
+	mutation UpsertRepository($name: String!, $publisher: String!, $attributes: RepositoryAttributes!) {
+		upsertRepository(name: $name, publisher: $publisher, attributes: $attributes) { id }
 	}
 `
 
@@ -111,6 +122,51 @@ func (client *Client) UpdateRepository(name string, input RepositoryInput) (stri
 	req.Var("name", name)
 	err := client.Run(req, &resp)
 	return resp.Id, err
+}
+
+func (client *Client) CreateRepository(name, publisher string, input RepositoryInput) error {
+	var resp struct {
+		UpsertRepository struct {
+			Id string
+		}
+	}
+	
+	req := client.Build(upsertRepository)
+	req.Var("name", name)
+	req.Var("publisher", publisher)
+
+	ok, err := getIconReader(input.Icon, "icon", req)
+	if err != nil {
+		return err
+	}
+	if ok {
+		input.Icon = "icon"
+	}
+
+	ok, err = getIconReader(input.DarkIcon, "darkicon", req)
+	if err != nil {
+		return err
+	}
+	if ok {
+		input.DarkIcon = "darkicon"
+	}
+
+	req.Var("attributes", input)
+	return client.Run(req, &resp)
+}
+
+func getIconReader(icon, field string, req *graphql.Request) (bool, error) {
+	if icon == "" {
+		return false, nil
+	}
+
+	file, err := filepath.Abs(icon)
+	if err != nil {
+		return false, err
+	}
+	f, err := os.Open(file)
+	req.File(field, file, f)
+	return true, err
 }
 
 func ConstructRepositoryInput(marshalled []byte) (input RepositoryInput, err error) {

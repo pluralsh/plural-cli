@@ -57,14 +57,12 @@ func mkSha(file string) (sha string, err error) {
 		return
 	}
 
-	readmePath, _ := filepath.Abs(input.Readme)
-	readme, err := utils.Sha256(readmePath)
+	readme, err := fileSha(input.Readme)
 	if err != nil {
 		return
 	}
 
-	blobPath, _ := filepath.Abs(input.Blob)
-	blob, err := utils.Sha256(blobPath)
+	blob, err := fileSha(input.Blob)
 	if err != nil {
 		return
 	}
