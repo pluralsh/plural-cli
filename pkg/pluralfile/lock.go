@@ -92,7 +92,7 @@ func (lock *Lockfile) getSha(name ComponentName, key string) string {
 		sha, _ := lock.Tag[key]
 		return sha
 	case REPO_ATTRS:
-		sha, _ := lock.Tag[key]
+		sha, _ := lock.Attrs[key]
 		return sha
 	default:
 		return ""

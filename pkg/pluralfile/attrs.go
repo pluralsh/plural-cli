@@ -39,7 +39,9 @@ func (a *RepoAttrs) Push(repo string, sha string) (string, error) {
 		utils.Highlight("No change for %s\n", a.File)
 		return sha, err
 	}
-	client := api.NewClient()
+
+	utils.Highlight("Setting attributes for %s\n", repo)
+	client := api.NewUploadClient()
 	return newsha, client.CreateRepository(repo, a.Publisher, input)
 }
 
