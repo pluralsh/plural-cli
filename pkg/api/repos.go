@@ -32,13 +32,19 @@ type IntegrationInput struct {
 	Tags        []Tag  `json:"tags,omitempty" yaml:"tags"`
 }
 
+type OauthSettings struct {
+	UriFormat  string `yaml:"uriFormat"`
+	AuthMethod string `yaml:"authMethod"`
+}
+
 type RepositoryInput struct {
-	Name        string
-	Description string
-	Tags        []Tag  `json:"tags,omitempty" yaml:"tags"`
-	Icon        string `json:"icon,omitempty" yaml:"icon"`
-	DarkIcon    string `json:"darkIcon,omitempty" yaml:"darkIcon"`
-	Category    string
+	Name          string
+	Description   string
+	Tags          []Tag  `json:"tags,omitempty" yaml:"tags"`
+	Icon          string `json:"icon,omitempty" yaml:"icon"`
+	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
+	Category      string
+	OauthSettings *OauthSettings `yaml:"oauthSettings,omitempty"`
 }
 
 const updateRepository = `
@@ -113,7 +119,7 @@ func (client *Client) CreateIntegration(name string, input IntegrationInput) (st
 	return resp.Id, err
 }
 
-func (client *Client) UpdateRepository(name string, input RepositoryInput) (string, error) {
+func (client *Client) UpdateRepository(name string, input *RepositoryInput) (string, error) {
 	var resp struct {
 		Id string
 	}
@@ -124,7 +130,7 @@ func (client *Client) UpdateRepository(name string, input RepositoryInput) (stri
 	return resp.Id, err
 }
 
-func (client *Client) CreateRepository(name, publisher string, input RepositoryInput) error {
+func (client *Client) CreateRepository(name, publisher string, input *RepositoryInput) error {
 	var resp struct {
 		UpsertRepository struct {
 			Id string
@@ -169,8 +175,9 @@ func getIconReader(icon, field string, req *graphql.Request) (bool, error) {
 	return true, err
 }
 
-func ConstructRepositoryInput(marshalled []byte) (input RepositoryInput, err error) {
-	err = yaml.Unmarshal(marshalled, &input)
+func ConstructRepositoryInput(marshalled []byte) (input *RepositoryInput, err error) {
+	input = &RepositoryInput{}
+	err = yaml.Unmarshal(marshalled, input)
 	return
 }
 
