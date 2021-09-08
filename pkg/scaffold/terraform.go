@@ -66,12 +66,13 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			return err
 		}
 		values := map[string]interface{}{
-			"Values": ctx, 
-			"Cluster": wk.Provider.Cluster(),
-			"Project": wk.Provider.Project(),
-			"Namespace": wk.Config.Namespace(repo.Name),
-			"Region": wk.Provider.Region(),
-			"Context": wk.Provider.Context(),
+			"Values":        ctx,
+			"Configuration": wk.Context.Configuration,
+			"Cluster":       wk.Provider.Cluster(),
+			"Project":       wk.Provider.Project(),
+			"Namespace":     wk.Config.Namespace(repo.Name),
+			"Region":        wk.Provider.Region(),
+			"Context":       wk.Provider.Context(),
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {
 			return err
@@ -148,13 +149,17 @@ func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
 	buf.Grow(5 * 1024)
 
 	tmp, err := template.MakeTemplate(outputTemplate)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	for _, tfInst := range wk.Terraform {
 		tfName := tfInst.Terraform.Name
 		for name, value := range tfInst.Version.Dependencies.Outputs {
 			err = tmp.Execute(&buf, map[string]interface{}{"Name": name, "Value": value, "Module": tfName})
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			buf.WriteString("\n\n")
 		}
 	}
