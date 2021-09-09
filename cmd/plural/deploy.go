@@ -166,6 +166,7 @@ func deploy(c *cli.Context) error {
 		return err
 	}
 
+	client := api.NewClient()
 	repoRoot, err := utils.RepoRoot()
 	if err != nil {
 		return err
@@ -188,6 +189,20 @@ func deploy(c *cli.Context) error {
 			return err
 		}
 		fmt.Printf("\n")
+
+
+		installation, err := client.GetInstallation(repo)
+		if err != nil {
+			return err
+		}
+		workspace, err := wkspace.New(client, installation)
+		if err != nil {
+			return err
+		}
+
+		if err := scaffold.Notes(workspace); err != nil {
+			return err
+		}
 	}
 
 	utils.Highlight("\n==> Commit and push your changes to record your deployment\n")

@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	"github.com/michaeljguarino/graphql"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type ResourceDefinitionInput struct {
@@ -44,6 +45,7 @@ type RepositoryInput struct {
 	Icon          string `json:"icon,omitempty" yaml:"icon"`
 	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
 	Category      string
+	Notes         string `json:"notes,omitempty" yaml:"notes"`
 	OauthSettings *OauthSettings `yaml:"oauthSettings,omitempty"`
 }
 
@@ -145,6 +147,7 @@ func (client *Client) CreateRepository(name, publisher string, input *Repository
 	if err != nil {
 		return err
 	}
+
 	if ok {
 		input.Icon = "icon"
 	}
@@ -153,8 +156,19 @@ func (client *Client) CreateRepository(name, publisher string, input *Repository
 	if err != nil {
 		return err
 	}
+
 	if ok {
 		input.DarkIcon = "darkicon"
+	}
+	
+	if input.Notes != "" {
+		file, _ := filepath.Abs(input.Notes)
+		notes, err := utils.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		input.Notes = notes
 	}
 
 	req.Var("attributes", input)

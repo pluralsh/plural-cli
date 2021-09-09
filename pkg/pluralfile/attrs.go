@@ -61,7 +61,12 @@ func (a *RepoAttrs) mkSha(fullPath string, input *api.RepositoryInput) (sha stri
 		return
 	}
 
-	sha = utils.Sha([]byte(fmt.Sprintf("%s:%s:%s", base, iconSha, darkIconSha)))
+	notesSha, err := fileSha(input.Notes)
+	if err != nil {
+		return
+	}
+
+	sha = utils.Sha([]byte(fmt.Sprintf("%s:%s:%s:%s", base, iconSha, darkIconSha, notesSha)))
 	return
 }
 

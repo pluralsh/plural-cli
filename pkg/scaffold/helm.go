@@ -72,6 +72,64 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []depend
 	return dependencies
 }
 
+func Notes(w *wkspace.Workspace) error {
+	repoRoot, err := utils.RepoRoot()
+	if err != nil {
+		return err
+	}
+
+	if w.Installation.Repository.Notes == "" {
+		return nil
+	}
+
+	repo := w.Installation.Repository.Name
+	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
+	valuesFile := filepath.Join(repoRoot, repo, "helm", repo, "values.yaml")
+	prevVals, _ := prevValues(valuesFile)
+	conf := config.Read()
+	vals := map[string]interface{}{
+		"Values":        ctx,
+		"Configuration": w.Context.Configuration,
+		"License":       w.Installation.License,
+		"OIDC":          w.Installation.OIDCProvider,
+		"Region":        w.Provider.Region(),
+		"Project":       w.Provider.Project(),
+		"Cluster":       w.Provider.Cluster(),
+		"Config":        conf,
+		"Provider":      w.Provider.Name(),
+		"Context":       w.Provider.Context(),
+	}
+
+	if (w.Context.SMTP != nil) {
+		vals["SMTP"] = w.Context.SMTP.Configuration()
+	}
+
+	if (w.Installation.AcmeKeyId != "") {
+		vals["Acme"] = map[string]string{
+			"KeyId": w.Installation.AcmeKeyId,
+			"Secret": w.Installation.AcmeSecret,
+		}
+	}
+
+	for k, v := range prevVals {
+		vals[k] = v
+	}
+
+	tmpl, err := template.MakeTemplate(w.Installation.Repository.Notes)
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	buf.Grow(5 * 1024)
+	if err := tmpl.Execute(&buf, vals); err != nil {
+		return err
+	}
+
+	fmt.Println(buf.String())
+	return nil
+}
+
 func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
 	var buf bytes.Buffer
@@ -101,9 +159,11 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Provider":      w.Provider.Name(),
 			"Context":       w.Provider.Context(),
 		}
+
 		if (w.Context.SMTP != nil) {
 			vals["SMTP"] = w.Context.SMTP.Configuration()
 		}
+
 		if (w.Installation.AcmeKeyId != "") {
 			vals["Acme"] = map[string]string{
 				"KeyId": w.Installation.AcmeKeyId,
