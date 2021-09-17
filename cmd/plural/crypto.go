@@ -2,19 +2,21 @@ package main
 
 import (
 	"bytes"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
 
 const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
+/**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
 context.yaml filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
