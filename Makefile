@@ -11,8 +11,15 @@ GOARCH ?= amd64
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+git-push:
+	git pull --rebase
+	git push
+
 install:
 	GOBIN=/usr/local/bin go install -ldflags '-s -w' ./cmd/plural/
+
+build-cli:
+	GOBIN=/usr/local/bin go build -ldflags '-s -w' -o plural.o ./cmd/plural/
 
 release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o plural.o ./cmd/plural/
