@@ -76,7 +76,7 @@ func getClient(region string) (*s3.S3, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, utils.ErrorWrap(err, "Failed to initialize aws client: ")
 	}
 
 	return s3.New(sess), nil
@@ -84,7 +84,7 @@ func getClient(region string) (*s3.S3, error) {
 
 func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", err
+		return "", utils.ErrorWrap(err, "Failed to create terraform state bucket: ")
 	}
 
 	ctx["Region"] = aws.Region()

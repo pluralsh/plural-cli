@@ -70,7 +70,7 @@ func azureFromManifest(man *manifest.Manifest) (*AzureProvider, error) {
 
 func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := azure.CreateBucket(azure.bucket); err != nil {
-		return "", err
+		return "", utils.ErrorWrap(err, "Failed to create terraform state bucket: ")
 	}
 
 	ctx["Region"] = azure.Region()
