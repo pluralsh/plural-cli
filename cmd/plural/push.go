@@ -143,7 +143,7 @@ func handleHelmUpload(c *cli.Context) error {
 	}
 
 	cmUrl := fmt.Sprintf("%s/cm/%s", conf.BaseUrl(), repo)
-	return utils.Cmd(&conf, "helm", "push", "--context-path=/cm", pth, cmUrl)
+	return utils.Cmd(&conf, "helm", "cm-push", "--context-path=/cm", pth, cmUrl)
 }
 
 func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
