@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
+	"k8s.io/api/core/v1"
 )
 
 type GCPProvider struct {
@@ -195,4 +196,8 @@ func (gcp *GCPProvider) Region() string {
 
 func (gcp *GCPProvider) Context() map[string]interface{} {
 	return map[string]interface{}{}
+}
+
+func (gcp *GCPProvider) Decommision(node *v1.Node) error {
+	return nil
 }

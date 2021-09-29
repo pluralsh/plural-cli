@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
+	"k8s.io/api/core/v1"
 )
 
 type AWSProvider struct {
@@ -159,6 +161,35 @@ func (aws *AWSProvider) Region() string {
 
 func (aws *AWSProvider) Context() map[string]interface{} {
 	return map[string]interface{}{}
+}
+
+func (prov *AWSProvider) Decommision(node *v1.Node) error {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(prov.region),
+	})
+
+	if err != nil {
+		return utils.ErrorWrap(err, "Failed to establish aws session")
+	}
+
+	svc := ec2.New(sess)
+	instances, err := svc.DescribeInstances(&ec2.DescribeInstancesInput{
+		Filters: []*ec2.Filter{
+			{Name: aws.String("instance-ip"), Values: []*string{ aws.String(node.ObjectMeta.Name) }},
+		},
+	})
+
+	if err != nil {
+		return utils.ErrorWrap(err, "failed to find node in ec2")
+	}
+
+	instance := instances.Reservations[0].Instances[0]
+
+	_, err = svc.TerminateInstances(&ec2.TerminateInstancesInput{
+		InstanceIds: []*string{ instance.InstanceId },
+	})
+
+	return utils.ErrorWrap(err, "failed to terminate instance")
 }
 
 func getAwsAccount() (string, error) {

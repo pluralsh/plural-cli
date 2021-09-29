@@ -1,28 +1,28 @@
 package provider
 
 const (
-	GCP   = "google"
-	AWS   = "aws"
-	AZURE = "azure"
+  GCP   = "google"
+  AWS   = "aws"
+  AZURE = "azure"
 )
 
 const azureBackendTemplate = `terraform {
-	backend "azurerm" {
-		storage_account_name = {{ .Values.Context.StorageAccount | quote }}
-		resource_group_name = {{ .Values.ResourceGroup | quote }}
-		container_name = {{ .Values.Bucket | quote }}
-		key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
-	}
+  backend "azurerm" {
+    storage_account_name = {{ .Values.Context.StorageAccount | quote }}
+    resource_group_name = {{ .Values.ResourceGroup | quote }}
+    container_name = {{ .Values.Bucket | quote }}
+    key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
+  }
 
-	required_providers {
+  required_providers {
     azurerm = {
       source = "hashicorp/azurerm"
       version = "2.57.0"
     }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0.3"
+    }
   }
 }
 
@@ -40,7 +40,7 @@ provider "kubernetes" {
 {{ else }}
 data "azurerm_kubernetes_cluster" "cluster" {
   name = {{ .Values.Cluster }}
-	resource_group_name = {{ .Values.ResourceGroup | quote }}
+  resource_group_name = {{ .Values.ResourceGroup | quote }}
 }
 
 provider "kubernetes" {
@@ -53,25 +53,25 @@ provider "kubernetes" {
 `
 
 const gcpBackendTemplate = `terraform {
-	backend "gcs" {
-		bucket = {{ .Values.Bucket | quote }}
-		prefix = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}"
-	}
+  backend "gcs" {
+    bucket = {{ .Values.Bucket | quote }}
+    prefix = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}"
+  }
 
-	required_providers {
+  required_providers {
     google = {
       source  = "hashicorp/google"
       version = "~> 3.65.0"
     }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0.3"
+    }
   }
 }
 
 locals {
-	gcp_location  = {{ .Values.Location | quote }}
+  gcp_location  = {{ .Values.Location | quote }}
   gcp_location_parts = split("-", local.gcp_location)
   gcp_region         = "${local.gcp_location_parts[0]}-${local.gcp_location_parts[1]}"
 }
@@ -104,21 +104,21 @@ provider "kubernetes" {
 `
 
 const awsBackendTemplate = `terraform {
-	backend "s3" {
-		bucket = {{ .Values.Bucket | quote }}
-		key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
-		region = {{ .Values.Region | quote }}
-	}
+  backend "s3" {
+    bucket = {{ .Values.Bucket | quote }}
+    key = "{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
+    region = {{ .Values.Region | quote }}
+  }
 
-	required_providers {
+  required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 3.55.0"
     }
-		kubernetes = {
-			source  = "hashicorp/kubernetes"
-			version = "~> 2.0.3"
-		}
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0.3"
+    }
   }
 }
 

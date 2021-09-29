@@ -5,6 +5,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
+	"k8s.io/api/core/v1"
 	"strconv"
 	"strings"
 )
@@ -19,6 +20,7 @@ type Provider interface {
 	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
 	Install() error
 	Context() map[string]interface{}
+	Decommision(node *v1.Node) error
 }
 
 func Bootstrap(manifestPath string, force bool) (Provider, error) {

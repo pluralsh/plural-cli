@@ -17,6 +17,7 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
+	"k8s.io/api/core/v1"
 )
 
 type AzureProvider struct {
@@ -146,6 +147,11 @@ func (az *AzureProvider) Region() string {
 
 func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
+}
+
+
+func (az *AzureProvider) Decommision(node *v1.Node) error {
+	return nil
 }
 
 func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {

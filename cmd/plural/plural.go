@@ -206,6 +206,12 @@ func main() {
 			Subcommands: bundleCommands(),
 		},
 		{
+			Name:        "ops",
+			Usage:       "Commands for simplifying cluster operations",
+			Subcommands: opsCommands(),
+			Category:    "Debugging",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",
