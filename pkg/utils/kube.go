@@ -78,6 +78,10 @@ func (k *Kube) Node(name string) (*v1.Node, error) {
 	return k.Kube.CoreV1().Nodes().Get(context.Background(), name, metav1.GetOptions{})
 }
 
+func (k *Kube) Nodes() (*v1.NodeList, error) {
+	return k.Kube.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+}
+
 func (k *Kube) FinalizeNamespace(namespace string) error {
 	ctx := context.Background()
 	client := k.Kube.CoreV1().Namespaces()
