@@ -19,6 +19,7 @@ type Step struct {
 	Command string   `hcl:"command"`
 	Args    []string `hcl:"args"`
 	Sha     string   `hcl:"sha"`
+	Retries int      `hcl:"retries"`
 }
 
 func SuppressedCommand(command string, args ...string) (cmd *exec.Cmd, output *OutputWriter) {
@@ -56,6 +57,12 @@ func (step Step) Execute(root string, ignore []string) (string, error) {
 	cmd.Dir = filepath.Join(root, step.Wkdir)
 	err = RunCommand(cmd, output)
 	if err != nil {
+		if step.Retries > 0 {
+			step.Retries -= 1
+			fmt.Printf("retrying command, number of retries remaining: %s\n", step.Retries)
+			return step.Execute(root, ignore)
+		}
+
 		return step.Sha, err
 	}
 
