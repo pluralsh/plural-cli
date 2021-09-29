@@ -23,6 +23,7 @@ COMMANDS:
      watch  watches applications until they become ready
      proxy  proxies into running processes in your cluster
      logs   Commands for tailing logs for specific apps
+     ops    Commands for simplifying cluster operations
 
    Publishing:
      apply          applys the current pluralfile
