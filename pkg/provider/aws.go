@@ -175,7 +175,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	svc := ec2.New(sess)
 	instances, err := svc.DescribeInstances(&ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
-			{Name: aws.String("instance-ip"), Values: []*string{ aws.String(node.ObjectMeta.Name) }},
+			{Name: aws.String("private-dns-name"), Values: []*string{ aws.String(node.ObjectMeta.Name) }},
 		},
 	})
 
