@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/azure/azure-sdk-for-go/services/compute/mgmt/2021-07-01/compute"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -151,7 +152,15 @@ func (az *AzureProvider) Context() map[string]interface{} {
 
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {
-	return nil
+	ctx := context.Background()
+	vms := compute.NewVirtualMachinesClient(utils.ToString(az.ctx["SubscriptionId"]))
+	fut, err := vms.Delete(ctx, az.Project(), node.Name, to.BoolPtr(true))
+	if err != nil {
+		return utils.ErrorWrap(err, "failed to call deletion api")
+	}
+
+	err = fut.WaitForCompletionRef(ctx, vms.Client)
+	return utils.ErrorWrap(err, "vm deletion failed with")
 }
 
 func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {

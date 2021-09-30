@@ -16,6 +16,9 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
 	"k8s.io/api/core/v1"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 )
 
 type GCPProvider struct {
@@ -199,5 +202,18 @@ func (gcp *GCPProvider) Context() map[string]interface{} {
 }
 
 func (gcp *GCPProvider) Decommision(node *v1.Node) error {
-	return nil
+	ctx := context.Background()
+	c, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		return utils.ErrorWrap(err, "failed to initialize compute client")
+	}
+	defer c.Close()
+
+	_, err = c.Delete(ctx, &computepb.DeleteInstanceRequest{
+		Instance: node.Name,
+		Project: gcp.project,
+		Zone: gcp.region,
+	})
+	
+	return utils.ErrorWrap(err, "failed to delete instance")
 }

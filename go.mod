@@ -3,7 +3,7 @@ module github.com/pluralsh/plural
 go 1.13
 
 require (
-	cloud.google.com/go v0.72.0 // indirect
+	cloud.google.com/go v0.97.0
 	cloud.google.com/go/storage v1.12.0
 	filippo.io/age v1.0.0-rc.2
 	github.com/Azure/azure-sdk-for-go v53.4.0+incompatible
@@ -16,6 +16,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
+	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
 	github.com/buger/goterm v1.0.0
 	github.com/fatih/color v1.10.0
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -36,11 +37,8 @@ require (
 	github.com/schollz/progressbar/v3 v3.7.6
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
-	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58 // indirect
-	golang.org/x/tools v0.0.0-20201125220014-2e53cd670342 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20201119123407-9b1e624d6bc4 // indirect
+	golang.org/x/mod v0.4.2
+	google.golang.org/genproto v0.0.0-20210929214142-896c89f843d2
 	gopkg.in/oleiade/reflections.v1 v1.0.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
