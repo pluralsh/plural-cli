@@ -54,6 +54,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem) (string, error) {
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
+	prompt := itemPrompt(item)
 
 	def := item.Default
 	prev, ok := ctx[item.Name]
@@ -62,8 +63,21 @@ func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem) (strin
 	}
 
 	if def != "" {
-		return utils.ReadLineDefault("Enter the value", def)
+		return utils.ReadLineDefault(prompt, def)
 	}
 
-	return utils.ReadLine("Enter the value ")
+	return utils.ReadLine(prompt)
+}
+
+func itemPrompt(item *api.ConfigurationItem) string {
+	switch (item.Type) {
+	case Int:
+		return "Enter the value (must be an integer) "
+	case Bool:
+		return "Enter the value (true/false) "
+	case String:
+		// default
+	}
+
+	return "Enter the value "
 }
