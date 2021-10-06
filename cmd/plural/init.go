@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/mholt/archiver/v3"
-	"github.com/pkg/browser"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
+
+	"github.com/mholt/archiver/v3"
+	"github.com/pkg/browser"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -88,6 +89,7 @@ func handleLogin(c *cli.Context) error {
 		conf.Email = email
 		conf.Token = jwt
 		client = api.FromConfig(conf)
+		fmt.Printf("Assumed service account %s\n", saEmail)
 	}
 
 	accessToken, err := client.GrabAccessToken()
