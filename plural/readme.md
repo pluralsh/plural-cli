@@ -42,7 +42,6 @@ COMMANDS:
    Workspace:
      validate, v         validates your workspace
      topsort, d          renders a dependency-inferred topological sort of the installations in a workspace
-     install             installs forge cli dependencies
      workspace, wkspace  Commands for managing installations in your workspace
      output              Commands for generating outputs from supported tools
      build-context       creates a fresh context.yaml for legacy repos
