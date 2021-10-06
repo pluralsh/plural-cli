@@ -99,7 +99,13 @@ func main() {
 			Aliases:   []string{"b"},
 			Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
 			ArgsUsage: "WKSPACE",
-			Action:    destroy,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "from",
+					Usage: "where to start your deploy command (useful when restarting interrupted destroys)",
+				},
+			},
+			Action: destroy,
 		},
 		{
 			Name:  "init",

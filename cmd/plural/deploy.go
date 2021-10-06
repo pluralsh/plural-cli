@@ -312,8 +312,18 @@ func destroy(c *cli.Context) error {
 		return err
 	}
 
+	from := c.String("from")
+	started := from == ""
 	for i := len(installations) - 1; i >= 0; i-- {
 		installation := installations[i]
+		if installation.Repository.Name == from {
+			started = true
+		}
+
+		if !started {
+			continue
+		}
+
 		if err := doDestroy(repoRoot, client, installation); err != nil {
 			return err
 		}
