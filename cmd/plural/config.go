@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
-	"os"
 )
 
 func configCommands() []cli.Command {
@@ -37,6 +38,12 @@ func profileCommands() []cli.Command {
 			Usage:     "saves the current config as PROFILE",
 			ArgsUsage: "PROFILE",
 			Action:    handleSaveProfile,
+		},
+		{
+			Name:      "show",
+			Usage:     "displays the configuration for the current profile",
+			ArgsUsage: "PROFILE",
+			Action:    handleRead,
 		},
 		{
 			Name:      "list",

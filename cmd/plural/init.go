@@ -3,13 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"time"
 
-	"github.com/mholt/archiver/v3"
 	"github.com/pkg/browser"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -140,82 +137,4 @@ func initHelm(success string) error {
 	}
 	utils.Success(success)
 	return nil
-}
-
-func handleInstall(c *cli.Context) (err error) {
-	root, found := utils.ProjectRoot()
-	if !found {
-		root, err = utils.RepoRoot()
-		if err != nil {
-			return
-		}
-	}
-
-	err = os.MkdirAll(filepath.Join(root, "bin"), os.ModePerm)
-	if err != nil {
-		return
-	}
-	root = filepath.Join(root, "bin")
-
-	goos := runtime.GOOS
-	arch := runtime.GOARCH
-	kubectl := fmt.Sprintf("https://dl.k8s.io/release/%s/bin/%s/%s/kubectl", KUBECTL_VERSION, goos, arch)
-	err = utils.Install("kubectl", kubectl, filepath.Join(root, "kubectl"), func(dest string) (string, error) { return dest, nil })
-	if err != nil {
-		return
-	}
-
-	helm := fmt.Sprintf("https://get.helm.sh/helm-v%s-%s-%s.tar.gz", HELM_VERSION, goos, arch)
-	err = utils.Install("helm", helm, filepath.Join(root, "helm-root.tar.gz"), func(dest string) (bin string, err error) {
-		bin = filepath.Join(root, "helm")
-		err = archiver.Unarchive(dest, filepath.Join(root, "helm-root"))
-		if err != nil {
-			return
-		}
-
-		err = os.Rename(filepath.Join(dest, "helm"), bin)
-		if err != nil {
-			return
-		}
-
-		err = os.RemoveAll(dest)
-		return
-	})
-
-	if err != nil {
-		return
-	}
-
-	tf := fmt.Sprintf("https://releases.hashicorp.com/terraform/%s/terraform_%s_%s_%s.zip", TF_VERSION, TF_VERSION, goos, arch)
-	err = utils.Install("terraform", tf, filepath.Join(root, "terraform.zip"), func(dest string) (bin string, err error) {
-		bin = filepath.Join(root, "terraform")
-		err = archiver.Unarchive(dest, bin)
-		if err != nil {
-			return
-		}
-
-		err = os.Remove(dest)
-		return
-	})
-
-	if err != nil {
-		return
-	}
-
-	conf := config.Read()
-	err = utils.Cmd(&conf, "helm", "plugin", "install", "https://github.com/chartmuseum/helm-push")
-	if err != nil {
-		return
-	}
-	err = utils.Cmd(&conf, "helm", "plugin", "install", "https://github.com/databus23/helm-diff")
-	if err != nil {
-		return
-	}
-
-	prov, err := provider.Select(true)
-	if err != nil {
-		return
-	}
-	err = prov.Install()
-	return
 }

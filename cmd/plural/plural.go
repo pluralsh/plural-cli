@@ -33,7 +33,13 @@ func main() {
 			Aliases:   []string{"d"},
 			Usage:     "deploys the current workspace",
 			ArgsUsage: "WKSPACE",
-			Action:    deploy,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "silence",
+					Usage: "don't display notes for deployed apps",
+				},
+			},
+			Action: deploy,
 		},
 		{
 			Name:      "diff",
@@ -125,12 +131,6 @@ func main() {
 				},
 			},
 			Category: "User Profile",
-		},
-		{
-			Name:     "install",
-			Usage:    "installs forge cli dependencies",
-			Action:   handleInstall,
-			Category: "Workspace",
 		},
 		{
 			Name:     "import",

@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
 )
 
@@ -77,7 +77,7 @@ func diffed(c *cli.Context) error {
 func build(c *cli.Context) error {
 	if err := validateOwner(); err != nil {
 		return err
-	} 
+	}
 
 	client := api.NewClient()
 	if c.IsSet("only") {
@@ -190,7 +190,6 @@ func deploy(c *cli.Context) error {
 		}
 		fmt.Printf("\n")
 
-
 		installation, err := client.GetInstallation(repo)
 		if err != nil {
 			return err
@@ -198,6 +197,10 @@ func deploy(c *cli.Context) error {
 		workspace, err := wkspace.New(client, installation)
 		if err != nil {
 			return err
+		}
+
+		if c.Bool("silence") {
+			continue
 		}
 
 		if err := scaffold.Notes(workspace); err != nil {
@@ -341,13 +344,13 @@ func validateOwner() error {
 	conf := config.Read()
 	if err != nil {
 		return fmt.Errorf("Your workspace hasn't been configured, try running `plural init`")
-	} 
+	}
 
-	if owner := project.Owner; owner != nil { 
+	if owner := project.Owner; owner != nil {
 		if owner.Email != conf.Email || owner.Endpoint != conf.Endpoint {
 			return fmt.Errorf(
-				"The owner of this project is actually %s; plural environemnt = %s", 
-				owner.Email, 
+				"The owner of this project is actually %s; plural environemnt = %s",
+				owner.Email,
 				config.PluralUrl(owner.Endpoint),
 			)
 		}
