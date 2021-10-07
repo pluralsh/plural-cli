@@ -4,9 +4,9 @@ artifact:
   .forge/artifacts/forge.yaml:windows:amd64: qTjr3MV-tEdPuzpUgqR71voMCzVzkESecApbchAwdoY=
   .forge/forge.yaml_linux_amd64: f4iS5tsL13U7gDlHVjDV9SaqHKY9KnJWUJkPLZ3frpg=
   .forge/forge.yaml_mac_amd64: gxoMfcF9ih9QJOxbJwE-tnuftL4L081UOvM6VjgFeh8=
-  plural/plural.yaml_linux_amd64: VsV558qVmzTWeTWooSpdT3byrjYsJkGBa64yumeDlU4=
-  plural/plural.yaml_mac_amd64: GKd0wbBF_6wNtURP8GikQ_D0QAvcDcVM3fVVmK6VFvk=
-  plural/plural.yaml_mac_arm64: haPwtzBvOOXHd3c7nWcQvzchSFsLXBXJRPESpDF_idE=
+  plural/plural.yaml_linux_amd64: kYnipZ7ro2-FKZNcJMpycgmEmN1c_QLpljpnNEBBKKc=
+  plural/plural.yaml_mac_amd64: g52bSCsMAjd7ek9HoSt18PbBeBYqa0IXBYggfXvZ1_A=
+  plural/plural.yaml_mac_arm64: xD-iT-cC_teI9IXUaDGQiQB_tldlC86ybOcCiAok4LA=
 terraform: {}
 helm: {}
 recipe: {}
