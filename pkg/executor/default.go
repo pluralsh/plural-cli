@@ -56,6 +56,7 @@ func defaultSteps(path string) []*Step {
 			Command: "plural",
 			Args:    []string{"wkspace", "helm", path},
 			Sha:     "",
+			Retries: 1,
 		},
 	}
 }
