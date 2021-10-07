@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"gopkg.in/yaml.v2"
 )
 
@@ -141,6 +142,11 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	conf := config.Read()
 	globals := map[string]interface{}{}
 
+	proj, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
 	for _, chartInst := range w.Charts {
 		tmpl, err := template.MakeTemplate(chartInst.Version.ValuesTemplate)
 		if err != nil {
@@ -158,6 +164,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Config":        conf,
 			"Provider":      w.Provider.Name(),
 			"Context":       w.Provider.Context(),
+			"Network":       proj.Network,
 		}
 
 		if (w.Context.SMTP != nil) {
