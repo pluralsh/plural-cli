@@ -38,6 +38,10 @@ func main() {
 					Name:  "silence",
 					Usage: "don't display notes for deployed apps",
 				},
+				cli.BoolFlag{
+					Name:  "ignore-console",
+					Usage: "don't deploy the plural console",
+				},
 			},
 			Action: deploy,
 		},

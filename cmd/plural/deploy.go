@@ -179,7 +179,12 @@ func deploy(c *cli.Context) error {
 
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
 
+	ignoreConsole := c.Bool("ignore-console")
 	for _, repo := range sorted {
+		if ignoreConsole && repo == "console" {
+			continue
+		}
+
 		execution, err := executor.GetExecution(filepath.Join(repoRoot, repo), "deploy")
 		if err != nil {
 			return err
