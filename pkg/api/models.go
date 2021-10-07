@@ -107,14 +107,14 @@ type OIDCProvider struct {
 }
 
 type Installation struct {
-	Id						string
-	Repository    *Repository
-	User          *User
+	Id           string
+	Repository   *Repository
+	User         *User
 	OIDCProvider *OIDCProvider `json:"oidcProvider"`
-	License       string
-	Context       map[string]interface{}
-	AcmeKeyId     string
-	AcmeSecret    string
+	License      string
+	Context      map[string]interface{}
+	AcmeKeyId    string
+	AcmeSecret   string
 }
 
 type InstallationEdge struct {
@@ -186,12 +186,12 @@ type Condition struct {
 }
 
 type ConfigurationItem struct {
-	Name    string
-	Default string
+	Name          string
+	Default       string
 	Documentation string
-	Type    string
-	Placeholder string
-	Condition   *Condition
+	Type          string
+	Placeholder   string
+	Condition     *Condition
 }
 
 type Artifact struct {
@@ -227,9 +227,9 @@ type User struct {
 }
 
 type PublicKey struct {
-	Id string
+	Id      string
 	Content string
-	User *User
+	User    *User
 }
 
 type PublicKeyEdge struct {
@@ -242,6 +242,11 @@ type EabCredential struct {
 	HmacKey  string
 	Cluster  string
 	Provider string
+}
+
+type DnsDomain struct {
+	Id   string
+	Name string
 }
 
 var RepositoryFragment = fmt.Sprintf(`
@@ -460,5 +465,12 @@ fragment EabCredentialFragment on EabCredential {
 	hmacKey
 	cluster
 	provider
+}
+`
+
+const DnsDomainFragment = `
+fragment DnsDomainFragment on DnsDomain {
+	id
+	name
 }
 `

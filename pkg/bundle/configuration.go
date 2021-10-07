@@ -2,9 +2,12 @@ package bundle
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
 	"strconv"
+	"strings"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
@@ -12,7 +15,7 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 		return true
 	}
 
-	switch (cond.Operation) {
+	switch cond.Operation {
 	case "NOT":
 		val, _ := ctx[cond.Field]
 		return !(val.(bool))
@@ -25,13 +28,18 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	if !evaluateCondition(ctx, item.Condition) {
 		return nil
 	}
-	
-	res, err := fetchResult(ctx, item)
+
+	proj, err := manifest.FetchProject()
 	if err != nil {
 		return err
 	}
 
-	switch (item.Type) {
+	res, err := fetchResult(ctx, item, proj)
+	if err != nil {
+		return err
+	}
+
+	switch item.Type {
 	case Int:
 		parsed, err := strconv.Atoi(res)
 		if err != nil {
@@ -44,6 +52,11 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 			return err
 		}
 		ctx[item.Name] = parsed
+	case Domain:
+		if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
+			return fmt.Errorf("Domain must end with %s", proj.Network.Subdomain)
+		}
+		ctx[item.Name] = res
 	case String:
 		ctx[item.Name] = res
 	}
@@ -51,10 +64,10 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	return nil
 }
 
-func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem) (string, error) {
+func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (string, error) {
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
-	prompt := itemPrompt(item)
+	prompt := itemPrompt(item, proj)
 
 	def := item.Default
 	prev, ok := ctx[item.Name]
@@ -69,12 +82,18 @@ func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem) (strin
 	return utils.ReadLine(prompt)
 }
 
-func itemPrompt(item *api.ConfigurationItem) string {
-	switch (item.Type) {
+func itemPrompt(item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
+	switch item.Type {
 	case Int:
 		return "Enter the value (must be an integer) "
 	case Bool:
 		return "Enter the value (true/false) "
+	case Domain:
+		if proj.Network != nil {
+			return fmt.Sprintf("Enter a domain, which must be beneath %s ", proj.Network.Subdomain)
+		}
+
+		return "Enter a domain "
 	case String:
 		// default
 	}

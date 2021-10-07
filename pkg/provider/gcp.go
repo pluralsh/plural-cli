@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
-	"runtime"
 	"path/filepath"
+	"runtime"
+	"strings"
+
 	"github.com/mholt/archiver/v3"
 
 	"cloud.google.com/go/storage"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/config"
+
 	"k8s.io/api/core/v1"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -54,6 +56,11 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
+
+	if err := projectManifest.ConfigureNetwork(); err != nil {
+		return nil, err
+	}
+
 	path := manifest.ProjectManifestPath()
 	projectManifest.Write(path)
 
@@ -145,12 +152,12 @@ func (gcp *GCPProvider) Install() (err error) {
 		return
 	}
 
-	goos := runtime.GOOS 
+	goos := runtime.GOOS
 	arch := runtime.GOARCH
 	switch runtime.GOARCH {
 	case "amd64":
 		arch = "x86_64"
-		break;
+		break
 	case "arm64":
 		arch = "arm"
 	}
@@ -162,7 +169,7 @@ func (gcp *GCPProvider) Install() (err error) {
 		gcloudPath := filepath.Join(filepath.Dir(dest), "gcloud-sdk")
 		err := archiver.Unarchive(dest, gcloudPath)
 		if err != nil {
-		  return "", err
+			return "", err
 		}
 
 		installCommand := "install.sh"
@@ -211,9 +218,9 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 
 	_, err = c.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Instance: node.Name,
-		Project: gcp.project,
-		Zone: gcp.region,
+		Project:  gcp.project,
+		Zone:     gcp.region,
 	})
-	
+
 	return utils.ErrorWrap(err, "failed to delete instance")
 }

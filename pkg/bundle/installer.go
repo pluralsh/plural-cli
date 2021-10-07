@@ -2,10 +2,11 @@ package bundle
 
 import (
 	"fmt"
+
+	"github.com/inancgumus/screen"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/inancgumus/screen"
 )
 
 func Install(repo, name string) error {
@@ -14,9 +15,9 @@ func Install(repo, name string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	path := manifest.ContextPath()
-	context, err := manifest.ReadContext(path) 
+	context, err := manifest.ReadContext(path)
 	if err != nil {
 		context = manifest.NewContext()
 	}
@@ -32,14 +33,21 @@ func Install(repo, name string) error {
 			ctx = map[string]interface{}{}
 		}
 
+		seen := make(map[string]bool)
+
 		for _, item := range section.RecipeItems {
-			fmt.Printf("\n%s [%s] -- %s\n", getName(item), getType(item), getDescription(item))
 			for _, configItem := range item.Configuration {
+				if seen[configItem.Name] {
+					continue
+				}
+
+				seen[configItem.Name] = true
 				if err := configure(ctx, configItem); err != nil {
 					return err
 				}
 			}
 		}
+
 		context.Configuration[section.Repository.Name] = ctx
 	}
 

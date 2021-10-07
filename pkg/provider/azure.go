@@ -62,6 +62,11 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Context:  prov.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
+	err = projectManifest.ConfigureNetwork()
+	if err != nil {
+		return
+	}
+	
 	err = projectManifest.Write(manifest.ProjectManifestPath())
 	return
 }

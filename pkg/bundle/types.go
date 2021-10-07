@@ -2,6 +2,7 @@ package bundle
 
 const (
 	String = "STRING"
-	Int = "INT"
-	Bool = "BOOL"
+	Int    = "INT"
+	Bool   = "BOOL"
+	Domain = "DOMAIN"
 )

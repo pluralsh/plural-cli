@@ -1,10 +1,13 @@
 package manifest
 
 import (
-	"gopkg.in/yaml.v2"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"gopkg.in/yaml.v2"
 )
 
 type ChartManifest struct {
@@ -48,6 +51,11 @@ type Owner struct {
 	Endpoint string `yaml:"endpoint,omitempty"`
 }
 
+type NetworkConfig struct {
+	Subdomain string
+	PluralDns bool
+}
+
 type ProjectManifest struct {
 	Cluster  string
 	Bucket   string
@@ -55,6 +63,7 @@ type ProjectManifest struct {
 	Provider string
 	Region   string
 	Owner    *Owner
+	Network  *NetworkConfig
 	Context  map[string]interface{}
 }
 
@@ -85,9 +94,9 @@ func ProjectManifestPath() string {
 func (m *ProjectManifest) Write(path string) error {
 	versioned := &VersionedProjectManifest{
 		ApiVersion: "plural.sh/v1alpha1",
-		Kind: "ProjectManifest",
-		Metadata: &Metadata{Name: m.Cluster},
-		Spec: m,
+		Kind:       "ProjectManifest",
+		Metadata:   &Metadata{Name: m.Cluster},
+		Spec:       m,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -124,9 +133,9 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 func (m *Manifest) Write(path string) error {
 	versioned := &VersionedManifest{
 		ApiVersion: "plural.sh/v1alpha1",
-		Kind: "Manifest",
-		Metadata: &Metadata{Name: m.Name},
-		Spec: m,
+		Kind:       "Manifest",
+		Metadata:   &Metadata{Name: m.Name},
+		Spec:       m,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -153,4 +162,29 @@ func Read(path string) (man *Manifest, err error) {
 
 	man = versioned.Spec
 	return
+}
+
+func (man *ProjectManifest) ConfigureNetwork() error {
+	if man.Network != nil {
+		return nil
+	}
+
+	utils.Highlight("Ok, let's get your network configuration set up now...\n")
+	res, _ := utils.ReadLine("Do you want to use plural's dns provider: [Yn] ")
+	pluralDns := res != "n"
+	modifier := " (eg something.mydomain.com)"
+	if pluralDns {
+		modifier = ", must be a subdomain under onplural.sh"
+	}
+
+	subdomain, _ := utils.ReadLine(fmt.Sprintf("What do you want to use as your subdomain%s: ", modifier))
+
+	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
+
+	if pluralDns {
+		client := api.NewClient()
+		return client.CreateDomain(subdomain)
+	}
+
+	return nil
 }
