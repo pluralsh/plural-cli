@@ -13,7 +13,7 @@ func defaultSteps(path string) []*Step {
 			Wkdir:   filepath.Join(path, "terraform"),
 			Target:  filepath.Join(path, "terraform"),
 			Command: "terraform",
-			Args:    []string{"init"},
+			Args:    []string{"init", "-upgrade"},
 			Sha:     "",
 		},
 		{
