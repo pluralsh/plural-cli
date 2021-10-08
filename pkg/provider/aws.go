@@ -38,7 +38,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 
 	account, err := getAwsAccount()
 	if err != nil {
-		return nil, err
+		return nil, utils.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 	}
 
 	provider := &AWSProvider{
