@@ -7,6 +7,7 @@ artifact:
   plural/plural.yaml_linux_amd64: tk-XH9VuS2e6CmEegaSv3lRSohGj9jQaWT4Er-LXcWE=
   plural/plural.yaml_mac_amd64: R8ZYALsOd-fb57n0T37HAPSraSflSZeTojjwCrEH_JI=
   plural/plural.yaml_mac_arm64: 33DtgOOTBffj-7JzWYydcWJx5MqYkmGQMYL5N3GFZ3Y=
+  plural/plural.yaml_windows_amd64: YN3RzmnolHYO8IxrnTKP7TJonw_0JVRvdAL2aB3Zzv8=
 terraform: {}
 helm: {}
 recipe: {}
