@@ -7,13 +7,23 @@ import (
 	"time"
 
 	"github.com/urfave/cli"
+	"github.com/fatih/color"
 )
+
+func init() {
+	cli.BashCompletionFlag = cli.BoolFlag{Name: "compgen", Hidden: true}
+}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	app := cli.NewApp()
 	app.Name = "plural"
 	app.Usage = "Tooling to manage your installed plural applications"
+	app.EnableBashCompletion = true
+
+	if os.Getenv("ENABLE_COLOR") != "" {
+		color.NoColor = false
+	}
 
 	app.Commands = []cli.Command{
 		{
