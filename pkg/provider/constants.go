@@ -1,9 +1,9 @@
 package provider
 
 const (
-  GCP   = "google"
-  AWS   = "aws"
-  AZURE = "azure"
+	GCP   = "google"
+	AWS   = "aws"
+	AZURE = "azure"
 )
 
 const azureBackendTemplate = `terraform {
@@ -21,7 +21,7 @@ const azureBackendTemplate = `terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.0.3"
+      version = "~> 2.5.0"
     }
   }
 }
@@ -65,7 +65,7 @@ const gcpBackendTemplate = `terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.0.3"
+      version = "~> 2.5.0"
     }
   }
 }
@@ -113,11 +113,11 @@ const awsBackendTemplate = `terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.55.0"
+      version = "~> 3.62.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.0.3"
+      version = "~> 2.5.0"
     }
   }
 }
