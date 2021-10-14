@@ -44,6 +44,7 @@ type Manifest struct {
 	Terraform    []*TerraformManifest
 	Dependencies []*Dependency
 	Context      map[string]interface{}
+	Links        *Links `yaml:"links,omitempty"`
 }
 
 type Owner struct {
@@ -89,6 +90,15 @@ func ProjectManifestPath() string {
 	}
 
 	return filepath.Join(root, "workspace.yaml")
+}
+
+func ManifestPath(repo string) (string, error) {
+	root, found := utils.ProjectRoot()
+	if !found {
+		return "", fmt.Errorf("You're not within an installation repo")
+	}
+
+	return filepath.Join(root, repo, "manifest.yaml"), nil
 }
 
 func (m *ProjectManifest) Write(path string) error {

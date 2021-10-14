@@ -56,12 +56,28 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	var modules = make([]string, len(wk.Terraform)+1)
 	modules[0] = backend
 	ctx, _ := wk.Context.Repo(repo.Name)
+	links := wk.Links
 	for i, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
+		linkPath := ""
+		if links != nil {
+			if path, ok := links.Terraform[tf.Name]; ok {
+				linkPath = path
+			}
+		}
 
 		var buf bytes.Buffer
 		buf.Grow(5 * 1024)
-		tmpl, err := template.MakeTemplate(tf.ValuesTemplate)
+		plate := tfInst.Version.ValuesTemplate
+		if linkPath != "" {
+			var err error
+			plate, err = utils.ReadFile(filepath.Join(linkPath, "terraform.tfvars"))
+			if err != nil {
+				return err
+			}
+		}
+
+		tmpl, err := template.MakeTemplate(plate)
 		if err != nil {
 			return err
 		}
@@ -80,7 +96,12 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 		module := make(map[string]interface{})
 		module["name"] = tf.Name
-		module["path"] = "./" + tf.Name
+		if linkPath != "" {
+			module["path"] = linkPath
+		} else {
+			module["path"] = "./" + tf.Name
+		}
+
 		module["conf"] = buf.String()
 		if tf.Dependencies != nil && tf.Dependencies.Wirings != nil {
 			module["deps"] = tf.Dependencies.Wirings.Terraform

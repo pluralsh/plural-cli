@@ -24,6 +24,7 @@ type Workspace struct {
 	Config       *config.Config
 	Manifest     *manifest.ProjectManifest
 	Context      *manifest.Context
+	Links        *manifest.Links
 }
 
 func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
@@ -50,6 +51,11 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
+	man, err := manifest.Read(manifestPath)
+	if err != nil {
+		return nil, err
+	}
+
 	wk := &Workspace{
 		Provider: prov,
 		Installation: inst,
@@ -58,6 +64,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		Config: &conf,
 		Context: ctx,
 		Manifest: project,
+		Links: man.Links,
 	}
 	return wk, nil
 }

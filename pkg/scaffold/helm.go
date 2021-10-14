@@ -148,7 +148,18 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	}
 
 	for _, chartInst := range w.Charts {
-		tmpl, err := template.MakeTemplate(chartInst.Version.ValuesTemplate)
+		plate := chartInst.Version.ValuesTemplate
+		if w.Links != nil {
+			if path, ok := w.Links.Helm[chartInst.Chart.Name]; ok {
+				var err error
+				plate, err = utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		tmpl, err := template.MakeTemplate(plate)
 		if err != nil {
 			return err
 		}
@@ -330,6 +341,11 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 }
 
 func repoUrl(w *wkspace.Workspace, repo string) string {
+	if w.Links != nil {
+		if path, ok := w.Links.Helm[repo]; ok {
+			return fmt.Sprintf("file:%s", path)
+		}
+	}
 	url := strings.ReplaceAll(w.Config.BaseUrl(), "https", "cm")
 	return fmt.Sprintf("%s/cm/%s", url, repo)
 }

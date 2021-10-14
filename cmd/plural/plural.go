@@ -281,6 +281,9 @@ func main() {
 		},
 	}
 
+	links := linkCommands()
+	app.Commands = append(app.Commands, links...)
+
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
