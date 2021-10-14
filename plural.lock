@@ -4,10 +4,10 @@ artifact:
   .forge/artifacts/forge.yaml:windows:amd64: qTjr3MV-tEdPuzpUgqR71voMCzVzkESecApbchAwdoY=
   .forge/forge.yaml_linux_amd64: f4iS5tsL13U7gDlHVjDV9SaqHKY9KnJWUJkPLZ3frpg=
   .forge/forge.yaml_mac_amd64: gxoMfcF9ih9QJOxbJwE-tnuftL4L081UOvM6VjgFeh8=
-  plural/plural.yaml_linux_amd64: T__1IvRj-owVZCL16ho6seVrH_VaJTLc2pp-fMSoW6o=
-  plural/plural.yaml_mac_amd64: i4QGpW3fe_6taUjnzb7ANXaPesHz2deYLk31TAKrQMg=
-  plural/plural.yaml_mac_arm64: DfX3Ms8CPLrtbTTl0hgniTPqcrh-hmLgoQogvBYrzao=
-  plural/plural.yaml_windows_amd64: xL6fX4cMvSOZKHUocHcDFyLQmVLO7hwzrzLeFODM23Q=
+  plural/plural.yaml_linux_amd64: jcU0dwYnweA8L8uyVqSYtckpgNMvWZPzICyn0EFVLbw=
+  plural/plural.yaml_mac_amd64: jeDhso4nEISf-ctYNpMjV2OL9OAH5zFB3f7dFGsiwqk=
+  plural/plural.yaml_mac_arm64: sQ_mVM3BpYEGFlDpW8-NwDa8nBcV0uVHxGbRQDmcQSQ=
+  plural/plural.yaml_windows_amd64: JhZf_9Ghq6Njb5ULxlOWMMFySWmtnYisuNmt7FC2H8k=
 terraform: {}
 helm: {}
 recipe: {}

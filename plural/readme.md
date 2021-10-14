@@ -13,6 +13,8 @@ COMMANDS:
    destroy, b  iterates through all installations in reverse topological order, deleting helm installations and terraform
    init        initializes plural within a git repo
    bundle      Commands for installing and discovering installation bundles
+   link        links a local package into an installation repo
+   unlink      unlinks a linked package
    help, h     Shows a list of commands or help for one command
 
    API:
