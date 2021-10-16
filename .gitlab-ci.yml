@@ -45,6 +45,10 @@ plural-apply:
   <<: *ignore-cond
   only:
   - master
+  before_script:
+  - mkdir -p ~/.plural
+  - cp $PLURAL_CONF ~/.plural/config.yml
+  - echo "Starting to apply"
   script:
   - make install
   - plural apply
