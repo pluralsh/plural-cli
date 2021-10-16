@@ -249,6 +249,11 @@ type DnsDomain struct {
 	Name string
 }
 
+type ApplyLock struct {
+	Id   string
+	Lock string
+}
+
 var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id
@@ -472,5 +477,12 @@ const DnsDomainFragment = `
 fragment DnsDomainFragment on DnsDomain {
 	id
 	name
+}
+`
+
+const ApplyLockFragment = `
+fragment ApplyLockFragment on ApplyLock {
+	id
+	lock
 }
 `

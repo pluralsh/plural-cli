@@ -99,7 +99,11 @@ func apply(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	lock := pluralfile.Lock(file)
+
+	lock, err := plrl.Lock(file)
+	if err != nil {
+		return err
+	}
 	return plrl.Execute(file, lock)
 }
 

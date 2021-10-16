@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/api"
 )
 
 type Lockfile struct {
@@ -35,10 +36,37 @@ func lock() *Lockfile {
 	}
 }
 
+func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
+	client := api.NewClient()
+	applyLock, err := client.AcquireLock(plrl.Repo)
+	if err != nil {
+		return nil, err
+	}
+
+	if applyLock.Lock == "" {
+		return Lock(path), nil
+	}
+
+	lock := lock()
+	yaml.Unmarshal([]byte(applyLock.Lock), lock)
+	return lock, nil
+}
+
+func (plrl *Pluralfile) Flush(path string, lock *Lockfile) error {
+	client := api.NewClient()
+	io, err := yaml.Marshal(lock)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.ReleaseLock(plrl.Repo, string(io))
+	return err
+}
+
 func Lock(path string) *Lockfile {
 	conf := config.Read()
-	lockfile := lockPath(path, conf.LockProfile)
 	lock := lock()
+	lockfile := lockPath(path, conf.LockProfile)
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
 		return lock

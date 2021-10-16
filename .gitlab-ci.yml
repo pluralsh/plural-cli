@@ -26,7 +26,7 @@ stages:
     variables:
     - $CI_COMMIT_MESSAGE =~ /pushed to plural/
 
-build-console:
+build-cli:
   stage: push
   <<: *push-globs
   <<: *ignore-cond
@@ -43,6 +43,8 @@ plural-apply:
   stage: push
   image: gcr.io/pluralsh/golang:1.16-stretch
   <<: *ignore-cond
+  only:
+  - master
   before_script:
     - 'which ssh-agent || ( apt-get update -qy && apt-get install openssh-client -qqy )'
     - 'which git || ( apt-get update -qy && apt-get install git -qqy )'

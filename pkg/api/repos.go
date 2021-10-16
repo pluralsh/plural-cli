@@ -49,6 +49,10 @@ type RepositoryInput struct {
 	OauthSettings *OauthSettings `yaml:"oauthSettings,omitempty"`
 }
 
+type LockAttributes struct {
+	Lock string
+}
+
 const updateRepository = `
 	mutation UpdateRepository($name: String!, $input: ResourceDefinitionAttributes!) {
 		updateRepository(repositoryName: $name, attributes: {integrationResourceDefinition: $input}) {
@@ -87,6 +91,25 @@ var getRepo = fmt.Sprintf(`
 	}
 	%s
 `, RepositoryFragment)
+
+var acquireLock = fmt.Sprintf(`
+	mutation Acquire($name: String!) {
+		acquireLock(repository: $name) {
+			...ApplyLockFragment
+		}
+	}
+	%s
+`, ApplyLockFragment)
+
+var releaseLock = fmt.Sprintf(`
+	mutation Acquire($name: String!, $attrs: LockAttributes!) {
+		releaseLock(repository: $name, attributes: $attrs) {
+			...ApplyLockFragment
+		}
+	}
+	%s
+`, ApplyLockFragment)
+
 
 func (client *Client) GetRepository(repo string) (repository *Repository, err error) {
 	var resp struct {
@@ -173,6 +196,29 @@ func (client *Client) CreateRepository(name, publisher string, input *Repository
 
 	req.Var("attributes", input)
 	return client.Run(req, &resp)
+}
+
+func (client *Client) AcquireLock(repo string) (*ApplyLock, error) {
+	var resp struct {
+		AcquireLock *ApplyLock
+	}
+
+	req := client.Build(acquireLock)
+	req.Var("name", repo)
+	err := client.Run(req, &resp)
+	return resp.AcquireLock, err
+}
+
+func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
+	var resp struct {
+		ReleaseLock *ApplyLock
+	}
+
+	req := client.Build(releaseLock)
+	req.Var("name", repo)
+	req.Var("attrs", LockAttributes{Lock: lock})
+	err := client.Run(req, &resp)
+	return resp.ReleaseLock, err
 }
 
 func getIconReader(icon, field string, req *graphql.Request) (bool, error) {
