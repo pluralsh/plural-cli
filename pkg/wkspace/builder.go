@@ -52,8 +52,9 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	}
 
 	man, err := manifest.Read(manifestPath)
-	if err != nil {
-		return nil, err
+	var links *manifest.Links
+	if err == nil {
+		links = man.Links
 	}
 
 	wk := &Workspace{
@@ -64,7 +65,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		Config: &conf,
 		Context: ctx,
 		Manifest: project,
-		Links: man.Links,
+		Links: links,
 	}
 	return wk, nil
 }
