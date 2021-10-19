@@ -90,6 +90,14 @@ var getEabCredential = fmt.Sprintf(`
 	%s
 `, EabCredentialFragment)
 
+const deleteEabCredential = `
+	mutation Delete($cluster: String!, $provider: Provider!) {
+		deleteEabKey(cluster: $cluster, provider: $provider) {
+			id
+		}
+	}
+`
+
 type UpgradeAttributes struct {
 	Message string
 }
@@ -268,7 +276,28 @@ func (client *Client) GetEabCredential(cluster, provider string) (*EabCredential
 	}
 	req := client.Build(getEabCredential)
 	req.Var("cluster", cluster)
-	req.Var("provider", strings.ToUpper(provider))
+	req.Var("provider", toProvider(provider))
 	err := client.Run(req, &resp)
 	return resp.EabCredential, err
+}
+
+func (client *Client) DeleteEabCredential(cluster, provider string) error {
+	var resp struct {
+		DeleteEabKey struct {
+			Id string
+		}
+	}
+
+	req := client.Build(deleteEabCredential)
+	req.Var("cluster", cluster)
+	req.Var("provider", toProvider(provider))
+	return client.Run(req, &resp)
+}
+
+func toProvider(prov string) string {
+	if prov == "google" {
+		return "GCP"
+	}
+
+	return strings.ToUpper(prov)
 }

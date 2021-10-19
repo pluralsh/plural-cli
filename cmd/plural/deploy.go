@@ -334,6 +334,11 @@ func destroy(c *cli.Context) error {
 		}
 	}
 
+	man, _ := manifest.FetchProject()
+	if err := client.DeleteEabCredential(man.Cluster, man.Provider); err != nil {
+		fmt.Printf("no eab key to delete %s", err) 
+	}
+
 	utils.Success("Finished destroying workspace")
 	return nil
 }
