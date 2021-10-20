@@ -18,6 +18,7 @@ require (
 	github.com/aws/aws-sdk-go v1.35.35
 	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
 	github.com/buger/goterm v1.0.0
+	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.10.0
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0
@@ -35,6 +36,7 @@ require (
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.7.6
+	github.com/thoas/go-funk v0.9.1
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/mod v0.4.2

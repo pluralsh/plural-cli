@@ -232,6 +232,12 @@ func main() {
 			Category:    "Debugging",
 		},
 		{
+			Name: "utils",
+			Usage: "useful plural utilities",
+			Subcommands: utilsCommands(),
+			Category: "Miscellaneous",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",
