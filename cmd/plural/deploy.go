@@ -351,11 +351,7 @@ func doDestroy(repoRoot string, client *api.Client, installation *api.Installati
 		return err
 	}
 
-	if err := workspace.DestroyHelm(); err != nil {
-		return err
-	}
-
-	return workspace.DestroyTerraform()
+	return workspace.Destroy()
 }
 
 func validateOwner() error {

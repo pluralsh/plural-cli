@@ -31,6 +31,25 @@ func (w *Workspace) HelmDiff() error {
 	return w.ToMinimal().DiffHelm()
 }
 
+func (w *Workspace) Destroy() error {
+	if err := w.DestroyHelm(); err != nil {
+		return err
+	}
+
+	if err := w.DestroyTerraform(); err != nil {
+		return err
+	}
+
+	return w.Reset()
+}
+
+func (w *Workspace) Reset() error {
+	repo := w.Installation.Repository
+	deployfile, _ := filepath.Abs(filepath.Join(repo.Name, "deploy.hcl"))
+
+	return os.Remove(deployfile)
+}
+
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
 	path, err := filepath.Abs(path.Join(repo.Name, "terraform"))
@@ -46,9 +65,7 @@ func (w *Workspace) DestroyTerraform() error {
 		}
 
 		ns := w.Config.Namespace(repo.Name)
-		if err := kube.FinalizeNamespace(ns); err != nil {
-			fmt.Printf("namespace finalization ignored for %s, due to %s", ns, err)
-		}
+		kube.FinalizeNamespace(ns)
 	})
 
 	os.Chdir(path)

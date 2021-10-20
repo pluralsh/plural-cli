@@ -59,7 +59,7 @@ func (step Step) Execute(root string, ignore []string) (string, error) {
 	if err != nil {
 		if step.Retries > 0 {
 			step.Retries -= 1
-			fmt.Printf("retrying command, number of retries remaining: %s\n", step.Retries)
+			fmt.Printf("retrying command, number of retries remaining: %d\n", step.Retries)
 			return step.Execute(root, ignore)
 		}
 
