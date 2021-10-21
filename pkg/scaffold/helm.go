@@ -91,7 +91,7 @@ func Notes(w *wkspace.Workspace) error {
 	vals := map[string]interface{}{
 		"Values":        ctx,
 		"Configuration": w.Context.Configuration,
-		"License":       w.Installation.License,
+		"License":       w.Installation.LicenseKey,
 		"OIDC":          w.Installation.OIDCProvider,
 		"Region":        w.Provider.Region(),
 		"Project":       w.Provider.Project(),
@@ -167,7 +167,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		vals := map[string]interface{}{
 			"Values":        ctx,
 			"Configuration": w.Context.Configuration,
-			"License":       w.Installation.License,
+			"License":       w.Installation.LicenseKey,
 			"OIDC":          w.Installation.OIDCProvider,
 			"Region":        w.Provider.Region(),
 			"Project":       w.Provider.Project(),
@@ -219,6 +219,10 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 
 	if len(globals) > 0 {
 		values["global"] = globals
+	}
+
+	values["plrl"] = map[string]interface{}{
+		"license": w.Installation.LicenseKey,
 	}
 
 	io, err := yaml.Marshal(values)
@@ -281,6 +285,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	files := []struct {
 		path    string
 		content []byte
+		force   bool
 	}{
 		{
 			// .helmignore
@@ -292,12 +297,26 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 			path:    filepath.Join(s.Root, NotesName),
 			content: []byte(defaultNotes),
 		},
+		{
+			// templates/secret.yaml
+			path:    filepath.Join(s.Root, LicenseSecretName),
+			content: []byte(licenseSecret),
+			force:   true,
+		},
+		{
+			// templates/licnse.yaml
+			path:    filepath.Join(s.Root, LicenseCrdName),
+			content: []byte(fmt.Sprintf(license, repo.Name)),
+			force:   true,
+		},
 	}
 
 	for _, file := range files {
-		if _, err := os.Stat(file.path); err == nil {
-			// File exists and is okay. Skip it.
-			continue
+		if !file.force {
+			if _, err := os.Stat(file.path); err == nil {
+				// File exists and is okay. Skip it.
+				continue
+			}
 		}
 		if err := utils.WriteFile(file.path, file.content); err != nil {
 			return err

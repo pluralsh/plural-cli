@@ -25,7 +25,7 @@ func (wk *Workspace) BuildManifest(prev *manifest.Manifest) *manifest.Manifest {
 		wk.Provider.Bucket(),
 		wk.Provider.Name(),
 		wk.Provider.Region(),
-		wk.Installation.License,
+		wk.Installation.LicenseKey,
 		charts,
 		terraform,
 		buildDependencies(repository.Name, wk.Charts, wk.Terraform),

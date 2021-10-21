@@ -74,6 +74,24 @@ spec:
     - src: {{ .DarkIcon }}
     {{ end }}
 `
+  licenseSecret = `apiVersion: v1
+kind: Secret
+metadata:
+  name: plural-license-secret
+stringData:
+  license: {{ .Values.plrl.license }}
+`
+
+  license = `apiVersion: platform.plural.sh/v1alpha1
+kind: License
+metadata:
+  name: %s
+spec:
+  secretRef:
+    name: plural-license-secret
+    key: license
+`
+
 	// ChartfileName is the default Chart file name.
 	ChartfileName = "Chart.yaml"
 	// ValuesfileName is the default values file name.
@@ -86,4 +104,8 @@ spec:
 	NotesName = TemplatesDir + sep + "NOTES.txt"
 	// file to put the default application resource in
 	ApplicationName = TemplatesDir + sep + "application.yaml"
+  // file to put the license secret in
+  LicenseSecretName = TemplatesDir + sep + "secret.yaml"
+  // file to put the license crd in
+  LicenseCrdName = TemplatesDir + sep + "license.yaml"
 )

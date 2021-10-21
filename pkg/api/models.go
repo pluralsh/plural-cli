@@ -111,7 +111,7 @@ type Installation struct {
 	Repository   *Repository
 	User         *User
 	OIDCProvider *OIDCProvider `json:"oidcProvider"`
-	License      string
+	LicenseKey   string
 	Context      map[string]interface{}
 	AcmeKeyId    string
 	AcmeSecret   string
@@ -286,7 +286,7 @@ var InstallationFragment = fmt.Sprintf(`
 	fragment InstallationFragment on Installation {
 		id
 		context
-		license
+		licenseKey
 		acmeKeyId
 		acmeSecret
 		repository { ...RepositoryFragment }

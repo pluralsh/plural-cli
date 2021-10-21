@@ -38,7 +38,7 @@ func testTemplate(c *cli.Context) error {
 		buf.Grow(5 * 1024)
 		vals := map[string]interface{}{
 			"Values":   ctx,
-			"License":  installation.License,
+			"License":  installation.LicenseKey,
 			"Region":   "region",
 			"Project":  "example",
 			"Cluster":  "cluster",
