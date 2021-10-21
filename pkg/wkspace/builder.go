@@ -86,12 +86,18 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
-	manifest := wk.BuildManifest()
+	path, _ := manifest.ManifestPath(repo.Name)
+	prev, err := manifest.Read(path)
+	if err != nil {
+		prev = &manifest.Manifest{}
+	}
+
+	manifest := wk.BuildManifest(prev)
 	if err := mkdir(filepath.Join(repoRoot, repo.Name)); err != nil {
 		return err
 	}
 
-	if err := manifest.Write(manifestPath(repo.Name)); err != nil {
+	if err := manifest.Write(path); err != nil {
 		return err
 	}
 

@@ -5,7 +5,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 )
 
-func (wk *Workspace) BuildManifest() *manifest.Manifest {
+func (wk *Workspace) BuildManifest(prev *manifest.Manifest) *manifest.Manifest {
 	repository := wk.Installation.Repository
 	charts := make([]*manifest.ChartManifest, len(wk.Charts))
 	terraform := make([]*manifest.TerraformManifest, len(wk.Terraform))
@@ -30,7 +30,7 @@ func (wk *Workspace) BuildManifest() *manifest.Manifest {
 		terraform,
 		buildDependencies(repository.Name, wk.Charts, wk.Terraform),
 		wk.Provider.Context(),
-		nil,
+		prev.Links,
 	}
 }
 

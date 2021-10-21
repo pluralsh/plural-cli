@@ -67,7 +67,7 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []depend
 		dependencies[i] = dependency{
 			chartInstallation.Chart.Name,
 			chartInstallation.Version.Version,
-			repoUrl(w, repo.Name),
+			repoUrl(w, repo.Name, chartInstallation.Chart.Name),
 		}
 	}
 	return dependencies
@@ -340,10 +340,10 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	return nil
 }
 
-func repoUrl(w *wkspace.Workspace, repo string) string {
+func repoUrl(w *wkspace.Workspace, repo string, chart string) string {
 	if w.Links != nil {
-		if path, ok := w.Links.Helm[repo]; ok {
-			return fmt.Sprintf("file:%s", path)
+		if path, ok := w.Links.Helm[chart]; ok {
+			return fmt.Sprintf("file://%s", path)
 		}
 	}
 	url := strings.ReplaceAll(w.Config.BaseUrl(), "https", "cm")
