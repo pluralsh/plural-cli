@@ -17,6 +17,7 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"gopkg.in/yaml.v2"
+	"github.com/coreos/go-semver/semver"
 )
 
 type dependency struct {
@@ -263,12 +264,34 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		return utils.HighlightError(fmt.Errorf("No charts installed for this repository, you might need to run `plural bundle install %s <bundle-name>`", repo.Name))
 	}
 
+	version := "0.10"
+	filename := filepath.Join(s.Root, ChartfileName)
+
+	if utils.Exists(filename) {
+		content, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return utils.ErrorWrap(err, "Failed to read existing Chart.yaml")
+		}
+
+		chart := chart{}
+		if err := yaml.Unmarshal(content, &chart); err != nil {
+			return utils.ErrorWrap(err, "Existing Chart.yaml has invalid yaml formatting")
+		}
+
+		sv, err := semver.NewVersion(chart.Version)
+		if err != nil {
+			return utils.ErrorWrap(err, "Existing Chart.yaml version invalid semver format")
+		}
+		sv.BumpPatch()
+		version = sv.String()
+	}
+
 	appVersion := appVersion(w.Charts)
 	chart := &chart{
 		ApiVersion: "v2",
 		Name: repo.Name,
 		Description: fmt.Sprintf("A helm chart for %s", repo.Name),
-		Version: "0.1.0",
+		Version: version,
 		AppVersion: appVersion,
 		Dependencies: s.chartDependencies(w, name),
 	}
@@ -278,7 +301,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		return err
 	}
 
-	if err := utils.WriteFile(filepath.Join(s.Root, ChartfileName), chartFile); err != nil {
+	if err := utils.WriteFile(filename, chartFile); err != nil {
 		return err
 	}
 
@@ -296,6 +319,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 			// NOTES.txt
 			path:    filepath.Join(s.Root, NotesName),
 			content: []byte(defaultNotes),
+			force:   true,
 		},
 		{
 			// templates/secret.yaml

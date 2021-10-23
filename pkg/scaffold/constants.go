@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	defaultNotes     = `Placeholder for now`
+	defaultNotes     = `Your {{ .Release.Name }} installation`
 	sep              = string(filepath.Separator)
 	defaultChartfile = `apiVersion: v1
 name: {{ .Values.name }}
