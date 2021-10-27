@@ -127,8 +127,8 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	}
 
 	namespace := m.Config.Namespace(m.Name)
-	utils.Warn("helm diff upgrade --install --show-secrets --namespace %s %s %s\n", namespace, m.Name, path)
-	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--install", "--namespace", namespace, m.Name, path)
+	utils.Warn("helm diff upgrade --install --show-secrets --reset-values --namespace %s %s %s\n", namespace, m.Name, path)
+	return m.runDiff("helm", "diff", "upgrade", "--show-secrets", "--reset-values", "--install", "--namespace", namespace, m.Name, path)
 }
 
 func (m *MinimalWorkspace) DiffTerraform() error {
