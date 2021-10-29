@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/urfave/cli"
 	"github.com/pluralsh/plural/pkg/manifest"
 )
@@ -12,21 +10,31 @@ func linkCommands() []cli.Command {
 		{
 			Name:      "link",
 			Usage:     "links a local package into an installation repo",
-			ArgsUsage: "TOOL REPO NAME:PATH",
+			ArgsUsage: "TOOL REPO",
 			Action:    handleLink,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "name, n",
+					Usage: "the name of the artifact to link",
+				},
+				cli.StringFlag{
+					Name:  "path, f",
+					Usage: "local path to that artifact (can be relative)",
+				},
+			},
 		},
 		{
 			Name:      "unlink",
 			Usage:     "unlinks a linked package",
-			ArgsUsage: "REPO TOOL:NAME",
+			ArgsUsage: "REPO TOOL NAME",
 			Action:    handleUnlink,
 		},
 	}
 }
 
 func handleLink(c *cli.Context) error {
-	tool, repo, spec := c.Args().Get(0), c.Args().Get(1), c.Args().Get(2)
-	parsed := strings.Split(spec, ":")
+	tool, repo := c.Args().Get(0), c.Args().Get(1)
+	name, path := c.String("name"), c.String("path")
 
 	manPath, err := manifest.ManifestPath(repo)
 	if err != nil {
@@ -38,13 +46,13 @@ func handleLink(c *cli.Context) error {
 		return err
 	}
 
-	man.AddLink(tool, parsed[0], parsed[1])
+	man.AddLink(tool, name, path)
 
 	return man.Write(manPath)
 }
 
 func handleUnlink(c *cli.Context) error {
-	repo, spec := c.Args().Get(0), c.Args().Get(1)
+	repo, tool := c.Args().Get(0), c.Args().Get(1)
 
 	manPath, err := manifest.ManifestPath(repo)
 	if err != nil {
@@ -56,11 +64,10 @@ func handleUnlink(c *cli.Context) error {
 		return err
 	}
 
-	if spec == "all" {
+	if tool == "all" {
 		man.UnlinkAll()
 	} else {
-		parsed := strings.Split(spec, ":")
-		man.Unlink(parsed[0], parsed[1])
+		man.Unlink(tool, c.Args().Get(2))
 	}
 
 	return man.Write(manPath)
