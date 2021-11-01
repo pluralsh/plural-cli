@@ -264,7 +264,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 		return utils.HighlightError(fmt.Errorf("No charts installed for this repository, you might need to run `plural bundle install %s <bundle-name>`", repo.Name))
 	}
 
-	version := "0.10"
+	version := "0.1.0"
 	filename := filepath.Join(s.Root, ChartfileName)
 
 	if utils.Exists(filename) {
