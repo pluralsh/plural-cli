@@ -3,6 +3,7 @@ package wkspace
 import (
 	"io/ioutil"
 	"os"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -68,6 +69,29 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		Links: links,
 	}
 	return wk, nil
+}
+
+func (wk *Workspace) PrintLinks() {
+	if wk.Links == nil {
+		return
+	}
+
+	fmt.Printf("\n")
+	doPrintLinks("helm", wk.Links.Helm)
+	doPrintLinks("terraform", wk.Links.Terraform)
+}
+
+func doPrintLinks(name string, links map[string]string) {
+	if len(links) == 0 {
+		return
+	}
+
+	utils.Highlight("configured %s links:\n", name)
+	for name, path := range links {
+		fmt.Printf("\t%s ==> %s\n", name, path)
+	}
+
+	fmt.Printf("\n")
 }
 
 func (wk *Workspace) ToMinimal() *MinimalWorkspace {

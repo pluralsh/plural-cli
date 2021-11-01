@@ -123,6 +123,9 @@ func doBuild(client *api.Client, installation *api.Installation) error {
 	if err == nil {
 		utils.Success("Finished building %s\n\n", repoName)
 	}
+
+	workspace.PrintLinks()
+
 	return err
 }
 
