@@ -14,6 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 
@@ -24,6 +25,10 @@ const (
 )
 
 func handleInit(c *cli.Context) error {
+	if err := wkspace.Preflight(); err != nil {
+		return err
+	}
+
 	if err := handleLogin(c); err != nil {
 		return err
 	}

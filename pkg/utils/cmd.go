@@ -12,6 +12,7 @@ func Cmd(conf *config.Config, program string, args ...string) error {
 	return MkCmd(conf, program, args...).Run()
 }
 
+
 func Which(command string) (exists bool, path string) {
 	root, _ := ProjectRoot()
 	os.Setenv("PATH", fmt.Sprintf("%s:%s", filepath.Join(root, "bin"), os.Getenv("PATH")))
