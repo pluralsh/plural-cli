@@ -9,23 +9,19 @@ import (
 )
 
 func Preflight() error {
-	if ok, _ := utils.Which("helm"); !ok {
-		return utils.HighlightError(fmt.Errorf("helm not installed"))
+	requirements := []string{"helm", "kubectl", "terraform", "git"}
+	for _, req := range requirements {
+		if ok, _ := utils.Which(req); !ok {
+			return utils.HighlightError(fmt.Errorf("%s not installed", req))
+		}
 	}
 
-	if ok, _ := utils.Which("kubectl"); !ok {
-		return utils.HighlightError(fmt.Errorf("kubectl not installed"))
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
 	}
 
-	if ok, _ := utils.Which("terraform"); !ok {
-		return utils.HighlightError(fmt.Errorf("terraform not installed"))
-	}
-
-	if ok, _ := utils.Which("git"); !ok {
-		return utils.HighlightError(fmt.Errorf("git not installed"))
-	}
-
-	cmd := exec.Command("helm", "plugin", "list")
+	cmd = exec.Command("helm", "plugin", "list")
 	result, err := cmd.Output()
 	if err != nil {
 		return err
@@ -34,11 +30,6 @@ func Preflight() error {
 	resultstr := string(result)
 	if !strings.Contains(resultstr, "cm-push") {
 		return utils.HighlightError(fmt.Errorf("you need to install the helm push plugin, run `helm plugin install https://github.com/pluralsh/helm-push`"))
-	}
-
-	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	if _, err := cmd.CombinedOutput(); err != nil {
-		return utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
 	}
 
 	return nil
