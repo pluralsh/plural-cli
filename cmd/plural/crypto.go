@@ -165,7 +165,9 @@ func cryptoInit(c *cli.Context) error {
 
 	utils.WriteFileIfNotPresent(".gitattributes", gitattributes)
 	utils.WriteFileIfNotPresent(".gitignore", gitignore)
-	return nil
+
+	_, err := crypto.Build()
+	return err
 }
 
 func handleCryptoShare(c *cli.Context) error {

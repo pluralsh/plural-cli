@@ -22,13 +22,8 @@ func Preflight() error {
 	}
 
 	cmd = exec.Command("helm", "plugin", "list")
-	result, err := cmd.Output()
-	if err != nil {
-		return err
-	}
-
-	resultstr := string(result)
-	if !strings.Contains(resultstr, "cm-push") {
+	result, _ := cmd.Output()
+	if !strings.Contains(string(result), "cm-push") {
 		return utils.HighlightError(fmt.Errorf("you need to install the helm push plugin, run `helm plugin install https://github.com/pluralsh/helm-push`"))
 	}
 
