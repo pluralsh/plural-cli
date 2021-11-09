@@ -1,8 +1,9 @@
 package bundle
 
 import (
-	"strings"
 	"fmt"
+	"strings"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 )
@@ -18,7 +19,7 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	}
 
 	settings := recipe.OidcSettings
-	redirectUri, err := formatRedirectUri(settings, ctx)
+	redirectUris, err := formatRedirectUris(settings, ctx)
 	if err != nil {
 		return err
 	}
@@ -34,21 +35,25 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	}
 
 	oidcSettings := &api.OidcProviderAttributes{
-		RedirectUris: []string{ redirectUri },
-		AuthMethod: settings.AuthMethod,
+		RedirectUris: redirectUris,
+		AuthMethod:   settings.AuthMethod,
 		Bindings: []api.Binding{
-			{ UserId: me.Id },
+			{UserId: me.Id},
 		},
 	}
 
 	return client.OIDCProvider(inst.Id, oidcSettings)
 }
 
-func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (string, error) {
-	domain, ok := ctx[settings.DomainKey]
-	if !ok {
-		return "", fmt.Errorf("No domain setting for %s in context", settings.DomainKey)
+func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) ([]string, error) {
+	domains := []string{}
+	for index := range settings.DomainKeys {
+		domain, ok := ctx[settings.DomainKeys[index]]
+		if !ok {
+			return []string{""}, fmt.Errorf("No domain setting for %s in context", settings.DomainKeys[index])
+		}
+		domains = append(domains, strings.ReplaceAll(settings.UriFormat, "{domain}", domain.(string)))
 	}
 
-	return strings.ReplaceAll(settings.UriFormat, "{domain}", domain.(string)), nil
+	return domains, nil
 }

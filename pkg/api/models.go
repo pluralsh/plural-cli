@@ -161,9 +161,9 @@ type Recipe struct {
 }
 
 type OIDCSettings struct {
-	DomainKey  string `yaml:"domainKey"`
-	UriFormat  string `yaml:"uriFormat"`
-	AuthMethod string `yaml:"authMethod"`
+	DomainKeys []string `yaml:"domainKeys"`
+	UriFormat  string   `yaml:"uriFormat"`
+	AuthMethod string   `yaml:"authMethod"`
 }
 
 type RecipeSection struct {
@@ -430,7 +430,7 @@ const RecipeFragment = `
 		oidcSettings {
 			uriFormat
 			authMethod
-			domainKey
+			domainKeys
 		}
 	}
 `
