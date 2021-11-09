@@ -5,4 +5,5 @@ const (
 	Int    = "INT"
 	Bool   = "BOOL"
 	Domain = "DOMAIN"
+	Bucket = "BUCKET"
 )

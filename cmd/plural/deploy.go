@@ -184,7 +184,7 @@ func deploy(c *cli.Context) error {
 
 	ignoreConsole := c.Bool("ignore-console")
 	for _, repo := range sorted {
-		if ignoreConsole && repo == "console" {
+		if ignoreConsole && (repo == "console" || repo == "bootstrap") {
 			continue
 		}
 

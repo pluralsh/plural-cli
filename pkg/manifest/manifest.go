@@ -65,6 +65,7 @@ type ProjectManifest struct {
 	Region   string
 	Owner    *Owner
 	Network  *NetworkConfig
+	BucketPrefix string
 	Context  map[string]interface{}
 }
 
@@ -172,6 +173,19 @@ func Read(path string) (man *Manifest, err error) {
 
 	man = versioned.Spec
 	return
+}
+
+func (man *ProjectManifest) Configure() error {
+	utils.Highlight("Let's get some final information about your workspace set up")
+
+	res, _ := utils.ReadLine("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
+	man.BucketPrefix = res
+
+	if err := man.ConfigureNetwork(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (man *ProjectManifest) ConfigureNetwork() error {

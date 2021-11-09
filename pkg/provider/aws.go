@@ -58,7 +58,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	if err := projectManifest.ConfigureNetwork(); err != nil {
+	if err := projectManifest.Configure(); err != nil {
 		return nil, err
 	}
 

@@ -34,7 +34,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		return err
 	}
 
-	res, err := fetchResult(ctx, item, proj)
+	res, def, err := fetchResult(ctx, item, proj)
 	if err != nil {
 		return err
 	}
@@ -59,27 +59,46 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		ctx[item.Name] = res
 	case String:
 		ctx[item.Name] = res
+	case Bucket:
+		if res == def {
+			ctx[item.Name] = res
+		}
+		ctx[item.Name] = bucketName(res, proj)
 	}
 
 	return nil
 }
 
-func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (string, error) {
+func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (string, string, error) {
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
 	prompt := itemPrompt(item, proj)
 
-	def := item.Default
+	def := genDefault(item.Default, item, proj)
 	prev, ok := ctx[item.Name]
 	if ok {
 		def = utils.ToString(prev)
 	}
 
 	if def != "" {
-		return utils.ReadLineDefault(prompt, def)
+		res, err := utils.ReadLineDefault(prompt, def) 
+		return res, def, err
 	}
 
-	return utils.ReadLine(prompt)
+	res, err := utils.ReadLine(prompt)
+	return res, def, err
+}
+
+func genDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
+	if def == "" {
+		return def
+	}
+
+	if item.Type != Bucket {
+		return def
+	}
+
+	return bucketName(def, proj)
 }
 
 func itemPrompt(item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
@@ -94,9 +113,23 @@ func itemPrompt(item *api.ConfigurationItem, proj *manifest.ProjectManifest) str
 		}
 
 		return "Enter a domain "
+	case Bucket:
+		if proj.BucketPrefix == "" {
+			return "Enter a globally unique object store bucket name "
+		}
+
+		return fmt.Sprintf("Enter a globally unique bucket name, will be formatted as %s-%s-<your-input>", proj.BucketPrefix, proj.Cluster)
 	case String:
 		// default
 	}
 
 	return "Enter the value "
+}
+
+func bucketName(value string, proj *manifest.ProjectManifest) string {
+	if proj.BucketPrefix == "" {
+		return value
+	}
+
+	return fmt.Sprintf("%s-%s-%s", proj.BucketPrefix, proj.Cluster, value)
 }
