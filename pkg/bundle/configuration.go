@@ -62,8 +62,9 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	case Bucket:
 		if res == def {
 			ctx[item.Name] = res
+		} else {
+			ctx[item.Name] = bucketName(res, proj)
 		}
-		ctx[item.Name] = bucketName(res, proj)
 	}
 
 	return nil

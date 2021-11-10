@@ -58,15 +58,15 @@ type NetworkConfig struct {
 }
 
 type ProjectManifest struct {
-	Cluster  string
-	Bucket   string
-	Project  string
-	Provider string
-	Region   string
-	Owner    *Owner
-	Network  *NetworkConfig
-	BucketPrefix string
-	Context  map[string]interface{}
+	Cluster      string
+	Bucket       string
+	Project      string
+	Provider     string
+	Region       string
+	Owner        *Owner
+	Network      *NetworkConfig
+	BucketPrefix string `yaml:"bucketPrefix"`
+	Context      map[string]interface{}
 }
 
 type VersionedManifest struct {
