@@ -45,7 +45,12 @@ func (w *Workspace) Destroy() error {
 
 func (w *Workspace) Reset() error {
 	repo := w.Installation.Repository
-	deployfile, _ := filepath.Abs(filepath.Join(repo.Name, "deploy.hcl"))
+	repoRoot, err := utils.RepoRoot()
+	if err != nil {
+		return err
+	}
+
+	deployfile := filepath.Join(repoRoot, repo.Name, "deploy.hcl")
 
 	return os.Remove(deployfile)
 }
