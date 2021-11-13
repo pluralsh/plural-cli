@@ -178,7 +178,7 @@ func Read(path string) (man *Manifest, err error) {
 func (man *ProjectManifest) Configure() error {
 	utils.Highlight("Let's get some final information about your workspace set up")
 
-	res, _ := utils.ReadLine("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
+	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
 	man.BucketPrefix = res
 
 	if err := man.ConfigureNetwork(); err != nil {
@@ -200,8 +200,11 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 	if pluralDns {
 		modifier = ", must be a subdomain under onplural.sh"
 	}
-
+	
 	subdomain, _ := utils.ReadLine(fmt.Sprintf("What do you want to use as your subdomain%s: ", modifier))
+	if err := utils.ValidateDns(subdomain); err != nil {
+		return err
+	}
 
 	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
 

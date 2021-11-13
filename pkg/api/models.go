@@ -185,6 +185,12 @@ type Condition struct {
 	Value     string
 }
 
+type Validation struct {
+	Type    string
+	Regex   string
+	Message string
+}
+
 type ConfigurationItem struct {
 	Name          string
 	Default       string
@@ -192,6 +198,7 @@ type ConfigurationItem struct {
 	Type          string
 	Placeholder   string
 	Condition     *Condition
+	Validation    *Validation
 }
 
 type Artifact struct {
@@ -447,6 +454,7 @@ var RecipeItemFragment = fmt.Sprintf(`
 			documentation
 			placeholder
 			condition { field operation value }
+			validation { type regex message }
 		}
 	}
 	%s

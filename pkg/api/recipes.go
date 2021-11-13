@@ -36,6 +36,12 @@ type ConditionInput struct {
 	Operation string
 }
 
+type ValidationInput struct {
+	Type    string
+	Regex   string
+	Message string
+}
+
 type ConfigurationItemInput struct {
 	Name          string
 	Default       string
@@ -43,6 +49,7 @@ type ConfigurationItemInput struct {
 	Documentation string
 	Placeholder   string
 	Condition     *ConditionInput
+	Validation    *ValidationInput
 }
 
 type RecipeEdge struct {

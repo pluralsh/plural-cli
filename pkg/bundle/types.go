@@ -6,4 +6,5 @@ const (
 	Bool   = "BOOL"
 	Domain = "DOMAIN"
 	Bucket = "BUCKET"
+	File   = "FILE"
 )

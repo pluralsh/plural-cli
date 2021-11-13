@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -19,6 +20,12 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	case "NOT":
 		val, _ := ctx[cond.Field]
 		return !(val.(bool))
+	case "PREFIX":
+		val, _ := ctx[cond.Field]
+		return strings.HasPrefix(val.(string), cond.Value)
+	case "SUFFIX":
+		val, _ := ctx[cond.Field]
+		return strings.HasSuffix(val.(string), cond.Value)
 	}
 
 	return true
@@ -51,20 +58,44 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		if err != nil {
 			return err
 		}
+
 		ctx[item.Name] = parsed
 	case Domain:
 		if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
 			return fmt.Errorf("Domain must end with %s", proj.Network.Subdomain)
 		}
+
+		if err := utils.ValidateDns(res); err != nil {
+			return err
+		}
+
 		ctx[item.Name] = res
 	case String:
+		if item.Validation != nil && item.Validation.Type == "REGEX" {
+			valid := item.Validation
+			if err := utils.ValidateRegex(res, valid.Regex, valid.Message); err != nil {
+				return err
+			}
+		}
+
 		ctx[item.Name] = res
 	case Bucket:
-		if res == def {
-			ctx[item.Name] = res
-		} else {
+		if res != def {
+			if err := utils.ValidateRegex(res, "[a-z][a-z0-9\\-]+", "Name must be a hyphenated alphanumeric string"); err != nil {
+				return err
+			}
+
 			ctx[item.Name] = bucketName(res, proj)
+		} else {
+			ctx[item.Name] = res
 		}
+	case File:
+		path, _ := filepath.Abs(res)
+		contents, err := utils.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		ctx[item.Name] = contents
 	}
 
 	return nil
