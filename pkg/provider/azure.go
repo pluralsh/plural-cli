@@ -30,11 +30,26 @@ type AzureProvider struct {
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
-	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
-	storAcct, _ := utils.ReadLine("Enter the name of the storage account to use for your stage, must be globally unique or owned by your subscription: ")
-	bucket, _ := utils.ReadLine("Enter the name of a storage container to use for state, eg: <yourprojectname>-tf-state: ")
+	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
+	if err != nil {
+		return nil, err
+	}
+
+	storAcct, err := utils.ReadAlphaNum("Enter the name of the storage account to use for your stage, must be globally unique or owned by your subscription: ")
+	if err != nil {
+		return nil, err
+	}
+
+	bucket, err := utils.ReadAlphaNum("Enter the name of a storage container to use for state, eg: <yourprojectname>-tf-state: ")
+	if err != nil {
+		return nil, err
+	}
+	
 	region, _ := utils.ReadLineDefault("Enter the region you want to deploy to", "US East")
-	rg, _ := utils.ReadLine("Enter the name of the resource group to use as default: ")
+	rg, err := utils.ReadAlphaNum("Enter the name of the resource group to use as default: ")
+	if err != nil {
+		return nil, err
+	}
 
 	subId, tenID, err := getAzureAccount()
 	if err != nil {

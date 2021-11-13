@@ -37,9 +37,19 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
-	project, _ := utils.ReadLine("Enter the name of its gcp project: ")
-	bucket, _ := utils.ReadLine("Enter the name of a gcs bucket to use for state, eg: <yourprojectname>-tf-state: ")
+	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
+	if err != nil {
+		return nil, err
+	}
+	project, err := utils.ReadAlphaNum("Enter the name of its gcp project: ")
+	if err != nil {
+		return nil, err
+	}
+	bucket, err := utils.ReadAlphaNum("Enter the name of a gcs bucket to use for state, eg: <yourprojectname>-tf-state: ")
+	if err != nil {
+		return nil, err
+	}
+
 	provider := &GCPProvider{
 		cluster,
 		project,

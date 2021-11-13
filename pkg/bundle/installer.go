@@ -22,6 +22,8 @@ func Install(repo, name string) error {
 		context = manifest.NewContext()
 	}
 
+	context.AddBundle(repo, name)
+
 	for _, section := range recipe.RecipeSections {
 		screen.Clear()
 		screen.MoveTopLeft()
@@ -43,6 +45,12 @@ func Install(repo, name string) error {
 
 				seen[configItem.Name] = true
 				if err := configure(ctx, configItem); err != nil {
+					// write current progress to context then return
+					context.Configuration[section.Repository.Name] = ctx
+					if err := context.Write(path); err != nil {
+						return err
+					}
+
 					return err
 				}
 			}
@@ -51,7 +59,6 @@ func Install(repo, name string) error {
 		context.Configuration[section.Repository.Name] = ctx
 	}
 
-	context.AddBundle(repo, name)
 	err = context.Write(path)
 	if err != nil {
 		return err

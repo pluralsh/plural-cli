@@ -27,9 +27,18 @@ type AWSProvider struct {
 }
 
 func mkAWS(conf config.Config) (*AWSProvider, error) {
-	cluster, _ := utils.ReadLine("Enter the name of your cluster: ")
-	bucket, _ := utils.ReadLine("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")
-	region, _ := utils.ReadLineDefault("Enter the region you want to deploy to", "us-east-2")
+	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
+	if err != nil {
+		return nil, err
+	}
+	bucket, err := utils.ReadAlphaNum("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")
+	if err != nil {
+		return nil, err
+	}
+	region, err := utils.ReadAlphaNumDefault("Enter the region you want to deploy to", "us-east-2")
+	if err != nil {
+		return nil, err
+	}
 
 	client, err := getClient(region)
 	if err != nil {
