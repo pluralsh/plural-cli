@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -90,8 +89,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 			ctx[item.Name] = res
 		}
 	case File:
-		path, _ := filepath.Abs(res)
-		contents, err := utils.ReadFile(path)
+		contents, err := utils.ReadFile(res)
 		if err != nil {
 			return err
 		}
