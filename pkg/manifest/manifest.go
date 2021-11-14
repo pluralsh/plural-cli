@@ -176,7 +176,7 @@ func Read(path string) (man *Manifest, err error) {
 }
 
 func (man *ProjectManifest) Configure() error {
-	utils.Highlight("Let's get some final information about your workspace set up")
+	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
 
 	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
 	man.BucketPrefix = res
@@ -193,7 +193,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 		return nil
 	}
 
-	utils.Highlight("Ok, let's get your network configuration set up now...\n")
+	utils.Highlight("\nOk, let's get your network configuration set up now...\n")
 	res, _ := utils.ReadLine("Do you want to use plural's dns provider: [Yn] ")
 	pluralDns := res != "n"
 	modifier := " (eg something.mydomain.com)"

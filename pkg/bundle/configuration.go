@@ -8,6 +8,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
@@ -17,8 +18,10 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 
 	switch cond.Operation {
 	case "NOT":
-		val, _ := ctx[cond.Field]
-		return !(val.(bool))
+		val, ok := ctx[cond.Field]
+		if !ok { return true }
+		booled, ok := val.(bool)
+		return ok && !booled
 	case "PREFIX":
 		val, _ := ctx[cond.Field]
 		return strings.HasPrefix(val.(string), cond.Value)
@@ -32,6 +35,15 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 
 func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	if !evaluateCondition(ctx, item.Condition) {
+		return nil
+	}
+
+	if item.Type == Function {
+		res, err := fetchFunction(item)
+		if err != nil {
+			return err
+		}
+		ctx[item.Name] = res
 		return nil
 	}
 
@@ -89,7 +101,11 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 			ctx[item.Name] = res
 		}
 	case File:
-		contents, err := utils.ReadFile(res)
+		path, err := homedir.Expand(res)
+		if err != nil {
+			return err
+		}
+		contents, err := utils.ReadFile(path)
 		if err != nil {
 			return err
 		}

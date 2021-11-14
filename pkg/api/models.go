@@ -197,6 +197,7 @@ type ConfigurationItem struct {
 	Documentation string
 	Type          string
 	Placeholder   string
+	FunctionName  string `json:"functionName",yaml:"functionName"`
 	Condition     *Condition
 	Validation    *Validation
 }
@@ -453,6 +454,7 @@ var RecipeItemFragment = fmt.Sprintf(`
 			default
 			documentation
 			placeholder
+			functionName
 			condition { field operation value }
 			validation { type regex message }
 		}
