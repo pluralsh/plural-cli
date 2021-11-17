@@ -12,6 +12,7 @@ type instResponse struct {
 
 type Binding struct {
 	UserId string
+	GroupId string
 }
 
 type OidcProviderAttributes struct {
@@ -21,8 +22,8 @@ type OidcProviderAttributes struct {
 }
 
 var instQuery = fmt.Sprintf(`
-	query Installation($name: String!) {
-		installation(name: $name) {
+	query Installation($name: String, $id: ID) {
+		installation(name: $name, id: $id) {
 			...InstallationFragment
 		}
 	}
@@ -57,6 +58,17 @@ func (client *Client) GetInstallation(name string) (inst *Installation, err erro
 	return
 }
 
+func (client *Client) GetInstallationById(id string) (inst *Installation, err error) {
+	var resp struct {
+		Installation *Installation
+	}
+	req := client.Build(instQuery)
+	req.Var("id", id)
+	err = client.Run(req, &resp)
+	inst = resp.Installation
+	return
+}
+
 func (client *Client) GetInstallations() ([]*Installation, error) {
 	var resp instResponse
 	err := client.Run(client.Build(instsQuery), &resp)
@@ -73,6 +85,7 @@ func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes
 			Id string
 		}
 	}
+	
 	req := client.Build(oidcProviderMut)
 	req.Var("id", id)
 	req.Var("attributes", attributes)

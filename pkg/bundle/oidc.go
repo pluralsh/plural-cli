@@ -40,8 +40,29 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 			{ UserId: me.Id },
 		},
 	}
+	mergeOidcAttributes(inst, oidcSettings)
 
 	return client.OIDCProvider(inst.Id, oidcSettings)
+}
+
+
+func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAttributes) {
+	if (inst.OIDCProvider == nil) {
+		return
+	}
+
+	provider := inst.OIDCProvider
+	attributes.RedirectUris = utils.Dedupe(append(attributes.RedirectUris, provider.RedirectUris...))
+	bindings := attributes.Bindings
+	for _, val := range provider.Bindings {
+		// attributes is only pre-populated with the current user right not
+		if val.User != nil && val.User.Id != attributes.Bindings[0].UserId {
+			bindings = append(bindings, api.Binding{UserId: val.User.Id})
+		} else if val.Group != nil {
+			bindings = append(bindings, api.Binding{GroupId: val.Group.Id})
+		}
+	}
+	attributes.Bindings = bindings
 }
 
 func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (string, error) {

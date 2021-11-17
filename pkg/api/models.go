@@ -103,6 +103,7 @@ type OIDCProvider struct {
 	ClientId      string
 	ClientSecret  string
 	RedirectUris  []string
+	Bindings      []*ProviderBinding
 	Configuration *OAuthConfiguration
 }
 
@@ -234,6 +235,16 @@ type User struct {
 	Name  string
 }
 
+type Group struct {
+	Id    string
+	Name  string
+}
+
+type ProviderBinding struct {
+	User  *User
+	Group *Group
+}
+
 type PublicKey struct {
 	Id      string
 	Content string
@@ -280,6 +291,10 @@ const OIDCFragment = `
 		clientId
 		clientSecret
 		redirectUris
+		bindings { 
+			user { id email }
+			group { id name }
+		}
 		configuration {
 			issuer
       authorizationEndpoint
