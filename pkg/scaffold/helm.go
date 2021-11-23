@@ -89,6 +89,7 @@ func Notes(w *wkspace.Workspace) error {
 	valuesFile := filepath.Join(repoRoot, repo, "helm", repo, "values.yaml")
 	prevVals, _ := prevValues(valuesFile)
 	conf := config.Read()
+	apps := BuildApplications(repoRoot)
 	vals := map[string]interface{}{
 		"Values":        ctx,
 		"Configuration": w.Context.Configuration,
@@ -100,6 +101,7 @@ func Notes(w *wkspace.Workspace) error {
 		"Config":        conf,
 		"Provider":      w.Provider.Name(),
 		"Context":       w.Provider.Context(),
+		"Applications":  apps,
 	}
 
 	if (w.Context.SMTP != nil) {

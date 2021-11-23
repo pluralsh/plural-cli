@@ -43,6 +43,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		return err
 	}
 
+	apps, err := NewApplications()
+	if err != nil {
+		return err
+	}
+
 	if err := scaffold.untarModules(wk); err != nil {
 		return err
 	}
@@ -89,6 +94,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Namespace":     wk.Config.Namespace(repo.Name),
 			"Region":        wk.Provider.Region(),
 			"Context":       wk.Provider.Context(),
+			"Applications":  apps,
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {
 			return err
