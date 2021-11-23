@@ -40,7 +40,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	client := api.NewClient()
 	applyLock, err := client.AcquireLock(plrl.Repo)
 	if err != nil {
-		return nil, err
+		return lock(), nil
 	}
 
 	if applyLock.Lock == "" {
