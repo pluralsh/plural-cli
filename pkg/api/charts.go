@@ -24,6 +24,13 @@ type chartInstallationsResponse struct {
 	}
 }
 
+type packageCacheEntry struct {
+	Charts []*ChartInstallation
+	Terraform []*TerraformInstallation
+}
+
+var packageCache = make(map[string]*packageCacheEntry)
+
 var chartsQuery = fmt.Sprintf(`
 	query ChartsQuery($id: ID!) {
 		charts(repositoryId: $id, first: %d) {
@@ -117,6 +124,10 @@ func (client *Client) GetChartInstallations(repoId string) ([]*ChartInstallation
 }
 
 func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error) {
+	if entry, ok := packageCache[repoId]; ok {
+		return entry.Charts, entry.Terraform, nil
+	}
+
 	var resp struct {
 		ChartInstallations struct {
 			Edges []*ChartInstallationEdge
@@ -141,6 +152,10 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartIns
 	tfs = make([]*TerraformInstallation, len(resp.TerraformInstallations.Edges))
 	for i, edge := range resp.TerraformInstallations.Edges {
 		tfs[i] = edge.Node
+	}
+
+	if err == nil {
+		packageCache[repoId] = &packageCacheEntry{Charts: charts, Terraform: tfs}
 	}
 	
 	return
