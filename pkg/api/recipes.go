@@ -28,7 +28,6 @@ type RecipeSectionInput struct {
 type RecipeItemInput struct {
 	Name          string
 	Type          string
-	Configuration []ConfigurationItemInput
 }
 
 type ConditionInput struct {
