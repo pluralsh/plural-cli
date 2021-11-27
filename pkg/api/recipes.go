@@ -20,8 +20,9 @@ type DependencyInput struct {
 }
 
 type RecipeSectionInput struct {
-	Name  string
-	Items []RecipeItemInput
+	Name          string
+	Items         []RecipeItemInput
+	Configuration []ConfigurationItemInput
 }
 
 type RecipeItemInput struct {

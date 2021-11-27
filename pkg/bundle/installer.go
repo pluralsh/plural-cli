@@ -37,22 +37,20 @@ func Install(repo, name string) error {
 
 		seen := make(map[string]bool)
 
-		for _, item := range section.RecipeItems {
-			for _, configItem := range item.Configuration {
-				if seen[configItem.Name] {
-					continue
-				}
+		for _, configItem := range section.Configuration {
+			if seen[configItem.Name] {
+				continue
+			}
 
-				seen[configItem.Name] = true
-				if err := configure(ctx, configItem); err != nil {
-					// write current progress to context then return
-					context.Configuration[section.Repository.Name] = ctx
-					if err := context.Write(path); err != nil {
-						return err
-					}
-
+			seen[configItem.Name] = true
+			if err := configure(ctx, configItem); err != nil {
+				// write current progress to context then return
+				context.Configuration[section.Repository.Name] = ctx
+				if err := context.Write(path); err != nil {
 					return err
 				}
+
+				return err
 			}
 		}
 

@@ -168,9 +168,10 @@ type OIDCSettings struct {
 }
 
 type RecipeSection struct {
-	Id          string
-	Repository  *Repository
-	RecipeItems []*RecipeItem
+	Id            string
+	Repository    *Repository
+	RecipeItems   []*RecipeItem
+	Configuration []*ConfigurationItem
 }
 
 type RecipeItem struct {
@@ -458,31 +459,37 @@ const RecipeFragment = `
 	}
 `
 
+const RecipeConfigurationFragment = `
+	fragment RecipeConfigurationFragment on RecipeConfiguration {
+		name
+		type
+		default
+		documentation
+		placeholder
+		functionName
+		condition { field operation value }
+		validation { type regex message }
+	}
+`
+
 var RecipeItemFragment = fmt.Sprintf(`
 	fragment RecipeItemFragment on RecipeItem {
 		id
 		chart { ...ChartFragment }
 		terraform { ...TerraformFragment }
-		configuration {
-			name
-			type
-			default
-			documentation
-			placeholder
-			functionName
-			condition { field operation value }
-			validation { type regex message }
-		}
+		configuration { ...RecipeConfigurationFragment }
 	}
 	%s
 	%s
-`, ChartFragment, TerraformFragment)
+	%s
+`, ChartFragment, TerraformFragment, RecipeConfigurationFragment)
 
 var RecipeSectionFragment = fmt.Sprintf(`
 fragment RecipeSectionFragment on RecipeSection {
 	index
 	repository { ...RepositoryFragment }
 	recipeItems { ...RecipeItemFragment }
+	configuration { ...RecipeConfigurationFragment }
 }
 %s
 %s
