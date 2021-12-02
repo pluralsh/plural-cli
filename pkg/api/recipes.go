@@ -97,7 +97,7 @@ func (client *Client) CreateRecipe(repoName string, attrs *RecipeInput) (string,
 	var resp struct {
 		Id string
 	}
-	fmt.Printf("%+v", attrs.OidcSettings)
+
 	req := client.Build(createRecipe)
 	req.Var("attributes", attrs)
 	req.Var("name", repoName)
