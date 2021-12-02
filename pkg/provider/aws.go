@@ -31,10 +31,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	bucket, err := utils.ReadAlphaNum("Enter the name of a s3 bucket to use for state, eg: <yourprojectname>-tf-state: ")
-	if err != nil {
-		return nil, err
-	}
+	
 	region, err := utils.ReadAlphaNumDefault("Enter the region you want to deploy to", "us-east-2")
 	if err != nil {
 		return nil, err
@@ -53,7 +50,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	provider := &AWSProvider{
 		cluster,
 		account,
-		bucket,
+		"",
 		region,
 		client,
 	}
@@ -61,7 +58,6 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  cluster,
 		Project:  account,
-		Bucket:   bucket,
 		Provider: AWS,
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -70,6 +66,8 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	if err := projectManifest.Configure(); err != nil {
 		return nil, err
 	}
+
+	provider.bucket = projectManifest.Bucket 
 
 	path := manifest.ProjectManifestPath()
 	projectManifest.Write(path)

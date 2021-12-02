@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"fmt"
+	"strings"
 	"io/ioutil"
 	"path/filepath"
 
@@ -181,6 +182,8 @@ func (man *ProjectManifest) Configure() error {
 	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
 	man.BucketPrefix = res
 
+	man.BucketPrefix = fmt.Sprintf("%s-tf-state", res)
+
 	if err := man.ConfigureNetwork(); err != nil {
 		return err
 	}
@@ -204,6 +207,10 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 	subdomain, _ := utils.ReadLine(fmt.Sprintf("What do you want to use as your subdomain%s: ", modifier))
 	if err := utils.ValidateDns(subdomain); err != nil {
 		return err
+	}
+
+	if pluralDns && !strings.HasSuffix(subdomain, "onplural.sh") {
+		return fmt.Errorf("Not an onplural.sh domain")
 	}
 
 	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}

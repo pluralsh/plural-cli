@@ -40,11 +40,6 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return nil, err
 	}
 
-	bucket, err := utils.ReadAlphaNum("Enter the name of a storage container to use for state, eg: <yourprojectname>-tf-state: ")
-	if err != nil {
-		return nil, err
-	}
-	
 	region, _ := utils.ReadLineDefault("Enter the region you want to deploy to", "US East")
 	rg, err := utils.ReadAlphaNum("Enter the name of the resource group to use as default: ")
 	if err != nil {
@@ -59,7 +54,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	prov = &AzureProvider{
 		cluster,
 		rg,
-		bucket,
+		"",
 		region,
 		map[string]interface{}{
 			"SubscriptionId": subId,
@@ -71,7 +66,6 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  cluster,
 		Project:  rg,
-		Bucket:   bucket,
 		Provider: AZURE,
 		Region:   prov.Region(),
 		Context:  prov.Context(),
@@ -81,6 +75,8 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	if err != nil {
 		return
 	}
+
+	prov.bucket = projectManifest.Bucket
 	
 	err = projectManifest.Write(manifest.ProjectManifestPath())
 	return

@@ -45,23 +45,19 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	bucket, err := utils.ReadAlphaNum("Enter the name of a gcs bucket to use for state, eg: <yourprojectname>-tf-state: ")
-	if err != nil {
-		return nil, err
-	}
 
 	provider := &GCPProvider{
 		cluster,
 		project,
-		bucket,
+		"",
 		getRegion(),
 		client,
 		ctx,
 	}
+
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  cluster,
 		Project:  project,
-		Bucket:   bucket,
 		Provider: GCP,
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -70,6 +66,8 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	if err := projectManifest.Configure(); err != nil {
 		return nil, err
 	}
+
+	provider.bucket = projectManifest.Bucket
 
 	path := manifest.ProjectManifestPath()
 	projectManifest.Write(path)
