@@ -179,7 +179,7 @@ func Read(path string) (man *Manifest, err error) {
 func (man *ProjectManifest) Configure() error {
 	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
 
-	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company")
+	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
 	man.BucketPrefix = res
 
 	man.BucketPrefix = fmt.Sprintf("%s-tf-state", res)
