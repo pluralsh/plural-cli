@@ -51,8 +51,8 @@ func (w *Workspace) Reset() error {
 	}
 
 	deployfile := filepath.Join(repoRoot, repo.Name, "deploy.hcl")
-
-	return os.Remove(deployfile)
+	os.Remove(deployfile)
+	return nil
 }
 
 func (w *Workspace) DestroyTerraform() error {
