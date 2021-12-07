@@ -122,7 +122,7 @@ func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *
 
 	def := genDefault(item.Default, item, proj)
 	prev, ok := ctx[item.Name]
-	if ok {
+	if ok && item.Type != File {
 		def = utils.ToString(prev)
 	}
 

@@ -181,8 +181,7 @@ func (man *ProjectManifest) Configure() error {
 
 	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
 	man.BucketPrefix = res
-
-	man.BucketPrefix = fmt.Sprintf("%s-tf-state", res)
+	man.Bucket = fmt.Sprintf("%s-tf-state", res)
 
 	if err := man.ConfigureNetwork(); err != nil {
 		return err

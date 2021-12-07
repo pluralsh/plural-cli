@@ -9,7 +9,6 @@ import (
 )
 
 func fetchFunction(item *api.ConfigurationItem) (interface{}, error) {
-	fmt.Printf("%+v", item)
 	switch item.FunctionName {
 	case "repoUrl":
 		return repoUrl()
