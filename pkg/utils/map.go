@@ -21,7 +21,7 @@ func DeepSet(v map[string]interface{}, path []string, val interface{}) map[strin
 func Dedupe(l []string) []string {
 	res := make([]string, 0)
 	seen := make(map[string]bool)
-	for _, val := range res {
+	for _, val := range l {
 		if _, ok := seen[val]; ok {
 			continue
 		}

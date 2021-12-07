@@ -158,7 +158,7 @@ type Recipe struct {
 	Provider       string
 	Description    string
 	RecipeSections []*RecipeSection
-	OidcSettings   *OIDCSettings
+	OidcSettings   *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
 }
 
 type OIDCSettings struct {
