@@ -5,7 +5,6 @@ import (
 	"os"
 	"fmt"
 	"time"
-	"path"
 	"path/filepath"
 )
 
@@ -57,7 +56,7 @@ func (w *Workspace) Reset() error {
 
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
-	path, err := filepath.Abs(path.Join(repo.Name, "terraform"))
+	path, err := filepath.Abs(filepath.Join(repo.Name, "terraform"))
 	if err != nil {
 		return err
 	}
@@ -77,5 +76,6 @@ func (w *Workspace) DestroyTerraform() error {
 	if err := utils.Cmd(w.Config, "terraform", "init"); err != nil {
 		return err
 	}
+
 	return utils.Cmd(w.Config, "terraform", "destroy", "-auto-approve")
 }

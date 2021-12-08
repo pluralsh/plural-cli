@@ -100,8 +100,6 @@ func (gcp *GCPProvider) KubeConfig() error {
 		return nil
 	}
 
-	// move tf supported env var to gcloud's
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GOOGLE_CREDENTIALS"))
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.cluster,
 		"--region", getZone(gcp.region), "--project", gcp.project)
@@ -139,7 +137,6 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 }
 
 func getRegion() string {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", os.Getenv("GOOGLE_CREDENTIALS"))
 	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
 	res, err := cmd.CombinedOutput()
 	if err != nil {
