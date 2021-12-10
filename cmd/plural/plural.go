@@ -52,6 +52,10 @@ func main() {
 					Name:  "ignore-console",
 					Usage: "don't deploy the plural console",
 				},
+				cli.StringFlag{
+					Name:  "commit",
+					Usage: "commits your changes with this message",
+				},
 			},
 			Action: deploy,
 		},

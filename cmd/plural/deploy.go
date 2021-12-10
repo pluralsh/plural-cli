@@ -217,6 +217,11 @@ func deploy(c *cli.Context) error {
 	}
 
 	utils.Highlight("\n==> Commit and push your changes to record your deployment\n")
+
+	if commit := c.String("commit"); commit != "" {
+		utils.Highlight("Pushing upstream...\n")
+		return utils.Sync(commit)
+	}
 	return nil
 }
 

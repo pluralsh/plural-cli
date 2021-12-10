@@ -52,3 +52,22 @@ func ChangedFiles() ([]string, error) {
 	}
 	return result, nil
 }
+
+func Sync(msg string) error {
+	root, _ := ProjectRoot()
+	if err := git(root, "add", "."); err != nil {
+		return err
+	}
+
+	if err := git(root, "commit", "-m", msg); err != nil {
+		return err
+	}
+
+	return git(root, "push")
+}
+
+func git(root string, args ...string) error {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = root
+	return cmd.Run()
+}
