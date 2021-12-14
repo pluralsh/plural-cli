@@ -23,6 +23,10 @@ func getSortedInstallations(repo string, client *api.Client) ([]*api.Installatio
 		return installations, err
 	}
 
+	if len(installations) == 0 {
+		return installations, fmt.Errorf("no installations present, run `plural bundle install <repo> <bundle-name>` to install your first app")
+	}
+
 	sorted, err := wkspace.Dependencies(repo, installations)
 	if err != nil {
 		sorted = installations // we don't know all the dependencies yet
@@ -344,10 +348,10 @@ func destroy(c *cli.Context) error {
 
 	man, _ := manifest.FetchProject()
 	if err := client.DeleteEabCredential(man.Cluster, man.Provider); err != nil {
-		fmt.Printf("no eab key to delete %s", err) 
+		fmt.Printf("no eab key to delete %s\n", err) 
 	}
 
-	utils.Success("Finished destroying workspace")
+	utils.Success("Finished destroying workspace\n")
 	return nil
 }
 

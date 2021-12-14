@@ -2,24 +2,32 @@ package wkspace
 
 import (
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/executor"
 	"os"
 	"fmt"
 	"time"
+	"strings"
 	"path/filepath"
 )
+
+func execSuppressed(command string, args ...string) error {
+	utils.Highlight("%s %s ~> ", command, strings.Join(args, " "))
+	cmd, out := executor.SuppressedCommand(command, args...)
+	return executor.RunCommand(cmd, out)
+}
 
 func (w *Workspace) DestroyHelm() error {
 	// ensure current kubeconfig is correct before destroying stuff
 	w.Provider.KubeConfig()
 	name := w.Installation.Repository.Name
 
-	err := utils.Cmd(w.Config, "helm", "get", "values", name, "-n", w.Config.Namespace(name))
-	if err != nil {
-		fmt.Println("Helm already uninstalled, continuing...")
+	ns := w.Config.Namespace(name)
+	if err := execSuppressed("helm", "get", "values", name, "-n", ns); err != nil {
+		fmt.Println("Helm already uninstalled, continuing...\n")
 		return nil
 	}
 
-	return utils.Cmd(w.Config, "helm", "del", name, "-n", w.Config.Namespace(name))
+	return execSuppressed("helm", "del", name, "-n", ns)
 }
 
 func (w *Workspace) Bounce() error {
@@ -73,9 +81,9 @@ func (w *Workspace) DestroyTerraform() error {
 	})
 
 	os.Chdir(path)
-	if err := utils.Cmd(w.Config, "terraform", "init"); err != nil {
+	if err := execSuppressed("terraform", "init"); err != nil {
 		return err
 	}
 
-	return utils.Cmd(w.Config, "terraform", "destroy", "-auto-approve")
+	return execSuppressed("terraform", "destroy", "-auto-approve")
 }
