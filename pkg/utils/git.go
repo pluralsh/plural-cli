@@ -48,7 +48,9 @@ func ChangedFiles() ([]string, error) {
 	result := make([]string, 0)
 	for _, line := range strings.Split(strings.TrimSpace(string(res)), "\n") {
 		cols := strings.Split(strings.TrimSpace(line), " ")
-		result = append(result, cols[1])
+		if len(cols) > 1 {
+			result = append(result, cols[1])
+		}
 	}
 	return result, nil
 }
