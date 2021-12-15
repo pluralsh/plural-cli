@@ -68,10 +68,6 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	}
 
 	provider.bucket = projectManifest.Bucket
-
-	path := manifest.ProjectManifestPath()
-	projectManifest.Write(path)
-
 	return provider, nil
 }
 

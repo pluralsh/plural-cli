@@ -77,8 +77,6 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	}
 
 	prov.bucket = projectManifest.Bucket
-	
-	err = projectManifest.Write(manifest.ProjectManifestPath())
 	return
 }
 

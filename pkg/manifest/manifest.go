@@ -187,7 +187,7 @@ func (man *ProjectManifest) Configure() error {
 		return err
 	}
 
-	return nil
+	return man.Write(ProjectManifestPath())
 }
 
 func (man *ProjectManifest) ConfigureNetwork() error {
@@ -203,13 +203,19 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 		modifier = ", must be a subdomain under onplural.sh"
 	}
 	
-	subdomain, _ := utils.ReadLine(fmt.Sprintf("What do you want to use as your subdomain%s: ", modifier))
-	if err := utils.ValidateDns(subdomain); err != nil {
-		return err
-	}
+	var subdomain string
+	for {
+		subdomain, _ = utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your subdomain%s: ", modifier))
+		if err := utils.ValidateDns(subdomain); err != nil {
+			fmt.Println("Subdomain invalid: ", err)
+			continue
+		}
 
-	if pluralDns && !strings.HasSuffix(subdomain, "onplural.sh") {
-		return fmt.Errorf("Not an onplural.sh domain")
+		if pluralDns && !strings.HasSuffix(subdomain, "onplural.sh") {
+			fmt.Println("Not an onplural.sh domain")
+			continue
+		}
+		break
 	}
 
 	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}

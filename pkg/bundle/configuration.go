@@ -116,6 +116,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 }
 
 func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (string, string, error) {
+	fmt.Println("")
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
 	prompt := itemPrompt(item, proj)

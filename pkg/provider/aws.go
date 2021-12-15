@@ -68,10 +68,6 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	}
 
 	provider.bucket = projectManifest.Bucket 
-
-	path := manifest.ProjectManifestPath()
-	projectManifest.Write(path)
-
 	return provider, nil
 }
 
