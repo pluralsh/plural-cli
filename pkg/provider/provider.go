@@ -70,16 +70,24 @@ func Select(force bool) (Provider, error) {
 	}
 	fmt.Println("")
 
-	val, _ := utils.ReadLine("Your choice: ")
-	i, err := strconv.Atoi(strings.TrimSpace(val))
-	if err != nil {
-		return nil, err
-	}
+	val := utils.UntilInputValid(
+		func() (string, error) {
+			return utils.ReadLine(fmt.Sprintf("Your choice [0 - %d]: ", len(available) - 1))
+		}, 
+		func(val string) error {
+			i, err := strconv.Atoi(strings.TrimSpace(val))
+			if err != nil {
+				return fmt.Errorf("Must be an integer < %d", len(available))
+			}
+			if i >= len(available) {
+				return fmt.Errorf("Invalid index, must be < %d", len(available))
+			}
 
-	if i >= len(available) {
-		return nil, fmt.Errorf("Invalid index, must be < %d", len(available))
-	}
+			return nil
+		},
+	)
 
+	i, _ := strconv.Atoi(strings.TrimSpace(val))
 	utils.Success("Using provider %s\n", available[i])
 	return New(available[i])
 }

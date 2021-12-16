@@ -42,16 +42,12 @@ func Install(repo, name string) error {
 				continue
 			}
 
-			seen[configItem.Name] = true
-			if err := configure(ctx, configItem); err != nil {
-				// write current progress to context then return
-				context.Configuration[section.Repository.Name] = ctx
-				if err := context.Write(path); err != nil {
-					return err
-				}
-
-				return err
+			if _, ok := ctx[configItem.Name]; ok {
+				continue
 			}
+
+			seen[configItem.Name] = true
+			utils.UntilValid(func() error { return configure(ctx, configItem) })
 		}
 
 		context.Configuration[section.Repository.Name] = ctx

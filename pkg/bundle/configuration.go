@@ -61,13 +61,13 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	case Int:
 		parsed, err := strconv.Atoi(res)
 		if err != nil {
-			return err
+			return fmt.Errorf("not a valid integer")
 		}
 		ctx[item.Name] = parsed
 	case Bool:
 		parsed, err := strconv.ParseBool(res)
 		if err != nil {
-			return err
+			return fmt.Errorf("should be one of [true/false]")
 		}
 
 		ctx[item.Name] = parsed

@@ -11,79 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type ChartManifest struct {
-	Id        string
-	Name      string
-	VersionId string
-	Version   string
-}
-
-type TerraformManifest struct {
-	Id   string
-	Name string
-}
-
-type Dependency struct {
-	Repo string
-}
-
-type Metadata struct {
-	Name   string
-	Labels map[string]string `yaml:",omitempty"`
-}
-
-type Manifest struct {
-	Id           string
-	Name         string
-	Cluster      string
-	Project      string
-	Bucket       string
-	Provider     string
-	Region       string
-	License      string
-	Charts       []*ChartManifest
-	Terraform    []*TerraformManifest
-	Dependencies []*Dependency
-	Context      map[string]interface{}
-	Links        *Links `yaml:"links,omitempty"`
-}
-
-type Owner struct {
-	Email    string
-	Endpoint string `yaml:"endpoint,omitempty"`
-}
-
-type NetworkConfig struct {
-	Subdomain string
-	PluralDns bool
-}
-
-type ProjectManifest struct {
-	Cluster      string
-	Bucket       string
-	Project      string
-	Provider     string
-	Region       string
-	Owner        *Owner
-	Network      *NetworkConfig
-	BucketPrefix string `yaml:"bucketPrefix"`
-	Context      map[string]interface{}
-}
-
-type VersionedManifest struct {
-	ApiVersion string `yaml:"apiVersion"`
-	Kind       string
-	Metadata   *Metadata
-	Spec       *Manifest
-}
-
-type VersionedProjectManifest struct {
-	ApiVersion string `yaml:"apiVersion"`
-	Kind       string
-	Metadata   *Metadata
-	Spec       *ProjectManifest
-}
-
 func ProjectManifestPath() string {
 	root, found := utils.ProjectRoot()
 	if !found {
@@ -203,27 +130,29 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 		modifier = ", must be a subdomain under onplural.sh"
 	}
 	
-	var subdomain string
-	for {
-		subdomain, _ = utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your subdomain%s: ", modifier))
-		if err := utils.ValidateDns(subdomain); err != nil {
-			fmt.Println("Subdomain invalid: ", err)
-			continue
-		}
+	subdomain := utils.UntilInputValid(
+		func() (string, error) {
+			return utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your subdomain%s: ", modifier))
+		},
+		func(val string) error {
+			if err := utils.ValidateDns(val); err != nil {
+				return err
+			}
+	
+			if pluralDns && !strings.HasSuffix(val, "onplural.sh") {
+				return fmt.Errorf("Not an onplural.sh domain")
+			}
 
-		if pluralDns && !strings.HasSuffix(subdomain, "onplural.sh") {
-			fmt.Println("Not an onplural.sh domain")
-			continue
-		}
-		break
-	}
+			if pluralDns {
+				client := api.NewClient()
+				return client.CreateDomain(val)
+			}
+
+			return nil
+		},
+	)
 
 	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
-
-	if pluralDns {
-		client := api.NewClient()
-		return client.CreateDomain(subdomain)
-	}
 
 	return nil
 }
