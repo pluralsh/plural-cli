@@ -27,6 +27,12 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
+			Name:    "version",
+			Aliases: []string{"v", "vsn"},
+			Usage:   "Gets cli version info",
+			Action:  versionInfo,
+		},
+		{
 			Name:    "build",
 			Aliases: []string{"b"},
 			Usage:   "builds your workspace",
@@ -293,6 +299,10 @@ func main() {
 
 	links := linkCommands()
 	app.Commands = append(app.Commands, links...)
+
+	if flip := rand.Intn(4); flip == 0 {
+		checkRecency()
+	}
 
 	err := app.Run(os.Args)
 	if err != nil {

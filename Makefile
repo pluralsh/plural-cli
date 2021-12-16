@@ -2,11 +2,12 @@
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
-APP_VSN ?= `cat VERSION`
-BUILD ?= `git rev-parse --short HEAD`
+APP_VSN ?= $(shell cat VERSION)
+BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
+BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN)
 
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -16,13 +17,13 @@ git-push:
 	git push
 
 install:
-	GOBIN=/usr/local/bin go install -ldflags '-s -w' ./cmd/plural/
+	GOBIN=/usr/local/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
 build-cli:
-	GOBIN=/usr/local/bin go build -ldflags '-s -w' -o plural.o ./cmd/plural/
+	GOBIN=/usr/local/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o plural.o ./cmd/plural/
 
 release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w'  -o plural.o ./cmd/plural/
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/
 
 plural: .PHONY ## uploads to plural
 	plural apply
