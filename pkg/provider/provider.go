@@ -6,8 +6,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
 	"k8s.io/api/core/v1"
-	"strconv"
-	"strings"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 type Provider interface {
@@ -64,32 +63,14 @@ func Select(force bool) (Provider, error) {
 		}
 	}
 
-	fmt.Println("Select one of the following providers:")
-	for i, name := range available {
-		fmt.Printf("[%d] %s\n", i, name)
+	provider := ""
+	prompt := &survey.Select{
+    Message: "Select one of the following providers:",
+    Options: available,
 	}
-	fmt.Println("")
-
-	val := utils.UntilInputValid(
-		func() (string, error) {
-			return utils.ReadLine(fmt.Sprintf("Your choice [0 - %d]: ", len(available) - 1))
-		}, 
-		func(val string) error {
-			i, err := strconv.Atoi(strings.TrimSpace(val))
-			if err != nil {
-				return fmt.Errorf("Must be an integer < %d", len(available))
-			}
-			if i >= len(available) {
-				return fmt.Errorf("Invalid index, must be < %d", len(available))
-			}
-
-			return nil
-		},
-	)
-
-	i, _ := strconv.Atoi(strings.TrimSpace(val))
-	utils.Success("Using provider %s\n", available[i])
-	return New(available[i])
+	survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
+	utils.Success("Using provider %s\n", provider)
+	return New(provider)
 }
 
 func FromManifest(man *manifest.Manifest) (Provider, error) {

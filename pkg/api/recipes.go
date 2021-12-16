@@ -48,6 +48,7 @@ type ConfigurationItemInput struct {
 	Type          string
 	Documentation string
 	Placeholder   string
+	Optional      bool
 	FunctionName  string `yaml:"functionName,omitempty",json:"functionName,omitempty"`
 	Condition     *ConditionInput
 	Validation    *ValidationInput

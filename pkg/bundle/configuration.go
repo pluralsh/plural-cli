@@ -2,9 +2,9 @@ package bundle
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -52,55 +52,45 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		return err
 	}
 
-	res, def, err := fetchResult(ctx, item, proj)
-	if err != nil {
-		return err
-	}
+	fmt.Println("")
+	utils.Highlight(item.Name)
+	fmt.Printf("\n>> %s\n", item.Documentation)
+	def := genDefault(item.Default, item, proj)
 
 	switch item.Type {
 	case Int:
-		parsed, err := strconv.Atoi(res)
-		if err != nil {
-			return fmt.Errorf("not a valid integer")
-		}
-		ctx[item.Name] = parsed
+		var res int
+		prompt, opts := intSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
+		ctx[item.Name] = res
 	case Bool:
-		parsed, err := strconv.ParseBool(res)
-		if err != nil {
-			return fmt.Errorf("should be one of [true/false]")
-		}
-
-		ctx[item.Name] = parsed
+		res := false
+		prompt, opts := boolSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
+		ctx[item.Name] = res
 	case Domain:
-		if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
-			return fmt.Errorf("Domain must end with %s", proj.Network.Subdomain)
-		}
-
-		if err := utils.ValidateDns(res); err != nil {
-			return err
-		}
-
+		var res string
+		prompt, opts := domainSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case String:
-		if item.Validation != nil && item.Validation.Type == "REGEX" {
-			valid := item.Validation
-			if err := utils.ValidateRegex(res, valid.Regex, valid.Message); err != nil {
-				return err
-			}
-		}
-
+		var res string
+		prompt, opts := stringSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:
+		var res string
+		prompt, opts := bucketSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
 		if res != def {
-			if err := utils.ValidateRegex(res, "[a-z][a-z0-9\\-]+", "Name must be a hyphenated alphanumeric string"); err != nil {
-				return err
-			}
-
 			ctx[item.Name] = bucketName(res, proj)
 		} else {
 			ctx[item.Name] = res
 		}
 	case File:
+		var res string
+		prompt, opts := fileSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
 		path, err := homedir.Expand(res)
 		if err != nil {
 			return err
@@ -115,27 +105,6 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	return nil
 }
 
-func fetchResult(ctx map[string]interface{}, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (string, string, error) {
-	fmt.Println("")
-	utils.Highlight(item.Name)
-	fmt.Printf("\n>> %s\n", item.Documentation)
-	prompt := itemPrompt(item, proj)
-
-	def := genDefault(item.Default, item, proj)
-	prev, ok := ctx[item.Name]
-	if ok && item.Type != File {
-		def = utils.ToString(prev)
-	}
-
-	if def != "" {
-		res, err := utils.ReadLineDefault(prompt, def) 
-		return res, def, err
-	}
-
-	res, err := utils.ReadLine(prompt)
-	return res, def, err
-}
-
 func genDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
 	if def == "" {
 		return def
@@ -146,31 +115,6 @@ func genDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectM
 	}
 
 	return bucketName(def, proj)
-}
-
-func itemPrompt(item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
-	switch item.Type {
-	case Int:
-		return "Enter the value (must be an integer) "
-	case Bool:
-		return "Enter the value (true/false) "
-	case Domain:
-		if proj.Network != nil {
-			return fmt.Sprintf("Enter a domain, which must be beneath %s ", proj.Network.Subdomain)
-		}
-
-		return "Enter a domain "
-	case Bucket:
-		if proj.BucketPrefix == "" {
-			return "Enter a globally unique object store bucket name "
-		}
-
-		return fmt.Sprintf("Enter a globally unique bucket name, will be formatted as %s-%s-<your-input>", proj.BucketPrefix, proj.Cluster)
-	case String:
-		// default
-	}
-
-	return "Enter the value "
 }
 
 func bucketName(value string, proj *manifest.ProjectManifest) string {

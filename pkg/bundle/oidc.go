@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[string]interface{}) error {
@@ -12,9 +13,14 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 		return nil
 	}
 
-	confirm, err := utils.ReadLine("Do you want to enable plural OIDC? (yN)")
-	if confirm != "y" || err != nil {
-		return err
+	confirm := false
+	survey.AskOne(&survey.Confirm{
+		Message: "Enable plural OIDC",
+		Default: true,
+	}, survey.WithValidator(survey.Required))
+
+	if !confirm {
+		return nil
 	}
 
 	settings := recipe.OidcSettings

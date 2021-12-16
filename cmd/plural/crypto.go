@@ -163,8 +163,13 @@ func cryptoInit(c *cli.Context) error {
 		}
 	}
 
-	utils.WriteFileIfNotPresent(".gitattributes", gitattributes)
-	utils.WriteFileIfNotPresent(".gitignore", gitignore)
+	if err := utils.WriteFile(".gitattributes", []byte(gitattributes)); err != nil {
+		return err
+	}
+
+	if err := utils.WriteFile(".gitignore", []byte(gitignore)); err != nil {
+		return err
+	}
 
 	_, err := crypto.Build()
 	return err

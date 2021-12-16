@@ -200,6 +200,7 @@ type ConfigurationItem struct {
 	Type          string
 	Placeholder   string
 	FunctionName  string `json:"functionName",yaml:"functionName"`
+	Optional      bool
 	Condition     *Condition
 	Validation    *Validation
 }
@@ -465,6 +466,7 @@ const RecipeConfigurationFragment = `
 		type
 		default
 		documentation
+		optional
 		placeholder
 		functionName
 		condition { field operation value }
