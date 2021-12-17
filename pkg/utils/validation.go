@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"regexp"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 const (
@@ -51,6 +52,22 @@ func ValidateRegex(val, regex, message string) error {
 
 	return ErrorWrap(fmt.Errorf(message), "Validation Failure")
 }
+
+func RegexValidator(regex, message string) survey.Validator {
+	return func(val interface{}) error {
+		str, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("Result is not a string")
+		}
+
+		return ValidateRegex(str, regex, message)
+	}
+}
+
+var ValidateAlphaNumeric = survey.ComposeValidators(
+	survey.Required,
+	RegexValidator("[a-z][0-9\\-a-z]+", "Must be an alphanumeric string"),
+)
 
 func ValidateDns(val string) error {
 	return ValidateRegex(val, dnsRegex, "String must be a dns compliant hostname")

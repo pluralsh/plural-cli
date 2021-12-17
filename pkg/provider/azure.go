@@ -19,6 +19,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
 	"k8s.io/api/core/v1"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 type AzureProvider struct {
@@ -29,21 +30,39 @@ type AzureProvider struct {
 	ctx 			     map[string]interface{}
 }
 
+var azureSurvey = []*survey.Question{
+	{
+		Name:     "cluster",
+		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
+		Validate: utils.ValidateAlphaNumeric,
+	},
+	{
+		Name: "storage",
+		Prompt: &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
+		Validate: utils.ValidateAlphaNumeric,
+	},
+	{
+		Name: "region",
+		Prompt: &survey.Input{Message: "Enter the region you want to deploy to:", Default: "US East"},
+		Validate: survey.Required,
+	},
+	{
+		Name: "resource",
+		Prompt: &survey.Input{Message: "Enter the name of the resource group to use as default: "},
+		Validate: utils.ValidateAlphaNumeric,
+	},
+}
+
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
-	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
-	if err != nil {
-		return nil, err
+	var resp struct {
+		Cluster  string
+		Storage  string
+		Region   string
+		Resource string
 	}
-
-	storAcct, err := utils.ReadAlphaNum("Enter the name of the storage account to use for your stage, must be globally unique or owned by your subscription: ")
+	err = survey.Ask(awsSurvey, &resp) 
 	if err != nil {
-		return nil, err
-	}
-
-	region, _ := utils.ReadLineDefault("Enter the region you want to deploy to", "US East")
-	rg, err := utils.ReadAlphaNum("Enter the name of the resource group to use as default: ")
-	if err != nil {
-		return nil, err
+		return
 	}
 
 	subId, tenID, err := getAzureAccount()
@@ -52,20 +71,20 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	}
 
 	prov = &AzureProvider{
-		cluster,
-		rg,
+		resp.Cluster,
+		resp.Resource,
 		"",
-		region,
+		resp.Region,
 		map[string]interface{}{
 			"SubscriptionId": subId,
 			"TenantId": tenID,
-			"StorageAccount": storAcct,
+			"StorageAccount": resp.Storage,
 		},
 	}
 
 	projectManifest := manifest.ProjectManifest{
-		Cluster:  cluster,
-		Project:  rg,
+		Cluster:  prov.Cluster(),
+		Project:  prov.Project(),
 		Provider: AZURE,
 		Region:   prov.Region(),
 		Context:  prov.Context(),

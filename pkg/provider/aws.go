@@ -16,28 +16,37 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 type AWSProvider struct {
-	cluster       string
+	Clus          string `survey:"cluster"`
 	project       string
 	bucket        string
-	region        string
+	Reg           string `survey:"region"`
 	storageClient *s3.S3
+} 
+
+var awsSurvey = []*survey.Question{
+	{
+			Name:     "cluster",
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
+			Validate: utils.ValidateAlphaNumeric,
+	},
+	{
+			Name: "region",
+			Prompt: &survey.Input{Message: "What region will you deploy to?", Default: "us-east-2"},
+			Validate: survey.Required,
+	},
 }
 
 func mkAWS(conf config.Config) (*AWSProvider, error) {
-	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
-	if err != nil {
-		return nil, err
-	}
-	
-	region, err := utils.ReadAlphaNumDefault("Enter the region you want to deploy to", "us-east-2")
-	if err != nil {
+	provider := &AWSProvider{}
+	if err := survey.Ask(awsSurvey, provider); err != nil {
 		return nil, err
 	}
 
-	client, err := getClient(region)
+	client, err := getClient(provider.Reg)
 	if err != nil {
 		return nil, err
 	}
@@ -46,18 +55,12 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	if err != nil {
 		return nil, utils.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 	}
-
-	provider := &AWSProvider{
-		cluster,
-		account,
-		"",
-		region,
-		client,
-	}
+	provider.project = account
+	provider.storageClient = client
 
 	projectManifest := manifest.ProjectManifest{
-		Cluster:  cluster,
-		Project:  account,
+		Cluster:  provider.Cluster(),
+		Project:  provider.Project(),
 		Provider: AWS,
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -113,7 +116,7 @@ func (aws *AWSProvider) KubeConfig() error {
 	}
 
 	cmd := exec.Command(
-		"aws", "eks", "update-kubeconfig", "--name", aws.cluster, "--region", aws.region)
+		"aws", "eks", "update-kubeconfig", "--name", aws.Cluster(), "--region", aws.Region())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -152,7 +155,7 @@ func (aws *AWSProvider) Name() string {
 }
 
 func (aws *AWSProvider) Cluster() string {
-	return aws.cluster
+	return aws.Clus
 }
 
 func (aws *AWSProvider) Project() string {
@@ -164,7 +167,7 @@ func (aws *AWSProvider) Bucket() string {
 }
 
 func (aws *AWSProvider) Region() string {
-	return aws.region
+	return aws.Reg
 }
 
 func (aws *AWSProvider) Context() map[string]interface{} {
@@ -173,7 +176,7 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 
 func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(prov.region),
+		Region: aws.String(prov.Region()),
 	})
 
 	if err != nil {

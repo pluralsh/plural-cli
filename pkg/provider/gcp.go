@@ -16,6 +16,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/AlecAivazis/survey/v2"
 
 	"k8s.io/api/core/v1"
 
@@ -24,40 +25,44 @@ import (
 )
 
 type GCPProvider struct {
-	cluster       string
-	project       string
+	Clust         string `survey:"cluster"`
+	Proj          string `survey:"project"`
 	bucket        string
 	region        string
 	storageClient *storage.Client
 	ctx           context.Context
 }
 
+var gcpSurvey = []*survey.Question{
+	{
+			Name:     "cluster",
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
+			Validate: utils.ValidateAlphaNumeric,
+	},
+	{
+			Name: "project",
+			Prompt: &survey.Input{Message: "Enter the name of its gcp project"},
+			Validate: utils.ValidateAlphaNumeric,
+	},
+}
+
 func mkGCP(conf config.Config) (*GCPProvider, error) {
+	provider := &GCPProvider{}
+	if err := survey.Ask(gcpSurvey, provider); err != nil {
+		return nil, err
+	}
+
 	client, ctx, err := storageClient()
 	if err != nil {
 		return nil, err
 	}
-	cluster, err := utils.ReadAlphaNum("Enter the name of your cluster: ")
-	if err != nil {
-		return nil, err
-	}
-	project, err := utils.ReadAlphaNum("Enter the name of its gcp project: ")
-	if err != nil {
-		return nil, err
-	}
-
-	provider := &GCPProvider{
-		cluster,
-		project,
-		"",
-		getRegion(),
-		client,
-		ctx,
-	}
+	provider.region = getRegion()
+	provider.storageClient = client
+	provider.ctx = ctx
 
 	projectManifest := manifest.ProjectManifest{
-		Cluster:  cluster,
-		Project:  project,
+		Cluster:  provider.Cluster(),
+		Project:  provider.Project(),
 		Provider: GCP,
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -97,8 +102,8 @@ func (gcp *GCPProvider) KubeConfig() error {
 	}
 
 	cmd := exec.Command(
-		"gcloud", "container", "clusters", "get-credentials", gcp.cluster,
-		"--region", getZone(gcp.region), "--project", gcp.project)
+		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
+		"--region", getZone(gcp.region), "--project", gcp.Proj)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -127,7 +132,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 func (gcp *GCPProvider) mkBucket(name string) error {
 	bkt := gcp.storageClient.Bucket(name)
 	if _, err := bkt.Attrs(gcp.ctx); err != nil {
-		return bkt.Create(gcp.ctx, gcp.project, nil)
+		return bkt.Create(gcp.ctx, gcp.Project(), nil)
 	}
 	return nil
 }
@@ -190,11 +195,11 @@ func (gcp *GCPProvider) Name() string {
 }
 
 func (gcp *GCPProvider) Cluster() string {
-	return gcp.cluster
+	return gcp.Clust
 }
 
 func (gcp *GCPProvider) Project() string {
-	return gcp.project
+	return gcp.Proj
 }
 
 func (gcp *GCPProvider) Bucket() string {
@@ -219,8 +224,8 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 
 	_, err = c.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Instance: node.Name,
-		Project:  gcp.project,
-		Zone:     gcp.region,
+		Project:  gcp.Project(),
+		Zone:     gcp.Region(),
 	})
 
 	return utils.ErrorWrap(err, "failed to delete instance")
