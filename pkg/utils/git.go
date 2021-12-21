@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"fmt"
 	"path/filepath"
 	"os/exec"
 	"strings"
@@ -57,12 +58,12 @@ func ChangedFiles() ([]string, error) {
 
 func Sync(msg string) error {
 	root, _ := ProjectRoot()
-	if err := git(root, "add", "."); err != nil {
-		return err
+	if res, err := git(root, "add", "."); err != nil {
+		return ErrorWrap(fmt.Errorf(res), "`git add .` failed")
 	}
 
-	if err := git(root, "commit", "-m", msg); err != nil {
-		return err
+	if res, err := git(root, "commit", "-m", msg); err != nil {
+		return ErrorWrap(fmt.Errorf(res), "failed to commit changes")
 	}
 
 	branch, err := CurrentBranch()
@@ -70,7 +71,11 @@ func Sync(msg string) error {
 		return err
 	}
 
-	return git(root, "push", "origin", branch)
+	if res, err := git(root, "push", "origin", branch); err != nil {
+		return ErrorWrap(fmt.Errorf(res), fmt.Sprintf("`git push origin %s` failed", branch))
+	}
+
+	return nil
 }
 
 func CurrentBranch() (string, error) {
@@ -79,8 +84,9 @@ func CurrentBranch() (string, error) {
 	return strings.TrimSpace(string(res)), err
 }
 
-func git(root string, args ...string) error {
+func git(root string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = root
-	return cmd.Run()
+	res, err := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res)), err
 }
