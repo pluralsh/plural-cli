@@ -300,7 +300,7 @@ func main() {
 	links := linkCommands()
 	app.Commands = append(app.Commands, links...)
 
-	if flip := rand.Intn(4); flip == 0 {
+	if flip := rand.Intn(4); os.Args[1] != "crypto" && flip == 0 {
 		checkRecency()
 	}
 
