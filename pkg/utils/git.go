@@ -65,7 +65,18 @@ func Sync(msg string) error {
 		return err
 	}
 
-	return git(root, "push")
+	branch, err := CurrentBranch()
+	if err != nil {
+		return err
+	}
+
+	return git(root, "push", "origin", branch)
+}
+
+func CurrentBranch() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	res, err := cmd.CombinedOutput()
+	return strings.TrimSpace(string(res)), err
 }
 
 func git(root string, args ...string) error {
