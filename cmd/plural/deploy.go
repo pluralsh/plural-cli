@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -308,6 +307,10 @@ func destroy(c *cli.Context) error {
 		return err
 	}
 
+	if ok := confirm("Are you sure you want to destroy this workspace?"); !ok {
+		return nil
+	}
+
 	client := api.NewClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := utils.RepoRoot()
@@ -364,27 +367,6 @@ func doDestroy(repoRoot string, client *api.Client, installation *api.Installati
 	}
 
 	return workspace.Destroy()
-}
-
-func validateOwner() error {
-	path := manifest.ProjectManifestPath()
-	project, err := manifest.ReadProject(path)
-	conf := config.Read()
-	if err != nil {
-		return fmt.Errorf("Your workspace hasn't been configured, try running `plural init`")
-	}
-
-	if owner := project.Owner; owner != nil {
-		if owner.Email != conf.Email || owner.Endpoint != conf.Endpoint {
-			return fmt.Errorf(
-				"The owner of this project is actually %s; plural environemnt = %s",
-				owner.Email,
-				config.PluralUrl(owner.Endpoint),
-			)
-		}
-	}
-
-	return nil
 }
 
 func buildContext(c *cli.Context) error {
