@@ -102,9 +102,14 @@ func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
   opts := []survey.AskOpt{
     survey.WithValidator(func (val interface{}) error {
 			res, _ := val.(string)
-			if err := utils.ValidateRegex(res, "[a-z][a-z0-9\\-]+", "Name must be a hyphenated alphanumeric string"); err != nil {
+      if len(res) > 63 || len(res) < 3 {
+        return fmt.Errorf("bucket name must be between 3 and 63 characters long")
+      }
+
+			if err := utils.ValidateRegex(res, "[a-z][a-z0-9\\-]+[a-z0-9]", "Name must be a hyphenated alphanumeric string"); err != nil {
 				return err
 			}
+  
 			return nil
 		}),
 		survey.WithValidator(survey.Required),
