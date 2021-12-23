@@ -12,17 +12,19 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
+func stringValidator(item *api.ConfigurationItem) survey.AskOpt {
+  return survey.WithValidator(func (val interface{}) error {
+    res, _ := val.(string)
+    if item.Validation != nil && item.Validation.Type == "REGEX" {
+      valid := item.Validation
+      return utils.ValidateRegex(res, valid.Regex, valid.Message)
+    }
+    return nil
+  })
+}
+
 func stringSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
-  opts := []survey.AskOpt{
-    survey.WithValidator(func (val interface{}) error {
-			res, _ := val.(string)
-			if item.Validation != nil && item.Validation.Type == "REGEX" {
-				valid := item.Validation
-				return utils.ValidateRegex(res, valid.Regex, valid.Message)
-			}
-			return nil
-  	}),
-	}
+  opts := []survey.AskOpt{ stringValidator(item) }
 
 	if !item.Optional {
 		opts = append(opts, survey.WithValidator(survey.Required))
@@ -32,6 +34,16 @@ func stringSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
     Message: "Enter the value",
     Default: def,
   }, opts
+}
+
+func passwordSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+  opts := []survey.AskOpt{ stringValidator(item) }
+
+	if !item.Optional {
+		opts = append(opts, survey.WithValidator(survey.Required))
+	}
+
+  return &survey.Password{Message: "Enter the value"}, opts
 }
 
 func boolSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
@@ -61,9 +73,8 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 		}),
   }
 
-  return &survey.Input{
-    Message: fmt.Sprintf("Enter a domain, which must be beneath %s ", proj.Network.Subdomain),
-  }, opts
+  msg := fmt.Sprintf("Enter a domain, which must be beneath %s ", proj.Network.Subdomain)
+  return &survey.Input{Message: msg}, opts
 }
 
 func fileSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {

@@ -78,6 +78,11 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		prompt, opts := stringSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
+	case Password:
+		var res string
+		prompt, opts := passwordSurvey(def, item, proj)
+		survey.AskOne(prompt, &res, opts...)
+		ctx[item.Name] = res
 	case Bucket:
 		var res string
 		prompt, opts := bucketSurvey(def, item, proj)

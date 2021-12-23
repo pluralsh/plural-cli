@@ -8,4 +8,5 @@ const (
 	Bucket   = "BUCKET"
 	File     = "FILE"
 	Function = "FUNCTION"
+	Password = "PASSWORD"
 )
