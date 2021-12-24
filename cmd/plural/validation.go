@@ -5,7 +5,23 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/urfave/cli"
 )
+
+func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		nargs := c.NArg()
+		if nargs > len(args) {
+			return fmt.Errorf("Too many args passed to %s.  Try running --help to see usage", c.Command.FullName())
+		}
+
+		if nargs < len(args) {
+			return fmt.Errorf("Not enough arguments provided, needs %s, try running --help to see usage", args[nargs])
+		}
+
+		return fn(c)
+	}
+} 
 
 func validateOwner() error {
 	path := manifest.ProjectManifestPath()
