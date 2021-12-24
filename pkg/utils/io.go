@@ -58,6 +58,10 @@ func Success(line string, args... interface{}) {
 	color.New(color.FgGreen, color.Bold).Printf(line, args...)
 }
 
+func Error(line string, args... interface{}) {
+	color.New(color.FgRed, color.Bold).Printf(line, args...)
+}
+
 func Highlight(line string, args... interface{}) {
 	color.New(color.Bold).Printf(line, args...)
 }

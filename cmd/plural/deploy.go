@@ -360,7 +360,7 @@ func destroy(c *cli.Context) error {
 
 func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
 	os.Chdir(repoRoot)
-	utils.Warn("Destroying workspace %s\n", installation.Repository.Name)
+	utils.Error("\nDestroying workspace %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(client, installation)
 	if err != nil {
 		return err
