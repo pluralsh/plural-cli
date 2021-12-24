@@ -3,7 +3,6 @@ package provider
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
 
@@ -25,7 +24,7 @@ type AWSProvider struct {
 	bucket        string
 	Reg           string `survey:"region"`
 	storageClient *s3.S3
-} 
+}
 
 var awsSurvey = []*survey.Question{
 	{
@@ -117,8 +116,6 @@ func (aws *AWSProvider) KubeConfig() error {
 
 	cmd := exec.Command(
 		"aws", "eks", "update-kubeconfig", "--name", aws.Cluster(), "--region", aws.Region())
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 

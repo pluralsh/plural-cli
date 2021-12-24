@@ -47,7 +47,11 @@ func Install(repo, name string) error {
 			}
 
 			seen[configItem.Name] = true
-			utils.UntilValid(func() error { return configure(ctx, configItem) })
+			if err := configure(ctx, configItem); err != nil {
+				context.Configuration[section.Repository.Name] = ctx
+				context.Write(path)
+				return err
+			}
 		}
 
 		context.Configuration[section.Repository.Name] = ctx

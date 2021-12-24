@@ -104,8 +104,6 @@ func (gcp *GCPProvider) KubeConfig() error {
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
 		"--region", getZone(gcp.region), "--project", gcp.Proj)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 

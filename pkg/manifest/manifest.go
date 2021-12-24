@@ -54,6 +54,7 @@ func FetchProject() (*ProjectManifest, error) {
 func ReadProject(path string) (man *ProjectManifest, err error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
+		err = fmt.Errorf("could not find workspace.yaml file, you might need to run `plural init`")
 		return
 	}
 
