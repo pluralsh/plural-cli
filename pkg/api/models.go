@@ -153,12 +153,14 @@ type Webhook struct {
 }
 
 type Recipe struct {
-	Id             string
-	Name           string
-	Provider       string
-	Description    string
-	RecipeSections []*RecipeSection
-	OidcSettings   *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
+	Id                 string
+	Name               string
+	Provider           string
+	Description        string
+	Repository         *Repository
+	RecipeSections     []*RecipeSection
+	OidcSettings       *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
+	RecipeDependencies []*Recipe `yaml:"recipeDependencies",json:"recipeDependencies"`
 }
 
 type OIDCSettings struct {
@@ -452,6 +454,7 @@ const RecipeFragment = `
     name
     description
     provider
+		repository { id name }
 		oidcSettings {
 			uriFormat
 			authMethod

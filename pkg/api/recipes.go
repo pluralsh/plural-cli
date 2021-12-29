@@ -71,6 +71,7 @@ query Recipe($repo: String, $name: String) {
 	recipe(repo: $repo, name: $name) {
 		...RecipeFragment
 		recipeSections { ...RecipeSectionFragment }
+		recipeDependencies { ...RecipeFragment }
 	}
 }
 %s

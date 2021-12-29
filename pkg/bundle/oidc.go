@@ -8,18 +8,16 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 )
 
-func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[string]interface{}) error {
+var oidcConfirmed bool
+
+func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
 	if recipe.OidcSettings == nil {
 		return nil
 	}
 
-	confirm := false
-	survey.AskOne(&survey.Confirm{
-		Message: "Enable plural OIDC",
-		Default: true,
-	}, survey.WithValidator(survey.Required))
+	confirmOidc(confirm)
 
-	if !confirm {
+	if !*confirm {
 		return nil
 	}
 
@@ -61,7 +59,7 @@ func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAtt
 	attributes.RedirectUris = utils.Dedupe(append(attributes.RedirectUris, provider.RedirectUris...))
 	bindings := attributes.Bindings
 	for _, val := range provider.Bindings {
-		// attributes is only pre-populated with the current user right not
+		// attributes is only pre-populated with the current user right now
 		if val.User != nil && val.User.Id != attributes.Bindings[0].UserId {
 			bindings = append(bindings, api.Binding{UserId: val.User.Id})
 		} else if val.Group != nil {
@@ -78,4 +76,17 @@ func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (
 	}
 
 	return strings.ReplaceAll(settings.UriFormat, "{domain}", domain.(string)), nil
+}
+
+func confirmOidc(confirm *bool) {
+	if oidcConfirmed {
+		return
+	}
+
+	survey.AskOne(&survey.Confirm{
+		Message: "Enable plural OIDC",
+		Default: true,
+	}, confirm, survey.WithValidator(survey.Required))
+
+	oidcConfirmed = true
 }

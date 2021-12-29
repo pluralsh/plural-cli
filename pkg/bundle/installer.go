@@ -67,7 +67,23 @@ func Install(repo, name string) error {
 		return err
 	}
 
-	return configureOidc(repo, client, recipe, context.Configuration[repo])
+	if recipe.OidcSettings == nil {
+		return nil
+	}
+
+	confirm := false
+	if err := configureOidc(repo, client, recipe, context.Configuration[repo], &confirm); err != nil {
+		return err
+	}
+	
+	for _, r := range recipe.RecipeDependencies {
+		repo := r.Repository.Name
+		if err := configureOidc(repo, client, r, context.Configuration[repo], &confirm); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getName(item *api.RecipeItem) string {
