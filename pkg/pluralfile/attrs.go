@@ -51,15 +51,8 @@ func (a *RepoAttrs) mkSha(fullPath string, input *api.RepositoryInput) (sha stri
 		return
 	}
 
-	iconSha, err := fileSha(input.Icon)
-	if err != nil {
-		return
-	}
-	
-	darkIconSha, err := fileSha(input.DarkIcon)
-	if err != nil {
-		return
-	}
+	iconSha, _ := fileSha(input.Icon)
+	darkIconSha, _ := fileSha(input.DarkIcon)
 
 	notesSha, err := fileSha(input.Notes)
 	if err != nil {

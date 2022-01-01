@@ -37,11 +37,11 @@ func Sha256(path string) (string, error) {
 	hasher := sha256.New()
 	f, err := os.Open(path)
 	if err != nil {
-		return "nil", err
+		return "", err
 	}
 	defer f.Close()
 	if _, err := io.Copy(hasher, f); err != nil {
-		return "nil", err
+		return "", err
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)), nil
