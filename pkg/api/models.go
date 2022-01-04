@@ -167,6 +167,7 @@ type OIDCSettings struct {
 	DomainKey  string `yaml:"domainKey"`
 	UriFormat  string `yaml:"uriFormat"`
 	AuthMethod string `yaml:"authMethod"`
+	Subdomain  bool   `yaml:"subdomain"`
 }
 
 type RecipeSection struct {

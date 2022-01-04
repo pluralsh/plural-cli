@@ -151,18 +151,18 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	}
 
 	for _, chartInst := range w.Charts {
-		plate := chartInst.Version.ValuesTemplate
+		tplate := chartInst.Version.ValuesTemplate
 		if w.Links != nil {
 			if path, ok := w.Links.Helm[chartInst.Chart.Name]; ok {
 				var err error
-				plate, err = utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
+				tplate, err = utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
 				if err != nil {
 					return err
 				}
 			}
 		}
 
-		tmpl, err := template.MakeTemplate(plate)
+		tmpl, err := template.MakeTemplate(tplate)
 		if err != nil {
 			return err
 		}

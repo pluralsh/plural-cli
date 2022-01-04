@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/AlecAivazis/survey/v2"
 )
 
@@ -70,12 +71,26 @@ func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAtt
 }
 
 func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (string, error) {
-	domain, ok := ctx[settings.DomainKey]
-	if !ok {
-		return "", fmt.Errorf("No domain setting for %s in context", settings.DomainKey)
+	uri := settings.UriFormat
+	if settings.DomainKey != "" {
+		domain, ok := ctx[settings.DomainKey]
+		if !ok {
+			return "", fmt.Errorf("No domain setting for %s in context", settings.DomainKey)
+		}
+
+		uri = strings.ReplaceAll(uri, "{domain}", domain.(string))
+	}
+	
+	if settings.Subdomain {
+		proj, err := manifest.FetchProject()
+		if err != nil {
+			return "", err
+		}
+
+		uri = strings.ReplaceAll(uri, "{subdomain}", proj.Network.Subdomain)
 	}
 
-	return strings.ReplaceAll(settings.UriFormat, "{domain}", domain.(string)), nil
+	return uri, nil
 }
 
 func confirmOidc(confirm *bool) {
