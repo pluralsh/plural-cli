@@ -74,19 +74,23 @@ spec:
     - src: {{ .DarkIcon }}
     {{ end }}
 `
-  
-  appTemplate = `
-    {{ if .Values.global.application.links }}
+
+	appTemplate = `
+    {{- if .Values.global }}
+    {{- if .Values.global.application }}
+    {{- if .Values.global.application.links }}
     links:
     {{ toYaml .Values.global.application.links | nindent 6 }}
-    {{ end }}
-  {{ if .Values.global.application.info }}
+    {{- end }}
+  {{- if .Values.global.application.info }}
   info:
   {{ toYaml .Values.global.application.info | nindent 4 }}
-  {{  end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
 `
 
-  licenseSecret = `apiVersion: v1
+	licenseSecret = `apiVersion: v1
 kind: Secret
 metadata:
   name: plural-license-secret
@@ -94,7 +98,7 @@ stringData:
   license: {{ .Values.plrl.license }}
 `
 
-  license = `apiVersion: platform.plural.sh/v1alpha1
+	license = `apiVersion: platform.plural.sh/v1alpha1
 kind: License
 metadata:
   name: %s
@@ -116,8 +120,8 @@ spec:
 	NotesName = TemplatesDir + sep + "NOTES.txt"
 	// file to put the default application resource in
 	ApplicationName = TemplatesDir + sep + "application.yaml"
-  // file to put the license secret in
-  LicenseSecretName = TemplatesDir + sep + "secret.yaml"
-  // file to put the license crd in
-  LicenseCrdName = TemplatesDir + sep + "license.yaml"
+	// file to put the license secret in
+	LicenseSecretName = TemplatesDir + sep + "secret.yaml"
+	// file to put the license crd in
+	LicenseCrdName = TemplatesDir + sep + "license.yaml"
 )
