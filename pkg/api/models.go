@@ -460,6 +460,7 @@ const RecipeFragment = `
 			uriFormat
 			authMethod
 			domainKey
+			subdomain
 		}
 	}
 `

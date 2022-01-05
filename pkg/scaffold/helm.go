@@ -371,7 +371,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	if err := tpl.Execute(&appBuffer, vars); err != nil {
 		return err
 	}
-
+	appBuffer.WriteString(appTemplate)
 
 	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), appBuffer.Bytes()); err != nil {
 		return err

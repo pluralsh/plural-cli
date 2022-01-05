@@ -74,6 +74,18 @@ spec:
     - src: {{ .DarkIcon }}
     {{ end }}
 `
+  
+  appTemplate = `
+    {{ if .Values.global.application.links }}
+    links:
+    {{ toYaml .Values.global.application.links | nindent 6 }}
+    {{ end }}
+  {{ if .Values.global.application.info }}
+  info:
+  {{ toYaml .Values.global.application.info | nindent 4 }}
+  {{  end }}
+`
+
   licenseSecret = `apiVersion: v1
 kind: Secret
 metadata:
