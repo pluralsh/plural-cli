@@ -6,18 +6,18 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	ttpl "text/template"
 	"strings"
+	ttpl "text/template"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"gopkg.in/yaml.v2"
-	"github.com/coreos/go-semver/semver"
 )
 
 type dependency struct {
@@ -27,11 +27,11 @@ type dependency struct {
 }
 
 type chart struct {
-	ApiVersion  string `yaml:"apiVersion"`
-	Name 			  string
-	Description string
-	Version 		string
-	AppVersion  string `yaml:"appVersion"`
+	ApiVersion   string `yaml:"apiVersion"`
+	Name         string
+	Description  string
+	Version      string
+	AppVersion   string `yaml:"appVersion"`
 	Dependencies []dependency
 }
 
@@ -104,13 +104,13 @@ func Notes(w *wkspace.Workspace) error {
 		"Applications":  apps,
 	}
 
-	if (w.Context.SMTP != nil) {
+	if w.Context.SMTP != nil {
 		vals["SMTP"] = w.Context.SMTP.Configuration()
 	}
 
-	if (w.Installation.AcmeKeyId != "") {
+	if w.Installation.AcmeKeyId != "" {
 		vals["Acme"] = map[string]string{
-			"KeyId": w.Installation.AcmeKeyId,
+			"KeyId":  w.Installation.AcmeKeyId,
 			"Secret": w.Installation.AcmeSecret,
 		}
 	}
@@ -144,6 +144,11 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	prevVals, _ := prevValues(valuesFile)
 	conf := config.Read()
 	globals := map[string]interface{}{}
+
+	apps, err := NewApplications()
+	if err != nil {
+		return err
+	}
 
 	proj, err := manifest.FetchProject()
 	if err != nil {
@@ -179,15 +184,16 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			"Provider":      w.Provider.Name(),
 			"Context":       w.Provider.Context(),
 			"Network":       proj.Network,
+			"Applications":  apps,
 		}
 
-		if (w.Context.SMTP != nil) {
+		if w.Context.SMTP != nil {
 			vals["SMTP"] = w.Context.SMTP.Configuration()
 		}
 
-		if (w.Installation.AcmeKeyId != "") {
+		if w.Installation.AcmeKeyId != "" {
 			vals["Acme"] = map[string]string{
-				"KeyId": w.Installation.AcmeKeyId,
+				"KeyId":  w.Installation.AcmeKeyId,
 				"Secret": w.Installation.AcmeSecret,
 			}
 		}
@@ -290,11 +296,11 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 
 	appVersion := appVersion(w.Charts)
 	chart := &chart{
-		ApiVersion: "v2",
-		Name: repo.Name,
-		Description: fmt.Sprintf("A helm chart for %s", repo.Name),
-		Version: version,
-		AppVersion: appVersion,
+		ApiVersion:   "v2",
+		Name:         repo.Name,
+		Description:  fmt.Sprintf("A helm chart for %s", repo.Name),
+		Version:      version,
+		AppVersion:   appVersion,
 		Dependencies: s.chartDependencies(w, name),
 	}
 
@@ -362,11 +368,11 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 
 	var appBuffer bytes.Buffer
 	vars := map[string]string{
-		"Name": repo.Name,
-		"Version": appVersion,
+		"Name":        repo.Name,
+		"Version":     appVersion,
 		"Description": repo.Description,
-		"Icon": repo.Icon,
-		"DarkIcon": repo.DarkIcon,
+		"Icon":        repo.Icon,
+		"DarkIcon":    repo.DarkIcon,
 	}
 	if err := tpl.Execute(&appBuffer, vars); err != nil {
 		return err
