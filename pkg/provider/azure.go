@@ -60,7 +60,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Region   string
 		Resource string
 	}
-	err = survey.Ask(awsSurvey, &resp) 
+	err = survey.Ask(azureSurvey, &resp) 
 	if err != nil {
 		return
 	}
