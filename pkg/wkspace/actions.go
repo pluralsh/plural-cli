@@ -10,10 +10,18 @@ import (
 	"path/filepath"
 )
 
-func execSuppressed(command string, args ...string) error {
-	utils.Highlight("%s %s ~> ", command, strings.Join(args, " "))
-	cmd, out := executor.SuppressedCommand(command, args...)
-	return executor.RunCommand(cmd, out)
+func execSuppressed(command string, args ...string) (err error) {
+	for retry := 2; retry >= 0; retry-- {
+		utils.Highlight("%s %s ~> ", command, strings.Join(args, " "))
+		cmd, out := executor.SuppressedCommand(command, args...)
+		err = executor.RunCommand(cmd, out)
+		if err == nil {
+			break
+		}
+		fmt.Printf("retrying command, number of retries remaining: %d\n", retry)
+	}
+
+	return
 }
 
 func (w *Workspace) DestroyHelm() error {
