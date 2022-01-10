@@ -153,7 +153,7 @@ func secret(namespace, name string) map[string]interface{} {
 }
 
 func importValue(tool, path string) string {
-	return fmt.Sprintf("'{{ .Import.%s.%s }}'", tool, path)
+	return fmt.Sprintf(`"{{ .Import.%s.%s }}"`, tool, path)
 }
 
 func toYaml(val interface{}) (string, error) {

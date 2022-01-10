@@ -143,7 +143,7 @@ func (azure *AzureProvider) KubeConfig() error {
 	}
 
 	cmd := exec.Command(
-		"az", "aks", "get-credentials", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
+		"az", "aks", "get-credentials", "--overwrite-existing", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
 	return cmd.Run()
 }
 
