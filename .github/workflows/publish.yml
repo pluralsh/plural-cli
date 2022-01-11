@@ -2,7 +2,7 @@ name: plural-ci
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, test-ci ]
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -28,6 +28,8 @@ jobs:
         password: ${{ secrets.PLURAL_ACCESS_TOKEN }}
     - run: make build
     - run: make push
+    - run: make build-cloud
+    - run: make push-cloud
   deploy:
     runs-on: ubuntu-latest
     steps:

@@ -36,9 +36,18 @@ build: .PHONY ## Build the Docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
+build-cloud: .PHONY ## build the cloud docker image
+	docker build --platform linux/amd64 -t $(APP_NAME):$(APP_VSN)-cloud \
+		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud \
+		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN)-cloud -f dockerfiles/Dockerfile.cloud  .
+
 push: ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
 	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
+
+push-cloud: ## push to gcr
+	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud
+	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)-cloud
 
 generate:
 	go generate ./...
