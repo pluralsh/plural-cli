@@ -12,17 +12,17 @@ BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN)
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-git-push:
+git-push: .PHONY
 	git pull --rebase
 	git push
 
-install:
+install: .PHONY
 	GOBIN=/usr/local/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
-build-cli:
+build-cli: .PHONY
 	GOBIN=/usr/local/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o plural.o ./cmd/plural/
 
-release:
+release: .PHONY
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/
 
 plural: .PHONY ## uploads to plural
@@ -41,13 +41,17 @@ build-cloud: .PHONY ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN)-cloud -f dockerfiles/Dockerfile.cloud  .
 
-push: ## push to gcr
+push: .PHONY ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
 	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
 
-push-cloud: ## push to gcr
+push-cloud: .PHONY ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud
 	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)-cloud
 
-generate:
+generate: .PHONY
 	go generate ./...
+
+bake-ami: .PHONY
+	cd packer && packer build -var "img_name=plural/ubuntu/$(BUILD)" .
+	@echo "baked ami for all regions"

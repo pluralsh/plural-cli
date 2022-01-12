@@ -1,3 +1,0 @@
-FROM gcr.io/pluralsh/plural-cli:1.1-base
-
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash -s -- -y
