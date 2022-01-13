@@ -9,7 +9,6 @@ import (
 	"strings"
 	ttpl "text/template"
 
-	"github.com/coreos/go-semver/semver"
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -286,12 +285,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 			return utils.ErrorWrap(err, "Existing Chart.yaml has invalid yaml formatting")
 		}
 
-		sv, err := semver.NewVersion(chart.Version)
-		if err != nil {
-			return utils.ErrorWrap(err, "Existing Chart.yaml version invalid semver format")
-		}
-		sv.BumpPatch()
-		version = sv.String()
+		version = chart.Version
 	}
 
 	appVersion := appVersion(w.Charts)
