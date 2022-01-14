@@ -62,6 +62,10 @@ func main() {
 					Name:  "commit",
 					Usage: "commits your changes with this message",
 				},
+				cli.BoolFlag{
+					Name:  "force",
+					Usage: "use force push when pushing to git",
+				},
 			},
 			Action: deploy,
 		},

@@ -56,7 +56,7 @@ func ChangedFiles() ([]string, error) {
 	return result, nil
 }
 
-func Sync(msg string) error {
+func Sync(msg string, force bool) error {
 	root, _ := ProjectRoot()
 	if res, err := git(root, "add", "."); err != nil {
 		return ErrorWrap(fmt.Errorf(res), "`git add .` failed")
@@ -71,7 +71,12 @@ func Sync(msg string) error {
 		return err
 	}
 
-	if res, err := git(root, "push", "origin", branch); err != nil {
+	args := []string{"push", "origin", branch}
+	if force {
+		args = []string{"push", "-f", "origin", branch}
+	}
+
+	if res, err := git(root, args...); err != nil {
 		return ErrorWrap(fmt.Errorf(res), fmt.Sprintf("`git push origin %s` failed", branch))
 	}
 

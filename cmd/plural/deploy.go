@@ -223,7 +223,7 @@ func deploy(c *cli.Context) error {
 
 	if commit := c.String("commit"); commit != "" {
 		utils.Highlight("Pushing upstream...\n")
-		return utils.Sync(commit)
+		return utils.Sync(commit, c.Bool("force"))
 	}
 	return nil
 }

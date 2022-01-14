@@ -61,6 +61,10 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
   opts := []survey.AskOpt{
     survey.WithValidator(func (val interface{}) error {
 			res, _ := val.(string)
+      if res == "" && item.Optional {
+        return nil
+      }
+
 			if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
 				return fmt.Errorf("Domain must end with %s", proj.Network.Subdomain)
 			}
