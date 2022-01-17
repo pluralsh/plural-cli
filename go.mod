@@ -21,6 +21,7 @@ require (
 	github.com/buger/goterm v1.0.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.10.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0
 	github.com/huandu/xstrings v1.3.2 // indirect

@@ -1,0 +1,7 @@
+version: '3'
+services:
+  server:
+    image: gcr.io/pluralsh/plural-cli:0.1.1-cloud
+    restart: always
+    ports:
+    - '8080:8080'

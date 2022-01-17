@@ -93,6 +93,18 @@ func DeserializeKey(contents []byte) (k *AESKey, err error) {
 	return
 }
 
+func Setup(key string) error {
+	p := getKeyPath()
+	if utils.Exists(p) {
+		if err := os.Rename(p, fmt.Sprintf("%s.bak", p)); err != nil {
+			return err
+		}
+	}
+
+	aes := &AESKey{Key: key}
+	return aes.Flush()
+}
+
 func (k *AESKey) Marshal() ([]byte, error) {
 	return yaml.Marshal(k)
 }

@@ -1,12 +1,26 @@
 FROM golang:1.17-stretch
 
-RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh
 
-WORKDIR $GOPATH/src/plural/
-COPY . .
-RUN go build -o /go/bin/plural -ldflags '-s -w' ./cmd/plural/
-RUN cp /go/bin/plural /usr/local/bin/plural && \
-      plural --help
+ARG HELM_VERSION=3.7.0
+ARG TERRAFORM_VERSION=1.0.7
+
+# install kubectl, helm and terraform
+# ENV BASE_URL="https://storage.googleapis.com/kubernetes-helm"
+ENV BASE_URL="https://get.helm.sh"
+ENV TAR_FILE="helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+
+ARG KUBECTL_VERSION='1.22.1'
+ADD https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl /usr/local/bin/kubectl
+
+RUN curl -L ${BASE_URL}/${TAR_FILE} | tar xvz && \
+    mv linux-amd64/helm /usr/local/bin/helm && \
+    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin && \
+    chmod +x /usr/local/bin/helm && \
+    chmod +x /usr/local/bin/terraform && \
+    chmod +x /usr/local/bin/kubectl && \ 
+    kubectl --help && terraform version && helm version
 
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash -s -- -y && \
@@ -23,3 +37,13 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
       curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \ 
       apt-get update -y && apt-get install -y google-cloud-sdk && \
       gcloud --help
+
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+WORKDIR $GOPATH/src/plural/
+COPY . .
+RUN go build -o /go/bin/plural -ldflags '-s -w' ./cmd/plural/
+RUN cp /go/bin/plural /usr/local/bin/plural && \
+      plural --help
+
+CMD eval $(ssh-agent -s); plural serve

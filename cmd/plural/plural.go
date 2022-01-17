@@ -168,9 +168,15 @@ func main() {
 		},
 		{
 			Name:     "import",
-			Usage:    "imports forge config from another file",
+			Usage:    "imports plural config from another file",
 			Action:   handleImport,
 			Category: "User Profile",
+		},
+		{
+			Name:     "serve",
+			Usage:    "launch the server",
+			Action:   handleServe,
+			Category: "Workspace",
 		},
 		{
 			Name:     "test",

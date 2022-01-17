@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/server"
 	"github.com/urfave/cli"
 )
 
@@ -133,6 +134,10 @@ func handleImport(c *cli.Context) error {
 
 	utils.Success("Workspace properly imported\n")
 	return nil
+}
+
+func handleServe(c *cli.Context) error {
+	return server.Run()
 }
 
 func initHelm(success string) error {

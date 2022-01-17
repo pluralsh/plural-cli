@@ -55,3 +55,9 @@ generate: .PHONY
 bake-ami: .PHONY
 	cd packer && packer build -var "img_name=plural/ubuntu/$(BUILD)" .
 	@echo "baked ami for all regions"
+
+up: .PHONY # spin up local server
+	docker-compose up -d
+
+down: .PHONY # teardown server
+	docker-compose down
