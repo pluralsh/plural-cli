@@ -46,4 +46,6 @@ RUN go build -o /go/bin/plural -ldflags '-s -w' ./cmd/plural/
 RUN cp /go/bin/plural /usr/local/bin/plural && \
       plural --help
 
+ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+
 CMD eval $(ssh-agent -s); plural serve

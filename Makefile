@@ -57,7 +57,7 @@ bake-ami: .PHONY
 	@echo "baked ami for all regions"
 
 up: .PHONY # spin up local server
-	docker-compose up -d
+	docker-compose up
 
 down: .PHONY # teardown server
 	docker-compose down

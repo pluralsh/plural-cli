@@ -2,8 +2,8 @@ package server
 
 import (
 	"os"
+	"io/ioutil"
 	"path/filepath"
-	"github.com/pluralsh/plural/pkg/utils"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -13,13 +13,20 @@ func setupGit(setup *SetupRequest) error {
 		return err
 	}
 
-	utils.WriteFileIfNotPresent(filepath.Join(p, "id_rsa"), setup.SshPrivateKey)
-	utils.WriteFileIfNotPresent(filepath.Join(p, "id_rsa.pub"), setup.SshPublicKey)
+	if err := os.MkdirAll(p, 0700); err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(filepath.Join(p, "id_rsa"), []byte(setup.SshPrivateKey), 0600); err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filepath.Join(p, "id_rsa.pub"), []byte(setup.SshPublicKey), 0644); err != nil {
+		return err
+	}
 
 	if err := execCmd("ssh-add", filepath.Join(p, "id_rsa")); err != nil {
 		return err
 	}
-
 
 	dir, err := os.Getwd()
 	if err != nil {

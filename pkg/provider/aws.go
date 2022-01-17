@@ -50,7 +50,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		return nil, err
 	}
 
-	account, err := getAwsAccount()
+	account, err := GetAwsAccount()
 	if err != nil {
 		return nil, utils.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 	}
@@ -200,7 +200,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	return utils.ErrorWrap(err, "failed to terminate instance")
 }
 
-func getAwsAccount() (string, error) {
+func GetAwsAccount() (string, error) {
 	cmd := exec.Command("aws", "sts", "get-caller-identity")
 	out, err := cmd.Output()
 	if err != nil {

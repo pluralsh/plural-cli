@@ -1,7 +1,8 @@
-version: '3'
+version: '3.7'
 services:
   server:
     image: gcr.io/pluralsh/plural-cli:0.1.1-cloud
     restart: always
+    pull_policy: always
     ports:
     - '8080:8080'

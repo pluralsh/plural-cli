@@ -1,11 +1,14 @@
 package server
 
 import (
+	"os"
+	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/manifest"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 func toConfig(setup *SetupRequest) *config.Config {
@@ -51,6 +54,15 @@ func setupCli(c *gin.Context) error {
 		return err
 	}
 
+	p, err := homedir.Expand("~/.plural")
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(p, 0755); err != nil {
+		return err
+	}
+
 	if err := crypto.Setup(setup.AesKey); err != nil {
 		return err
 	}
@@ -62,6 +74,10 @@ func setupCli(c *gin.Context) error {
 
 	if err := setupGit(&setup); err != nil {
 		return err
+	}
+
+	if setup.Provider == "aws" {
+		return setupAws(&setup)
 	}
 
 	man := toManifest(&setup)
@@ -76,5 +92,6 @@ func setupCli(c *gin.Context) error {
 		return ctx.Write(path)
 	}
 
+	c.JSON(http.StatusOK, gin.H{"success": true})
 	return nil
 }
