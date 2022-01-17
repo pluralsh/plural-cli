@@ -76,8 +76,8 @@ func setupCli(c *gin.Context) error {
 		return err
 	}
 
-	if setup.Provider == "aws" {
-		return setupAws(&setup)
+	if err := setupProvider(&setup); err != nil {
+		return err
 	}
 
 	man := toManifest(&setup)

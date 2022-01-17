@@ -59,5 +59,5 @@ bake-ami: .PHONY
 up: .PHONY # spin up local server
 	docker-compose up
 
-down: .PHONY # teardown server
-	docker-compose down
+pull: .PHONY # pulls new server image
+	docker-compose pull

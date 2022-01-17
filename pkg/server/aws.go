@@ -6,12 +6,7 @@ import (
 
 func setupAws(setup *SetupRequest) error {
 	aws := setup.Credentials.Aws
-	accountId, err := provider.GetAwsAccount()
-	if err != nil {
-		return err
-	}
-
-	setup.Workspace.Project = accountId
+	
 
 	if err := awsConfig("default.region", setup.Workspace.Region); err != nil {
 		return err
@@ -21,7 +16,17 @@ func setupAws(setup *SetupRequest) error {
 		return err
 	}
 
-	return awsConfig("aws_secret_access_key", aws.SecretAccessKey)
+	if err := awsConfig("aws_secret_access_key", aws.SecretAccessKey); err != nil {
+		return err
+	}
+
+	accountId, err := provider.GetAwsAccount()
+	if err != nil {
+		return err
+	}
+
+	setup.Workspace.Project = accountId
+	return nil
 }
 
 func awsConfig(args ...string) error {
