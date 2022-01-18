@@ -23,14 +23,16 @@ require (
 	github.com/fatih/color v1.10.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/imdario/mergo v0.3.11
+	github.com/imdario/mergo v0.3.12
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
+	github.com/klauspost/pgzip v1.2.4 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/michaeljguarino/graphql v0.2.5
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oleiade/reflections v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/packethost/packngo v0.21.0
@@ -43,7 +45,7 @@ require (
 	github.com/thoas/go-funk v0.9.1
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/urfave/cli v1.22.5
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/mod v0.4.2
 	google.golang.org/genproto v0.0.0-20210929214142-896c89f843d2
 	gopkg.in/oleiade/reflections.v1 v1.0.0

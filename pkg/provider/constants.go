@@ -142,8 +142,6 @@ provider "kubernetes" {
 }
 `
 
-// TODO: Figure out how to deal with local backend
-// TODO: Figure out how to configure the Kubernetes provider (rke/equinix datasource or store somewhere?)
 const equinixBackendTemplate = `terraform {
   backend "local" {
     path = "../../{{ .Values.Bucket }}/{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"

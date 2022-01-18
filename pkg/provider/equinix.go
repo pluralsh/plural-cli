@@ -1,16 +1,21 @@
 package provider
 
 import (
-	"encoding/json"
+	"context"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/exec"
+	"net/http"
+	"net/url"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/imdario/mergo"
 	metal "github.com/packethost/packngo"
 	"github.com/pluralsh/plural/pkg/config"
@@ -49,29 +54,37 @@ var equinixSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of the project you want to use:"},
 		Validate: survey.Required,
 	},
+	{
+		Name:     "apiToken",
+		Prompt:   &survey.Input{Message: "Enter your personal API Token for Equinix Metal:"},
+		Validate: survey.Required,
+	},
 }
 
 func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 	var resp struct {
-		Clust   string
-		Metro   string
-		Project string
+		Cluster  string
+		Metro    string
+		Project  string
+		ApiToken string
 	}
 	if err := survey.Ask(equinixSurvey, &resp); err != nil {
 		return nil, err
 	}
 
-	projectID, err := getProjectIDFromName(resp.Project)
+	projectID, err := getProjectIDFromName(resp.Project, resp.ApiToken)
 	if err != nil {
 		return nil, utils.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
 	}
 
 	provider = &EQUINIXProvider{
-		resp.Clust,
+		resp.Cluster,
 		projectID,
 		"",
 		resp.Metro,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"ApiToken": resp.ApiToken,
+		},
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -109,8 +122,8 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
 	}
 
-	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/*"))
-	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/* filter=plural-crypt diff=plural-crypt"))
+	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/**"))
+	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt"))
 
 	return template.RenderString(equinixBackendTemplate, ctx)
 }
@@ -134,15 +147,14 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 		return err
 	}
 
-	currentDir, err := os.Getwd()
+	repoRoot, err := utils.RepoRoot()
 	if err != nil {
 		return err
 	}
 
 	kubeConfigFiles := []string{
 		filepath.Join(usr.HomeDir, ".kube/config-plural-backup"),
-		// TODO: make file path more robust
-		filepath.Join(currentDir, "../bootstrap/terraform/kube_config_cluster.yaml"),
+		filepath.Join(repoRoot, "bootstrap/terraform/kube_config_cluster.yaml"),
 	}
 	kubeconfigs := []*clientcmdapi.Config{}
 
@@ -190,22 +202,10 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(usr.HomeDir, ".kube/config"), output, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(filepath.Join(usr.HomeDir, ".kube/config"), output, 0644)
 }
 
 func (equinix *EQUINIXProvider) Install() (err error) {
-	if exists, _ := utils.Which("metal"); exists {
-		utils.Success("metal cli already installed!\n")
-		return
-	}
-
-	fmt.Println("Equinix Metal requires you to manually pkg install the metal cli")
-
-	fmt.Println("Visit https://github.com/equinix/metal-cli#installation to install")
 	return
 }
 
@@ -230,20 +230,16 @@ func (equinix *EQUINIXProvider) Region() string {
 }
 
 func (equinix *EQUINIXProvider) Context() map[string]interface{} {
-	return map[string]interface{}{}
+	return equinix.ctx
 }
 
 func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
-	// TODO: Figure out how to get and store API token
-	client, err := metal.NewClient()
 
-	if err != nil {
-		return utils.ErrorWrap(err, "Failed to create Equinix Metal client")
-	}
+	client := getMetalClient(prov.Context()["ApiToken"].(string))
 
 	deviceID := strings.Replace(node.Spec.ProviderID, "equinixmetal://", "", -1)
 
-	_, err = client.Devices.Delete(deviceID, false)
+	_, err := client.Devices.Delete(deviceID, false)
 
 	if err != nil {
 		return utils.ErrorWrap(err, "failed to terminate instance")
@@ -252,28 +248,65 @@ func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
 	return nil
 }
 
-func getProjectIDFromName(projectName string) (string, error) {
-	cmd := exec.Command("metal", "project", "get", "-o", "json")
-	out, err := cmd.Output()
+func getMetalClient(apiToken string) *metal.Client {
+	transport := logging.NewTransport("Equinix Metal", http.DefaultTransport)
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Transport = transport
+	retryClient.RetryMax = 3
+	retryClient.RetryWaitMin = time.Second
+	retryClient.RetryWaitMax = time.Second
+	retryClient.CheckRetry = MetalRetryPolicy
+	standardClient := retryClient.StandardClient()
+
+	client := metal.NewClientWithAuth("plural", apiToken, standardClient)
+
+	return client
+}
+
+func MetalRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	var redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
+
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+
 	if err != nil {
-		fmt.Println(out)
-		return "", err
+		if v, ok := err.(*url.Error); ok {
+			// Don't retry if the error was due to too many redirects.
+			if redirectsErrorRe.MatchString(v.Error()) {
+				return false, nil
+			}
+
+			// Don't retry if the error was due to TLS cert verification failure.
+			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
+				return false, nil
+			}
+		}
+
+		// The error is likely recoverable so retry.
+		return true, nil
+	}
+	return false, nil
+}
+
+func getProjectIDFromName(projectName, apiToken string) (string, error) {
+	client := getMetalClient(apiToken)
+
+	projects, _, err := client.Projects.List(nil)
+	if err != nil {
+		return "", utils.ErrorWrap(err, "Error getting project using Metal Client")
 	}
 
 	var projectID string
-	var res []struct {
-		Name string
-		Id   string
-	}
-	json.Unmarshal(out, &res)
 
-	for _, project := range res {
+	for _, project := range projects {
 		if project.Name == projectName {
-			projectID = project.Id
+			projectID = project.ID
+			break
 		}
 	}
 	if projectID == "" {
-		return "", fmt.Errorf("Project with name %s not found", projectName)
+		return "", utils.ErrorWrap(err, fmt.Sprintf("Project with name %s not found", projectName))
 	}
 
 	return projectID, nil
