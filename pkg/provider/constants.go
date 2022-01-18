@@ -152,7 +152,11 @@ const equinixBackendTemplate = `terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.5.0"
+      version = "~> 2.7.1"
+    }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.13.1"
     }
     helm = {
       source = "hashicorp/helm"
@@ -164,7 +168,7 @@ const equinixBackendTemplate = `terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.5.0"
+      version = "~> 2.7.1"
     }
   }
 }
@@ -177,8 +181,15 @@ provider "helm" {
     cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
     client_certificate = {{ .Values.Cluster }}.client_cert
     client_key = {{ .Values.Cluster }}.client_key
-    # config_path    = "${path.root}/orig_kube_config_cluster.yaml"
   }
+}
+
+provider "kubectl" {
+  host = {{ .Values.Cluster }}.api_server_url
+  cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+  client_certificate = {{ .Values.Cluster }}.client_cert
+  client_key = {{ .Values.Cluster }}.client_key
+  load_config_file = false
 }
 
 provider "kubernetes" {
@@ -186,24 +197,15 @@ provider "kubernetes" {
   cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
   client_certificate = {{ .Values.Cluster }}.client_cert
   client_key = {{ .Values.Cluster }}.client_key
-  # config_path    = "${path.root}/orig_kube_config_cluster.yaml"
 }
 {{- else }}
 provider "helm" {
   kubernetes {
-    # host = rke_cluster.cluster.api_server_url
-    # cluster_ca_certificate = rke_cluster.cluster.ca_crt
-    # client_certificate = rke_cluster.cluster.client_cert
-    # client_key = rke_cluster.cluster.client_key
     config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
   }
 }
 
 provider "kubernetes" {
-  # host = rke_cluster.cluster.api_server_url
-  # cluster_ca_certificate = rke_cluster.cluster.ca_crt
-  # client_certificate = rke_cluster.cluster.client_cert
-  # client_key = rke_cluster.cluster.client_key
   config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
 }
 {{- end }}
