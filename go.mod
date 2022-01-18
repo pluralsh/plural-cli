@@ -54,4 +54,5 @@ require (
 	k8s.io/client-go v0.19.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
 	sigs.k8s.io/application v0.8.3
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )

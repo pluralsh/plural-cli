@@ -143,49 +143,68 @@ provider "kubernetes" {
 `
 
 // TODO: Figure out how to deal with local backend
-// TODO: Figure out how to deal with API token
 // TODO: Figure out how to configure the Kubernetes provider (rke/equinix datasource or store somewhere?)
 const equinixBackendTemplate = `terraform {
   backend "local" {
-    path = "{{ .Values.Bucket }}/terraform.tfstate"
+    path = "../../{{ .Values.Bucket }}/{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
   }
-
+{{- if .Values.ClusterCreated }}
   required_providers {
-    metal = {
-      source  = "equinix/metal"
-      version = ">= 2.1, <4"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.5.0"
     }
-    rke = {
-      source  = "rancher/rke"
-      version = "1.3.0"
+    helm = {
+      source = "hashicorp/helm"
+      version = ">= 2.4, <3"
     }
+  }
+}
+{{- else }}
+  required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.5.0"
     }
   }
 }
+{{- end }}
 
-provider "metal" {
-  auth_token = var.auth_token
-}
-
-{{ if .Values.ClusterCreated }}
-provider "kubernetes" {
-  host = {{ .Values.Cluster }}.endpoint
-  cluster_ca_certificate = base64decode({{ .Values.Cluster }}.ca_certificate)
-  token = data.google_client_config.current.access_token
-}
-{{ else }}
-data "google_container_cluster" "cluster" {
-  name = {{ .Values.Cluster }}
-  location = local.gcp_region
+{{- if .Values.ClusterCreated }}
+provider "helm" {
+  kubernetes {
+    host = {{ .Values.Cluster }}.api_server_url
+    cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+    client_certificate = {{ .Values.Cluster }}.client_cert
+    client_key = {{ .Values.Cluster }}.client_key
+    # config_path    = "${path.root}/orig_kube_config_cluster.yaml"
+  }
 }
 
 provider "kubernetes" {
-  host = data.google_container_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)
-  token = data.google_client_config.current.access_token
+  host = {{ .Values.Cluster }}.api_server_url
+  cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+  client_certificate = {{ .Values.Cluster }}.client_cert
+  client_key = {{ .Values.Cluster }}.client_key
+  # config_path    = "${path.root}/orig_kube_config_cluster.yaml"
 }
-{{ end }}
+{{- else }}
+provider "helm" {
+  kubernetes {
+    # host = rke_cluster.cluster.api_server_url
+    # cluster_ca_certificate = rke_cluster.cluster.ca_crt
+    # client_certificate = rke_cluster.cluster.client_cert
+    # client_key = rke_cluster.cluster.client_key
+    config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
+  }
+}
+
+provider "kubernetes" {
+  # host = rke_cluster.cluster.api_server_url
+  # cluster_ca_certificate = rke_cluster.cluster.ca_crt
+  # client_certificate = rke_cluster.cluster.client_cert
+  # client_key = rke_cluster.cluster.client_key
+  config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
+}
+{{- end }}
 `
