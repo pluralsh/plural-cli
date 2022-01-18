@@ -40,6 +40,9 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
+RUN echo "\ncd /root/workspace || echo 'workspace not yet created'\n" >> /root/.zshrc && \
+      cat /root/.zshrc
+
 WORKDIR $GOPATH/src/plural/
 COPY . .
 RUN go build -o /go/bin/plural -ldflags '-s -w' ./cmd/plural/
@@ -48,4 +51,5 @@ RUN cp /go/bin/plural /usr/local/bin/plural && \
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
+WORKDIR /root
 CMD eval $(ssh-agent -s); plural serve

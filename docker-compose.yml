@@ -4,5 +4,6 @@ services:
     image: gcr.io/pluralsh/plural-cli:0.1.1-cloud
     restart: always
     pull_policy: always
+    platform: linux/amd64
     ports:
     - '8080:8080'

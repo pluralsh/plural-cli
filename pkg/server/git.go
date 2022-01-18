@@ -28,16 +28,16 @@ func setupGit(setup *SetupRequest) error {
 		return err
 	}
 
-	dir, err := os.Getwd()
+	dir, err := homedir.Expand("~/workspace")
 	if err != nil {
 		return err
 	}
 
-	if err := execCmd("git", "clone", setup.GitUrl, "workspace"); err != nil {
+	if err := execCmd("git", "clone", setup.GitUrl, dir); err != nil {
 		return err
 	}
 
-	os.Chdir(filepath.Join(dir, "workspace"))
+	os.Chdir(dir)
 	if err := execCmd("plural", "crypto", "init"); err != nil {
 		return err
 	}
