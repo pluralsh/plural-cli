@@ -96,8 +96,6 @@ func equinixFromManifest(man *manifest.Manifest) (*EQUINIXProvider, error) {
 }
 
 func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
-	// TODO: figure out how to deal with local backend
-	// TODO: add gitignore and gitattributes to the tf-state folder
 
 	ctx["Region"] = equinix.Region()
 	ctx["Bucket"] = equinix.Bucket()
@@ -110,6 +108,10 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
 	}
+
+	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/*"))
+	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/* filter=plural-crypt diff=plural-crypt"))
+
 	return template.RenderString(equinixBackendTemplate, ctx)
 }
 
