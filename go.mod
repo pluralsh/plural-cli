@@ -33,6 +33,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oleiade/reflections v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/packethost/packngo v0.21.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210706143420-7d21f8c997e2
 	github.com/pluralsh/plural-operator v0.1.4

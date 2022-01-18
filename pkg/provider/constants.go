@@ -1,9 +1,10 @@
 package provider
 
 const (
-	GCP   = "google"
-	AWS   = "aws"
-	AZURE = "azure"
+	GCP     = "google"
+	AWS     = "aws"
+	AZURE   = "azure"
+	EQUINIX = "equinix"
 )
 
 const azureBackendTemplate = `terraform {
@@ -139,4 +140,52 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
+`
+
+// TODO: Figure out how to deal with local backend
+// TODO: Figure out how to deal with API token
+// TODO: Figure out how to configure the Kubernetes provider (rke/equinix datasource or store somewhere?)
+const equinixBackendTemplate = `terraform {
+  backend "local" {
+    path = "{{ .Values.Bucket }}/terraform.tfstate"
+  }
+
+  required_providers {
+    metal = {
+      source  = "equinix/metal"
+      version = ">= 2.1, <4"
+    }
+    rke = {
+      source  = "rancher/rke"
+      version = "1.3.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.5.0"
+    }
+  }
+}
+
+provider "metal" {
+  auth_token = var.auth_token
+}
+
+{{ if .Values.ClusterCreated }}
+provider "kubernetes" {
+  host = {{ .Values.Cluster }}.endpoint
+  cluster_ca_certificate = base64decode({{ .Values.Cluster }}.ca_certificate)
+  token = data.google_client_config.current.access_token
+}
+{{ else }}
+data "google_container_cluster" "cluster" {
+  name = {{ .Values.Cluster }}
+  location = local.gcp_region
+}
+
+provider "kubernetes" {
+  host = data.google_container_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth.0.cluster_ca_certificate)
+  token = data.google_client_config.current.access_token
+}
+{{ end }}
 `
