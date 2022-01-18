@@ -2,11 +2,12 @@ package provider
 
 import (
 	"fmt"
+
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/config"
-	"k8s.io/api/core/v1"
-	"github.com/AlecAivazis/survey/v2"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Provider interface {
@@ -36,17 +37,17 @@ func Bootstrap(manifestPath string, force bool) (Provider, error) {
 }
 
 func Select(force bool) (Provider, error) {
-	available := []string{GCP, AWS, AZURE}
+	available := []string{GCP, AWS, AZURE, EQUINIX}
 	path := manifest.ProjectManifestPath()
 	if utils.Exists(path) {
 		if project, err := manifest.ReadProject(path); err == nil {
 			prov, err := FromManifest(&manifest.Manifest{
 				Provider: project.Provider,
-				Project: project.Project,
-				Cluster: project.Cluster,
-				Region: project.Region,
-				Bucket: project.Bucket,
-				Context: project.Context,
+				Project:  project.Project,
+				Cluster:  project.Cluster,
+				Region:   project.Region,
+				Bucket:   project.Bucket,
+				Context:  project.Context,
 			})
 
 			if force {
@@ -65,8 +66,8 @@ func Select(force bool) (Provider, error) {
 
 	provider := ""
 	prompt := &survey.Select{
-    Message: "Select one of the following providers:",
-    Options: available,
+		Message: "Select one of the following providers:",
+		Options: available,
 	}
 	survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
 	utils.Success("Using provider %s\n", provider)
@@ -81,6 +82,8 @@ func FromManifest(man *manifest.Manifest) (Provider, error) {
 		return awsFromManifest(man)
 	case AZURE:
 		return azureFromManifest(man)
+	case EQUINIX:
+		return equinixFromManifest(man)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
 	}
@@ -95,6 +98,8 @@ func New(provider string) (Provider, error) {
 		return mkAWS(conf)
 	case AZURE:
 		return mkAzure(conf)
+	case EQUINIX:
+		return mkEquinix(conf)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)
 	}

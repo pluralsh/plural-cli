@@ -1,9 +1,10 @@
 package provider
 
 const (
-	GCP   = "google"
-	AWS   = "aws"
-	AZURE = "azure"
+	GCP     = "google"
+	AWS     = "aws"
+	AZURE   = "azure"
+	EQUINIX = "equinix"
 )
 
 const azureBackendTemplate = `terraform {
@@ -139,4 +140,71 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
+`
+
+const equinixBackendTemplate = `terraform {
+  backend "local" {
+    path = "../../{{ .Values.Bucket }}/{{ .Values.__CLUSTER__ }}/{{ .Values.Prefix }}/terraform.tfstate"
+  }
+{{- if .Values.ClusterCreated }}
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.7.1"
+    }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.13.1"
+    }
+    helm = {
+      source = "hashicorp/helm"
+      version = ">= 2.4, <3"
+    }
+  }
+}
+{{- else }}
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.7.1"
+    }
+  }
+}
+{{- end }}
+
+{{- if .Values.ClusterCreated }}
+provider "helm" {
+  kubernetes {
+    host = {{ .Values.Cluster }}.api_server_url
+    cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+    client_certificate = {{ .Values.Cluster }}.client_cert
+    client_key = {{ .Values.Cluster }}.client_key
+  }
+}
+
+provider "kubectl" {
+  host = {{ .Values.Cluster }}.api_server_url
+  cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+  client_certificate = {{ .Values.Cluster }}.client_cert
+  client_key = {{ .Values.Cluster }}.client_key
+  load_config_file = false
+}
+
+provider "kubernetes" {
+  host = {{ .Values.Cluster }}.api_server_url
+  cluster_ca_certificate = {{ .Values.Cluster }}.ca_crt
+  client_certificate = {{ .Values.Cluster }}.client_cert
+  client_key = {{ .Values.Cluster }}.client_key
+}
+{{- else }}
+provider "helm" {
+  kubernetes {
+    config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
+  }
+}
+
+provider "kubernetes" {
+  config_path    = "../../bootstrap/terraform/kube_config_cluster.yaml"
+}
+{{- end }}
 `
