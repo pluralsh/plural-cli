@@ -123,7 +123,7 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 	}
 
 	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/**"))
-	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt"))
+	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
 
 	return template.RenderString(equinixBackendTemplate, ctx)
 }
