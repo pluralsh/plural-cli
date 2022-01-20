@@ -54,3 +54,13 @@ func setupGit(setup *SetupRequest) error {
 
 	return execCmd("plural", "crypto", "unlock")
 }
+
+func syncGit() error {
+	dir, err := homedir.Expand("~/workspace")
+	if err != nil {
+		return err
+	}
+
+	os.Chdir(dir)
+	return utils.Sync("pushing local cloud shell changes", true)
+}

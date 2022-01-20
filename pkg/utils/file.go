@@ -31,6 +31,15 @@ func DownloadFile(url string, path string) error {
 	return err
 }
 
+func CopyFile(src, dest string) error {
+	bytesRead, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(dest, bytesRead, 0644)
+}
+
 func EmptyDirectory(dir string) error {
 	d, err := os.Open(dir)
 	if err != nil {

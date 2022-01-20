@@ -179,6 +179,12 @@ func main() {
 			Category: "Workspace",
 		},
 		{
+			Name:        "shell",
+			Usage:       "manages your cloud shell",
+			Subcommands: shellCommands(),
+			Category:    "Workspace", 
+		},
+		{
 			Name:     "test",
 			Usage:    "validate a values templace",
 			Action:   testTemplate,

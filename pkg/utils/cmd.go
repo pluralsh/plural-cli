@@ -12,6 +12,13 @@ func Cmd(conf *config.Config, program string, args ...string) error {
 	return MkCmd(conf, program, args...).Run()
 }
 
+func Exec(program string, args ...string) error {
+	cmd := exec.Command(program, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 
 func Which(command string) (exists bool, path string) {
 	root, _ := ProjectRoot()

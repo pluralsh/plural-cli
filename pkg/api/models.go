@@ -118,6 +118,12 @@ type Installation struct {
 	AcmeSecret   string
 }
 
+type CloudShell struct {
+	Id     string
+	AesKey string `json:"aesKey"`
+	GitUrl string `json:"gitUrl"`
+}
+
 type InstallationEdge struct {
 	Node *Installation
 }
@@ -523,5 +529,13 @@ const ApplyLockFragment = `
 fragment ApplyLockFragment on ApplyLock {
 	id
 	lock
+}
+`
+
+const CloudShellFragment = `
+fragment CloudShellFragment on CloudShell {
+	id
+	aesKey
+	gitUrl
 }
 `

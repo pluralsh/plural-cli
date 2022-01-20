@@ -36,6 +36,14 @@ func configFile() string {
 	return path.Join(folder, ".plural", "config.yml")
 }
 
+func Exists() bool {
+	_, err := os.Stat(configFile())
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true 
+}
+
 func Read() Config {
 	return Import(configFile())
 }
