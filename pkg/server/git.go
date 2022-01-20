@@ -4,8 +4,18 @@ import (
 	"os"
 	"io/ioutil"
 	"path/filepath"
+	"github.com/pluralsh/plural/pkg/utils"
 	homedir "github.com/mitchellh/go-homedir"
 )
+
+func gitExists() (bool, error) {
+	dir, err := homedir.Expand("~/workspace")
+	if err != nil {
+		return false, err
+	}
+
+	return utils.Exists(dir), nil
+}
 
 func setupGit(setup *SetupRequest) error {
 	p, err := homedir.Expand("~/.ssh")

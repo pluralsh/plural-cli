@@ -72,6 +72,16 @@ func setupCli(c *gin.Context) error {
 		return err
 	}
 
+	exists, err := gitExists()
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		c.JSON(http.StatusOK, gin.H{"success": true})
+		return nil
+	}
+
 	if err := setupGit(&setup); err != nil {
 		return err
 	}
@@ -89,7 +99,9 @@ func setupCli(c *gin.Context) error {
 	ctx := toContext(&setup)
 	path = manifest.ContextPath()
 	if !utils.Exists(path) {
-		return ctx.Write(path)
+		if err := ctx.Write(path); err != nil {
+			return err
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
