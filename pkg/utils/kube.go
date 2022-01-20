@@ -18,6 +18,10 @@ import (
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
 func InKubernetes() bool {
+	if os.Getenv("IGNORE_IN_CLUSTER") == "true" {
+		return false
+	}
+
 	return Exists(tokenFile)
 }
 
