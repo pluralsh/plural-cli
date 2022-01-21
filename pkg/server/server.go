@@ -15,6 +15,7 @@ func Run() error {
 	v1 := r.Group("/v1")
 	{
 		v1.POST("/setup", serverFunc(setupCli))
+		v1.GET("/health", healthcheck)
 	}
 
 	term := make(chan os.Signal) // OS termination signal
@@ -35,6 +36,10 @@ func Run() error {
 	}
 
 	return <-fail
+}
+
+func healthcheck(c *gin.Context) {
+	c.String(http.StatusOK, "OK")
 }
 
 func teardown(ctx context.Context) error {

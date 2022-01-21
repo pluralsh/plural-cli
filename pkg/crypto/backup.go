@@ -7,13 +7,19 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func backupKey() error {
+func backupKey(key string) error {
 	p := getKeyPath()
 	if utils.Exists(p) {
+		aes, _ := Read(p)
+		if aes.Key == key {
+			return nil
+		}
+
 		ind := 0
 		for {
 			bp := backupPath(ind)
 			if utils.Exists(bp) {
+				ind++
 				continue
 			}
 

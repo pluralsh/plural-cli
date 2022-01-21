@@ -57,15 +57,19 @@ type AESKey struct {
 	Key string
 }
 
+func Read(path string) (*AESKey, error) {
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return DeserializeKey(contents)
+}
+
 func Materialize() (*AESKey, error) {
 	p := getKeyPath()
 	if utils.Exists(p) {
-		contents, err := ioutil.ReadFile(p)
-		if err != nil {
-			return nil, err
-		}
-
-		return DeserializeKey(contents)
+		return Read(p)
 	}
 
 	key := make([]byte, 32)
@@ -94,7 +98,7 @@ func DeserializeKey(contents []byte) (k *AESKey, err error) {
 }
 
 func Setup(key string) error {
-	if err := backupKey(); err != nil {
+	if err := backupKey(key); err != nil {
 		return err
 	}
 

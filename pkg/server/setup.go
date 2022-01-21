@@ -2,6 +2,7 @@ package server
 
 import (
 	"os"
+	"fmt"
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -49,6 +50,7 @@ func toContext(setup *SetupRequest) *manifest.Context {
 }
 
 func setupCli(c *gin.Context) error {
+	fmt.Println("Beginning to setup workspace")
 	var setup SetupRequest
 	if err := c.ShouldBindJSON(&setup); err != nil {
 		return err
