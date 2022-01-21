@@ -48,11 +48,28 @@ func setupGit(setup *SetupRequest) error {
 	}
 
 	os.Chdir(dir)
+	if err := gitConfig("user.email", setup.User.Email); err != nil {
+		return err
+	}
+
+	name := "plural-shell"
+	if setup.User.GitUser != "" {
+		name = setup.User.GitUser
+	}
+	if err := gitConfig("user.name", name); err != nil {
+		return err
+	}
+
 	if err := execCmd("plural", "crypto", "init"); err != nil {
 		return err
 	}
 
 	return execCmd("plural", "crypto", "unlock")
+}
+
+func gitConfig(args ...string) error {
+	cmdArgs := append([]string{"config", "--global"}, args...)
+	return execCmd("git", cmdArgs...)
 }
 
 func syncGit() error {

@@ -22,6 +22,9 @@ RUN curl -L ${BASE_URL}/${TAR_FILE} | tar xvz && \
     chmod +x /usr/local/bin/kubectl && \ 
     kubectl --help && terraform version && helm version
 
+RUN  helm plugin install https://github.com/pluralsh/helm-push && \
+     helm plugin install https://github.com/databus23/helm-diff
+
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash -s -- -y && \
       az --help
