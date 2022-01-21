@@ -1,6 +1,6 @@
 FROM golang:1.17-stretch
 
-RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs tmux locales-all
 
 ARG HELM_VERSION=3.7.0
 ARG TERRAFORM_VERSION=1.0.7
@@ -47,11 +47,11 @@ WORKDIR $GOPATH/src/plural/
 COPY . .
 RUN make build-cli OUTFILE=/go/bin/plural
 RUN cp /go/bin/plural /usr/local/bin/plural && \
-      plural --help
-
-RUN cp welcome.txt /root/welcome.txt && \ 
-      echo "\n[ -d /root/workspace ] && cd /root/workspace || echo 'workspace not yet created'\n" >> /root/.zshrc && \
-      echo "cat /root/welcome.txt\n" >> /root/.zshrc
+      plural --help && \
+      cp welcome.txt /root/welcome.txt && \ 
+      echo "cat /root/welcome.txt\n" >> /root/.zshrc && \
+      cp start-session.sh /usr/local/bin/start-session.sh && \
+      chmod +x /usr/local/bin/start-session.sh
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
