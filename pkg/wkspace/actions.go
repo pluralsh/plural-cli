@@ -89,7 +89,7 @@ func (w *Workspace) DestroyTerraform() error {
 	})
 
 	os.Chdir(path)
-	if err := execSuppressed("terraform", "init"); err != nil {
+	if err := execSuppressed("terraform", "init", "-upgrade"); err != nil {
 		return err
 	}
 

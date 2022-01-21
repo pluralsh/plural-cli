@@ -8,6 +8,7 @@ DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
 BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN)
+OUTFILE ?= plural.o
 
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -20,7 +21,7 @@ install: .PHONY
 	GOBIN=/usr/local/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
 build-cli: .PHONY
-	GOBIN=/usr/local/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o plural.o ./cmd/plural/
+	GOBIN=/usr/local/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
 
 release: .PHONY
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/

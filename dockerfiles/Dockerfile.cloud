@@ -1,6 +1,6 @@
 FROM golang:1.17-stretch
 
-RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs
 
 ARG HELM_VERSION=3.7.0
 ARG TERRAFORM_VERSION=1.0.7
@@ -43,14 +43,15 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-RUN echo "\ncd /root/workspace || echo 'workspace not yet created'\n" >> /root/.zshrc && \
-      cat /root/.zshrc
-
 WORKDIR $GOPATH/src/plural/
 COPY . .
-RUN go build -o /go/bin/plural -ldflags '-s -w' ./cmd/plural/
+RUN make build-cli OUTFILE=/go/bin/plural
 RUN cp /go/bin/plural /usr/local/bin/plural && \
       plural --help
+
+RUN cp welcome.txt /root/welcome.txt && \ 
+      echo "\n[ -d /root/workspace ] && cd /root/workspace || echo 'workspace not yet created'\n" >> /root/.zshrc && \
+      echo "cat /root/welcome.txt\n" >> /root/.zshrc
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 

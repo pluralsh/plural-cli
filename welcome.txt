@@ -1,0 +1,18 @@
+                                                                                                                    
+██████╗ ██╗     ██╗   ██╗██████╗  █████╗ ██╗     
+██╔══██╗██║     ██║   ██║██╔══██╗██╔══██╗██║     
+██████╔╝██║     ██║   ██║██████╔╝███████║██║     
+██╔═══╝ ██║     ██║   ██║██╔══██╗██╔══██║██║     
+██║     ███████╗╚██████╔╝██║  ██║██║  ██║███████╗
+╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
+                                                                                                                                                                                                                                                                                                                 
+Here's a brief primer on some of the commands you might need:
+
+plural init ## initializes your plural git repository
+
+plural bundle list APP ## lists all the bundles available for APP
+plural bundle install APP BUNDLE ## installs the bundle BUNDLE for APP
+
+plural build ## build your entire workspace, use `--only APP` to only build APP
+plural deploy --commit "I deployed something with Plural!!" ## deploy your workspace after running `plural build`
+
