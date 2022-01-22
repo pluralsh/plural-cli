@@ -62,10 +62,8 @@ RUN make build-cli OUTFILE=/go/bin/plural
 RUN cp /go/bin/plural /usr/local/bin/plural && \
       plural --help && \
       cp welcome.txt /root/welcome.txt && \ 
-      cp tmux/PowerlineSymbols.otf /usr/share/fonts/opentype && \
       cp tmux/.tmux.conf /root/.tmux.conf && cp tmux/.tmux.conf.local /root/.tmux.conf.local && \
       echo "cat /root/welcome.txt\n" >> /root/.zshrc && \
-      echo "export TERM=xterm-256color" >> /root/.zshrc && \
       cp start-session.sh /usr/local/bin/start-session.sh && \
       chmod +x /usr/local/bin/start-session.sh
 
