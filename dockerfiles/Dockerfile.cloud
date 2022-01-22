@@ -1,6 +1,8 @@
 FROM golang:1.17-stretch
 
-RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs tmux locales-all
+RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list && \
+    apt-get update -y && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs vim locales-all && \
+    apt-get install -t stretch-backports -y tmux
 
 ARG HELM_VERSION=3.7.0
 ARG TERRAFORM_VERSION=1.0.7
@@ -43,13 +45,18 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
+WORKDIR /root
+
 WORKDIR $GOPATH/src/plural/
+ENV LANG=en_US.UTF-8
 COPY . .
 RUN make build-cli OUTFILE=/go/bin/plural
 RUN cp /go/bin/plural /usr/local/bin/plural && \
       plural --help && \
       cp welcome.txt /root/welcome.txt && \ 
+      cp .tmux.conf /root/.tmux.conf && cp .tmux.conf.local /root/.tmux.conf.local && \
       echo "cat /root/welcome.txt\n" >> /root/.zshrc && \
+      echo "export TERM=xterm-256color" >> /root/.zshrc && \
       cp start-session.sh /usr/local/bin/start-session.sh && \
       chmod +x /usr/local/bin/start-session.sh
 

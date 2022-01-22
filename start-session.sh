@@ -1,7 +1,7 @@
 #!/bin/sh
 
 session="workspace"
-tmux start \;
+tmux start
 tmux has-session -t $session 2>/dev/null
 
 if [ $? != 0 ]; then
