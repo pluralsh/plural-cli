@@ -9,4 +9,4 @@ if [ $? != 0 ]; then
 fi
 
 # Attach to created session
-tmux attach-session -t $session
+tmux attach-session -d -t $session
