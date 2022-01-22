@@ -5,7 +5,7 @@ tmux start
 tmux has-session -t $session 2>/dev/null
 
 if [ $? != 0 ]; then
-  tmux new-session -c /root/workspace -s $session zsh
+  tmux new-session -c ~/workspace -s $session zsh
 fi
 
 # Attach to created session

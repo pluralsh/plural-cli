@@ -1,2 +1,2 @@
 for i in $(set | grep "_SERVICE_\|_PORT\|KUBERNETES" | cut -f1 -d=); do unset $i; done
-cat /root/welcome.txt
+cat ~/welcome.txt
