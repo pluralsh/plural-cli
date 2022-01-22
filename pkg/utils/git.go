@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"os/exec"
 	"strings"
+	"regexp"
 )
 
 func ProjectRoot() (root string, found bool) {
@@ -87,6 +88,13 @@ func CurrentBranch() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	res, err := cmd.CombinedOutput()
 	return strings.TrimSpace(string(res)), err
+}
+
+func RepoName(url string) string {
+	reg, _ := regexp.Compile(".*/")
+	base := reg.ReplaceAllString(url, "")
+
+	return strings.TrimSuffix(base, ".git")
 }
 
 func git(root string, args ...string) (string, error) {

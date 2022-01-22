@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -51,7 +52,17 @@ func handleShellSync(c *cli.Context) error {
 	}
 
 	utils.Highlight("Cloning your workspace repo locally:\n")
-	return utils.Exec("git", "clone", shell.GitUrl)
+	if err := utils.Exec("git", "clone", shell.GitUrl); err != nil {
+		return err
+	}
+
+	dir := utils.RepoName(shell.GitUrl)
+	os.Chdir(dir)
+	if err := cryptoInit(c); err != nil {
+		return err
+	}
+
+	return handleUnlock(c)
 }
 
 func handleShellPurge(c *cli.Context) error {
