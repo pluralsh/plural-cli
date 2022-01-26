@@ -41,6 +41,7 @@ type OauthSettings struct {
 type RepositoryInput struct {
 	Name          string
 	Description   string
+	Private       bool   `json:"private,omitempty" yaml:"private,omitempty"`
 	Tags          []Tag  `json:"tags,omitempty" yaml:"tags"`
 	Icon          string `json:"icon,omitempty" yaml:"icon"`
 	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
