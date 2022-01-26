@@ -67,9 +67,10 @@ USER plural
 COPY tmux /home/plural/tmux
 COPY welcome.txt /home/plural/welcome.txt
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \ 
-      cp tmux/.tmux.conf /home/plural/.tmux.conf && cp tmux/.tmux.conf.local /home/plural/.tmux.conf.local && \
+      cp tmux/.tmux.conf /home/plural/.tmux.conf && \ 
+      cp tmux/.tmux.conf.local /home/plural/.tmux.conf.local && \
       cat tmux/.zshrc.local >> /home/plural/.zshrc
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-
+ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
 CMD eval $(ssh-agent -s); plural serve

@@ -14,8 +14,13 @@ type Aws struct {
 	SecretAccessKey string `json:"secret_access_key"`
 }
 
+type Gcp struct {
+	ApplicationCredentials string `json:"application_credentials"`
+}
+
 type Credentials struct {
 	Aws *Aws `json:"aws"`
+	Gcp *Gcp `json:"gcp"`
 }
 
 type User struct {
