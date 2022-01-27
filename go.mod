@@ -13,7 +13,6 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
@@ -23,13 +22,12 @@ require (
 	github.com/fatih/color v1.10.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
-	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
-	github.com/klauspost/pgzip v1.2.4 // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/michaeljguarino/graphql v0.2.5
 	github.com/mitchellh/go-homedir v1.1.0
@@ -43,7 +41,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.7.6
 	github.com/thoas/go-funk v0.9.1
-	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/mod v0.4.2
@@ -56,5 +53,5 @@ require (
 	k8s.io/client-go v0.19.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
 	sigs.k8s.io/application v0.8.3
-	sigs.k8s.io/yaml v1.2.0 // indirect
+	sigs.k8s.io/yaml v1.2.0
 )

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"github.com/google/shlex"
 )
 
 type Pluralfile struct {
@@ -67,7 +68,11 @@ func Parse(f string) (*Pluralfile, error) {
 			continue
 		}
 
-		splitline := strings.Split(line, " ")
+
+		splitline, err := shlex.Split(line)
+		if err != nil {
+			return plrl, err
+		}
 
 		switch strings.ToLower(splitline[0]) {
 		case "repo":
