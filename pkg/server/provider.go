@@ -28,6 +28,10 @@ func setupGcp(setup *SetupRequest) error {
 		return err
 	}
 
+	if err := execCmd("gcloud", "auth", "activate-service-account", "--key-file", f, "--project", setup.Workspace.Project); err != nil {
+		return err
+	}
+
 	return nil
 }
 
