@@ -22,9 +22,7 @@ RUN curl -L ${BASE_URL}/${TAR_FILE} | tar xvz && \
     chmod +x /usr/local/bin/helm && \
     chmod +x /usr/local/bin/terraform && \
     chmod +x /usr/local/bin/kubectl && \ 
-    kubectl --help && terraform version && helm version && \  
-    helm plugin install https://github.com/pluralsh/helm-push && \
-    helm plugin install https://github.com/databus23/helm-diff
+    kubectl --help && terraform version && helm version
 
 # install azure cli
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash -s -- -y && \
@@ -69,7 +67,9 @@ COPY welcome.txt /home/plural/welcome.txt
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \ 
       cp tmux/.tmux.conf /home/plural/.tmux.conf && \ 
       cp tmux/.tmux.conf.local /home/plural/.tmux.conf.local && \
-      cat tmux/.zshrc.local >> /home/plural/.zshrc
+      cat tmux/.zshrc.local >> /home/plural/.zshrc && \
+      helm plugin install https://github.com/pluralsh/helm-push && \
+      helm plugin install https://github.com/databus23/helm-diff
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
