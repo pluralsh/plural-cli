@@ -148,7 +148,8 @@ func Parse(f string) (*Pluralfile, error) {
 			}
 			plrl.Components = append(plrl.Components, crds...)
 		case "run":
-			cmd, args := splitline[1],  splitline[2:]
+			simpleSplit := strings.Split(line, " ")
+			cmd, args := simpleSplit[1],  simpleSplit[2:]
 			plrl.Components = append(plrl.Components, &Command{Command: cmd, Args: args})
 		case "tag":
 			tags, err := expandGlob(splitline[1], func(tag string) Component {
