@@ -15,11 +15,14 @@ import (
 var prefix = []byte("CHARTMART-ENCRYPTED")
 
 const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
+/**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
 /**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
 context.yaml filter=plural-crypt diff=plural-crypt
 workspace.yaml filter=plural-crypt diff=plural-crypt
+context.yaml* filter=plural-crypt diff=plural-crypt
+workspace.yaml* filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
 
@@ -27,6 +30,10 @@ const gitignore = `/**/.terraform
 /**/.terraform*
 /**/terraform.tfstate*
 /bin
+*~
+.idea
+*.swp
+*.swo
 `
 
 func cryptoCommands() []cli.Command {
