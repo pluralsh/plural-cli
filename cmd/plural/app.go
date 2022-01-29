@@ -29,7 +29,7 @@ func handleWatch(c *cli.Context) error {
 
 	tm.Clear()
 	tm.MoveCursor(1, 1)
-	application.Print(app)
+	application.Print(kube.Kube, app)
 	application.Flush()
 
 	watcher, err := application.WatchNamespace(ctx, appClient)
@@ -46,7 +46,7 @@ func handleWatch(c *cli.Context) error {
 			return fmt.Errorf("Failed to parse watch event")
 		}
 		tm.MoveCursor(1, 1)
-		application.Print(app)
+		application.Print(kube.Kube, app)
 		application.Flush()
 	}
 }

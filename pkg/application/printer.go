@@ -5,10 +5,11 @@ import (
 	"sigs.k8s.io/application/api/v1beta1"
 	"strings"
 	tm "github.com/buger/goterm"
+	"k8s.io/client-go/kubernetes"
 	// corev1 "k8s.io/api/core/v1"
 )
 
-func Print(app *v1beta1.Application) (err error) {
+func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
 	tm.Printf("Application: %s (%s)  ", app.Name, app.Spec.Descriptor.Version)
 	cond := findReadiness(app)
 	if cond != nil {
@@ -33,6 +34,7 @@ func Print(app *v1beta1.Application) (err error) {
 			}
 			kind := strings.ToLower(comp.Kind)
 			tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status)
+			additionalDetails(client, kind, comp.Name, app.Namespace)
 			tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate\n", kind, comp.Name, app.Namespace)
 			first = false
 		}
