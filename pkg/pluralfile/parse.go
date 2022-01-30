@@ -36,7 +36,7 @@ type Component interface {
 }
 
 func (plrl *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
-	defer plrl.Flush(f, lock)
+	defer plrl.Flush(lock)
 	for _, component := range plrl.Components {
 		key := component.Key()
 		t := component.Type()

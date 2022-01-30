@@ -52,7 +52,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	return lock, nil
 }
 
-func (plrl *Pluralfile) Flush(path string, lock *Lockfile) error {
+func (plrl *Pluralfile) Flush(lock *Lockfile) error {
 	client := api.NewClient()
 	io, err := yaml.Marshal(lock)
 	if err != nil {
