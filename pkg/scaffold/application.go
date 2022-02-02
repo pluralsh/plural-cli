@@ -1,8 +1,10 @@
 package scaffold
 
 import (
-	"path/filepath"
 	"io/ioutil"
+	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils"
 
 	"gopkg.in/yaml.v2"
@@ -35,4 +37,9 @@ func (apps *Applications) HelmValues(app string) (map[string]interface{}, error)
 
 	err = yaml.Unmarshal(content, &res)
 	return res, err
-} 
+}
+
+func (apps *Applications) TerraformValues(app string) (map[string]interface{}, error) {
+	out, err := output.Read(filepath.Join(apps.Root, app, "output.yaml"))
+	return out.Terraform, err
+}

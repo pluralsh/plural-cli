@@ -1,13 +1,14 @@
 package output
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
+
 	"github.com/pluralsh/plural/pkg/manifest"
+	"gopkg.in/yaml.v2"
 )
 
 type Output struct {
-	Terraform map[string]string
+	Terraform map[string]interface{}
 }
 
 type VersionedOutput struct {
@@ -24,9 +25,9 @@ func New() *Output {
 func (out *Output) Save(app, path string) error {
 	versioned := &VersionedOutput{
 		ApiVersion: "plural.sh/v1alpha1",
-		Kind: "Output",
-		Metadata: &manifest.Metadata{Name: app},
-		Spec: out,
+		Kind:       "Output",
+		Metadata:   &manifest.Metadata{Name: app},
+		Spec:       out,
 	}
 
 	io, err := yaml.Marshal(&versioned)
