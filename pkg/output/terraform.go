@@ -6,11 +6,11 @@ import (
 )
 
 type TerraformOutputItem struct {
-	Value string
-	Type  string
+	Value interface{}
+	Type  interface{}
 }
 
-func TerraformOutput(path string) (out map[string]string, err error) {
+func TerraformOutput(path string) (out map[string]interface{}, err error) {
 	cmd := exec.Command("terraform", "output", "-json")
 	cmd.Dir = path
 	res, err := cmd.Output()
@@ -24,7 +24,7 @@ func TerraformOutput(path string) (out map[string]string, err error) {
 		return
 	}
 
-	out = make(map[string]string)
+	out = make(map[string]interface{})
 	for key, val := range outType {
 		out[key] = val.Value
 	}
