@@ -16,6 +16,8 @@ var prefix = []byte("CHARTMART-ENCRYPTED")
 
 const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
 /**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
+/**/terraform/**/main.tf filter=plural-crypt diff=plural-crypt
+/**/terraform/**/main.tf* filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
 /**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
