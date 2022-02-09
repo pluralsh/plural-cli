@@ -284,6 +284,11 @@ type ApplyLock struct {
 	Lock string
 }
 
+type ScaffoldFile struct {
+	Path string
+	Content string
+}
+
 var RepositoryFragment = fmt.Sprintf(`
 	fragment RepositoryFragment on Repository {
 		id

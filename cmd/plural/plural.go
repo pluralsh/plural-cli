@@ -77,6 +77,12 @@ func main() {
 			Action:    handleDiff,
 		},
 		{
+			Name:      "create",
+			Usage:     "scaffolds the resources needed to create a new plural repository",
+			Action:    handleScaffold,
+			Category:  "WKSPACE",
+		},
+		{
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",

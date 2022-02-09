@@ -3,11 +3,13 @@ package api
 import (
 	"fmt"
 	"os"
+	"strings"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 	"github.com/michaeljguarino/graphql"
 	"github.com/pluralsh/plural/pkg/utils"
+	_ "github.com/AlecAivazis/survey/v2"
 )
 
 type ResourceDefinitionInput struct {
@@ -52,6 +54,14 @@ type RepositoryInput struct {
 
 type LockAttributes struct {
 	Lock string
+}
+
+type ScaffoldInputs struct {
+	Application string `survey:"application"`
+	Publisher   string `survey:"publisher"`
+	Category    string `survey:"category"`
+	Ingress     bool   `survey:"ingress"`
+	Postgres    bool   `survey:"postgres"`
 }
 
 const updateRepository = `
@@ -111,6 +121,14 @@ var releaseLock = fmt.Sprintf(`
 	%s
 `, ApplyLockFragment)
 
+const scaffoldsQuery = `
+	query Scaffolds($app: String!, $pub: String!, $cat: Category!, $ing: Boolean, $pg: Boolean) {
+		scaffold(application: $app, publisher: $pub, category: $cat, ingress: $ing, postgres: $pg) {
+			path
+			content
+		}
+	}
+`
 
 func (client *Client) GetRepository(repo string) (repository *Repository, err error) {
 	var resp struct {
@@ -220,6 +238,21 @@ func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
 	req.Var("attrs", LockAttributes{Lock: lock})
 	err := client.Run(req, &resp)
 	return resp.ReleaseLock, err
+}
+
+func (client *Client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
+	var resp struct {
+		Scaffold []*ScaffoldFile
+	}
+
+	req := client.Build(scaffoldsQuery)
+	req.Var("app", in.Application)
+	req.Var("pub", in.Publisher)
+	req.Var("cat", strings.ToUpper(in.Category))
+	req.Var("ing", in.Ingress)
+	req.Var("pg", in.Postgres)
+	err := client.Run(req, &resp)
+	return resp.Scaffold, err
 }
 
 func getIconReader(icon, field string, req *graphql.Request) (bool, error) {
