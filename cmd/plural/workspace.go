@@ -7,18 +7,11 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
 func workspaceCommands() []cli.Command {
 	return []cli.Command{
-		{
-			Name:      "docker-credentials",
-			Usage:     "create a docker credentials secret for this workspace",
-			ArgsUsage: "NAME",
-			Action:    ensureDockerCredentials,
-		},
 		{
 			Name:      "helm-init",
 			Usage:     "pushes a helm chart",
@@ -56,16 +49,6 @@ func workspaceCommands() []cli.Command {
 			Action:    createCrds,
 		},
 	}
-}
-
-func ensureDockerCredentials(c *cli.Context) error {
-	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
-	if err != nil {
-		return err
-	}
-
-	return minimal.EnsurePullCredentials()
 }
 
 func helmInit(c *cli.Context) error {
@@ -127,9 +110,19 @@ func createCrds(c *cli.Context) error {
 	if empty, err := utils.IsEmpty("crds"); err != nil || empty {
 		return err
 	}
+	return filepath.Walk("crds", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	cmd := exec.Command("kubectl", "apply", "-f", "crds")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+		if info.IsDir() {
+			return nil
+		}
+
+		if err := utils.Exec("kubectl", "create", "-f", path); err != nil {
+			return utils.Exec("kubectl", "replace", "-f", path)
+		}
+
+		return nil
+	})
 }

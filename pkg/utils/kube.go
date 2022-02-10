@@ -4,7 +4,15 @@ import (
 	"os"
 	"path/filepath"
 	"context"
+	"bytes"
+	"fmt"
+	"io"
 
+	"sigs.k8s.io/yaml"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	kubeyaml "k8s.io/apimachinery/pkg/util/yaml"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -29,6 +37,7 @@ type Kube struct {
 	Kube  *kubernetes.Clientset
 	Plural *pluralv1alpha1.Clientset
 	Application *application.ApplicationV1Beta1Client
+	Dynamic dynamic.Interface
 }
 
 func InClusterKubernetes() (*Kube, error) {
@@ -55,6 +64,33 @@ func Kubernetes() (*Kube, error) {
 	return buildKubeFromConfig(config)
 }
 
+func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {
+	d := kubeyaml.NewYAMLOrJSONDecoder(bytes.NewReader(content), 4096)
+	var objs []*unstructured.Unstructured
+	for {
+		ext := runtime.RawExtension{}
+		if err := d.Decode(&ext); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)
+		}
+	
+		ext.Raw = bytes.TrimSpace(ext.Raw)
+		if len(ext.Raw) == 0 || bytes.Equal(ext.Raw, []byte("null")) {
+			continue
+		}
+	
+		u := &unstructured.Unstructured{}
+		if err := yaml.Unmarshal(ext.Raw, u); err != nil {
+			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)
+		}
+		objs = append(objs, u)
+	}
+
+	return objs, nil
+}
+
 func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -71,7 +107,12 @@ func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 		return nil, err
 	}
 
-	return &Kube{Kube: clientset, Plural: plural, Application: app}, nil
+	dyn, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn}, nil
 }
 
 func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
