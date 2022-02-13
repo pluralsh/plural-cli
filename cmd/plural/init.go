@@ -53,6 +53,14 @@ func handleLogin(c *cli.Context) error {
 	conf.Endpoint = c.String("endpoint")
 	client := api.FromConfig(conf)
 
+	if config.Exists() {
+		conf := config.Read()
+		if confirm(fmt.Sprintf("It looks like you've already logged in as %s, use this profile?", conf.Email)) {
+			client = api.FromConfig(&conf)
+			return postLogin(&conf, client, c)
+		}
+	}
+
 	device, err := client.DeviceLogin()
 	if err != nil {
 		return err
@@ -76,11 +84,17 @@ func handleLogin(c *cli.Context) error {
 
 	conf.Token = jwt
 	client = api.FromConfig(conf)
-	me, err := client.Me()
+	return postLogin(conf, client, c)
+}
 
-	fmt.Printf("\nlogged in as %s!\n", me.Email)
+func postLogin(conf *config.Config, client *api.Client, c *cli.Context) error {
+	me, err := client.Me()
+	if err != nil {
+		return err
+	}
+
 	conf.Email = me.Email
-	client = api.FromConfig(conf)
+	fmt.Printf("\nlogged in as %s!\n", me.Email)
 
 	saEmail := c.String("service-account")
 	if saEmail != "" {
