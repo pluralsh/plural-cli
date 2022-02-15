@@ -65,7 +65,73 @@
       "custom_data": {
         "image_name": "plural/ubuntu/05b237d"
       }
+    },
+    {
+      "name": "us-west-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644937419,
+      "files": null,
+      "artifact_id": "us-west-2:ami-07d03fa7eab1d3ddb",
+      "packer_run_uuid": "5946b3e8-defb-7f7f-d7b7-16b6bd13d454",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
+    },
+    {
+      "name": "us-east-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644937439,
+      "files": null,
+      "artifact_id": "us-east-2:ami-0ec50bd8913bf9acd",
+      "packer_run_uuid": "5946b3e8-defb-7f7f-d7b7-16b6bd13d454",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
+    },
+    {
+      "name": "ap-southeast-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644937668,
+      "files": null,
+      "artifact_id": "ap-southeast-2:ami-097457d7640fdc887",
+      "packer_run_uuid": "5946b3e8-defb-7f7f-d7b7-16b6bd13d454",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
+    },
+    {
+      "name": "us-west-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644938184,
+      "files": null,
+      "artifact_id": "us-west-2:ami-0023f00ba65b26d30",
+      "packer_run_uuid": "3e908b23-696a-d51d-b6ba-36cbb70c2dc2",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
+    },
+    {
+      "name": "us-east-1",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644938360,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0ce1c9efa9eb40aed",
+      "packer_run_uuid": "3e908b23-696a-d51d-b6ba-36cbb70c2dc2",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
+    },
+    {
+      "name": "ap-southeast-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1644938575,
+      "files": null,
+      "artifact_id": "ap-southeast-2:ami-06bb54414d4b1074b",
+      "packer_run_uuid": "3e908b23-696a-d51d-b6ba-36cbb70c2dc2",
+      "custom_data": {
+        "image_name": "plural/ubuntu/4c78fbc"
+      }
     }
   ],
-  "last_run_uuid": "65a29b46-7940-e966-37cc-b4185e897e7a"
+  "last_run_uuid": "3e908b23-696a-d51d-b6ba-36cbb70c2dc2"
 }
