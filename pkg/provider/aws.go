@@ -54,6 +54,11 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	if err != nil {
 		return nil, utils.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 	}
+
+	if len(account) <= 0 {
+		return nil, utils.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+	}
+
 	provider.project = account
 	provider.storageClient = client
 
