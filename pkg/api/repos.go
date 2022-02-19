@@ -80,24 +80,27 @@ const upsertRepository = `
 
 const createIntegration = `
 	mutation CreateIntegration($name: String!, $attrs: IntegrationAttributes!) {
-		createIntegration(repositoryName: $name, attributes: $attrs) {
-			id
-		}
+		createIntegration(repositoryName: $name, attributes: $attrs) { id }
 	}
 `
 
 const updateRepo = `
 	mutation UpdateRepo($name: String!, $attrs: RepositoryAttributes!) {
-		updateRepository(repositoryName: $name, attributes: $attrs) {
-			id
-		}
+		updateRepository(repositoryName: $name, attributes: $attrs) { id }
 	}
 `
 
 var getRepo = fmt.Sprintf(`
 	query Repo($name: String) {
-		repository(name: $name) {
-			...RepositoryFragment
+		repository(name: $name) { ...RepositoryFragment }
+	}
+	%s
+`, RepositoryFragment)
+
+var listRepos = fmt.Sprintf(`
+	query Repos($q: String) {
+		repositories(q: $q, first: 100) {
+			edges { node { ...RepositoryFragment } }
 		}
 	}
 	%s
@@ -105,18 +108,14 @@ var getRepo = fmt.Sprintf(`
 
 var acquireLock = fmt.Sprintf(`
 	mutation Acquire($name: String!) {
-		acquireLock(repository: $name) {
-			...ApplyLockFragment
-		}
+		acquireLock(repository: $name) { ...ApplyLockFragment }
 	}
 	%s
 `, ApplyLockFragment)
 
 var releaseLock = fmt.Sprintf(`
 	mutation Acquire($name: String!, $attrs: LockAttributes!) {
-		releaseLock(repository: $name, attributes: $attrs) {
-			...ApplyLockFragment
-		}
+		releaseLock(repository: $name, attributes: $attrs) { ...ApplyLockFragment	}
 	}
 	%s
 `, ApplyLockFragment)
@@ -127,6 +126,12 @@ const scaffoldsQuery = `
 			path
 			content
 		}
+	}
+`
+
+const unlockRepository = `
+	mutation Unlock($name: String!) {
+		unlockRepository(name: $name)
 	}
 `
 
@@ -238,6 +243,34 @@ func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
 	req.Var("attrs", LockAttributes{Lock: lock})
 	err := client.Run(req, &resp)
 	return resp.ReleaseLock, err
+}
+
+func (client *Client) UnlockRepository(name string) error {
+	var resp struct {
+		UnlockRepository int
+	}
+
+	req := client.Build(unlockRepository)
+	req.Var("name", name)
+	return client.Run(req, &resp)
+}
+
+func (client *Client) ListRepositories(query string) ([]*Repository, error) {
+	var resp struct {
+		Repositories struct {
+			Edges []*RepositoryEdge
+		}
+	}
+
+	req := client.Build(listRepos)
+	req.Var("q", query)
+	err := client.Run(req, &resp)
+	res := make([]*Repository, len(resp.Repositories.Edges))
+	for i, edge := range resp.Repositories.Edges {
+		res[i] = edge.Node
+	}
+
+	return res, err
 }
 
 func (client *Client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {

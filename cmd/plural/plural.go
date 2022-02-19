@@ -191,6 +191,12 @@ func main() {
 			Category:    "Workspace", 
 		},
 		{
+			Name:        "repos",
+			Usage:       "view and manage plural repositories",
+			Subcommands: reposCommands(),
+			Category:    "API",
+		},
+		{
 			Name:     "test",
 			Usage:    "validate a values templace",
 			Action:   testTemplate,

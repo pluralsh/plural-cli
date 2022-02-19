@@ -124,6 +124,10 @@ type CloudShell struct {
 	GitUrl string `json:"gitUrl"`
 }
 
+type RepositoryEdge struct {
+	Node *Repository
+}
+
 type InstallationEdge struct {
 	Node *Installation
 }
