@@ -9,6 +9,17 @@ import (
 
 type depsFetcher func(string) ([]*manifest.Dependency, error)
 
+func SortAndFilter(installations []*api.Installation) ([]string, error) {
+	names := make([]string, 0)
+	for _, inst := range installations {
+		if isRepo(inst.Repository.Name) {
+			names = append(names, inst.Repository.Name)
+		}
+	}
+
+	return TopSortNames(names)
+}
+
 func TopSort(installations []*api.Installation) ([]*api.Installation, error) {
 	var repoMap = make(map[string]*api.Installation)
 	var depsMap = make(map[string][]*manifest.Dependency)

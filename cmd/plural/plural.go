@@ -47,7 +47,7 @@ func main() {
 		{
 			Name:      "deploy",
 			Aliases:   []string{"d"},
-			Usage:     "deploys the current workspace",
+			Usage:     "Deploys the current workspace.  This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
 			ArgsUsage: "WKSPACE",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -57,6 +57,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "ignore-console",
 					Usage: "don't deploy the plural console",
+				},
+				cli.BoolFlag{
+					Name: "all",
+					Usage: "deploy all repos irregardless of changes",
 				},
 				cli.StringFlag{
 					Name:  "commit",

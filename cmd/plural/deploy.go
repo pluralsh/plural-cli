@@ -34,6 +34,15 @@ func getSortedInstallations(repo string, client *api.Client) ([]*api.Installatio
 	return sorted, nil
 }
 
+func allSortedRepos(client *api.Client) ([]string, error) {
+	insts, err := client.GetInstallations()
+	if err != nil {
+		return nil, err
+	}
+
+	return wkspace.SortAndFilter(insts)
+}
+
 func getSortedNames(filter bool) ([]string, error) {
 	diffed, err := wkspace.DiffedRepos()
 	if err != nil {
@@ -181,6 +190,13 @@ func deploy(c *cli.Context) error {
 	sorted, err := getSortedNames(true)
 	if err != nil {
 		return err
+	}
+
+	if c.Bool("all") {
+		sorted, err = allSortedRepos(client)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))

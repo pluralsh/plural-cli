@@ -200,6 +200,15 @@ func DiffedRepos() ([]string, error) {
 	return result, nil
 }
 
+func isRepo(name string) bool {
+	repoRoot, err := utils.RepoRoot()
+	if err != nil {
+		return false
+	}
+	
+	return utils.Exists(filepath.Join(repoRoot, name, "manifest.yaml"))
+}
+
 func mkdir(path string) error {
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
