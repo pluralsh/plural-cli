@@ -124,8 +124,11 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 
 	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/**"))
 	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
-
-	return template.RenderString(equinixBackendTemplate, ctx)
+	scaffold, err := GetProviderScaffold("EQUINIX")
+	if err != nil {
+		return "", err
+	}
+	return template.RenderString(scaffold, ctx)
 }
 
 func (equinix *EQUINIXProvider) KubeConfig() error {

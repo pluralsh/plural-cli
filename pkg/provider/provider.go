@@ -2,8 +2,10 @@ package provider
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -23,7 +25,15 @@ type Provider interface {
 	Decommision(node *v1.Node) error
 }
 
+type Providers struct {
+	AvailableProviders []string
+	Scaffolds          map[string]string
+}
+
+var providers = Providers{}
+
 func Bootstrap(manifestPath string, force bool) (Provider, error) {
+	GetAvailableProviders()
 	if utils.Exists(manifestPath) {
 		man, err := manifest.Read(manifestPath)
 		if err != nil {
@@ -36,8 +46,35 @@ func Bootstrap(manifestPath string, force bool) (Provider, error) {
 	return Select(force)
 }
 
+func GetProviderScaffold(provider string) (string, error) {
+	if providers.Scaffolds == nil {
+		providers.Scaffolds = make(map[string]string)
+	}
+	_, ok := providers.Scaffolds[provider]
+	if !ok {
+		client := api.NewClient()
+		scaffold, err := client.GetTfProviderScaffold(provider)
+		providers.Scaffolds[provider] = scaffold
+		if err != nil {
+			return "", err
+		}
+	}
+	return providers.Scaffolds[provider], nil
+}
+
+func GetAvailableProviders() error {
+	if providers.AvailableProviders == nil {
+		client := api.NewClient()
+		available, err := client.GetTfProviders()
+		if err != nil {
+			return err
+		}
+		providers.AvailableProviders = available
+	}
+	return nil
+}
+
 func Select(force bool) (Provider, error) {
-	available := []string{GCP, AWS, AZURE, EQUINIX}
 	path := manifest.ProjectManifestPath()
 	if utils.Exists(path) {
 		if project, err := manifest.ReadProject(path); err == nil {
@@ -67,7 +104,7 @@ func Select(force bool) (Provider, error) {
 	provider := ""
 	prompt := &survey.Select{
 		Message: "Select one of the following providers:",
-		Options: available,
+		Options: providers.AvailableProviders,
 	}
 	survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
 	utils.Success("Using provider %s\n", provider)
@@ -75,14 +112,16 @@ func Select(force bool) (Provider, error) {
 }
 
 func FromManifest(man *manifest.Manifest) (Provider, error) {
-	switch man.Provider {
-	case GCP:
+	switch strings.ToUpper(man.Provider) {
+	case "GCP":
 		return gcpFromManifest(man)
-	case AWS:
+	case "GOOGLE": // for backward compatibility
+		return gcpFromManifest(man)
+	case "AWS":
 		return awsFromManifest(man)
-	case AZURE:
+	case "AZURE":
 		return azureFromManifest(man)
-	case EQUINIX:
+	case "EQUINIX":
 		return equinixFromManifest(man)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
@@ -91,14 +130,16 @@ func FromManifest(man *manifest.Manifest) (Provider, error) {
 
 func New(provider string) (Provider, error) {
 	conf := config.Read()
-	switch provider {
-	case GCP:
+	switch strings.ToUpper(provider) {
+	case "GCP":
 		return mkGCP(conf)
-	case AWS:
+	case "GOOGLE": // for backward compatibility
+		return mkGCP(conf)
+	case "AWS":
 		return mkAWS(conf)
-	case AZURE:
+	case "AZURE":
 		return mkAzure(conf)
-	case EQUINIX:
+	case "EQUINIX":
 		return mkEquinix(conf)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)

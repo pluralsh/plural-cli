@@ -1,4 +1,4 @@
-package provider
+package provider // TODO: Deprecate this file
 
 const (
 	GCP     = "google"

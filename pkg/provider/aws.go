@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"k8s.io/api/core/v1"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -15,7 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/AlecAivazis/survey/v2"
+	v1 "k8s.io/api/core/v1"
 )
 
 type AWSProvider struct {
@@ -28,14 +28,14 @@ type AWSProvider struct {
 
 var awsSurvey = []*survey.Question{
 	{
-			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-			Validate: utils.ValidateAlphaNumeric,
+		Name:     "cluster",
+		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
+		Validate: utils.ValidateAlphaNumeric,
 	},
 	{
-			Name: "region",
-			Prompt: &survey.Input{Message: "What region will you deploy to?", Default: "us-east-2"},
-			Validate: survey.Required,
+		Name:     "region",
+		Prompt:   &survey.Input{Message: "What region will you deploy to?", Default: "us-east-2"},
+		Validate: survey.Required,
 	},
 }
 
@@ -69,7 +69,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		return nil, err
 	}
 
-	provider.bucket = projectManifest.Bucket 
+	provider.bucket = projectManifest.Bucket
 	return provider, nil
 }
 
@@ -106,7 +106,11 @@ func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	if _, ok := ctx["Cluster"]; !ok {
 		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
 	}
-	return template.RenderString(awsBackendTemplate, ctx)
+	scaffold, err := GetProviderScaffold("AWS")
+	if err != nil {
+		return "", err
+	}
+	return template.RenderString(scaffold, ctx)
 }
 
 func (aws *AWSProvider) KubeConfig() error {
