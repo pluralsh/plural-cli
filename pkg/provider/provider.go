@@ -66,6 +66,12 @@ func GetAvailableProviders() error {
 	if providers.AvailableProviders == nil {
 		client := api.NewClient()
 		available, err := client.GetTfProviders()
+		for i := range available {
+			if available[i] == "GCP" {
+				available[i] = "google"
+			}
+			available[i] = strings.ToLower(available[i])
+		}
 		if err != nil {
 			return err
 		}
@@ -112,16 +118,14 @@ func Select(force bool) (Provider, error) {
 }
 
 func FromManifest(man *manifest.Manifest) (Provider, error) {
-	switch strings.ToUpper(man.Provider) {
-	case "GCP":
+	switch man.Provider {
+	case GCP:
 		return gcpFromManifest(man)
-	case "GOOGLE": // for backward compatibility
-		return gcpFromManifest(man)
-	case "AWS":
+	case AWS:
 		return awsFromManifest(man)
-	case "AZURE":
+	case AZURE:
 		return azureFromManifest(man)
-	case "EQUINIX":
+	case EQUINIX:
 		return equinixFromManifest(man)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
@@ -130,16 +134,14 @@ func FromManifest(man *manifest.Manifest) (Provider, error) {
 
 func New(provider string) (Provider, error) {
 	conf := config.Read()
-	switch strings.ToUpper(provider) {
-	case "GCP":
+	switch provider {
+	case GCP:
 		return mkGCP(conf)
-	case "GOOGLE": // for backward compatibility
-		return mkGCP(conf)
-	case "AWS":
+	case AWS:
 		return mkAWS(conf)
-	case "AZURE":
+	case AZURE:
 		return mkAzure(conf)
-	case "EQUINIX":
+	case EQUINIX:
 		return mkEquinix(conf)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)
