@@ -33,7 +33,7 @@ type Providers struct {
 var providers = Providers{}
 
 func Bootstrap(manifestPath string, force bool) (Provider, error) {
-	GetAvailableProviders()
+	getAvailableProviders()
 	if utils.Exists(manifestPath) {
 		man, err := manifest.Read(manifestPath)
 		if err != nil {
@@ -62,7 +62,7 @@ func GetProviderScaffold(provider string) (string, error) {
 	return providers.Scaffolds[provider], nil
 }
 
-func GetAvailableProviders() error {
+func getAvailableProviders() error {
 	if providers.AvailableProviders == nil {
 		client := api.NewClient()
 		available, err := client.GetTfProviders()
