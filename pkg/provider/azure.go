@@ -1,33 +1,33 @@
 package provider
 
 import (
-	"fmt"
-	"os"
 	"context"
-	"os/exec"
-	"net/url"
 	"encoding/json"
+	"fmt"
+	"net/url"
+	"os"
+	"os/exec"
 
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/azure/azure-sdk-for-go/services/compute/mgmt/2021-07-01/compute"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/config"
-	"k8s.io/api/core/v1"
-	"github.com/AlecAivazis/survey/v2"
+	v1 "k8s.io/api/core/v1"
 )
 
 type AzureProvider struct {
-	cluster        string
-	resourceGroup  string
-	bucket         string
-	region         string
-	ctx 			     map[string]interface{}
+	cluster       string
+	resourceGroup string
+	bucket        string
+	region        string
+	ctx           map[string]interface{}
 }
 
 var azureSurvey = []*survey.Question{
@@ -37,18 +37,18 @@ var azureSurvey = []*survey.Question{
 		Validate: utils.ValidateAlphaNumeric,
 	},
 	{
-		Name: "storage",
-		Prompt: &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
+		Name:     "storage",
+		Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
 		Validate: utils.ValidateAlphaNumeric,
 	},
 	{
-		Name: "region",
-		Prompt: &survey.Input{Message: "Enter the region you want to deploy to:", Default: "US East"},
+		Name:     "region",
+		Prompt:   &survey.Input{Message: "Enter the region you want to deploy to:", Default: "US East"},
 		Validate: survey.Required,
 	},
 	{
-		Name: "resource",
-		Prompt: &survey.Input{Message: "Enter the name of the resource group to use as default: "},
+		Name:     "resource",
+		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
 		Validate: utils.ValidateAlphaNumeric,
 	},
 }
@@ -60,7 +60,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Region   string
 		Resource string
 	}
-	err = survey.Ask(azureSurvey, &resp) 
+	err = survey.Ask(azureSurvey, &resp)
 	if err != nil {
 		return
 	}
@@ -77,7 +77,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		resp.Region,
 		map[string]interface{}{
 			"SubscriptionId": subId,
-			"TenantId": tenID,
+			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
 		},
 	}
@@ -121,7 +121,11 @@ func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interfac
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, azure.Cluster())
 	}
 
-	return template.RenderString(azureBackendTemplate, ctx)
+	scaffold, err := GetProviderScaffold("AZURE")
+	if err != nil {
+		return "", err
+	}
+	return template.RenderString(scaffold, ctx)
 }
 
 func (az *AzureProvider) CreateBucket(bucket string) (err error) {
@@ -181,7 +185,6 @@ func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
 }
 
-
 func (az *AzureProvider) Decommision(node *v1.Node) error {
 	ctx := context.Background()
 	vms := compute.NewVirtualMachinesClient(utils.ToString(az.ctx["SubscriptionId"]))
@@ -195,17 +198,17 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 }
 
 func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {
-	if (os.Getenv("ARM_USE_MSI") != "") {
+	if os.Getenv("ARM_USE_MSI") != "" {
 		return auth.NewAuthorizerFromEnvironment()
 	}
 
 	return auth.NewAuthorizerFromCLI()
- }
+}
 
- func (az *AzureProvider) getStorageAccountsClient() storage.AccountsClient {
-	 storageAccountsClient := storage.NewAccountsClient(utils.ToString(az.ctx["SubscriptionId"]))
-	 auth, _ := az.Authorizer()
-	 storageAccountsClient.Authorizer = auth
+func (az *AzureProvider) getStorageAccountsClient() storage.AccountsClient {
+	storageAccountsClient := storage.NewAccountsClient(utils.ToString(az.ctx["SubscriptionId"]))
+	auth, _ := az.Authorizer()
+	storageAccountsClient.Authorizer = auth
 	return storageAccountsClient
 }
 
@@ -227,7 +230,7 @@ func (az *AzureProvider) upsertStorageAccount(account string) (acc storage.Accou
 		az.resourceGroup,
 		account,
 		storage.AccountCreateParameters{
-			Sku: &storage.Sku{Name: storage.StandardLRS},
+			Sku:                               &storage.Sku{Name: storage.StandardLRS},
 			Kind:                              storage.StorageV2,
 			Location:                          to.StringPtr(az.region),
 			AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
@@ -264,7 +267,9 @@ func (az *AzureProvider) upsertStorageContainer(acc storage.Account, name string
 
 	container := service.NewContainerURL(name)
 	_, err = container.GetProperties(ctx, azblob.LeaseAccessConditions{})
-	if err == nil { return err }
+	if err == nil {
+		return err
+	}
 
 	_, err = container.Create(ctx, azblob.Metadata{}, azblob.PublicAccessNone)
 	return err
@@ -280,7 +285,7 @@ func getAzureAccount() (string, string, error) {
 
 	var res struct {
 		TenantId string
-		Id string
+		Id       string
 	}
 
 	json.Unmarshal(out, &res)

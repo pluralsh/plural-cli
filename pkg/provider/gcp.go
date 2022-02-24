@@ -10,15 +10,14 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver/v3"
+	v1 "k8s.io/api/core/v1"
 
 	"cloud.google.com/go/storage"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/AlecAivazis/survey/v2"
-
-	"k8s.io/api/core/v1"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
@@ -35,14 +34,14 @@ type GCPProvider struct {
 
 var gcpSurvey = []*survey.Question{
 	{
-			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
-			Validate: utils.ValidateAlphaNumeric,
+		Name:     "cluster",
+		Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
+		Validate: utils.ValidateAlphaNumeric,
 	},
 	{
-			Name: "project",
-			Prompt: &survey.Input{Message: "Enter the name of its gcp project"},
-			Validate: utils.ValidateAlphaNumeric,
+		Name:     "project",
+		Prompt:   &survey.Input{Message: "Enter the name of its gcp project"},
+		Validate: utils.ValidateAlphaNumeric,
 	},
 }
 
@@ -124,7 +123,11 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
-	return template.RenderString(gcpBackendTemplate, ctx)
+	scaffold, err := GetProviderScaffold("GCP")
+	if err != nil {
+		return "", err
+	}
+	return template.RenderString(scaffold, ctx)
 }
 
 func (gcp *GCPProvider) mkBucket(name string) error {
