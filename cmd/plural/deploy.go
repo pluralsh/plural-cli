@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
@@ -235,13 +236,28 @@ func deploy(c *cli.Context) error {
 		}
 	}
 
-	utils.Highlight("\n==> Commit and push your changes to record your deployment\n")
+	utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
 
-	if commit := c.String("commit"); commit != "" {
+	if commit := commitMsg(c); commit != "" {
 		utils.Highlight("Pushing upstream...\n")
 		return utils.Sync(commit, c.Bool("force"))
 	}
+
 	return nil
+}
+
+func commitMsg(c *cli.Context) string {
+	if commit := c.String("commit"); commit != "" {
+		return commit
+	}
+
+	if !c.Bool("silence") {
+		var commit string
+		survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit)
+		return commit
+	}
+
+	return ""
 }
 
 func handleDiff(c *cli.Context) error {
