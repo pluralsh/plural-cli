@@ -84,6 +84,32 @@ func Sync(msg string, force bool) error {
 	return nil
 }
 
+func RemoteDiff() (bool, error) {
+	branch, err := CurrentBranch()
+	if err != nil {
+		return false, err
+	}
+
+	dir, _ := os.Getwd()
+	res, err := git(dir, "ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", branch))
+	if err != nil {
+		return false, err
+	}
+
+	remote := strings.Fields(res)[0]
+	current, err := CurrentSha(branch)
+	if err != nil {
+		return false, err
+	}
+
+	return remote == current, nil
+}
+
+func CurrentSha(branch string) (string, error) {
+	dir, _ := os.Getwd()
+	return git(dir, "rev-list", "--max-count=1", fmt.Sprintf("origin/%s", branch))
+}
+
 func CurrentBranch() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	res, err := cmd.CombinedOutput()

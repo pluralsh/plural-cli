@@ -92,6 +92,15 @@ func build(c *cli.Context) error {
 		return err
 	}
 
+	changed, err := utils.RemoteDiff()
+	if err != nil {
+		return utils.ErrorWrap(noGit, "Failed to get git information")
+	}
+
+	if !changed {
+		return utils.ErrorWrap(remoteDiff, "Local Changes out of Sync")
+	}
+
 	client := api.NewClient()
 	if c.IsSet("only") {
 		installation, err := client.GetInstallation(c.String("only"))
