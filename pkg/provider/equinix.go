@@ -208,10 +208,6 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 	return ioutil.WriteFile(filepath.Join(usr.HomeDir, ".kube/config"), output, 0644)
 }
 
-func (equinix *EQUINIXProvider) Install() (err error) {
-	return
-}
-
 func (equinix *EQUINIXProvider) Name() string {
 	return EQUINIX
 }

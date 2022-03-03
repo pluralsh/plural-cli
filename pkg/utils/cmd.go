@@ -19,6 +19,14 @@ func Exec(program string, args ...string) error {
 	return cmd.Run()
 }
 
+func Execute(cmd *exec.Cmd) error {
+	res, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Command %s failed with output:\n\n%s", cmd.String(), res)
+	}
+
+	return nil
+}
 
 func Which(command string) (exists bool, path string) {
 	root, _ := ProjectRoot()

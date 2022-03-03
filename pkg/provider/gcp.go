@@ -3,13 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"strings"
 
-	"github.com/mholt/archiver/v3"
 	v1 "k8s.io/api/core/v1"
 
 	"cloud.google.com/go/storage"
@@ -103,7 +99,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
 		"--region", getZone(gcp.region), "--project", gcp.Proj)
-	return cmd.Run()
+	return utils.Execute(cmd)
 }
 
 func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
@@ -151,44 +147,6 @@ func getRegion() string {
 func getZone(region string) string {
 	split := strings.Split(region, "-")
 	return strings.Join(split[:2], "-")
-}
-
-func (gcp *GCPProvider) Install() (err error) {
-	if exists, _ := utils.Which("gcloud"); exists {
-		utils.Success("gcloud already installed!\n")
-		return
-	}
-
-	goos := runtime.GOOS
-	arch := runtime.GOARCH
-	switch runtime.GOARCH {
-	case "amd64":
-		arch = "x86_64"
-		break
-	case "arm64":
-		arch = "arm"
-	}
-
-	url := fmt.Sprintf("https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-335.0.0-%s-%s.tar.gz", goos, arch)
-	root, _ := utils.ProjectRoot()
-	dest := filepath.Join(root, "gcloud-sdk.tar.gz")
-	return utils.Install("gcloud", url, dest, func(dest string) (string, error) {
-		gcloudPath := filepath.Join(filepath.Dir(dest), "gcloud-sdk")
-		err := archiver.Unarchive(dest, gcloudPath)
-		if err != nil {
-			return "", err
-		}
-
-		installCommand := "install.sh"
-		if goos == "windows" {
-			installCommand = "install.bat"
-		}
-
-		cmd := exec.Command(filepath.Join(gcloudPath, installCommand), "--quiet")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return "", cmd.Run()
-	})
 }
 
 func (gcp *GCPProvider) Name() string {

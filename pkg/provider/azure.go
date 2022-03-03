@@ -148,17 +148,7 @@ func (azure *AzureProvider) KubeConfig() error {
 
 	cmd := exec.Command(
 		"az", "aks", "get-credentials", "--overwrite-existing", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
-	return cmd.Run()
-}
-
-func (azure *AzureProvider) Install() (err error) {
-	if exists, _ := utils.Which("az"); exists {
-		utils.Success("azure cli already installed!\n")
-		return
-	}
-
-	fmt.Println("visit https://docs.microsoft.com/en-us/cli/azure/install-azure-cli to install")
-	return
+	return utils.Execute(cmd)
 }
 
 func (az *AzureProvider) Name() string {

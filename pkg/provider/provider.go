@@ -20,7 +20,6 @@ type Provider interface {
 	Bucket() string
 	KubeConfig() error
 	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
-	Install() error
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
 }

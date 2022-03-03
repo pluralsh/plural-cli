@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go/aws"
@@ -125,7 +124,7 @@ func (aws *AWSProvider) KubeConfig() error {
 
 	cmd := exec.Command(
 		"aws", "eks", "update-kubeconfig", "--name", aws.Cluster(), "--region", aws.Region())
-	return cmd.Run()
+	return utils.Execute(cmd)
 }
 
 func (p *AWSProvider) mkBucket(name string) error {
@@ -138,22 +137,6 @@ func (p *AWSProvider) mkBucket(name string) error {
 	}
 
 	return nil
-}
-
-func (aws *AWSProvider) Install() (err error) {
-	if exists, _ := utils.Which("aws"); exists {
-		utils.Success("aws cli already installed!\n")
-		return
-	}
-
-	fmt.Println("AWS requires you to manually pkg install the aws cli")
-	osName := runtime.GOOS
-	if osName == "darwin" {
-		osName = "mac"
-	}
-
-	fmt.Printf("Visit https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-%s.html to install\n", osName)
-	return
 }
 
 func (aws *AWSProvider) Name() string {
