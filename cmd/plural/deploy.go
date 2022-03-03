@@ -97,8 +97,12 @@ func build(c *cli.Context) error {
 		return utils.ErrorWrap(noGit, "Failed to get git information")
 	}
 
-	if !changed {
+	if !changed && !c.Bool("force") {
 		return utils.ErrorWrap(remoteDiff, "Local Changes out of Sync")
+	}
+
+	if err := repoRoot(); err != nil {
+		return err
 	}
 
 	client := api.NewClient()
@@ -188,6 +192,10 @@ func doValidate(client *api.Client, installation *api.Installation) error {
 
 func deploy(c *cli.Context) error {
 	if err := validateOwner(); err != nil {
+		return err
+	}
+
+	if err := repoRoot(); err != nil {
 		return err
 	}
 

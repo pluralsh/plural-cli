@@ -41,6 +41,10 @@ func main() {
 					Name:  "only",
 					Usage: "repository to (re)build",
 				},
+				cli.BoolFlag{
+					Name: "force",
+					Usage: "force workspace to build even if remote is out of sync",
+				},
 			},
 			Action: build,
 		},

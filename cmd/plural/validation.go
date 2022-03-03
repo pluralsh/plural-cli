@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli"
@@ -49,4 +51,22 @@ func confirm(msg string) bool {
 	prompt := &survey.Confirm{Message: msg}
 	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
 	return res
+}
+
+func repoRoot() error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	root, err := utils.RepoRoot()
+	if err != nil {
+		return err
+	}
+
+	if root != dir {
+		return fmt.Errorf("You must run this command at the root of your git repository")
+	}
+
+	return nil
 }

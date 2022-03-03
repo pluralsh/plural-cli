@@ -31,18 +31,11 @@ func ProjectRoot() (root string, found bool) {
 }
 
 func RepoRoot() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	res, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(string(res)), nil
+	return gitRaw("rev-parse", "--show-toplevel")
 }
 
 func ChangedFiles() ([]string, error) {
-	cmd := exec.Command("git", "status", "--porcelain")
-	res, err := cmd.CombinedOutput()
+	res, err := gitRaw("status", "--porcelain")
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +83,7 @@ func RemoteDiff() (bool, error) {
 		return false, err
 	}
 
-	dir, _ := os.Getwd()
-	res, err := git(dir, "ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", branch))
+	res, err := gitRaw("ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", branch))
 	if err != nil {
 		return false, err
 	}
@@ -106,14 +98,11 @@ func RemoteDiff() (bool, error) {
 }
 
 func CurrentSha(branch string) (string, error) {
-	dir, _ := os.Getwd()
-	return git(dir, "rev-list", "--max-count=1", fmt.Sprintf("origin/%s", branch))
+	return gitRaw("rev-list", "--max-count=1", fmt.Sprintf("origin/%s", branch))
 }
 
 func CurrentBranch() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	res, err := cmd.CombinedOutput()
-	return strings.TrimSpace(string(res)), err
+	return gitRaw("rev-parse", "--abbrev-ref", "HEAD")
 }
 
 func RepoName(url string) string {
@@ -123,9 +112,15 @@ func RepoName(url string) string {
 	return strings.TrimSuffix(base, ".git")
 }
 
+func gitRaw(args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	res, err := ExecuteWithOutput(cmd)
+	return strings.TrimSpace(string(res)), err
+}
+
 func git(root string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = root
-	res, err := cmd.CombinedOutput()
+	res, err := ExecuteWithOutput(cmd)
 	return strings.TrimSpace(string(res)), err
 }

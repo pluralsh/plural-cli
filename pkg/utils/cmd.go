@@ -28,6 +28,15 @@ func Execute(cmd *exec.Cmd) error {
 	return nil
 }
 
+func ExecuteWithOutput(cmd *exec.Cmd) (string, error) {
+	res, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(res), fmt.Errorf("Command %s failed with output:\n\n%s", cmd.String(), res)
+	}
+
+	return string(res), nil
+}
+
 func Which(command string) (exists bool, path string) {
 	root, _ := ProjectRoot()
 	os.Setenv("PATH", fmt.Sprintf("%s:%s", filepath.Join(root, "bin"), os.Getenv("PATH")))
