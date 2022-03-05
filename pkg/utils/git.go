@@ -3,6 +3,7 @@ package utils
 import (
 	"os"
 	"fmt"
+	"bufio"
 	"path/filepath"
 	"os/exec"
 	"strings"
@@ -77,6 +78,11 @@ func Sync(msg string, force bool) error {
 	return nil
 }
 
+func IsSha(str string) bool {
+	matches, _ := regexp.MatchString("[a-f0-9]{40}", str)
+	return matches
+}
+
 func RemoteDiff() (bool, error) {
 	branch, err := CurrentBranch()
 	if err != nil {
@@ -88,7 +94,16 @@ func RemoteDiff() (bool, error) {
 		return false, err
 	}
 
-	remote := strings.Fields(res)[0]
+	scanner := bufio.NewScanner(strings.NewReader(res))
+	var remote string
+	for scanner.Scan() {
+		line := scanner.Text()
+		remote = strings.Fields(line)[0]
+		if IsSha(remote) {
+			break
+		}
+	}
+
 	current, err := CurrentSha(branch)
 	if err != nil {
 		return false, err
