@@ -22,6 +22,8 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
@@ -74,7 +76,7 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 
 	projectID, err := getProjectIDFromName(resp.Project, resp.ApiToken)
 	if err != nil {
-		return nil, utils.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
+		return nil, errors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
 	}
 
 	provider = &EQUINIXProvider{
@@ -150,7 +152,7 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 		return err
 	}
 
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -241,7 +243,7 @@ func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
 	_, err := client.Devices.Delete(deviceID, false)
 
 	if err != nil {
-		return utils.ErrorWrap(err, "failed to terminate instance")
+		return errors.ErrorWrap(err, "failed to terminate instance")
 	}
 
 	return nil
@@ -293,7 +295,7 @@ func getProjectIDFromName(projectName, apiToken string) (string, error) {
 
 	projects, _, err := client.Projects.List(nil)
 	if err != nil {
-		return "", utils.ErrorWrap(err, "Error getting project using Metal Client")
+		return "", errors.ErrorWrap(err, "Error getting project using Metal Client")
 	}
 
 	var projectID string
@@ -305,7 +307,7 @@ func getProjectIDFromName(projectName, apiToken string) (string, error) {
 		}
 	}
 	if projectID == "" {
-		return "", utils.ErrorWrap(err, fmt.Sprintf("Project with name %s not found", projectName))
+		return "", errors.ErrorWrap(err, fmt.Sprintf("Project with name %s not found", projectName))
 	}
 
 	return projectID, nil

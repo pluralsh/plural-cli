@@ -12,6 +12,7 @@ import (
 	"filippo.io/age"
 	"gopkg.in/yaml.v2"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/api"
 )
@@ -277,6 +278,6 @@ func getAgePath() string {
 }
 
 func cryptPath() string {
-	root, _ := utils.RepoRoot()
+	root, _ := git.Root()
 	return filepath.Join(root, ".plural-crypt")
 }

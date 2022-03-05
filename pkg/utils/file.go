@@ -5,31 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"net/http"
-	"github.com/schollz/progressbar/v3"
 )
-
-func DownloadFile(url string, path string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	bar := progressbar.DefaultBytes(
-    resp.ContentLength,
-    path,
-	)
-
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
-	return err
-}
 
 func CopyFile(src, dest string) error {
 	bytesRead, err := ioutil.ReadFile(src)

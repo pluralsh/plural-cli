@@ -13,6 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/output"
 )
 
@@ -24,7 +25,7 @@ type MinimalWorkspace struct {
 }
 
 func Minimal(name string) (*MinimalWorkspace, error) {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +151,7 @@ func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
 }
 
 func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return "", err
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -105,7 +106,7 @@ func azureFromManifest(man *manifest.Manifest) (*AzureProvider, error) {
 
 func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := azure.CreateBucket(azure.bucket); err != nil {
-		return "", utils.ErrorWrap(err, "Failed to create terraform state bucket: ")
+		return "", errors.ErrorWrap(err, "Failed to create terraform state bucket: ")
 	}
 
 	ctx["Region"] = azure.Region()
@@ -180,11 +181,11 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 	vms := compute.NewVirtualMachinesClient(utils.ToString(az.ctx["SubscriptionId"]))
 	fut, err := vms.Delete(ctx, az.Project(), node.Name, to.BoolPtr(true))
 	if err != nil {
-		return utils.ErrorWrap(err, "failed to call deletion api")
+		return errors.ErrorWrap(err, "failed to call deletion api")
 	}
 
 	err = fut.WaitForCompletionRef(ctx, vms.Client)
-	return utils.ErrorWrap(err, "vm deletion failed with")
+	return errors.ErrorWrap(err, "vm deletion failed with")
 }
 
 func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {

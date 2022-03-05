@@ -2,6 +2,7 @@ package wkspace
 
 import (
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/executor"
 	"os"
 	"fmt"
@@ -60,7 +61,7 @@ func (w *Workspace) Destroy() error {
 
 func (w *Workspace) Reset() error {
 	repo := w.Installation.Repository
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}

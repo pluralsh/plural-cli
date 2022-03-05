@@ -15,13 +15,13 @@ func proxyCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
 			ArgsUsage: "REPO",
-			Action:    handleProxyList,
+			Action:    requireArgs(handleProxyList, []string{"REPO"}),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
 			ArgsUsage: "REPO NAME",
-			Action:    handleProxyConnect,
+			Action:    requireArgs(handleProxyConnect, []string{"REPO", "NAME"}),
 		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
@@ -37,7 +38,7 @@ const (
 )
 
 func Scaffolds(wk *wkspace.Workspace) (*Build, error) {
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return &Build{}, err
 	}
@@ -154,7 +155,7 @@ func (s *Scaffold) executeType(wk *wkspace.Workspace) error {
 }
 
 func (b *Build) Execute(wk *wkspace.Workspace) error {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return err
 	}
