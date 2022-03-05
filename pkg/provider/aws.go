@@ -14,6 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -51,11 +52,11 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 
 	account, err := GetAwsAccount()
 	if err != nil {
-		return nil, utils.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
+		return nil, errors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 	}
 
 	if len(account) <= 0 {
-		return nil, utils.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+		return nil, errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
 	}
 
 	provider.project = account
@@ -92,7 +93,7 @@ func getClient(region string) (*s3.S3, error) {
 	})
 
 	if err != nil {
-		return nil, utils.ErrorWrap(err, "Failed to initialize aws client: ")
+		return nil, errors.ErrorWrap(err, "Failed to initialize aws client: ")
 	}
 
 	return s3.New(sess), nil
@@ -100,7 +101,7 @@ func getClient(region string) (*s3.S3, error) {
 
 func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", utils.ErrorWrap(err, "Failed to create terraform state bucket: ")
+		return "", errors.ErrorWrap(err, "Failed to create terraform state bucket: ")
 	}
 
 	ctx["Region"] = aws.Region()
@@ -169,7 +170,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	})
 
 	if err != nil {
-		return utils.ErrorWrap(err, "Failed to establish aws session")
+		return errors.ErrorWrap(err, "Failed to establish aws session")
 	}
 
 	svc := ec2.New(sess)
@@ -180,7 +181,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	})
 
 	if err != nil {
-		return utils.ErrorWrap(err, "failed to find node in ec2")
+		return errors.ErrorWrap(err, "failed to find node in ec2")
 	}
 
 	instance := instances.Reservations[0].Instances[0]
@@ -189,7 +190,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 		InstanceIds: []*string{instance.InstanceId},
 	})
 
-	return utils.ErrorWrap(err, "failed to terminate instance")
+	return errors.ErrorWrap(err, "failed to terminate instance")
 }
 
 func GetAwsAccount() (string, error) {

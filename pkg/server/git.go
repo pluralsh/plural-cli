@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -79,5 +80,5 @@ func syncGit() error {
 	}
 
 	os.Chdir(dir)
-	return utils.Sync("pushing local cloud shell changes", true)
+	return git.Sync(dir, "pushing local cloud shell changes", true)
 }

@@ -15,13 +15,13 @@ func logsCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
 			ArgsUsage: "REPO",
-			Action:    handleLogsList,
+			Action:    requireArgs(handleLogsList, []string{"REPO"}),
 		},
 		{
 			Name:      "tail",
 			Usage:     "execs the specific logtail",
 			ArgsUsage: "REPO NAME",
-			Action:    handleLogTail,
+			Action:    requireArgs(handleLogTail, []string{"REPO", "NAME"}),
 		},
 	}
 }

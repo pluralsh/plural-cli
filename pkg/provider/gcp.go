@@ -14,6 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
@@ -104,7 +105,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 
 func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
-		return "", utils.ErrorWrap(err, "Failed to create terraform state bucket")
+		return "", errors.ErrorWrap(err, "Failed to create terraform state bucket")
 	}
 
 	ctx["Project"] = gcp.Project()
@@ -177,7 +178,7 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	ctx := context.Background()
 	c, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		return utils.ErrorWrap(err, "failed to initialize compute client")
+		return errors.ErrorWrap(err, "failed to initialize compute client")
 	}
 	defer c.Close()
 
@@ -187,5 +188,5 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 		Zone:     gcp.Region(),
 	})
 
-	return utils.ErrorWrap(err, "failed to delete instance")
+	return errors.ErrorWrap(err, "failed to delete instance")
 }

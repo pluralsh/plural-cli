@@ -9,6 +9,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/urfave/cli"
 )
 
@@ -209,7 +210,7 @@ func handleSetupKeys(c *cli.Context) error {
 }
 
 func handleUnlock(c *cli.Context) error {
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 )
 
 type Workspace struct {
@@ -105,7 +106,7 @@ func (wk *Workspace) ToMinimal() *MinimalWorkspace {
 
 func (wk *Workspace) Prepare() error {
 	repo := wk.Installation.Repository
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -173,7 +174,7 @@ func (wk *Workspace) buildDiff(repoRoot string) error {
 }
 
 func DiffedRepos() ([]string, error) {
-	files, err := utils.ChangedFiles()
+	files, err := git.Modified()
 	repos := make(map[string]bool)
 	if err != nil {
 		return nil, err
@@ -201,7 +202,7 @@ func DiffedRepos() ([]string, error) {
 }
 
 func isRepo(name string) bool {
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return false
 	}

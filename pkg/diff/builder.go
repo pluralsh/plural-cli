@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -36,7 +37,7 @@ func GetDiff(path, name string) (*Diff, error) {
 }
 
 func (e *Diff) Execute() error {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/output"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 
 	"gopkg.in/yaml.v2"
 )
@@ -19,7 +19,7 @@ func BuildApplications(root string) *Applications {
 }
 
 func NewApplications() (*Applications, error) {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return nil, err
 	}

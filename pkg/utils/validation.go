@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 )
 
 const (
@@ -50,7 +51,7 @@ func ValidateRegex(val, regex, message string) error {
 		return nil
 	}
 
-	return ErrorWrap(fmt.Errorf(message), "Validation Failure")
+	return errors.ErrorWrap(fmt.Errorf(message), "Validation Failure")
 }
 
 func RegexValidator(regex, message string) survey.Validator {

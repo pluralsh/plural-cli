@@ -13,6 +13,8 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
@@ -92,13 +94,13 @@ func build(c *cli.Context) error {
 		return err
 	}
 
-	changed, err := utils.RemoteDiff()
+	changed, err := git.HasUpstreamChanges()
 	if err != nil {
-		return utils.ErrorWrap(noGit, "Failed to get git information")
+		return errors.ErrorWrap(noGit, "Failed to get git information")
 	}
 
 	if !changed && !c.Bool("force") {
-		return utils.ErrorWrap(remoteDiff, "Local Changes out of Sync")
+		return errors.ErrorWrap(remoteDiff, "Local Changes out of Sync")
 	}
 
 	if err := repoRoot(); err != nil {
@@ -200,7 +202,7 @@ func deploy(c *cli.Context) error {
 	}
 
 	client := api.NewClient()
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -257,7 +259,7 @@ func deploy(c *cli.Context) error {
 
 	if commit := commitMsg(c); commit != "" {
 		utils.Highlight("Pushing upstream...\n")
-		return utils.Sync(commit, c.Bool("force"))
+		return git.Sync(repoRoot, commit, c.Bool("force"))
 	}
 
 	return nil
@@ -278,7 +280,7 @@ func commitMsg(c *cli.Context) string {
 }
 
 func handleDiff(c *cli.Context) error {
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -311,7 +313,7 @@ func bounce(c *cli.Context) error {
 	}
 
 	client := api.NewClient()
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -362,7 +364,7 @@ func destroy(c *cli.Context) error {
 
 	client := api.NewClient()
 	repoName := c.Args().Get(0)
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}

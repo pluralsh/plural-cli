@@ -4,6 +4,7 @@ import (
 	"os"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
@@ -56,7 +57,7 @@ func handleShellSync(c *cli.Context) error {
 		return err
 	}
 
-	dir := utils.RepoName(shell.GitUrl)
+	dir := git.RepoName(shell.GitUrl)
 	os.Chdir(dir)
 	if err := cryptoInit(c); err != nil {
 		return err

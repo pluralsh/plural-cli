@@ -94,7 +94,7 @@ func main() {
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    handleWatch,
+			Action:    requireArgs(handleWatch, []string{"REPO"}),
 			Category:  "Debugging",
 		},
 		{

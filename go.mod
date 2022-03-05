@@ -21,6 +21,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.10.0
 	github.com/gin-gonic/gin v1.7.7
+	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-retryablehttp v0.7.0
@@ -28,7 +29,6 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/imdario/mergo v0.3.12
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
-	github.com/mholt/archiver/v3 v3.5.0
 	github.com/michaeljguarino/graphql v0.2.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oleiade/reflections v1.0.1 // indirect

@@ -15,6 +15,8 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"gopkg.in/yaml.v2"
 )
@@ -74,7 +76,7 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []depend
 }
 
 func Notes(w *wkspace.Workspace) error {
-	repoRoot, err := utils.RepoRoot()
+	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
@@ -277,12 +279,12 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	if utils.Exists(filename) {
 		content, err := ioutil.ReadFile(filename)
 		if err != nil {
-			return utils.ErrorWrap(err, "Failed to read existing Chart.yaml")
+			return errors.ErrorWrap(err, "Failed to read existing Chart.yaml")
 		}
 
 		chart := chart{}
 		if err := yaml.Unmarshal(content, &chart); err != nil {
-			return utils.ErrorWrap(err, "Existing Chart.yaml has invalid yaml formatting")
+			return errors.ErrorWrap(err, "Existing Chart.yaml has invalid yaml formatting")
 		}
 
 		version = chart.Version

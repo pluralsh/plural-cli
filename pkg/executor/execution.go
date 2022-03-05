@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/hcl"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -47,7 +48,7 @@ func GetExecution(path, name string) (*Execution, error) {
 }
 
 func (e *Execution) Execute() error {
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return err
 	}

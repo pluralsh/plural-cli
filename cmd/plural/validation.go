@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli"
@@ -59,7 +59,7 @@ func repoRoot() error {
 		return err
 	}
 
-	root, err := utils.RepoRoot()
+	root, err := git.Root()
 	if err != nil {
 		return err
 	}
