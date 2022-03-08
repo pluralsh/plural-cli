@@ -37,6 +37,8 @@ const gitignore = `/**/.terraform
 .idea
 *.swp
 *.swo
+.DS_STORE
+.vscode
 `
 
 func cryptoCommands() []cli.Command {
