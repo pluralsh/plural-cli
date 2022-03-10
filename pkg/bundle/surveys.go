@@ -2,6 +2,7 @@ package bundle
 
 import (
   "fmt"
+  "os"
   "strings"
 	"path/filepath"
   "github.com/AlecAivazis/survey/v2"
@@ -83,17 +84,34 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 
 func fileSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
   return &survey.Input{
-    Message: "select a file:",
+    Message: "select a file (use tab to list files in the directory):",
     Default: def,
     Suggest: func (toComplete string) []string {
 				path, err := homedir.Expand(toComplete)
 				if err != nil {
 					path = toComplete
 				}
-        files, _ := filepath.Glob(path + "*")
+        files, _ := filepath.Glob(cleanPath(path) + "*")
         return files
     },
   }, []survey.AskOpt{ survey.WithValidator(survey.Required) }
+}
+
+func cleanPath(path string) string {
+  if strings.HasSuffix(path, "/") {
+    return path
+  }
+
+  fi, err := os.Stat(path)
+  if err != nil {
+    return path
+  }
+
+  if fi.Mode().IsDir() {
+    return path + "/"
+  }
+
+  return path
 }
 
 func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {

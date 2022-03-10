@@ -2,8 +2,19 @@ package git
 
 import (
 	"fmt"
+	"os"
+	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/pluralsh/plural/pkg/utils/errors"
 )
+
+func Clone(auth transport.AuthMethod, url, path string) (*gogit.Repository, error) {
+	return gogit.PlainClone(path, false, &gogit.CloneOptions{
+		Auth:     auth,
+		URL:      url,
+		Progress: os.Stdout,
+	})
+}
 
 func Sync(root, msg string, force bool) error {
 	if res, err := git(root, "add", "."); err != nil {

@@ -167,10 +167,24 @@ type Recipe struct {
 	Name               string
 	Provider           string
 	Description        string
+	Tests              []*RecipeTest
 	Repository         *Repository
 	RecipeSections     []*RecipeSection
 	OidcSettings       *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
 	RecipeDependencies []*Recipe `yaml:"recipeDependencies",json:"recipeDependencies"`
+}
+
+type RecipeTest struct {
+	Name    string
+	Type    string
+	Message string
+	Args    []*TestArgument
+}
+
+type TestArgument struct {
+	Name string
+	Repo string
+	Key  string
 }
 
 type OIDCSettings struct {
@@ -470,6 +484,12 @@ const RecipeFragment = `
     name
     description
     provider
+		tests {
+			type
+			name
+			message
+			args { name repo key }
+		}
 		repository { id name }
 		oidcSettings {
 			uriFormat

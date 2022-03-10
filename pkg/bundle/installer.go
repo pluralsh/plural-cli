@@ -7,6 +7,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/bundle/tests"
 )
 
 func Install(repo, name string) error {
@@ -62,6 +63,10 @@ func Install(repo, name string) error {
 		return err
 	}
 
+	if err := performTests(context, recipe); err != nil {
+		return err
+	}
+
 	err = client.InstallRecipe(recipe.Id)
 	if err != nil {
 		return err
@@ -79,6 +84,21 @@ func Install(repo, name string) error {
 	for _, r := range recipe.RecipeDependencies {
 		repo := r.Repository.Name
 		if err := configureOidc(repo, client, r, context.Configuration[repo], &confirm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func performTests(ctx *manifest.Context, recipe *api.Recipe) error {
+	if len(recipe.Tests) == 0 {
+		return nil
+	}
+
+	utils.Highlight("Found %d tests to run...\n", len(recipe.Tests))
+	for _, test := range recipe.Tests {
+		if err := tests.Perform(ctx, test); err != nil {
 			return err
 		}
 	}

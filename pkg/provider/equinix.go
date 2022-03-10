@@ -44,7 +44,7 @@ var equinixSurvey = []*survey.Question{
 	{
 		Name:     "cluster",
 		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: utils.ValidateAlphaNumeric,
+		Validate: validCluster,
 	},
 	{
 		Name:     "metro",

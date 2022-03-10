@@ -9,6 +9,7 @@ type RecipeInput struct {
 	Name         string
 	Description  string
 	Provider     string
+	Tests        []RecipeTestInput
 	Sections     []RecipeSectionInput
 	Dependencies []DependencyInput
 	OidcSettings *OIDCSettings `yaml:"oidcSettings,omitempty"`
@@ -17,6 +18,19 @@ type RecipeInput struct {
 type DependencyInput struct {
 	Name string
 	Repo string
+}
+
+type RecipeTestInput struct {
+	Name    string
+	Message string
+	Type    string
+	Args    []*TestArgInput
+}
+
+type TestArgInput struct {
+	Name string
+	Repo string
+	Key  string
 }
 
 type RecipeSectionInput struct {
