@@ -23,7 +23,7 @@ func testGit(ctx *manifest.Context, test *api.RecipeTest) error {
 	}
 	
 	defer os.RemoveAll(dir)
-	fmt.Println("~~ Attempting to clone repo in a temporary directory...")
+	fmt.Println("~~> Attempting to clone repo in a temporary directory...")
 	_, err = git.Clone(auth, url, dir)
 	return err
 }
