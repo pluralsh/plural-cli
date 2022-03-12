@@ -9,7 +9,7 @@ type RecipeInput struct {
 	Name         string
 	Description  string
 	Provider     string
-	Tests        []RecipeTestInput
+	Tests        []RecipeTestInput `yaml:"tests",json:"tests,omitempty"`
 	Sections     []RecipeSectionInput
 	Dependencies []DependencyInput
 	OidcSettings *OIDCSettings `yaml:"oidcSettings,omitempty"`
@@ -112,6 +112,10 @@ mutation Install($id: ID!, $ctx: Map!) {
 func (client *Client) CreateRecipe(repoName string, attrs *RecipeInput) (string, error) {
 	var resp struct {
 		Id string
+	}
+
+	if len(attrs.Tests) == 0 {
+		attrs.Tests = make([]RecipeTestInput, 0)
 	}
 
 	req := client.Build(createRecipe)
