@@ -13,15 +13,8 @@ import (
 func workspaceCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:      "helm-init",
-			Usage:     "pushes a helm chart",
-			ArgsUsage: "NAME",
-			Action:    helmInit,
-		},
-		{
 			Name:      "kube-init",
 			Usage:     "generates kubernetes credentials for this subworkspace",
-			ArgsUsage: "NAME",
 			Action:    kubeInit,
 		},
 		{
@@ -45,30 +38,19 @@ func workspaceCommands() []cli.Command {
 		{
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
-			ArgsUsage: "REPO",
+			ArgsUsage: "NAME",
 			Action:    createCrds,
 		},
 	}
 }
 
-func helmInit(c *cli.Context) error {
-	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
-	if err != nil {
-		return err
-	}
-
-	return minimal.HelmInit(false)
-}
-
 func kubeInit(c *cli.Context) error {
-	root, found := utils.ProjectRoot()
+	_, found := utils.ProjectRoot()
 	if !found {
 		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
 	}
 
-	manifestPath := filepath.Join(root, "manifest.yaml")
-	prov, err := provider.Bootstrap(manifestPath, true)
+	prov, err := provider.GetProvider()
 	if err != nil {
 		return err
 	}

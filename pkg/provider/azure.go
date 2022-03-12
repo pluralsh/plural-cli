@@ -100,7 +100,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	return
 }
 
-func azureFromManifest(man *manifest.Manifest) (*AzureProvider, error) {
+func azureFromManifest(man *manifest.ProjectManifest) (*AzureProvider, error) {
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context}, nil
 }
 

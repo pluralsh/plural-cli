@@ -35,14 +35,13 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
-	manifestPath := manifestPath(inst.Repository.Name)
-	prov, err := provider.Bootstrap(manifestPath, true)
+	projPath, _ := filepath.Abs("workspace.yaml")
+	project, err := manifest.ReadProject(projPath)
 	if err != nil {
 		return nil, err
 	}
 
-	projPath, _ := filepath.Abs("workspace.yaml")
-	project, err := manifest.ReadProject(projPath)
+	prov, err := provider.FromManifest(project)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +52,7 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 		return nil, err
 	}
 
+	manifestPath := manifestPath(inst.Repository.Name)
 	man, err := manifest.Read(manifestPath)
 	var links *manifest.Links
 	if err == nil {

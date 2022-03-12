@@ -78,7 +78,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 	return provider, nil
 }
 
-func awsFromManifest(man *manifest.Manifest) (*AWSProvider, error) {
+func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	client, err := getClient(man.Region)
 	if err != nil {
 		return nil, err

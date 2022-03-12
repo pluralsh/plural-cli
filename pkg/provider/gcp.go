@@ -78,7 +78,7 @@ func storageClient() (*storage.Client, context.Context, error) {
 	return client, ctx, err
 }
 
-func gcpFromManifest(man *manifest.Manifest) (*GCPProvider, error) {
+func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	client, ctx, err := storageClient()
 	if err != nil {
 		return nil, err

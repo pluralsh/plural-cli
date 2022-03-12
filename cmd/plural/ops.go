@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"fmt"
-	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -77,11 +76,10 @@ func handleListNodes(cli *cli.Context) error {
 }
 
 func getProvider() (provider.Provider, error) {
-	root, found := utils.ProjectRoot()
+	_, found := utils.ProjectRoot()
 	if !found {
 		return nil, fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
 	}
 
-	manifestPath := filepath.Join(root, "manifest.yaml")
-	return provider.Bootstrap(manifestPath, true)
+	return provider.GetProvider()
 }

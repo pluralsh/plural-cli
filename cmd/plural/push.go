@@ -140,9 +140,7 @@ func handleHelmUpload(c *cli.Context) error {
 
 	utils.Highlight("linting helm: ")
 	cmd, output := executor.SuppressedCommand("helm", "lint", pth, "-f", f.Name())
-
-	err = executor.RunCommand(cmd, output)
-	if err != nil {
+	if err := executor.RunCommand(cmd, output); err != nil {
 		return err
 	}
 

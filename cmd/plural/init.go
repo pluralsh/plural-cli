@@ -38,8 +38,7 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
-	manifestPath, _ := filepath.Abs("manifest.yaml")
-	if _, err := provider.Bootstrap(manifestPath, false); err != nil {
+	if _, err := provider.GetProvider(); err != nil {
 		return err
 	}
 

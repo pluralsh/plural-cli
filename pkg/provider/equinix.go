@@ -106,7 +106,7 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 	return provider, nil
 }
 
-func equinixFromManifest(man *manifest.Manifest) (*EQUINIXProvider, error) {
+func equinixFromManifest(man *manifest.ProjectManifest) (*EQUINIXProvider, error) {
 	return &EQUINIXProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context}, nil
 }
 

@@ -108,7 +108,7 @@ func cleanPath(path string) string {
   }
 
   if fi.Mode().IsDir() {
-    return path + "/"
+    return path + string(filepath.Separator)
   }
 
   return path
