@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sort"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/template"
@@ -180,6 +181,9 @@ func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
 		return err
 	}
 
+	sort.SliceStable(wk.Terraform, func (i, j int) bool {
+		return wk.Terraform[i].Terraform.Name < wk.Terraform[j].Terraform.Name 
+	})
 	for _, tfInst := range wk.Terraform {
 		tfName := tfInst.Terraform.Name
 		for name, value := range tfInst.Version.Dependencies.Outputs {
