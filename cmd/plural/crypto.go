@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -67,6 +68,18 @@ func cryptoCommands() []cli.Command {
 			Name:   "import",
 			Usage:  "imports an aes key for plural to use",
 			Action: importKey,
+		},
+		{
+			Name:   "random",
+			Usage:  "generates a random string",
+			Action: randString,
+			Flags:  []cli.Flag{
+				cli.IntFlag{
+					Name: "len",
+					Usage: "the length of the string to generate",
+					Value: 32,
+				},
+			},
 		},
 		{
 			Name:   "export",
@@ -249,4 +262,14 @@ func importKey(c *cli.Context) error {
 		return err
 	}
 	return key.Flush()
+}
+
+func randString(c *cli.Context) error {
+	str, err := crypto.RandStr(c.Int("len"))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(str)
+	return nil
 }

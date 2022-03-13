@@ -68,18 +68,28 @@ func Read(path string) (*AESKey, error) {
 
 func Materialize() (*AESKey, error) {
 	p := getKeyPath()
+	// if key file already exists, always try to use it
 	if utils.Exists(p) {
 		return Read(p)
 	}
 
-	key := make([]byte, 32)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
+	key, err := RandStr(32)
+	if err != nil {
 		return nil, err
 	}
 
-	aeskey := &AESKey{base64.StdEncoding.EncodeToString(key)}
+	aeskey := &AESKey{key}
 	return aeskey, aeskey.Flush()
 }
+
+func RandStr(len int) (string, error) {
+	str := make([]byte, len)
+	if _, err := io.ReadFull(rand.Reader, str); err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(str), nil
+}  
 
 func getKeyPath() string {
 	folder, _ := os.UserHomeDir()
