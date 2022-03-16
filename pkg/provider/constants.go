@@ -71,15 +71,9 @@ const gcpBackendTemplate = `terraform {
   }
 }
 
-locals {
-  gcp_location  = {{ .Values.Location | quote }}
-  gcp_location_parts = split("-", local.gcp_location)
-  gcp_region         = "${local.gcp_location_parts[0]}-${local.gcp_location_parts[1]}"
-}
-
 provider "google" {
   project = {{ .Values.Project | quote }}
-  region  = local.gcp_region
+  region  = {{ .Values.Region | quote }}
 }
 
 data "google_client_config" "current" {}
@@ -93,7 +87,7 @@ provider "kubernetes" {
 {{ else }}
 data "google_container_cluster" "cluster" {
   name = {{ .Values.Cluster }}
-  location = local.gcp_region
+  location = {{ .Values.Region | quote }}
 }
 
 provider "kubernetes" {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -24,7 +23,7 @@ type GCPProvider struct {
 	Clust         string `survey:"cluster"`
 	Proj          string `survey:"project"`
 	bucket        string
-	region        string
+	Reg           string `survey:"region"`
 	storageClient *storage.Client
 	ctx           context.Context
 }
@@ -40,6 +39,11 @@ var gcpSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of its gcp project"},
 		Validate: utils.ValidateAlphaNumeric,
 	},
+	{
+		Name:     "region",
+		Prompt:   &survey.Input{Message: "What region will you deploy to?", Default: "us-east1"},
+		Validate: survey.Required,
+	},
 }
 
 func mkGCP(conf config.Config) (*GCPProvider, error) {
@@ -52,7 +56,7 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	provider.region = getRegion()
+
 	provider.storageClient = client
 	provider.ctx = ctx
 
@@ -99,7 +103,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
-		"--region", getZone(gcp.region), "--project", gcp.Proj)
+		"--region", gcp.Region(), "--project", gcp.Proj)
 	return utils.Execute(cmd)
 }
 
@@ -109,7 +113,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	}
 
 	ctx["Project"] = gcp.Project()
-	ctx["Location"] = gcp.Region()
+	ctx["Region"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
 	ctx["Prefix"] = prefix
 	ctx["ClusterCreated"] = false
@@ -135,21 +139,6 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 	return nil
 }
 
-func getRegion() string {
-	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
-	res, err := cmd.CombinedOutput()
-	if err != nil {
-		return "us-east1-b"
-	}
-
-	return strings.Split(string(res), "\n")[1]
-}
-
-func getZone(region string) string {
-	split := strings.Split(region, "-")
-	return strings.Join(split[:2], "-")
-}
-
 func (gcp *GCPProvider) Name() string {
 	return GCP
 }
@@ -167,7 +156,7 @@ func (gcp *GCPProvider) Bucket() string {
 }
 
 func (gcp *GCPProvider) Region() string {
-	return gcp.region
+	return gcp.Reg
 }
 
 func (gcp *GCPProvider) Context() map[string]interface{} {
