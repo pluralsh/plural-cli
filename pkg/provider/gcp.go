@@ -135,7 +135,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 
 	ctx["Project"] = gcp.Project()
 	// Location is here for backwards compatibility
-	ctx["Location"] = gcp.Region()
+	ctx["Location"] = getLocation()
 	ctx["Region"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
 	ctx["Prefix"] = prefix
@@ -162,6 +162,16 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 		})
 	}
 	return nil
+}
+
+func getLocation() string {
+	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
+	res, err := cmd.CombinedOutput()
+	if err != nil {
+		return "us-east1-b"
+	}
+
+	return strings.Split(string(res), "\n")[0]
 }
 
 func (gcp *GCPProvider) Name() string {
