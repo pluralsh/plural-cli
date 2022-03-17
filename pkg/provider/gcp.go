@@ -114,6 +114,17 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		return nil, err
 	}
 
+	// Needed to update legacy deployments
+	if man.Region == "" {
+		man.Region = "us-east1"
+		man.Write(manifest.ProjectManifestPath())
+	}
+
+	if _, ok := man.Context["BucketLocation"]; !ok {
+		man.Context["BucketLocation"] = "US"
+		man.Write(manifest.ProjectManifestPath())
+	}
+
 	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context}, nil
 }
 
