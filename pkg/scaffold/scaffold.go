@@ -122,7 +122,7 @@ func (b *Build) Flush(root string) error {
 	return ioutil.WriteFile(path, io, 0644)
 }
 
-func (s *Scaffold) Execute(wk *wkspace.Workspace) error {
+func (s *Scaffold) Execute(wk *wkspace.Workspace, force bool) error {
 	os.Setenv("HELM_REPO_ACCESS_TOKEN", wk.Config.Token)
 	err := s.executeType(wk)
 	if err != nil {
@@ -131,6 +131,10 @@ func (s *Scaffold) Execute(wk *wkspace.Workspace) error {
 
 	ignore := []string{}
 	for _, preflight := range s.Preflight {
+		if force {
+			preflight.Sha = ""
+		}
+
 		sha, err := preflight.Execute(s.Root, ignore)
 		if err != nil {
 			return err
@@ -154,7 +158,7 @@ func (s *Scaffold) executeType(wk *wkspace.Workspace) error {
 	}
 }
 
-func (b *Build) Execute(wk *wkspace.Workspace) error {
+func (b *Build) Execute(wk *wkspace.Workspace, force bool) error {
 	root, err := git.Root()
 	if err != nil {
 		return err
@@ -167,7 +171,7 @@ func (b *Build) Execute(wk *wkspace.Workspace) error {
 			return err
 		}
 		s.Root = path
-		if err := s.Execute(wk); err != nil {
+		if err := s.Execute(wk, force); err != nil {
 			b.Flush(root)
 			return err
 		}

@@ -99,7 +99,8 @@ func build(c *cli.Context) error {
 		return errors.ErrorWrap(noGit, "Failed to get git information")
 	}
 
-	if !changed && !c.Bool("force") {
+	force := c.Bool("force")
+	if !changed && !force {
 		return errors.ErrorWrap(remoteDiff, "Local Changes out of Sync")
 	}
 
@@ -114,7 +115,7 @@ func build(c *cli.Context) error {
 			return err
 		}
 
-		return doBuild(client, installation)
+		return doBuild(client, installation, force)
 	}
 
 	installations, err := getSortedInstallations("", client)
@@ -123,14 +124,14 @@ func build(c *cli.Context) error {
 	}
 
 	for _, installation := range installations {
-		if err := doBuild(client, installation); err != nil {
+		if err := doBuild(client, installation, force); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doBuild(client *api.Client, installation *api.Installation) error {
+func doBuild(client *api.Client, installation *api.Installation, force bool) error {
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 	workspace, err := wkspace.New(client, installation)
@@ -147,7 +148,7 @@ func doBuild(client *api.Client, installation *api.Installation) error {
 		return err
 	}
 
-	err = build.Execute(workspace)
+	err = build.Execute(workspace, force)
 	if err == nil {
 		utils.Success("Finished building %s\n\n", repoName)
 	}
