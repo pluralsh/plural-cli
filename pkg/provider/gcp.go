@@ -69,6 +69,7 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	provider.storageClient = client
 	provider.ctx = map[string]interface{}{
 		"BucketLocation": getBucketLocation(provider.Region()),
+		"Location":       getLocation(),
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -119,9 +120,14 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		man.Region = "us-east1"
 		man.Write(manifest.ProjectManifestPath())
 	}
-
+	// Needed to update legacy deployments
 	if _, ok := man.Context["BucketLocation"]; !ok {
 		man.Context["BucketLocation"] = "US"
+		man.Write(manifest.ProjectManifestPath())
+	}
+	// Needed to update legacy deployments
+	if _, ok := man.Context["Location"]; !ok {
+		man.Context["Location"] = getLocation()
 		man.Write(manifest.ProjectManifestPath())
 	}
 
@@ -146,7 +152,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 
 	ctx["Project"] = gcp.Project()
 	// Location is here for backwards compatibility
-	ctx["Location"] = getLocation()
+	ctx["Location"] = gcp.Context()["Location"]
 	ctx["Region"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
 	ctx["Prefix"] = prefix
