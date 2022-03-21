@@ -105,7 +105,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 
 func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
-		return "", errors.ErrorWrap(err, "Failed to create terraform state bucket")
+		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket))
 	}
 
 	ctx["Project"] = gcp.Project()

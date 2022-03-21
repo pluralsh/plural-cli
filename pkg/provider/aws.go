@@ -101,7 +101,7 @@ func getClient(region string) (*s3.S3, error) {
 
 func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", errors.ErrorWrap(err, "Failed to create terraform state bucket: ")
+		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
 	}
 
 	ctx["Region"] = aws.Region()
