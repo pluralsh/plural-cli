@@ -44,9 +44,9 @@ func authMethod(args map[string]*ContextValue) (transport.AuthMethod, error) {
 		return nil, fmt.Errorf("requires a ssh private key for authentication")
 	}
 	pk := privateKeyArg.Val.(string)
-	passArg := args["passphrase"]
+	passArg, ok := args["passphrase"]
 	passphrase := ""
-	if passArg.Present {
+	if ok && passArg.Present {
 		passphrase = passArg.Val.(string)
 	}
 
