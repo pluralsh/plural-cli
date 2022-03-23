@@ -24,10 +24,18 @@ type GCPProvider struct {
 	Clust         string `survey:"cluster"`
 	Proj          string `survey:"project"`
 	bucket        string
-	region        string
+	Reg           string `survey:"region"`
 	storageClient *storage.Client
-	ctx           context.Context
+	ctx           map[string]interface{}
 }
+
+type BucketLocation string
+
+const (
+	BucketLocationUS   BucketLocation = "US"
+	BucketLocationEU   BucketLocation = "EU"
+	BucketLocationASIA BucketLocation = "ASIA"
+)
 
 var gcpSurvey = []*survey.Question{
 	{
@@ -40,6 +48,11 @@ var gcpSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of its gcp project"},
 		Validate: utils.ValidateAlphaNumeric,
 	},
+	{
+		Name:     "region",
+		Prompt:   &survey.Input{Message: "What region will you deploy to?", Default: "us-east1"},
+		Validate: survey.Required,
+	},
 }
 
 func mkGCP(conf config.Config) (*GCPProvider, error) {
@@ -48,19 +61,24 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 		return nil, err
 	}
 
-	client, ctx, err := storageClient()
+	client, err := storageClient()
 	if err != nil {
 		return nil, err
 	}
-	provider.region = getRegion()
+
 	provider.storageClient = client
-	provider.ctx = ctx
+	provider.ctx = map[string]interface{}{
+		"BucketLocation": getBucketLocation(provider.Region()),
+		// Location might conflict with the region set by users. However, this is only a temporary solution that should be removed
+		"Location": getLocation(),
+	}
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
 		Project:  provider.Project(),
 		Provider: GCP,
 		Region:   provider.Region(),
+		Context:  provider.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
@@ -72,24 +90,54 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	return provider, nil
 }
 
-func storageClient() (*storage.Client, context.Context, error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	return client, ctx, err
+func getBucketLocation(region string) BucketLocation {
+	if strings.Contains(strings.ToLower(region), "us") ||
+		strings.Contains(strings.ToLower(region), "northamerica") ||
+		strings.Contains(strings.ToLower(region), "southamerica") {
+		return BucketLocationUS
+	} else if strings.Contains(strings.ToLower(region), "europe") {
+		return BucketLocationEU
+	} else if strings.Contains(strings.ToLower(region), "asia") ||
+		strings.Contains(strings.ToLower(region), "australia") {
+		return BucketLocationASIA
+	} else {
+		return BucketLocationUS
+	}
+}
+
+func storageClient() (*storage.Client, error) {
+	client, err := storage.NewClient(context.Background())
+	return client, err
 }
 
 func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
-	client, ctx, err := storageClient()
+	client, err := storageClient()
 	if err != nil {
 		return nil, err
 	}
 
-	region := man.Region
-	if region == "" {
-		region = "us-east1-b"
+	// Needed to update legacy deployments
+	if man.Region == "" {
+		man.Region = "us-east1"
+		man.Write(manifest.ProjectManifestPath())
+	} else if location := strings.Split(man.Region, "-"); len(location) == 3 {
+		man.Context["Location"] = man.Region
+		man.Region = fmt.Sprintf("%s-%s", location[0], location[1])
+		man.Context["BucketLocation"] = getBucketLocation(man.Region)
+		man.Write(manifest.ProjectManifestPath())
+	}
+	// Needed to update legacy deployments
+	if _, ok := man.Context["BucketLocation"]; !ok {
+		man.Context["BucketLocation"] = "US"
+		man.Write(manifest.ProjectManifestPath())
+	}
+	// Needed to update legacy deployments
+	if _, ok := man.Context["Location"]; !ok {
+		man.Context["Location"] = getLocation()
+		man.Write(manifest.ProjectManifestPath())
 	}
 
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, region, client, ctx}, nil
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -99,7 +147,7 @@ func (gcp *GCPProvider) KubeConfig() error {
 
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
-		"--region", getZone(gcp.region), "--project", gcp.Proj)
+		"--region", gcp.Region(), "--project", gcp.Proj)
 	return utils.Execute(cmd)
 }
 
@@ -109,7 +157,9 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	}
 
 	ctx["Project"] = gcp.Project()
-	ctx["Location"] = gcp.Region()
+	// Location is here for backwards compatibility
+	ctx["Location"] = gcp.Context()["Location"]
+	ctx["Region"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
 	ctx["Prefix"] = prefix
 	ctx["ClusterCreated"] = false
@@ -129,25 +179,22 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 
 func (gcp *GCPProvider) mkBucket(name string) error {
 	bkt := gcp.storageClient.Bucket(name)
-	if _, err := bkt.Attrs(gcp.ctx); err != nil {
-		return bkt.Create(gcp.ctx, gcp.Project(), nil)
+	if _, err := bkt.Attrs(context.Background()); err != nil {
+		return bkt.Create(context.Background(), gcp.Project(), &storage.BucketAttrs{
+			Location: fmt.Sprintf("%s", getBucketLocation(gcp.Reg)),
+		})
 	}
 	return nil
 }
 
-func getRegion() string {
+func getLocation() string {
 	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
 	res, err := cmd.CombinedOutput()
 	if err != nil {
 		return "us-east1-b"
 	}
 
-	return strings.Split(string(res), "\n")[1]
-}
-
-func getZone(region string) string {
-	split := strings.Split(region, "-")
-	return strings.Join(split[:2], "-")
+	return strings.Split(string(res), "\n")[0]
 }
 
 func (gcp *GCPProvider) Name() string {
@@ -167,11 +214,11 @@ func (gcp *GCPProvider) Bucket() string {
 }
 
 func (gcp *GCPProvider) Region() string {
-	return gcp.region
+	return gcp.Reg
 }
 
 func (gcp *GCPProvider) Context() map[string]interface{} {
-	return map[string]interface{}{}
+	return gcp.ctx
 }
 
 func (gcp *GCPProvider) Decommision(node *v1.Node) error {
