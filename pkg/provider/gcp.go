@@ -69,7 +69,8 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	provider.storageClient = client
 	provider.ctx = map[string]interface{}{
 		"BucketLocation": getBucketLocation(provider.Region()),
-		"Location":       getLocation(),
+		// Location might conflict with the region set by users. However, this is only a temporary solution that should be removed
+		"Location": getLocation(),
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -118,6 +119,11 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	// Needed to update legacy deployments
 	if man.Region == "" {
 		man.Region = "us-east1"
+		man.Write(manifest.ProjectManifestPath())
+	} else if location := strings.Split(man.Region, "-"); len(location) == 3 {
+		man.Context["Location"] = man.Region
+		man.Region = fmt.Sprintf("%s-%s", location[0], location[1])
+		man.Context["BucketLocation"] = getBucketLocation(man.Region)
 		man.Write(manifest.ProjectManifestPath())
 	}
 	// Needed to update legacy deployments
