@@ -70,7 +70,7 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 	provider.ctx = map[string]interface{}{
 		"BucketLocation": getBucketLocation(provider.Region()),
 		// Location might conflict with the region set by users. However, this is only a temporary solution that should be removed
-		"Location": getLocation(),
+		"Location": provider.Reg,
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -120,7 +120,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	if man.Region == "" {
 		man.Region = "us-east1"
 		man.Write(manifest.ProjectManifestPath())
-	} else if location := strings.Split(man.Region, "-"); len(location) == 3 {
+	} else if location := strings.Split(man.Region, "-"); len(location) >= 3 {
 		man.Context["Location"] = man.Region
 		man.Region = fmt.Sprintf("%s-%s", location[0], location[1])
 		man.Context["BucketLocation"] = getBucketLocation(man.Region)
@@ -133,7 +133,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	}
 	// Needed to update legacy deployments
 	if _, ok := man.Context["Location"]; !ok {
-		man.Context["Location"] = getLocation()
+		man.Context["Location"] = man.Region
 		man.Write(manifest.ProjectManifestPath())
 	}
 
@@ -185,16 +185,6 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 		})
 	}
 	return nil
-}
-
-func getLocation() string {
-	cmd := exec.Command("gcloud", "config", "get-value", "compute/zone")
-	res, err := cmd.CombinedOutput()
-	if err != nil {
-		return "us-east1-b"
-	}
-
-	return strings.Split(string(res), "\n")[0]
 }
 
 func (gcp *GCPProvider) Name() string {
