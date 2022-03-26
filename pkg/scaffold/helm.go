@@ -12,6 +12,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -75,44 +76,52 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []depend
 	return dependencies
 }
 
-func Notes(w *wkspace.Workspace) error {
+func Notes(installation *api.Installation) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
 
-	if w.Installation.Repository.Notes == "" {
+	if installation.Repository != nil && installation.Repository.Notes == "" {
 		return nil
 	}
 
-	repo := w.Installation.Repository.Name
-	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
+	context, err := manifest.ReadContext(manifest.ContextPath())
+	if err != nil {
+		return err
+	}
+
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	repo := installation.Repository.Name
+	ctx, _ := context.Repo(installation.Repository.Name)
 	valuesFile := filepath.Join(repoRoot, repo, "helm", repo, "values.yaml")
 	prevVals, _ := prevValues(valuesFile)
-	conf := config.Read()
-	apps := BuildApplications(repoRoot)
 	vals := map[string]interface{}{
 		"Values":        ctx,
-		"Configuration": w.Context.Configuration,
-		"License":       w.Installation.LicenseKey,
-		"OIDC":          w.Installation.OIDCProvider,
-		"Region":        w.Provider.Region(),
-		"Project":       w.Provider.Project(),
-		"Cluster":       w.Provider.Cluster(),
-		"Config":        conf,
-		"Provider":      w.Provider.Name(),
-		"Context":       w.Provider.Context(),
-		"Applications":  apps,
+		"Configuration": context.Configuration,
+		"License":       installation.LicenseKey,
+		"OIDC":          installation.OIDCProvider,
+		"Region":        prov.Region(),
+		"Project":       prov.Project(),
+		"Cluster":       prov.Cluster(),
+		"Config":        config.Read(),
+		"Provider":      prov.Name(),
+		"Context":       prov.Context(),
+		"Applications":  BuildApplications(repoRoot),
 	}
 
-	if w.Context.SMTP != nil {
-		vals["SMTP"] = w.Context.SMTP.Configuration()
+	if context.SMTP != nil {
+		vals["SMTP"] = context.SMTP.Configuration()
 	}
 
-	if w.Installation.AcmeKeyId != "" {
+	if installation.AcmeKeyId != "" {
 		vals["Acme"] = map[string]string{
-			"KeyId":  w.Installation.AcmeKeyId,
-			"Secret": w.Installation.AcmeSecret,
+			"KeyId":  installation.AcmeKeyId,
+			"Secret": installation.AcmeSecret,
 		}
 	}
 
@@ -120,7 +129,7 @@ func Notes(w *wkspace.Workspace) error {
 		vals[k] = v
 	}
 
-	tmpl, err := template.MakeTemplate(w.Installation.Repository.Notes)
+	tmpl, err := template.MakeTemplate(installation.Repository.Notes)
 	if err != nil {
 		return err
 	}

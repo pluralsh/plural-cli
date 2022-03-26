@@ -242,16 +242,11 @@ func deploy(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		workspace, err := wkspace.New(client, installation)
-		if err != nil {
-			return err
-		}
-
 		if c.Bool("silence") {
 			continue
 		}
 
-		if err := scaffold.Notes(workspace); err != nil {
+		if err := scaffold.Notes(installation); err != nil {
 			return err
 		}
 	}
@@ -403,16 +398,17 @@ func destroy(c *cli.Context) error {
 
 	man, _ := manifest.FetchProject()
 	if err := client.DeleteEabCredential(man.Cluster, man.Provider); err != nil {
-		fmt.Printf("no eab key to delete %s\n", err) 
+		fmt.Printf("no eab key to delete %s\n", err)
 	}
 
 	utils.Success("Finished destroying workspace\n")
+	utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
 	return nil
 }
 
 func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
 	os.Chdir(repoRoot)
-	utils.Error("\nDestroying workspace %s\n", installation.Repository.Name)
+	utils.Error("\nDestroying application %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(client, installation)
 	if err != nil {
 		return err
