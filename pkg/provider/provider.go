@@ -74,6 +74,8 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 		return azureFromManifest(man)
 	case EQUINIX:
 		return equinixFromManifest(man)
+	case KIND:
+		return kindFromManifest(man)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
 	}
@@ -90,6 +92,8 @@ func New(provider string) (Provider, error) {
 		return mkAzure(conf)
 	case EQUINIX:
 		return mkEquinix(conf)
+	case KIND:
+		return mkKind(conf)
 	default:
 		return nil, fmt.Errorf("Invalid provider name: %s", provider)
 	}
