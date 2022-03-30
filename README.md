@@ -35,6 +35,7 @@ Plural does require a few other cli's to be installed, namely:
 * terraform
 * kubectl
 * cloud provider cli for the infrastructure you're deploying to, like `awscli`, `gcloud`, etc
+* [kind](https://kind.sigs.k8s.io/) if using kind to deploy a local cluster for testing
 
 ## Setup
 
