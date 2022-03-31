@@ -5,6 +5,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 	"os"
 	"strings"
@@ -22,6 +23,12 @@ func bundleCommands() []cli.Command {
 			Name:      "install",
 			Usage:     "installs a bundle and writes the configuration to this installation's context",
 			ArgsUsage: "[repo] [name]",
+			Flags:     []cli.Flag{
+				cli.BoolFlag{
+					Name: "refresh",
+					Usage: "re-enter the configuration for this bundle",
+				},
+			},
 			Action:    requireArgs(bundleInstall, []string{"repo", "bundle-name"}),
 		},
 	}
@@ -49,7 +56,9 @@ func bundleList(c *cli.Context) error {
 	return nil
 }
 
-func bundleInstall(c *cli.Context) error {
+func bundleInstall(c *cli.Context) (err error) {
 	args := c.Args()
-	return bundle.Install(args.Get(0), args.Get(1))
+	err = bundle.Install(args.Get(0), args.Get(1), c.Bool("refresh"))
+	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
+	return
 }

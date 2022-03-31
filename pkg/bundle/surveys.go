@@ -79,7 +79,7 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
   }
 
   msg := fmt.Sprintf("Enter a domain, which must be beneath %s ", proj.Network.Subdomain)
-  return &survey.Input{Message: msg}, opts
+  return &survey.Input{Message: msg, Default: def}, opts
 }
 
 func fileSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
@@ -114,23 +114,29 @@ func cleanPath(path string) string {
   return path
 }
 
-func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest, context *manifest.Context, section *api.RecipeSection) (survey.Prompt, []survey.AskOpt) {
   prompt := "Enter a globally unique object store bucket name "
 
   if proj.BucketPrefix != "" {
     prompt = fmt.Sprintf("Enter a globally unique bucket name, will be formatted as %s-%s-<your-input>", proj.BucketPrefix, proj.Cluster)
   }
 
+  repo := section.Repository.Name
   opts := []survey.AskOpt{
     survey.WithValidator(func (val interface{}) error {
 			res, _ := val.(string)
-      if len(res) > 63 || len(res) < 3 {
+      name := bucketName(res, proj)
+      if len(name) > 63 || len(name) < 3 {
         return fmt.Errorf("bucket name must be between 3 and 63 characters long")
       }
 
-			if err := utils.ValidateRegex(res, "[a-z][a-z0-9\\-]+[a-z0-9]", "Name must be a hyphenated alphanumeric string"); err != nil {
+			if err := utils.ValidateRegex(name, "[a-z][a-z0-9\\-]+[a-z0-9]", "Name must be a hyphenated alphanumeric string"); err != nil {
 				return err
 			}
+
+      if err := context.ContainsString(name, "this bucket name has already been taken, please provide a unique name", repo, item.Name); err != nil {
+        return err
+      }
   
 			return nil
 		}),
