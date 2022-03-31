@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -98,6 +99,18 @@ func (c *Context) Write(path string) error {
 	}
 
 	return ioutil.WriteFile(path, io, 0644)
+}
+
+func (c *Context) ContainsString(str, msg, ignoreRepo, ignoreKey string) error {
+	for r, section := range c.Configuration {
+		for k, val := range section {
+			if v, ok := val.(string); ok && v == str && (r != ignoreRepo || k != ignoreKey) {
+				return fmt.Errorf(msg)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (smtp *SMTP) GetServer() string {

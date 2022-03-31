@@ -33,7 +33,7 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	return true
 }
 
-func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
+func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, section *api.RecipeSection) error {
 	if !evaluateCondition(ctx, item.Condition) {
 		return nil
 	}
@@ -55,7 +55,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	fmt.Println("")
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
-	def := genDefault(item.Default, item, proj)
+	def := getDefault(item.Default, item, proj)
 
 	switch item.Type {
 	case Int:
@@ -70,22 +70,26 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 		ctx[item.Name] = res
 	case Domain:
 		var res string
+		def = prevDefault(ctx, item, def)
 		prompt, opts := domainSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case String:
 		var res string
+		def = prevDefault(ctx, item, def)
 		prompt, opts := stringSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Password:
 		var res string
+		def = prevDefault(ctx, item, def)
 		prompt, opts := passwordSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:
 		var res string
-		prompt, opts := bucketSurvey(def, item, proj)
+		def = prevDefault(ctx, item, def)
+		prompt, opts := bucketSurvey(def, item, proj, context, section)
 		survey.AskOne(prompt, &res, opts...)
 		if res != def {
 			ctx[item.Name] = bucketName(res, proj)
@@ -110,7 +114,17 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem) error {
 	return nil
 }
 
-func genDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
+func prevDefault(ctx map[string]interface{}, item *api.ConfigurationItem, def string) string {
+	if val, ok := ctx[item.Name]; ok {
+		if v, ok := val.(string); ok {
+			return v
+		}
+	}
+
+	return def
+}
+
+func getDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
 	if def == "" {
 		return def
 	}
@@ -124,6 +138,10 @@ func genDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectM
 
 func bucketName(value string, proj *manifest.ProjectManifest) string {
 	if proj.BucketPrefix == "" {
+		return value
+	}
+
+	if strings.HasPrefix(value, proj.BucketPrefix) {
 		return value
 	}
 

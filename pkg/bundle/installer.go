@@ -10,7 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/bundle/tests"
 )
 
-func Install(repo, name string) error {
+func Install(repo, name string, refresh bool) error {
 	client := api.NewClient()
 	recipe, err := client.GetRecipe(repo, name)
 	if err != nil {
@@ -43,12 +43,12 @@ func Install(repo, name string) error {
 				continue
 			}
 
-			if _, ok := ctx[configItem.Name]; ok {
+			if _, ok := ctx[configItem.Name]; ok && !refresh {
 				continue
 			}
 
 			seen[configItem.Name] = true
-			if err := configure(ctx, configItem); err != nil {
+			if err := configure(ctx, configItem, context, section); err != nil {
 				context.Configuration[section.Repository.Name] = ctx
 				context.Write(path)
 				return err
