@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -49,4 +50,11 @@ func handleWatch(c *cli.Context) error {
 		application.Print(kube.Kube, app)
 		application.Flush()
 	}
+}
+
+func handleInfo(c *cli.Context) error {
+	repo := c.Args().Get(0)
+	conf := config.Read()
+	cmd := exec.Command("k9s", "-n", conf.Namespace(repo))
+	return cmd.Run()
 }

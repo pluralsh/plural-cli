@@ -98,6 +98,13 @@ func main() {
 			Category:  "Debugging",
 		},
 		{
+			Name:      "info",
+			Usage:     "generates a console dashboard for the namespace of this repo",
+			ArgsUsage: "REPO",
+			Action:    requireArgs(handleInfo, []string{"REPO"}),
+			Category:  "Debugging",
+		},
+		{
 			Name:  "apply",
 			Usage: "applys the current pluralfile",
 			Flags: []cli.Flag{
