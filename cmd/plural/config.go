@@ -2,7 +2,8 @@ package main
 
 import (
 	"os"
-
+	"io/ioutil"
+	
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
@@ -21,6 +22,11 @@ func configCommands() []cli.Command {
 			Usage:     "dumps config",
 			ArgsUsage: "",
 			Action:    handleRead,
+		},
+		{
+			Name:      "import",
+			Usage:     "imports a new config from a given token",
+			Action:    handleConfigImport,
 		},
 	}
 }
@@ -67,6 +73,15 @@ func handleRead(c *cli.Context) error {
 
 	os.Stdout.Write(d)
 	return nil
+}
+
+func handleConfigImport(c *cli.Context) error {
+	data, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	return config.FromToken(string(data))
 }
 
 func handleUseProfile(c *cli.Context) error {

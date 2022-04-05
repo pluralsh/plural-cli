@@ -91,6 +91,11 @@ func Import(file string) (conf Config) {
 	return
 }
 
+func FromToken(token string) error {
+	conf := &Config{Token: token}
+	return conf.Flush()
+}
+
 func Amend(key string, value string) error {
 	key = strings.Title(key)
 	conf := Read()

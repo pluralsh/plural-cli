@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -17,12 +16,6 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/pluralsh/plural/pkg/server"
 	"github.com/urfave/cli"
-)
-
-const (
-	KUBECTL_VERSION = "1.20.5"
-	HELM_VERSION    = "3.5.3"
-	TF_VERSION      = "0.15.2"
 )
 
 func handleInit(c *cli.Context) error {
@@ -151,13 +144,4 @@ func handleImport(c *cli.Context) error {
 
 func handleServe(c *cli.Context) error {
 	return server.Run()
-}
-
-func initHelm(success string) error {
-	err := exec.Command("helm", "init", "--client-only").Run()
-	if err != nil {
-		return err
-	}
-	utils.Success(success)
-	return nil
 }
