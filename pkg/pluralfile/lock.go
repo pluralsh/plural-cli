@@ -42,6 +42,10 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	if err != nil {
 		return lock(), nil
 	}
+	
+	if applyLock == nil {
+		return nil, fmt.Errorf("Could not fetch apply lock, do you have publish permissions for this repo?")
+	}
 
 	if applyLock.Lock == "" {
 		return Lock(path), nil
