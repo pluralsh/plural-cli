@@ -234,6 +234,7 @@ func deploy(c *cli.Context) error {
 		}
 
 		if err := execution.Execute(); err != nil {
+			utils.Note("It looks like your deployment failed, feel free to reach out to us on discord or intercom and we should be able to help you out\n")
 			return err
 		}
 		fmt.Printf("\n")
