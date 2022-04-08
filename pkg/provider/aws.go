@@ -88,8 +88,11 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 }
 
 func getClient(region string) (*s3.S3, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
+	sess, err := session.NewSessionWithOptions(session.Options{
+		Config: aws.Config{
+			Region: aws.String(region),
+		},
+		SharedConfigState: session.SharedConfigEnable,
 	})
 
 	if err != nil {
