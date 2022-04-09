@@ -13,8 +13,8 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
@@ -113,6 +113,8 @@ func build(c *cli.Context) error {
 		installation, err := client.GetInstallation(c.String("only"))
 		if err != nil {
 			return err
+		} else if installation == nil {
+			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
 		}
 
 		return doBuild(client, installation, force)
