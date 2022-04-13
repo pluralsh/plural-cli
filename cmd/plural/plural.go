@@ -153,6 +153,14 @@ func main() {
 					Name:  "from",
 					Usage: "where to start your deploy command (useful when restarting interrupted destroys)",
 				},
+				cli.StringFlag{
+					Name:  "commit",
+					Usage: "commits your changes with this message",
+				},
+				cli.BoolFlag{
+					Name:  "force",
+					Usage: "use force push when pushing to git",
+				},
 			},
 			Action: destroy,
 		},

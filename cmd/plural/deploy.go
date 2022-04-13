@@ -406,6 +406,14 @@ func destroy(c *cli.Context) error {
 
 	utils.Success("Finished destroying workspace\n")
 	utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
+	
+	utils.Highlight("\n==> Commit and push your changes to record your workspace changes\n\n")
+
+	if commit := commitMsg(c); commit != "" {
+		utils.Highlight("Pushing upstream...\n")
+		return git.Sync(repoRoot, commit, c.Bool("force"))
+	}
+
 	return nil
 }
 
