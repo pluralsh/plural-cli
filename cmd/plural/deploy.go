@@ -206,6 +206,7 @@ func deploy(c *cli.Context) error {
 
 	client := api.NewClient()
 	repoRoot, err := git.Root()
+
 	if err != nil {
 		return err
 	}

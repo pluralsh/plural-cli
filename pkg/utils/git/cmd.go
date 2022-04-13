@@ -9,6 +9,9 @@ import (
 func gitRaw(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	res, err := execute(cmd)
+
+	fmt.Sprintf("cmds %s    res:\n %s \n", cmd.String(), res)
+	
 	return strings.TrimSpace(string(res)), err
 }
 

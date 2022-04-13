@@ -76,6 +76,8 @@ func (client *Client) GetInstallations() ([]*Installation, error) {
 	for i, edge := range resp.Installations.Edges {
 		insts[i] = edge.Node
 	}
+
+	fmt.Printf(" resp %s \n  instResponse %s \n", resp, insts)
 	return insts, err
 }
 

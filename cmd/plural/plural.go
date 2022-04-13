@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/urfave/cli"
 	"github.com/fatih/color"
+	"github.com/urfave/cli"
 )
 
 func init() {
@@ -42,7 +42,7 @@ func main() {
 					Usage: "repository to (re)build",
 				},
 				cli.BoolFlag{
-					Name: "force",
+					Name:  "force",
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
@@ -51,7 +51,7 @@ func main() {
 		{
 			Name:      "deploy",
 			Aliases:   []string{"d"},
-			Usage:     "Deploys the current workspace.  This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
+			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
 			ArgsUsage: "WKSPACE",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -63,7 +63,7 @@ func main() {
 					Usage: "don't deploy the plural console",
 				},
 				cli.BoolFlag{
-					Name: "all",
+					Name:  "all",
 					Usage: "deploy all repos irregardless of changes",
 				},
 				cli.StringFlag{
@@ -80,15 +80,15 @@ func main() {
 		{
 			Name:      "diff",
 			Aliases:   []string{"df"},
-			Usage:     "diffs the state of  the current workspace with the deployed version and dumps results to diffs/",
+			Usage:     "diffs the state of the current workspace with the deployed version and dumps results to diffs/",
 			ArgsUsage: "WKSPACE",
 			Action:    handleDiff,
 		},
 		{
-			Name:      "create",
-			Usage:     "scaffolds the resources needed to create a new plural repository",
-			Action:    handleScaffold,
-			Category:  "WKSPACE",
+			Name:     "create",
+			Usage:    "scaffolds the resources needed to create a new plural repository",
+			Action:   handleScaffold,
+			Category: "WKSPACE",
 		},
 		{
 			Name:      "watch",
@@ -203,7 +203,7 @@ func main() {
 			Name:        "shell",
 			Usage:       "manages your cloud shell",
 			Subcommands: shellCommands(),
-			Category:    "Workspace", 
+			Category:    "Workspace",
 		},
 		{
 			Name:        "repos",
@@ -285,10 +285,10 @@ func main() {
 			Category:    "Debugging",
 		},
 		{
-			Name: "utils",
-			Usage: "useful plural utilities",
+			Name:        "utils",
+			Usage:       "useful plural utilities",
 			Subcommands: utilsCommands(),
-			Category: "Miscellaneous",
+			Category:    "Miscellaneous",
 		},
 		{
 			Name:    "template",
