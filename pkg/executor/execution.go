@@ -47,7 +47,7 @@ func GetExecution(path, name string) (*Execution, error) {
 	return &ex, nil
 }
 
-func (e *Execution) Execute() error {
+func (e *Execution) Execute(verbose bool) error {
 	root, err := git.Root()
 	if err != nil {
 		return err
@@ -56,7 +56,13 @@ func (e *Execution) Execute() error {
 
 	fmt.Printf("deploying %s, hold on to your butts\n", e.Metadata.Path)
 	for i, step := range e.Steps {
+		prev := step.Verbose
+		if verbose {
+			step.Verbose = true
+		}
+
 		newSha, err := step.Execute(root, ignore)
+		step.Verbose = prev
 		if err != nil {
 			if err := e.Flush(root); err != nil {
 				return err

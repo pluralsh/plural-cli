@@ -9,21 +9,27 @@ import (
 	// corev1 "k8s.io/api/core/v1"
 )
 
-func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
-	tm.Printf("Application: %s (%s)  ", app.Name, app.Spec.Descriptor.Version)
+func Ready(app *v1beta1.Application) bool {
 	cond := findReadiness(app)
-	if cond != nil {
-		if cond.Status == "True" {
-			success("READY")
-		} else if cond.Status == "False" {
-			warn("WAITING")
-		} else if cond.Status == "Unknown" {
-			highlight("UNKNOWN")
-		}
+	tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version)
+	if cond.Status == "True" {
+		success("READY")
+		tm.Println("")
+		return true
+	}
+
+	if cond.Status == "False" {
+		warn("WAITING")
+	} else if cond.Status == "Unknown" {
+		highlight("UNKNOWN")
 	}
 
 	tm.Println("")
+	return false
+}
 
+func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
+	Ready(app)
 	tm.Println(app.Spec.Descriptor.Description)
 	tm.Printf("\nComponents Ready: %s\n", app.Status.ComponentsReady)
 	first := true
@@ -65,14 +71,6 @@ func Flush() {
 
 	tm.Output.Flush()
 	tm.Screen.Reset()
-}
-
-func Ready(app *v1beta1.Application) bool {
-	cond := findReadiness(app)
-	if cond == nil {
-		return false
-	}
-	return cond.Status == "True"
 }
 
 func findReadiness(app *v1beta1.Application) (condition *v1beta1.Condition) {

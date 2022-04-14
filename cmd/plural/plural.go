@@ -59,6 +59,10 @@ func main() {
 					Usage: "don't display notes for deployed apps",
 				},
 				cli.BoolFlag{
+					Name:  "verbose",
+					Usage: "show all command output during execution",
+				},
+				cli.BoolFlag{
 					Name:  "ignore-console",
 					Usage: "don't deploy the plural console",
 				},
@@ -95,6 +99,13 @@ func main() {
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
 			Action:    requireArgs(handleWatch, []string{"REPO"}),
+			Category:  "Debugging",
+		},
+		{
+			Name:      "wait",
+			Usage:     "waits on applications until they become ready",
+			ArgsUsage: "REPO",
+			Action:    requireArgs(handleWait, []string{"REPO"}),
 			Category:  "Debugging",
 		},
 		{

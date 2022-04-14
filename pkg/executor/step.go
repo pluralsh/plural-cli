@@ -20,6 +20,7 @@ type Step struct {
 	Args    []string `hcl:"args"`
 	Sha     string   `hcl:"sha"`
 	Retries int      `hcl:"retries"`
+	Verbose bool     `hcl:"verbose"`
 }
 
 func SuppressedCommand(command string, args ...string) (cmd *exec.Cmd, output *OutputWriter) {
@@ -41,6 +42,22 @@ func RunCommand(cmd *exec.Cmd, output *OutputWriter) (err error) {
 	return
 }
 
+func (step Step) Run(root string) error {
+	dir := filepath.Join(root, step.Wkdir)
+	if step.Verbose && os.Getenv("ENABLE_COLOR") == "" {
+		cmd := exec.Command(step.Command, step.Args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stdout
+		cmd.Dir = dir
+		fmt.Println()
+		return cmd.Run()
+	}
+
+	cmd, output := SuppressedCommand(step.Command, step.Args...)
+	cmd.Dir = dir
+	return RunCommand(cmd, output)
+}
+
 func (step Step) Execute(root string, ignore []string) (string, error) {
 	current, err := MkHash(filepath.Join(root, step.Target), ignore)
 	if err != nil {
@@ -53,9 +70,7 @@ func (step Step) Execute(root string, ignore []string) (string, error) {
 		return current, nil
 	}
 
-	cmd, output := SuppressedCommand(step.Command, step.Args...)
-	cmd.Dir = filepath.Join(root, step.Wkdir)
-	err = RunCommand(cmd, output)
+	err = step.Run(root)
 	if err != nil {
 		if step.Retries > 0 {
 			step.Retries -= 1

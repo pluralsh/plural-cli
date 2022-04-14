@@ -49,19 +49,23 @@ func InClusterKubernetes() (*Kube, error) {
 	return buildKubeFromConfig(config)
 }
 
-func Kubernetes() (*Kube, error) {
+func KubeConfig() (*rest.Config, error) {
 	if InKubernetes() {
-		return InClusterKubernetes()
+		return rest.InClusterConfig()
 	}
-
+	
 	homedir, _ := os.UserHomeDir()
 	conf := filepath.Join(homedir, ".kube", "config")
-	config, err := clientcmd.BuildConfigFromFlags("", conf)
+	return clientcmd.BuildConfigFromFlags("", conf)
+}
+
+func Kubernetes() (*Kube, error) {
+	conf, err := KubeConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	return buildKubeFromConfig(config)
+	return buildKubeFromConfig(conf)
 }
 
 func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {

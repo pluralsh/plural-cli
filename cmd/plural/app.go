@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"os/exec"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/config"
@@ -11,45 +9,36 @@ import (
 	"sigs.k8s.io/application/api/v1beta1"
 
 	tm "github.com/buger/goterm"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func handleWatch(c *cli.Context) error {
 	repo := c.Args().Get(0)
-	conf := config.Read()
+	kubeConf, err := utils.KubeConfig()
+	if err != nil {
+		return err
+	}
 	kube, err := utils.Kubernetes()
 	if err != nil {
 		return err
 	}
-	ctx := context.Background()
-	appClient := kube.Application.Applications(conf.Namespace(repo))
-	app, err := appClient.Get(ctx, repo, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
 
-	tm.Clear()
-	tm.MoveCursor(1, 1)
-	application.Print(kube.Kube, app)
-	application.Flush()
-
-	watcher, err := application.WatchNamespace(ctx, appClient)
-	if err != nil {
-		return err
-	}
-
-	ch := watcher.ResultChan()
-	for {
-		event := <-ch
-		tm.Clear()
-		app, ok := event.Object.(*v1beta1.Application)
-		if !ok {
-			return fmt.Errorf("Failed to parse watch event")
-		}
+	timeout := func() error { return nil }
+	return application.Waiter(kubeConf, repo, func(app *v1beta1.Application) (bool, error) {
 		tm.MoveCursor(1, 1)
 		application.Print(kube.Kube, app)
 		application.Flush()
+		return false, nil
+	}, timeout)
+}
+
+func handleWait(c *cli.Context) error {
+	repo := c.Args().Get(0)
+	kubeConf, err := utils.KubeConfig()
+	if err != nil {
+		return err
 	}
+
+	return application.Wait(kubeConf, repo)
 }
 
 func handleInfo(c *cli.Context) error {
