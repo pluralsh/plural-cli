@@ -10,6 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -80,8 +81,8 @@ func (kind *KINDProvider) CreateBackend(prefix string, ctx map[string]interface{
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, kind.Cluster())
 	}
 
-	utils.WriteFile(filepath.Join(kind.Bucket(), ".gitignore"), []byte("!/**"))
-	utils.WriteFile(filepath.Join(kind.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
+	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitignore")), []byte("!/**"))
+	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
 	scaffold, err := GetProviderScaffold("KIND")
 	if err != nil {
 		return "", err

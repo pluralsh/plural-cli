@@ -1,11 +1,13 @@
 package utils
 
 import (
-	"github.com/pluralsh/plural/pkg/config"
-	"os"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func Cmd(conf *config.Config, program string, args ...string) error {
@@ -39,7 +41,7 @@ func ExecuteWithOutput(cmd *exec.Cmd) (string, error) {
 
 func Which(command string) (exists bool, path string) {
 	root, _ := ProjectRoot()
-	os.Setenv("PATH", fmt.Sprintf("%s:%s", filepath.Join(root, "bin"), os.Getenv("PATH")))
+	os.Setenv("PATH", fmt.Sprintf("%s:%s", pathing.SanitizeFilepath(filepath.Join(root, "bin")), os.Getenv("PATH")))
 	path, err := exec.LookPath(command)
 	exists = err == nil
 	return
@@ -49,7 +51,7 @@ func MkCmd(conf *config.Config, program string, args ...string) *exec.Cmd {
 	cmd := exec.Command(program, args...)
 	root, _ := ProjectRoot()
 	os.Setenv("HELM_REPO_ACCESS_TOKEN", conf.Token)
-	os.Setenv("PATH", fmt.Sprintf("%s:%s", filepath.Join(root, "bin"), os.Getenv("PATH")))
+	os.Setenv("PATH", fmt.Sprintf("%s:%s", pathing.SanitizeFilepath(filepath.Join(root, "bin")), os.Getenv("PATH")))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd

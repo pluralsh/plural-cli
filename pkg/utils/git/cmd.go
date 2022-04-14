@@ -2,8 +2,8 @@ package git
 
 import (
 	"fmt"
-	"strings"
 	"os/exec"
+	"strings"
 )
 
 func gitRaw(args ...string) (string, error) {
@@ -11,7 +11,7 @@ func gitRaw(args ...string) (string, error) {
 	res, err := execute(cmd)
 
 	fmt.Sprintf("cmds %s    res:\n %s \n", cmd.String(), res)
-	
+
 	return strings.TrimSpace(string(res)), err
 }
 

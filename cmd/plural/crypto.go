@@ -73,9 +73,9 @@ func cryptoCommands() []cli.Command {
 			Name:   "random",
 			Usage:  "generates a random string",
 			Action: randString,
-			Flags:  []cli.Flag{
+			Flags: []cli.Flag{
 				cli.IntFlag{
-					Name: "len",
+					Name:  "len",
 					Usage: "the length of the string to generate",
 					Value: 32,
 				},

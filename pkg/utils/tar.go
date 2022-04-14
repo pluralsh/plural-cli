@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func Tar(src string, w io.Writer, regex string) error {
@@ -99,7 +101,7 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 		if err != nil {
 			return err
 		}
-		abs := filepath.Join(dir, rel)
+		abs := pathing.SanitizeFilepath(filepath.Join(dir, rel))
 
 		fi := f.FileInfo()
 		mode := fi.Mode()

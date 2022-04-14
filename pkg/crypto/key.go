@@ -1,15 +1,17 @@
 package crypto
 
 import (
-	"fmt"
-	"encoding/base64"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
 	"io"
-	"path/filepath"
-	"os"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,8 +31,8 @@ func (prov *KeyProvider) ID() string {
 func (prov *KeyProvider) Marshall() ([]byte, error) {
 	conf := Config{
 		Version: "crypto.plural.sh/v1",
-		Type: KEY,
-		Id: prov.ID(),
+		Type:    KEY,
+		Id:      prov.ID(),
 		Context: map[string]interface{}{},
 	}
 
@@ -89,11 +91,11 @@ func RandStr(len int) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(str), nil
-}  
+}
 
 func getKeyPath() string {
 	folder, _ := os.UserHomeDir()
-	return filepath.Join(folder, ".plural", "key")
+	return pathing.SanitizeFilepath(filepath.Join(folder, ".plural", "key"))
 }
 
 func Import(buf []byte) (*AESKey, error) {
@@ -103,7 +105,7 @@ func Import(buf []byte) (*AESKey, error) {
 }
 
 func DeserializeKey(contents []byte) (k *AESKey, err error) {
-  err = yaml.Unmarshal(contents, &k)
+	err = yaml.Unmarshal(contents, &k)
 	return
 }
 

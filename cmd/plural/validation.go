@@ -61,7 +61,7 @@ func repoRoot() error {
 		return err
 	}
 	//santiize the filepath, respecting the OS
-	dir = pathing.GenOSFilepathString(dir)
+	dir = pathing.SanitizeFilepath(dir)
 
 	root, err := git.Root()
 	if err != nil {

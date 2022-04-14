@@ -1,9 +1,10 @@
 package git
 
 import (
+	"bufio"
 	"fmt"
 	"strings"
-	"bufio"
+
 	gogit "github.com/go-git/go-git/v5"
 )
 
@@ -37,7 +38,7 @@ func CurrentBranch() (b string, err error) {
 
 	ref, err := repo.Head()
 	if err != nil {
-		return 
+		return
 	}
 
 	b = ref.Name().Short()

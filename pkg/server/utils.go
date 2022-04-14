@@ -1,11 +1,12 @@
 package server
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 	"os"
 	"os/exec"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func serverFunc(f func(c *gin.Context) error) func(c *gin.Context) {
@@ -17,7 +18,7 @@ func serverFunc(f func(c *gin.Context) error) func(c *gin.Context) {
 }
 
 func toProvider(prov string) string {
-	prov = strings.ToLower(prov) 
+	prov = strings.ToLower(prov)
 	if prov == "gcp" {
 		return "google"
 	}

@@ -2,10 +2,11 @@ package application
 
 import (
 	"fmt"
-	"sigs.k8s.io/application/api/v1beta1"
 	"strings"
+
 	tm "github.com/buger/goterm"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/application/api/v1beta1"
 	// corev1 "k8s.io/api/core/v1"
 )
 
@@ -55,7 +56,7 @@ func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
 
 func Flush() {
 	for idx, str := range strings.SplitAfter(tm.Screen.String(), "\n") {
-		if idx == tm.Height() - 1 {
+		if idx == tm.Height()-1 {
 			tm.Output.WriteString("...")
 			break
 		}
@@ -85,14 +86,14 @@ func findReadiness(app *v1beta1.Application) (condition *v1beta1.Condition) {
 	return
 }
 
-func warn(line string, args... interface{}) {
+func warn(line string, args ...interface{}) {
 	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW))
 }
 
-func success(line string, args... interface{}) {
+func success(line string, args ...interface{}) {
 	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN))
 }
 
-func highlight(line string, args... interface{}) {
+func highlight(line string, args ...interface{}) {
 	tm.Print(tm.Bold(fmt.Sprintf(line, args...)))
 }

@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
-
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/provider"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/pluralsh/plural/pkg/server"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 
@@ -116,7 +116,7 @@ func handleImport(c *cli.Context) error {
 		return err
 	}
 
-	conf := config.Import(filepath.Join(dir, "config.yml"))
+	conf := config.Import(pathing.SanitizeFilepath(filepath.Join(dir, "config.yml")))
 	if err := conf.Flush(); err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func handleImport(c *cli.Context) error {
 		return err
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(dir, "key"))
+	data, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
 	if err != nil {
 		return err
 	}

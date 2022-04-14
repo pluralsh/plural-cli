@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/urfave/cli"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/urfave/cli"
 )
 
 func linkCommands() []cli.Command {

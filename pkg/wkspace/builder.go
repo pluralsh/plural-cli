@@ -1,9 +1,9 @@
 package wkspace
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +16,7 @@ import (
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 type Workspace struct {
@@ -60,14 +61,14 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	}
 
 	wk := &Workspace{
-		Provider: prov,
+		Provider:     prov,
 		Installation: inst,
-		Charts: ci,
-		Terraform: ti,
-		Config: &conf,
-		Context: ctx,
-		Manifest: project,
-		Links: links,
+		Charts:       ci,
+		Terraform:    ti,
+		Config:       &conf,
+		Context:      ctx,
+		Manifest:     project,
+		Links:        links,
 	}
 	return wk, nil
 }
@@ -111,7 +112,7 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
-	if err := mkdir(filepath.Join(repoRoot, repo.Name)); err != nil {
+	if err := mkdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name))); err != nil {
 		return err
 	}
 
@@ -141,16 +142,16 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
-	if err := mkdir(filepath.Join(wkspaceRoot, ".plural")); err != nil {
+	if err := mkdir(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural")))); err != nil {
 		return err
 	}
 
-	onceFile := filepath.Join(wkspaceRoot, ".plural", "ONCE")
+	onceFile := pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural", "ONCE"))
 	if err := ioutil.WriteFile(onceFile, []byte("once"), 0644); err != nil {
 		return err
 	}
 
-	nonceFile := filepath.Join(wkspaceRoot, ".plural", "NONCE")
+	nonceFile := pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural", "NONCE"))
 	if err := ioutil.WriteFile(nonceFile, []byte(crypto.RandString(32)), 0644); err != nil {
 		return err
 	}
@@ -159,16 +160,16 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 		return err
 	}
 
-	exec, _ := executor.GetExecution(filepath.Join(wkspaceRoot), "deploy")
+	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot)), "deploy")
 
 	return executor.DefaultExecution(name, exec).Flush(repoRoot)
 }
 
 func (wk *Workspace) buildDiff(repoRoot string) error {
 	name := wk.Installation.Repository.Name
-	wkspaceRoot := filepath.Join(repoRoot, name)
+	wkspaceRoot := pathing.SanitizeFilepath(filepath.Join(repoRoot, name))
 
-	d, _ := diff.GetDiff(filepath.Join(wkspaceRoot), "diff")
+	d, _ := diff.GetDiff(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot)), "diff")
 
 	return diff.DefaultDiff(name, d).Flush(repoRoot)
 }
@@ -210,8 +211,8 @@ func isRepo(name string) bool {
 	if err != nil {
 		return false
 	}
-	
-	return utils.Exists(filepath.Join(repoRoot, name, "manifest.yaml"))
+
+	return utils.Exists(pathing.SanitizeFilepath(filepath.Join(repoRoot, name, "manifest.yaml")))
 }
 
 func mkdir(path string) error {
@@ -222,6 +223,6 @@ func mkdir(path string) error {
 }
 
 func manifestPath(repo string) string {
-	path, _ := filepath.Abs(filepath.Join(repo, "manifest.yaml"))
+	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repo, "manifest.yaml")))
 	return path
 }

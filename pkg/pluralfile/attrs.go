@@ -68,5 +68,5 @@ func fileSha(path string) (string, error) {
 		return "", nil
 	}
 	fpath, _ := filepath.Abs(path)
-	return utils.Sha256(fpath) 
+	return utils.Sha256(fpath)
 }

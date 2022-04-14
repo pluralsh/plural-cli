@@ -2,10 +2,12 @@ package api
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural/pkg/utils"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 type terraformResponse struct {
@@ -87,7 +89,7 @@ func (client *Client) UploadTerraform(dir, repoName string) (Terraform, error) {
 		return tf, err
 	}
 	cwd, _ := os.Getwd()
-	tarFile := filepath.Join(cwd, name+".tgz")
+	tarFile := pathing.SanitizeFilepath(filepath.Join(cwd, name+".tgz"))
 	f, err := os.Create(tarFile)
 	if err != nil {
 		return tf, err

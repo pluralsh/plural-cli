@@ -2,9 +2,11 @@ package utils
 
 import (
 	"os"
-	"runtime"
 	"path/filepath"
+	"runtime"
+
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func ProjectRoot() (root string, found bool) {
@@ -24,7 +26,7 @@ func ProjectRoot() (root string, found bool) {
 			}
 		}
 
-		if Exists(filepath.Join(root, "workspace.yaml")) {
+		if Exists(pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml"))) {
 			found = true
 			return
 		}

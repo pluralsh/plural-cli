@@ -11,7 +11,7 @@ type instResponse struct {
 }
 
 type Binding struct {
-	UserId string
+	UserId  string
 	GroupId string
 }
 
@@ -76,8 +76,6 @@ func (client *Client) GetInstallations() ([]*Installation, error) {
 	for i, edge := range resp.Installations.Edges {
 		insts[i] = edge.Node
 	}
-
-	fmt.Printf(" resp %s \n  instResponse %s \n", resp, insts)
 	return insts, err
 }
 
@@ -87,7 +85,7 @@ func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes
 			Id string
 		}
 	}
-	
+
 	req := client.Build(oidcProviderMut)
 	req.Var("id", id)
 	req.Var("attributes", attributes)

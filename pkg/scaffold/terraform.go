@@ -7,12 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"sort"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
@@ -53,7 +54,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		return err
 	}
 
-	mainFile := filepath.Join(scaffold.Root, "main.tf")
+	mainFile := pathing.SanitizeFilepath(filepath.Join(scaffold.Root, "main.tf"))
 	contents, err := utils.ReadFile(mainFile)
 	if err != nil {
 		contents = ""
@@ -77,7 +78,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		plate := tfInst.Version.ValuesTemplate
 		if linkPath != "" {
 			var err error
-			plate, err = utils.ReadFile(filepath.Join(linkPath, "terraform.tfvars"))
+			plate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(linkPath, "terraform.tfvars")))
 			if err != nil {
 				return err
 			}
@@ -125,7 +126,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 		modules[i+1] = moduleBuf.String()
 
-		valuesFile := filepath.Join(scaffold.Root, tf.Name, "terraform.tfvars")
+		valuesFile := pathing.SanitizeFilepath(filepath.Join(scaffold.Root, tf.Name, "terraform.tfvars"))
 		os.Remove(valuesFile)
 
 		moduleBuf.Reset()
@@ -141,7 +142,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	}
 
 	secrets := buildTfSecrets(wk.Terraform)
-	if err := buildSecrets(filepath.Join(scaffold.Root, ".gitattributes"), secrets); err != nil {
+	if err := buildSecrets(pathing.SanitizeFilepath(filepath.Join(scaffold.Root, ".gitattributes")), secrets); err != nil {
 		return err
 	}
 
@@ -155,7 +156,7 @@ func (scaffold *Scaffold) untarModules(wk *wkspace.Workspace) error {
 	for _, tfInst := range wk.Terraform {
 		tf := tfInst.Terraform
 		v := tfInst.Version
-		path := filepath.Join(scaffold.Root, tf.Name)
+		path := pathing.SanitizeFilepath(filepath.Join(scaffold.Root, tf.Name))
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			fmt.Print("\n")
 			return err
@@ -181,8 +182,8 @@ func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
 		return err
 	}
 
-	sort.SliceStable(wk.Terraform, func (i, j int) bool {
-		return wk.Terraform[i].Terraform.Name < wk.Terraform[j].Terraform.Name 
+	sort.SliceStable(wk.Terraform, func(i, j int) bool {
+		return wk.Terraform[i].Terraform.Name < wk.Terraform[j].Terraform.Name
 	})
 	for _, tfInst := range wk.Terraform {
 		tfName := tfInst.Terraform.Name
@@ -195,7 +196,7 @@ func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
 		}
 	}
 
-	outputFile := filepath.Join(scaffold.Root, "outputs.tf")
+	outputFile := pathing.SanitizeFilepath(filepath.Join(scaffold.Root, "outputs.tf"))
 	return utils.WriteFile(outputFile, buf.Bytes())
 }
 

@@ -1,11 +1,12 @@
 package api
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"path/filepath"
-	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/utils"
+	"gopkg.in/yaml.v2"
 )
 
 var createArtifact = fmt.Sprintf(`
@@ -25,12 +26,12 @@ var createArtifact = fmt.Sprintf(`
 `, ArtifactFragment)
 
 type ArtifactAttributes struct {
-	Name string
-	Readme string
-	Type string
+	Name     string
+	Readme   string
+	Type     string
 	Platform string
-	Blob string
-	Arch string
+	Blob     string
+	Arch     string
 }
 
 var artifactsQuery = fmt.Sprintf(`

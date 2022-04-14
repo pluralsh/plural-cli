@@ -5,9 +5,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"gopkg.in/yaml.v2"
 )
 
 type Lockfile struct {
@@ -42,7 +43,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	if err != nil {
 		return lock(), nil
 	}
-	
+
 	if applyLock == nil {
 		return nil, fmt.Errorf("Could not fetch apply lock, do you have publish permissions for this repo?")
 	}
@@ -82,10 +83,10 @@ func Lock(path string) *Lockfile {
 
 func lockPath(path string, profile string) string {
 	if profile == "" {
-		return filepath.Join(filepath.Dir(path), "plural.lock")
+		return pathing.SanitizeFilepath(filepath.Join(filepath.Dir(path), "plural.lock"))
 	}
 
-	return filepath.Join(filepath.Dir(path), fmt.Sprintf("plural.%s.lock", profile))
+	return pathing.SanitizeFilepath(filepath.Join(filepath.Dir(path), fmt.Sprintf("plural.%s.lock", profile)))
 }
 
 func (lock *Lockfile) Flush(path string) error {

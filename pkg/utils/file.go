@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func CopyFile(src, dest string) error {
@@ -29,7 +31,7 @@ func EmptyDirectory(dir string) error {
 	}
 
 	for _, name := range names {
-		if err := os.RemoveAll(filepath.Join(dir, name)); err != nil {
+		if err := os.RemoveAll(pathing.SanitizeFilepath(filepath.Join(dir, name))); err != nil {
 			return err
 		}
 	}

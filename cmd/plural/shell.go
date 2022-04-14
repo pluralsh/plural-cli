@@ -2,20 +2,21 @@ package main
 
 import (
 	"os"
+
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
 )
 
 func shellCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:      "sync",
-			Usage:     "syncs the setup in your cloud shell locally",
-			Action:    handleShellSync,
+			Name:   "sync",
+			Usage:  "syncs the setup in your cloud shell locally",
+			Action: handleShellSync,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "endpoint",
@@ -28,9 +29,9 @@ func shellCommands() []cli.Command {
 			},
 		},
 		{
-			Name:      "purge",
-			Usage:     "deletes your cloud shell",
-			Action:    handleShellPurge,
+			Name:   "purge",
+			Usage:  "deletes your cloud shell",
+			Action: handleShellPurge,
 		},
 	}
 }

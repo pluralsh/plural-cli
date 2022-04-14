@@ -1,33 +1,35 @@
 package main
 
 import (
-	"path/filepath"
-	"io/ioutil"
-	"strings"
-	"fmt"
-	"os"
 	"bufio"
-	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v2"
-	"github.com/urfave/cli"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/coreos/go-semver/semver"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
+
+	"github.com/coreos/go-semver/semver"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/thoas/go-funk"
+	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 func utilsCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name: "image-bump",
+			Name:      "image-bump",
 			ArgsUsage: "CHART",
-			Usage: "Bumps a chart's image tag",
+			Usage:     "Bumps a chart's image tag",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name: "path",
+					Name:  "path",
 					Usage: "path to tag in helm values file",
 				},
 				cli.StringFlag{
-					Name: "tag",
+					Name:  "tag",
 					Usage: "the image tag to set to",
 				},
 			},
@@ -43,13 +45,13 @@ func handleImageBump(c *cli.Context) error {
 	chartPath, _ = filepath.Abs(chartPath)
 
 	chart := make(map[string]interface{})
-	vals  := make(map[string]interface{})
-	
-	if err := readHelmYaml(filepath.Join(chartPath, "Chart.yaml"), &chart); err != nil {
+	vals := make(map[string]interface{})
+
+	if err := readHelmYaml(pathing.SanitizeFilepath(filepath.Join(chartPath, "Chart.yaml")), &chart); err != nil {
 		return err
 	}
 
-	if err := readHelmYaml(filepath.Join(chartPath, "values.yaml"), &vals); err != nil {
+	if err := readHelmYaml(pathing.SanitizeFilepath(filepath.Join(chartPath, "values.yaml")), &vals); err != nil {
 		return err
 	}
 
@@ -65,14 +67,14 @@ func handleImageBump(c *cli.Context) error {
 		return err
 	}
 
-	if err := replaceVals(filepath.Join(chartPath, "values.yaml"), tag); err != nil {
+	if err := replaceVals(pathing.SanitizeFilepath(filepath.Join(chartPath, "values.yaml")), tag); err != nil {
 		return err
 	}
 
 	sv.BumpPatch()
 	chart["version"] = sv.String()
 
-	return writeHelmYaml(filepath.Join(chartPath, "Chart.yaml"), chart)
+	return writeHelmYaml(pathing.SanitizeFilepath(filepath.Join(chartPath, "Chart.yaml")), chart)
 }
 
 const replPattern = `(?s).*## PLRL-REPLACE\[(.*)\].*`
@@ -92,7 +94,7 @@ func replaceVals(path string, val string) error {
 		line := scanner.Text()
 		matches := re.FindStringSubmatch(line)
 		if len(matches) > 0 {
-			line = fmt.Sprintf(matches[1] + " ## PLRL-REPLACE[%s]", val, matches[1])
+			line = fmt.Sprintf(matches[1]+" ## PLRL-REPLACE[%s]", val, matches[1])
 		}
 
 		result = append(result, line)
@@ -105,7 +107,7 @@ func replaceVals(path string, val string) error {
 	content := strings.Join(result, "\n")
 
 	return ioutil.WriteFile(path, []byte(content), 0644)
-} 
+}
 
 func readHelmYaml(path string, result *map[string]interface{}) error {
 	content, err := ioutil.ReadFile(path)

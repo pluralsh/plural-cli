@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"golang.org/x/mod/sumdb/dirhash"
 )
 
@@ -42,7 +43,7 @@ func RunCommand(cmd *exec.Cmd, output *OutputWriter) (err error) {
 }
 
 func (step Step) Execute(root string, ignore []string) (string, error) {
-	current, err := MkHash(filepath.Join(root, step.Target), ignore)
+	current, err := MkHash(pathing.SanitizeFilepath(filepath.Join(root, step.Target)), ignore)
 	if err != nil {
 		return step.Sha, err
 	}
@@ -54,7 +55,7 @@ func (step Step) Execute(root string, ignore []string) (string, error) {
 	}
 
 	cmd, output := SuppressedCommand(step.Command, step.Args...)
-	cmd.Dir = filepath.Join(root, step.Wkdir)
+	cmd.Dir = pathing.SanitizeFilepath(filepath.Join(root, step.Wkdir))
 	err = RunCommand(cmd, output)
 	if err != nil {
 		if step.Retries > 0 {
@@ -101,7 +102,7 @@ func filteredHash(root string, ignore []string) (string, error) {
 	}
 
 	osOpen := func(name string) (io.ReadCloser, error) {
-		return os.Open(filepath.Join(root, strings.TrimPrefix(name, prefix)))
+		return os.Open(pathing.SanitizeFilepath(filepath.Join(root, strings.TrimPrefix(name, prefix))))
 	}
 
 	return dirhash.Hash1(keep, osOpen)
