@@ -137,6 +137,21 @@ func (wk *Workspace) Prepare() error {
 	return nil
 }
 
+func (wk *Workspace) requiresWait() bool {
+	for _, ci := range wk.Charts {
+		if ci.Version.Dependencies.Wait {
+			return true
+		}
+	}
+
+	for _, ti := range wk.Terraform {
+		if ti.Version.Dependencies.Wait {
+			return true
+		}
+	}
+	return false
+}
+
 func (wk *Workspace) buildExecution(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)

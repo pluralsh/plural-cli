@@ -16,6 +16,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/application"
 	"github.com/urfave/cli"
 )
 
@@ -246,8 +247,17 @@ func deploy(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+
 		if c.Bool("silence") {
 			continue
+		}
+
+		if man, err := fetchManifest(repo); err == nil && man.Wait {
+			if kubeConf, err := utils.KubeConfig(); err == nil {
+				fmt.Println("")
+				application.Wait(kubeConf, repo)
+				fmt.Println("")
+			}
 		}
 
 		if err := scaffold.Notes(installation); err != nil {
@@ -438,4 +448,13 @@ func buildContext(c *cli.Context) error {
 
 	path := manifest.ContextPath()
 	return manifest.BuildContext(path, insts)
+}
+
+func fetchManifest(repo string) (*manifest.Manifest, error) {
+	p, err := manifest.ManifestPath(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return manifest.Read(p)
 }

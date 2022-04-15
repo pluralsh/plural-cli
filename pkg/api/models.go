@@ -68,6 +68,7 @@ type Dependencies struct {
 	Wirings         *Wirings
 	Secrets         []string
 	Application     bool
+	Wait            bool
 	ProviderWirings map[string]interface{}
 	Outputs         map[string]string
 }
@@ -376,6 +377,7 @@ const DependenciesFragment = `
 			name
 			repo
 		}
+		wait
 		application
 		providers
 		secrets

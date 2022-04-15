@@ -18,19 +18,20 @@ func (wk *Workspace) BuildManifest(prev *manifest.Manifest) *manifest.Manifest {
 	}
 
 	return &manifest.Manifest{
-		repository.Id,
-		repository.Name,
-		wk.Provider.Cluster(),
-		wk.Provider.Project(),
-		wk.Provider.Bucket(),
-		wk.Provider.Name(),
-		wk.Provider.Region(),
-		wk.Installation.LicenseKey,
-		charts,
-		terraform,
-		buildDependencies(repository.Name, wk.Charts, wk.Terraform),
-		wk.Provider.Context(),
-		prev.Links,
+		Id: repository.Id,
+		Name: repository.Name,
+		Cluster: wk.Provider.Cluster(),
+		Project: wk.Provider.Project(),
+		Bucket: wk.Provider.Bucket(),
+		Provider: wk.Provider.Name(),
+		Region: wk.Provider.Region(),
+		License: wk.Installation.LicenseKey,
+		Wait: wk.requiresWait(),
+		Charts: charts,
+		Terraform: terraform,
+		Dependencies: buildDependencies(repository.Name, wk.Charts, wk.Terraform),
+		Context: wk.Provider.Context(),
+		Links: prev.Links,
 	}
 }
 

@@ -30,6 +30,7 @@ type Manifest struct {
 	Provider     string
 	Region       string
 	License      string
+	Wait         bool
 	Charts       []*ChartManifest
 	Terraform    []*TerraformManifest
 	Dependencies []*Dependency
