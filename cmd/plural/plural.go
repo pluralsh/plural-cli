@@ -46,7 +46,7 @@ func main() {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: build,
+			Action: owned(build),
 		},
 		{
 			Name:      "deploy",
@@ -79,7 +79,7 @@ func main() {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: deploy,
+			Action: owned(rooted(deploy)),
 		},
 		{
 			Name:      "diff",
@@ -152,7 +152,7 @@ func main() {
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
 			ArgsUsage: "WKSPACE",
-			Action:    bounce,
+			Action:    owned(bounce),
 		},
 		{
 			Name:      "destroy",
@@ -173,7 +173,7 @@ func main() {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: destroy,
+			Action: owned(destroy),
 		},
 		{
 			Name:  "init",

@@ -29,7 +29,7 @@ func bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action:    requireArgs(bundleInstall, []string{"repo", "bundle-name"}),
+			Action:    rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
 		},
 	}
 }

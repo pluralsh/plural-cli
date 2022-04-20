@@ -91,10 +91,6 @@ func diffed(c *cli.Context) error {
 }
 
 func build(c *cli.Context) error {
-	if err := validateOwner(); err != nil {
-		return err
-	}
-
 	changed, err := git.HasUpstreamChanges()
 	if err != nil {
 		return errors.ErrorWrap(noGit, "Failed to get git information")
@@ -103,10 +99,6 @@ func build(c *cli.Context) error {
 	force := c.Bool("force")
 	if !changed && !force {
 		return errors.ErrorWrap(remoteDiff, "Local Changes out of Sync")
-	}
-
-	if err := repoRoot(); err != nil {
-		return err
 	}
 
 	client := api.NewClient()
@@ -197,14 +189,6 @@ func doValidate(client *api.Client, installation *api.Installation) error {
 }
 
 func deploy(c *cli.Context) error {
-	if err := validateOwner(); err != nil {
-		return err
-	}
-
-	if err := repoRoot(); err != nil {
-		return err
-	}
-
 	verbose := c.Bool("verbose")
 	client := api.NewClient()
 	repoRoot, err := git.Root()
@@ -318,10 +302,6 @@ func handleDiff(c *cli.Context) error {
 }
 
 func bounce(c *cli.Context) error {
-	if err := validateOwner(); err != nil {
-		return err
-	}
-
 	client := api.NewClient()
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -364,10 +344,6 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 }
 
 func destroy(c *cli.Context) error {
-	if err := validateOwner(); err != nil {
-		return err
-	}
-
 	if ok := confirm("Are you sure you want to destroy this workspace?"); !ok {
 		return nil
 	}

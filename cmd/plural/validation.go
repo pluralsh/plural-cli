@@ -23,7 +23,27 @@ func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) 
 
 		return fn(c)
 	}
-} 
+}
+
+func rooted(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		if err := repoRoot(); err != nil {
+			return err
+		}
+
+		return fn(c)
+	}
+}
+
+func owned(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		if err := validateOwner(); err != nil {
+			return err
+		}
+
+		return fn(c)
+	}
+}
 
 func validateOwner() error {
 	path := manifest.ProjectManifestPath()
