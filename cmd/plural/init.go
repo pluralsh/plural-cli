@@ -47,7 +47,7 @@ func handleLogin(c *cli.Context) error {
 
 	if config.Exists() {
 		conf := config.Read()
-		if confirm(fmt.Sprintf("It looks like you've already logged in as %s, use this profile?", conf.Email)) {
+		if !confirm(fmt.Sprintf("It looks like you've already logged in as %s, use a different profile?", conf.Email)) {
 			client = api.FromConfig(&conf)
 			return postLogin(&conf, client, c)
 		}

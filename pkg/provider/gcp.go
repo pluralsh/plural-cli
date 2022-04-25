@@ -91,14 +91,15 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 }
 
 func getBucketLocation(region string) BucketLocation {
-	if strings.Contains(strings.ToLower(region), "us") ||
-		strings.Contains(strings.ToLower(region), "northamerica") ||
-		strings.Contains(strings.ToLower(region), "southamerica") {
+	reg := strings.ToLower(region)
+	if strings.Contains(reg, "us") ||
+		strings.Contains(reg, "northamerica") ||
+		strings.Contains(reg, "southamerica") {
 		return BucketLocationUS
-	} else if strings.Contains(strings.ToLower(region), "europe") {
+	} else if strings.Contains(reg, "europe") {
 		return BucketLocationEU
-	} else if strings.Contains(strings.ToLower(region), "asia") ||
-		strings.Contains(strings.ToLower(region), "australia") {
+	} else if strings.Contains(reg, "asia") ||
+		strings.Contains(reg, "australia") {
 		return BucketLocationASIA
 	} else {
 		return BucketLocationUS
