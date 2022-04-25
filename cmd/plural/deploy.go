@@ -344,10 +344,6 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 }
 
 func destroy(c *cli.Context) error {
-	if ok := confirm("Are you sure you want to destroy this workspace?"); !ok {
-		return nil
-	}
-
 	client := api.NewClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()

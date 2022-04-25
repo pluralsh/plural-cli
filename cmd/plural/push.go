@@ -181,6 +181,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	}
 	defer f.Close()
 
+	fmt.Println(string(buf.Bytes()))
 	err = wkspace.FormatValues(f, string(buf.Bytes()), output.New())
 	return
 }

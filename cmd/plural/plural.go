@@ -173,7 +173,7 @@ func main() {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: owned(destroy),
+			Action: confirmed(owned(destroy), "Are you sure you want to destroy this workspace?"),
 		},
 		{
 			Name:  "init",
