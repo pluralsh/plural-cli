@@ -13,7 +13,6 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
 	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
@@ -39,7 +38,6 @@ require (
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/schollz/progressbar/v3 v3.7.6
 	github.com/thoas/go-funk v0.9.1
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
