@@ -31,6 +31,33 @@ type AzureProvider struct {
 	ctx           map[string]interface{}
 }
 
+var (
+	azureRegions = []string{
+		"eastus",
+		"eastus2",
+		"southcentralus",
+		"westus2",
+		"westus3",
+		"australiaeast",
+		"southeastasia",
+		"northeurope",
+		"swedencentral",
+		"uksouth",
+		"westeurope",
+		"centralus",
+		"southafricanorth",
+		"centralindia",
+		"eastasia",
+		"japaneast",
+		"koreacentral",
+		"canadacentral",
+		"francecentral",
+		"germanywestcentral",
+		"norwayeast",
+		"brazilsouth",
+	}
+)
+
 var azureSurvey = []*survey.Question{
 	{
 		Name:     "cluster",
@@ -44,7 +71,7 @@ var azureSurvey = []*survey.Question{
 	},
 	{
 		Name:     "region",
-		Prompt:   &survey.Input{Message: "Enter the region you want to deploy to:", Default: "US East"},
+		Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: azureRegions},
 		Validate: survey.Required,
 	},
 	{
