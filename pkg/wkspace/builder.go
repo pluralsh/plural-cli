@@ -72,6 +72,16 @@ func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
 	return wk, nil
 }
 
+func Configured(repo string) bool {
+	ctx, err := manifest.ReadContext(manifest.ContextPath())
+	if err != nil {
+		return false
+	}
+
+	_, ok := ctx.Configuration[repo]
+	return ok
+}
+
 func (wk *Workspace) PrintLinks() {
 	if wk.Links == nil {
 		return
