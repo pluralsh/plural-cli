@@ -63,7 +63,7 @@ up: .PHONY # spin up local server
 pull: .PHONY # pulls new server image
 	docker-compose pull
 
-release: # tags and pushes a new release
+release-vsn: # tags and pushes a new release
 	@read -p "Version: " tag;
 	git tag -a $$tag -m "new release"
 	git push origin $$tag
