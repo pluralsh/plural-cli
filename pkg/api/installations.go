@@ -47,6 +47,12 @@ const oidcProviderMut = `
 	}
 `
 
+const resetInstallationsMut = `
+	mutation {
+		resetInstallations
+	}
+`
+
 func (client *Client) GetInstallation(name string) (inst *Installation, err error) {
 	var resp struct {
 		Installation *Installation
@@ -90,4 +96,14 @@ func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes
 	req.Var("id", id)
 	req.Var("attributes", attributes)
 	return client.Run(req, &resp)
+}
+
+func (client *Client) ResetInstallations() (int, error) {
+	var resp struct {
+		ResetInstallations int
+	}
+
+	req := client.Build(resetInstallationsMut)
+	err := client.Run(req, &resp)
+	return resp.ResetInstallations, err
 }

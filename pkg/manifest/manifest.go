@@ -133,7 +133,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 	
 	subdomain := utils.UntilInputValid(
 		func() (string, error) {
-			return utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your subdomain%s: ", modifier))
+			return utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier))
 		},
 		func(val string) error {
 			if err := utils.ValidateDns(val); err != nil {
@@ -146,7 +146,9 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 
 			if pluralDns {
 				client := api.NewClient()
-				return client.CreateDomain(val)
+				if err := client.CreateDomain(val); err != nil {
+					return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
+				}
 			}
 
 			return nil
