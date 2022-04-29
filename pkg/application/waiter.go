@@ -11,6 +11,10 @@ import (
 	tm "github.com/buger/goterm"
 )
 
+const (
+	waitTime = 5 * 60 * time.Second
+)
+
 func Waiter(kubeConf *rest.Config, repo string, appFunc func(app *v1beta1.Application) (bool, error), timeout func() error) error {
 	conf := config.Read()
 	ctx := context.Background()
@@ -48,7 +52,7 @@ func Waiter(kubeConf *rest.Config, repo string, appFunc func(app *v1beta1.Applic
 			if stop, err := appFunc(app); stop || err != nil {
 				return err
 			}
-		case <-time.After(60 * time.Second):
+		case <-time.After(waitTime):
 			if err := timeout(); err != nil {
 				return err
 			}

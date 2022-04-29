@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/urfave/cli"
@@ -14,6 +15,11 @@ func reposCommands() []cli.Command {
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "REPO",
 			Action:    handleUnlockRepo,
+		},
+		{
+			Name:      "reset",
+			Usage:     "eliminates your current plural installation set, to change cloud provider or eject from plural",
+			Action:    handleResetInstallations,
 		},
 		{
 			Name:      "list",
@@ -49,5 +55,17 @@ func handleListRepositories(c *cli.Context) error {
 	}
 
 	table.Render()
+	return nil
+}
+
+func handleResetInstallations(c *cli.Context) error {
+	client := api.NewClient()
+	count, err := client.ResetInstallations()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deleted %d installations in app.plural.sh\n", count)
+	fmt.Println("(you can recreate these at any time and any running infrastructure is not affected, plural will simply no longer deliver upgrades)")
 	return nil
 }
