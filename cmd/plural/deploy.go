@@ -402,6 +402,7 @@ func destroy(c *cli.Context) error {
 		return git.Sync(repoRoot, commit, c.Bool("force"))
 	}
 
+	utils.Note("To remove your installations in app.plural.sh as well, you can run `plural repos reset`")
 	return nil
 }
 
