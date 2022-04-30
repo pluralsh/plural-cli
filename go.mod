@@ -30,6 +30,7 @@ require (
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/michaeljguarino/graphql v0.2.5
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oleiade/reflections v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/packethost/packngo v0.21.0

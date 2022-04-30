@@ -12,6 +12,12 @@ import (
 func Ready(app *v1beta1.Application) bool {
 	cond := findReadiness(app)
 	tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version)
+	if cond == nil {
+		warn("WAITING")
+		tm.Println("")
+		return false
+	}
+
 	if cond.Status == "True" {
 		success("READY")
 		tm.Println("")

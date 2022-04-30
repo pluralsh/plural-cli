@@ -244,7 +244,9 @@ func deploy(c *cli.Context) error {
 		if man, err := fetchManifest(repo); err == nil && man.Wait {
 			if kubeConf, err := utils.KubeConfig(); err == nil {
 				fmt.Println("")
-				application.Wait(kubeConf, repo)
+				if err := application.Wait(kubeConf, repo); err != nil {
+					return err
+				}
 				fmt.Println("")
 			}
 		}
