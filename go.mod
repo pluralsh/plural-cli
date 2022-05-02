@@ -7,14 +7,14 @@ require (
 	cloud.google.com/go/storage v1.12.0
 	filippo.io/age v1.0.0-rc.2
 	github.com/AlecAivazis/survey/v2 v2.3.2
-	github.com/Azure/azure-sdk-for-go v53.4.0+incompatible
+	github.com/Azure/azure-sdk-for-go/v63 v63.4.0
 	github.com/Azure/azure-storage-blob-go v0.13.0
 	github.com/Azure/go-autorest/autorest v0.11.17
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/aws/aws-sdk-go v1.35.35
-	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
+	github.com/azure/azure-sdk-for-go/v63 v63.4.0
 	github.com/buger/goterm v1.0.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.10.0
