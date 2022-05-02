@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	PASSWORD = "PASSWORD"
+	PASSWORD     = "PASSWORD"
 	PASSWORDLESS = "PASSWORDLESS"
 )
 
@@ -103,7 +103,7 @@ type UpgradeAttributes struct {
 }
 
 type DeviceLogin struct {
-	LoginUrl string
+	LoginUrl    string
 	DeviceToken string
 }
 
@@ -112,7 +112,7 @@ type login struct {
 		Jwt string `json:"jwt"`
 	}
 	ImpersonateServiceAccount struct {
-		Jwt string `json:"jwt"`
+		Jwt   string `json:"jwt"`
 		Email string `json:"email"`
 	}
 }
@@ -135,7 +135,7 @@ type listToken struct {
 
 type LoginMethod struct {
 	LoginMethod string
-	Token string
+	Token       string
 }
 
 type Me struct {
@@ -249,7 +249,7 @@ func (client *Client) ListKeys(emails []string) (keys []*PublicKey, err error) {
 
 	req := client.Build(listKeys)
 	req.Var("emails", emails)
-	err  = client.Run(req, &resp)
+	err = client.Run(req, &resp)
 	keys = []*PublicKey{}
 	for _, edge := range resp.PublicKeys.Edges {
 		keys = append(keys, edge.Node)

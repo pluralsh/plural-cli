@@ -6,12 +6,12 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"gopkg.in/yaml.v2"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/api"
+	"gopkg.in/yaml.v2"
 )
 
 func fileExists(path string) bool {

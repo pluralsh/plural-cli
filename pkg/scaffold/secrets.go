@@ -1,8 +1,9 @@
 package scaffold
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
+
 	"github.com/pluralsh/plural/pkg/utils"
 )
 

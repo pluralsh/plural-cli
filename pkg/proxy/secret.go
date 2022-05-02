@@ -2,13 +2,14 @@ package proxy
 
 import (
 	"fmt"
+
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 )
 
 type UserCredentials struct {
-	User string
+	User     string
 	Password string
 }
 
@@ -30,9 +31,9 @@ func fetchUserPassword(secret *v1.Secret, creds *v1alpha1.Credentials) (user *Us
 	pwd, ok := secret.Data[creds.Key]
 	if !ok {
 		err = fmt.Errorf("Could not find password key")
-		return 
+		return
 	}
-	
+
 	username := creds.User
 	if creds.UserKey != "" {
 		uname, ok := secret.Data[creds.UserKey]

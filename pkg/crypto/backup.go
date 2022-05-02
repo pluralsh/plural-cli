@@ -1,10 +1,12 @@
 package crypto
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func backupKey(key string) error {
@@ -38,8 +40,8 @@ func backupPath(ind int) string {
 	folder, _ := os.UserHomeDir()
 	infix := ""
 	if ind > 0 {
-		infix = fmt.Sprintf("_%d.", ind) 
+		infix = fmt.Sprintf("_%d.", ind)
 	}
 
-	return filepath.Join(folder, ".plural", "keybackups", fmt.Sprintf("key_backup%s", infix))
+	return pathing.SanitizeFilepath(filepath.Join(folder, ".plural", "keybackups", fmt.Sprintf("key_backup%s", infix)))
 }

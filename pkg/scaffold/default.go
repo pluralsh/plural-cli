@@ -1,15 +1,17 @@
 package scaffold
 
 import (
-	"path/filepath"
 	"io/ioutil"
+	"path/filepath"
+
 	"github.com/hashicorp/hcl"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
 func Read(path string) (*Build, error) {
-	fullpath := filepath.Join(path, "build.hcl")
+	fullpath := pathing.SanitizeFilepath(filepath.Join(path, "build.hcl"))
 	contents, err := ioutil.ReadFile(fullpath)
 	build := Build{}
 	if err != nil {
@@ -41,7 +43,7 @@ func Default(w *wkspace.Workspace, name string) (b *Build) {
 			{
 				Name: "helm",
 				Type: HELM,
-				Path: filepath.Join("helm", name),
+				Path: pathing.SanitizeFilepath(filepath.Join("helm", name)),
 				Preflight: []*executor.Step{
 					{
 						Name:    "update-deps",

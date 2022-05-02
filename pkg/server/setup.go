@@ -1,15 +1,16 @@
 package server
 
 import (
-	"os"
 	"fmt"
 	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/manifest"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func toConfig(setup *SetupRequest) *config.Config {
@@ -29,7 +30,7 @@ func toManifest(setup *SetupRequest) *manifest.ProjectManifest {
 		Region:       wk.Region,
 		BucketPrefix: wk.BucketPrefix,
 		Owner:        &manifest.Owner{Email: setup.User.Email},
-		Network:      &manifest.NetworkConfig{
+		Network: &manifest.NetworkConfig{
 			PluralDns: true,
 			Subdomain: wk.Subdomain,
 		},
@@ -41,9 +42,9 @@ func toContext(setup *SetupRequest) *manifest.Context {
 	ctx.Configuration = map[string]map[string]interface{}{
 		"console": map[string]interface{}{
 			"private_key": setup.SshPrivateKey,
-			"public_key": setup.SshPublicKey,
-			"passphrase": "",
-			"repo_url": setup.GitUrl,
+			"public_key":  setup.SshPublicKey,
+			"passphrase":  "",
+			"repo_url":    setup.GitUrl,
 		},
 	}
 	return ctx

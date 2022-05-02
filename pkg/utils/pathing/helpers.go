@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// returns a string (filepath) with appropriate slashes, dependent on OS
-func GenOSFilepathString(filepath string) string {
+// returns a string (filepath) with appropriate slashes, dependent on OS. Optional parameters and method overloading unavailable in Go.
+func SanitizeFilepath(filepath string) string {
 	os := runtime.GOOS
 	switch os {
 	case "windows":
@@ -16,8 +16,8 @@ func GenOSFilepathString(filepath string) string {
 	}
 }
 
-// returns a string (filepath) with appropriate slashes, dependent on OS
-func GenOSFilepathStringWithError(filepath string, err error) (string, error) {
+// returns a string (filepath) with appropriate slashes, dependent on OS if error is empty. Optional parameters and method overloading unavailable in Go.
+func SanitizeFilePathWithError(filepath string, err error) (string, error) {
 	os := runtime.GOOS
 	switch os {
 	case "windows":

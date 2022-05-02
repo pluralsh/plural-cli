@@ -3,8 +3,9 @@ package bundle
 import (
 	"fmt"
 	"os/exec"
-	"strings"
 	"path"
+	"strings"
+
 	"github.com/pluralsh/plural/pkg/api"
 )
 

@@ -1,8 +1,8 @@
 package provider
 
 import (
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 var validCluster = survey.ComposeValidators(

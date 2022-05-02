@@ -1,12 +1,14 @@
 package server
 
 import (
-	"os"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func gitExists() (bool, error) {
@@ -28,14 +30,14 @@ func setupGit(setup *SetupRequest) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(p, "id_rsa"), []byte(setup.SshPrivateKey), 0600); err != nil {
+	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa")), []byte(setup.SshPrivateKey), 0600); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(p, "id_rsa.pub"), []byte(setup.SshPublicKey), 0644); err != nil {
+	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa.pub")), []byte(setup.SshPublicKey), 0644); err != nil {
 		return err
 	}
 
-	if err := execCmd("ssh-add", filepath.Join(p, "id_rsa")); err != nil {
+	if err := execCmd("ssh-add", pathing.SanitizeFilepath(filepath.Join(p, "id_rsa"))); err != nil {
 		return err
 	}
 

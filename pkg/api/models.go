@@ -172,7 +172,7 @@ type Recipe struct {
 	Repository         *Repository
 	RecipeSections     []*RecipeSection
 	OidcSettings       *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
-	RecipeDependencies []*Recipe `yaml:"recipeDependencies",json:"recipeDependencies"`
+	RecipeDependencies []*Recipe     `yaml:"recipeDependencies",json:"recipeDependencies"`
 }
 
 type RecipeTest struct {
@@ -266,8 +266,8 @@ type User struct {
 }
 
 type Group struct {
-	Id    string
-	Name  string
+	Id   string
+	Name string
 }
 
 type ProviderBinding struct {
@@ -304,7 +304,7 @@ type ApplyLock struct {
 }
 
 type ScaffoldFile struct {
-	Path string
+	Path    string
 	Content string
 }
 

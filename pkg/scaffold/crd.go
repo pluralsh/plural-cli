@@ -8,6 +8,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
@@ -38,5 +39,5 @@ func writeCrd(path string, crd *api.Crd) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath.Join(path, crd.Name), contents, 0644)
+	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(path, crd.Name)), contents, 0644)
 }

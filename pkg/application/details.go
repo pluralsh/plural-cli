@@ -1,12 +1,13 @@
 package application
 
 import (
+	"context"
 	"time"
+
 	tm "github.com/buger/goterm"
 	"github.com/olekukonko/tablewriter"
-	"context"
-	"k8s.io/client-go/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 func additionalDetails(client *kubernetes.Clientset, kind, name, namespace string) {

@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/pluralfile"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
@@ -86,7 +87,7 @@ func pushCommands() []cli.Command {
 
 func apply(c *cli.Context) error {
 	path, _ := os.Getwd()
-	var file = filepath.Join(path, "Pluralfile")
+	var file = pathing.SanitizeFilepath(filepath.Join(path, "Pluralfile"))
 	if c.IsSet("file") {
 		file, _ = filepath.Abs(c.String("file"))
 	}
@@ -132,7 +133,7 @@ func handleHelmUpload(c *cli.Context) error {
 	conf := config.Read()
 	pth, repo := c.Args().Get(0), c.Args().Get(1)
 
-	f, err := tmpValuesFile(filepath.Join(pth, "values.yaml.tpl"), &conf)
+	f, err := tmpValuesFile(pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.tpl")), &conf)
 	if err != nil {
 		return err
 	}

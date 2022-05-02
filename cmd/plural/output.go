@@ -1,10 +1,12 @@
 package main
 
 import (
+	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
-	"path/filepath"
 )
 
 func outputCommands() []cli.Command {
@@ -19,7 +21,7 @@ func outputCommands() []cli.Command {
 }
 
 func outputPath(root, app string) string {
-	return filepath.Join(root, app, "output.yaml")
+	return pathing.SanitizeFilepath(filepath.Join(root, app, "output.yaml"))
 }
 
 func handleTerraformOutput(c *cli.Context) (err error) {
@@ -31,7 +33,7 @@ func handleTerraformOutput(c *cli.Context) (err error) {
 		out = output.New()
 	}
 
-	tfOut, err := output.TerraformOutput(filepath.Join(root, app, "terraform"))
+	tfOut, err := output.TerraformOutput(pathing.SanitizeFilepath(filepath.Join(root, app, "terraform")))
 	if err != nil {
 		return
 	}

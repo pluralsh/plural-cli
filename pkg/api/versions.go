@@ -38,4 +38,3 @@ func (client *Client) UpdateVersion(spec *VersionSpec, tags []string) error {
 	req.Var("attributes", &VersionAttributes{Tags: tagAttrs})
 	return client.Run(req, &resp)
 }
-

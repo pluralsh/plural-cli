@@ -3,9 +3,11 @@ package scaffold
 import (
 	"os"
 	"path/filepath"
+
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 var categories = []string{
@@ -30,8 +32,8 @@ var scaffoldSurvey = []*survey.Question{
 		Validate: survey.Required,
 	},
 	{
-		Name:     "category",
-		Prompt:   &survey.Select{
+		Name: "category",
+		Prompt: &survey.Select{
 			Message: "Enter the category for your application:",
 			Options: categories,
 		},
@@ -61,7 +63,7 @@ func ApplicationScaffold(client *api.Client) error {
 	}
 
 	app := input.Application
-	helmPath := filepath.Join(app, "helm")
+	helmPath := pathing.SanitizeFilepath(filepath.Join(app, "helm"))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -77,7 +79,7 @@ func ApplicationScaffold(client *api.Client) error {
 		return err
 	}
 
-	os.Chdir(filepath.Join(pwd, app))
+	os.Chdir(pathing.SanitizeFilepath(filepath.Join(pwd, app)))
 
 	for _, scaffold := range scaffolds {
 		if err := utils.WriteFile(scaffold.Path, []byte(scaffold.Content)); err != nil {

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/urfave/cli"
@@ -17,9 +18,9 @@ func reposCommands() []cli.Command {
 			Action:    handleUnlockRepo,
 		},
 		{
-			Name:      "reset",
-			Usage:     "eliminates your current plural installation set, to change cloud provider or eject from plural",
-			Action:    handleResetInstallations,
+			Name:   "reset",
+			Usage:  "eliminates your current plural installation set, to change cloud provider or eject from plural",
+			Action: handleResetInstallations,
 		},
 		{
 			Name:      "list",

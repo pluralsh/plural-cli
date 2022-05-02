@@ -12,12 +12,13 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"gopkg.in/yaml.v2"
 )
@@ -59,7 +60,7 @@ func (s *Scaffold) createChartDependencies(w *wkspace.Workspace, name string) er
 		return err
 	}
 
-	requirementsFile := filepath.Join(s.Root, "requirements.yaml")
+	requirementsFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "requirements.yaml"))
 	return utils.WriteFile(requirementsFile, io)
 }
 
@@ -98,7 +99,7 @@ func Notes(installation *api.Installation) error {
 
 	repo := installation.Repository.Name
 	ctx, _ := context.Repo(installation.Repository.Name)
-	valuesFile := filepath.Join(repoRoot, repo, "helm", repo, "values.yaml")
+	valuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "values.yaml"))
 	prevVals, _ := prevValues(valuesFile)
 	vals := map[string]interface{}{
 		"Values":        ctx,
@@ -150,7 +151,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	values := make(map[string]map[string]interface{})
 	buf.Grow(5 * 1024)
 
-	valuesFile := filepath.Join(s.Root, "values.yaml")
+	valuesFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "values.yaml"))
 	prevVals, _ := prevValues(valuesFile)
 	conf := config.Read()
 	globals := map[string]interface{}{}
@@ -170,7 +171,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		if w.Links != nil {
 			if path, ok := w.Links.Helm[chartInst.Chart.Name]; ok {
 				var err error
-				tplate, err = utils.ReadFile(filepath.Join(path, "values.yaml.tpl"))
+				tplate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.tpl")))
 				if err != nil {
 					return err
 				}
@@ -283,7 +284,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	}
 
 	version := "0.1.0"
-	filename := filepath.Join(s.Root, ChartfileName)
+	filename := pathing.SanitizeFilepath(filepath.Join(s.Root, ChartfileName))
 
 	if utils.Exists(filename) {
 		content, err := ioutil.ReadFile(filename)
@@ -325,24 +326,24 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	}{
 		{
 			// .helmignore
-			path:    filepath.Join(s.Root, IgnorefileName),
+			path:    pathing.SanitizeFilepath(filepath.Join(s.Root, IgnorefileName)),
 			content: []byte(defaultIgnore),
 		},
 		{
 			// NOTES.txt
-			path:    filepath.Join(s.Root, NotesName),
+			path:    pathing.SanitizeFilepath(filepath.Join(s.Root, NotesName)),
 			content: []byte(defaultNotes),
 			force:   true,
 		},
 		{
 			// templates/secret.yaml
-			path:    filepath.Join(s.Root, LicenseSecretName),
+			path:    pathing.SanitizeFilepath(filepath.Join(s.Root, LicenseSecretName)),
 			content: []byte(licenseSecret),
 			force:   true,
 		},
 		{
 			// templates/licnse.yaml
-			path:    filepath.Join(s.Root, LicenseCrdName),
+			path:    pathing.SanitizeFilepath(filepath.Join(s.Root, LicenseCrdName)),
 			content: []byte(fmt.Sprintf(license, repo.Name)),
 			force:   true,
 		},
@@ -361,7 +362,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	}
 
 	// remove old requirements.yaml files to fully migrate to helm v3
-	reqsFile := filepath.Join(s.Root, "requirements.yaml")
+	reqsFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "requirements.yaml"))
 	if utils.Exists(reqsFile) {
 		os.Remove(reqsFile)
 	}
@@ -384,12 +385,12 @@ func (s *Scaffold) createChart(w *wkspace.Workspace, name string) error {
 	}
 	appBuffer.WriteString(appTemplate)
 
-	if err := utils.WriteFile(filepath.Join(s.Root, ApplicationName), appBuffer.Bytes()); err != nil {
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(s.Root, ApplicationName)), appBuffer.Bytes()); err != nil {
 		return err
 	}
 
 	// Need to add the ChartsDir explicitly as it does not contain any file OOTB
-	if err := os.MkdirAll(filepath.Join(s.Root, ChartsDir), 0755); err != nil {
+	if err := os.MkdirAll(pathing.SanitizeFilepath(filepath.Join(s.Root, ChartsDir)), 0755); err != nil {
 		return err
 	}
 

@@ -2,33 +2,33 @@ package config
 
 import (
 	"fmt"
-	"gopkg.in/oleiade/reflections.v1"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
-)
 
+	"gopkg.in/oleiade/reflections.v1"
+	"gopkg.in/yaml.v2"
+)
 
 type Metadata struct {
 	Name string `yaml:"name"`
 }
 
 type Config struct {
-	Email string `json:"email"`
-	Token string `yaml:"token" json:"token"`
-	NamespacePrefix string `yaml:"namespacePrefix"`
-	Endpoint string `yaml:"endpoint"`
-	LockProfile string `yaml:"lockProfile"`
-	metadata *Metadata ``
+	Email           string    `json:"email"`
+	Token           string    `yaml:"token" json:"token"`
+	NamespacePrefix string    `yaml:"namespacePrefix"`
+	Endpoint        string    `yaml:"endpoint"`
+	LockProfile     string    `yaml:"lockProfile"`
+	metadata        *Metadata ``
 }
 
 type VersionedConfig struct {
-	ApiVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
+	ApiVersion string    `yaml:"apiVersion"`
+	Kind       string    `yaml:"kind"`
 	Metadata   *Metadata `yaml:"metadata"`
-	Spec       *Config `yaml:"spec"`
+	Spec       *Config   `yaml:"spec"`
 }
 
 func configFile() string {
@@ -41,7 +41,7 @@ func Exists() bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return true 
+	return true
 }
 
 func Read() Config {
@@ -50,7 +50,7 @@ func Read() Config {
 
 func Profile(name string) error {
 	folder, _ := os.UserHomeDir()
-	conf := Import(path.Join(folder, ".plural", name + ".yml"))
+	conf := Import(path.Join(folder, ".plural", name+".yml"))
 	return conf.Flush()
 }
 
@@ -60,7 +60,7 @@ func Profiles() ([]*VersionedConfig, error) {
 	files, err := ioutil.ReadDir(confDir)
 	confs := []*VersionedConfig{}
 	if err != nil {
-			return confs, err
+		return confs, err
 	}
 
 	for _, f := range files {
@@ -106,15 +106,15 @@ func Amend(key string, value string) error {
 func (conf *Config) Marshal() ([]byte, error) {
 	versioned := &VersionedConfig{
 		ApiVersion: "platform.plural.sh/v1alpha1",
-		Kind: "Config",
-		Spec: conf,
-		Metadata: conf.metadata,
+		Kind:       "Config",
+		Spec:       conf,
+		Metadata:   conf.metadata,
 	}
 	return yaml.Marshal(&versioned)
 }
 
 func (c *Config) Namespace(ns string) string {
-	if (len(c.NamespacePrefix) > 0) {
+	if len(c.NamespacePrefix) > 0 {
 		return fmt.Sprintf("%s%s", c.NamespacePrefix, ns)
 	}
 
@@ -127,7 +127,7 @@ func (c *Config) Url() string {
 
 func PluralUrl(endpoint string) string {
 	host := "https://app.plural.sh"
-	if (endpoint != "") {
+	if endpoint != "" {
 		host = fmt.Sprintf("https://%s", endpoint)
 	}
 	return host
