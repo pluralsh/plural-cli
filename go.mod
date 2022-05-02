@@ -37,7 +37,7 @@ require (
 	github.com/thoas/go-funk v0.9.1
 	github.com/urfave/cli v1.22.8
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
-	golang.org/x/mod v0.4.2
+	golang.org/x/mod v0.5.1
 	google.golang.org/genproto v0.0.0-20210929214142-896c89f843d2
 	gopkg.in/oleiade/reflections.v1 v1.0.0
 	gopkg.in/yaml.v2 v2.4.0
