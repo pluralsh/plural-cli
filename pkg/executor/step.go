@@ -13,6 +13,15 @@ import (
 	"golang.org/x/mod/sumdb/dirhash"
 )
 
+type WrappedError struct {
+	inner error
+	Output string
+}
+
+func (we *WrappedError) Error() string {
+	return we.inner.Error()
+}
+
 type Step struct {
 	Name    string   `hcl:",key"`
 	Wkdir   string   `hcl:"wkdir"`
@@ -35,7 +44,9 @@ func SuppressedCommand(command string, args ...string) (cmd *exec.Cmd, output *O
 func RunCommand(cmd *exec.Cmd, output *OutputWriter) (err error) {
 	err = cmd.Run()
 	if err != nil {
-		fmt.Printf("\nOutput:\n\n%s\n", output.Format())
+		out := output.Format()
+		fmt.Printf("\nOutput:\n\n%s\n", out)
+		err = &WrappedError{inner: err, Output: out}
 		return
 	}
 

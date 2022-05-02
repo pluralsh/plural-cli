@@ -75,6 +75,7 @@ func handleLogin(c *cli.Context) error {
 	}
 
 	conf.Token = jwt
+	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?")
 	client = api.FromConfig(conf)
 	return postLogin(conf, client, c)
 }

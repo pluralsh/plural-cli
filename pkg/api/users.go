@@ -98,8 +98,20 @@ const deleteEabCredential = `
 	}
 `
 
+const createEvent = `
+	mutation Event($attrs: UserEventAttributes!) {
+		createUserEvent(attributes: $attrs)
+	}
+`
+
 type UpgradeAttributes struct {
 	Message string
+}
+
+type UserEventAttributes struct {
+	Event  string
+	Data   string
+	Status string
 }
 
 type DeviceLogin struct {
@@ -291,6 +303,16 @@ func (client *Client) DeleteEabCredential(cluster, provider string) error {
 	req := client.Build(deleteEabCredential)
 	req.Var("cluster", cluster)
 	req.Var("provider", toProvider(provider))
+	return client.Run(req, &resp)
+}
+
+func (client *Client) CreateEvent(event *UserEventAttributes) error {
+	var resp struct {
+		CreateUserEvent bool
+	}
+
+	req := client.Build(createEvent)
+	req.Var("attrs", event)
 	return client.Run(req, &resp)
 }
 

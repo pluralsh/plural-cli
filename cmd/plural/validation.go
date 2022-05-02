@@ -7,6 +7,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
@@ -57,6 +59,28 @@ func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error
 	}
 }
 
+func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		event := api.UserEventAttributes{Data: "", Event: event, Status: "OK"}
+		err := fn(c)
+		if err != nil {
+			event.Status = "ERROR"
+			if we, ok := err.(*executor.WrappedError); ok {
+				event.Data = we.Output
+			} else {
+				event.Data = fmt.Sprint(err)
+			}
+		}
+
+		conf := config.Read()
+		if conf.ReportErrors {
+			client := api.FromConfig(&conf)
+			client.CreateEvent(&event)
+		}
+		return err
+	}
+}
+
 func validateOwner() error {
 	path := manifest.ProjectManifestPath()
 	project, err := manifest.ReadProject(path)
@@ -81,6 +105,13 @@ func validateOwner() error {
 func confirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg}
+	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	return res
+}
+
+func affirm(msg string) bool {
+	res := true
+	prompt := &survey.Confirm{Message: msg, Default: true}
 	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
 	return res
 }
