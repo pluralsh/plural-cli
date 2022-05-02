@@ -65,7 +65,7 @@ jobs:
       with:
         version: latest
     - name: installing plural
-      uses: pluralsh/setup-plural@v0.1.1
+      uses: pluralsh/setup-plural@v0.1.2
       with:
         config: ${{ secrets.PLURAL_CONF }}
     - run: plural apply
