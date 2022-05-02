@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -30,7 +30,7 @@ func Exec(namespace string, name string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	t := proxy.Spec.Type
 	switch t {
 	case v1alpha1.Db:

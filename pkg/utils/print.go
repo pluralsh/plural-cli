@@ -2,12 +2,13 @@ package utils
 
 import (
 	"bufio"
-	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh/terminal"
 	"fmt"
 	"os"
-	"syscall"
 	"strings"
+	"syscall"
+
+	"github.com/fatih/color"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func ReadLine(prompt string) (string, error) {
@@ -50,23 +51,23 @@ func ReadPwd(prompt string) (string, error) {
 	return strings.TrimSpace(string(pwd)), err
 }
 
-func Warn(line string, args... interface{}) {
+func Warn(line string, args ...interface{}) {
 	color.New(color.FgYellow, color.Bold).Fprintf(os.Stderr, line, args...)
 }
 
-func Success(line string, args... interface{}) {
+func Success(line string, args ...interface{}) {
 	color.New(color.FgGreen, color.Bold).Printf(line, args...)
 }
 
-func Error(line string, args... interface{}) {
+func Error(line string, args ...interface{}) {
 	color.New(color.FgRed, color.Bold).Printf(line, args...)
 }
 
-func Highlight(line string, args... interface{}) {
+func Highlight(line string, args ...interface{}) {
 	color.New(color.Bold).Printf(line, args...)
 }
 
-func Note(line string, args... interface{}) {
+func Note(line string, args ...interface{}) {
 	Warn("**NOTE** :: ")
 	Highlight(line, args...)
 }

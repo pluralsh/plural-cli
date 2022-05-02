@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -19,9 +19,9 @@ func opsCommands() []cli.Command {
 			Action:    handleTerminateNode,
 		},
 		{
-			Name:      "cluster",
-			Usage:     "list the nodes in your cluster",
-			Action:    handleListNodes,
+			Name:   "cluster",
+			Usage:  "list the nodes in your cluster",
+			Action: handleListNodes,
 		},
 	}
 }
@@ -64,8 +64,8 @@ func handleListNodes(cli *cli.Context) error {
 		labels := node.ObjectMeta.Labels
 		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
 		table.Append([]string{
-			node.Name, 
-			cpu.String(), 
+			node.Name,
+			cpu.String(),
 			mem.String(),
 			labels["topology.kubernetes.io/region"],
 			labels["topology.kubernetes.io/zone"],

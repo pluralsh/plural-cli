@@ -6,7 +6,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils/git"
-
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,7 +29,7 @@ func NewApplications() (*Applications, error) {
 
 func (apps *Applications) HelmValues(app string) (map[string]interface{}, error) {
 	var res map[string]interface{}
-	path := filepath.Join(apps.Root, app, "helm", app, "values.yaml")
+	path := pathing.SanitizeFilepath(filepath.Join(apps.Root, app, "helm", app, "values.yaml"))
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		return res, err
@@ -40,6 +40,6 @@ func (apps *Applications) HelmValues(app string) (map[string]interface{}, error)
 }
 
 func (apps *Applications) TerraformValues(app string) (map[string]interface{}, error) {
-	out, err := output.Read(filepath.Join(apps.Root, app, "output.yaml"))
+	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(apps.Root, app, "output.yaml")))
 	return out.Terraform, err
 }

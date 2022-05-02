@@ -3,20 +3,22 @@ package crypto
 import (
 	"io/ioutil"
 	"path/filepath"
-	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
 	Version string
-	Type IdentityType
-	Id string
+	Type    IdentityType
+	Id      string
 	Context map[string]interface{}
 }
 
 func configPath() string {
 	root, _ := utils.ProjectRoot()
-	return filepath.Join(root, "crypto.yml")
+	return pathing.SanitizeFilepath(filepath.Join(root, "crypto.yml"))
 }
 
 func ReadConfig() (conf *Config, err error) {
@@ -39,7 +41,7 @@ func Build() (Provider, error) {
 			return fallback, err
 		}
 
-		switch (conf.Type) {
+		switch conf.Type {
 		case KEY:
 			return buildKeyProvider(conf)
 		case AGE:

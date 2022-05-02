@@ -1,26 +1,27 @@
 package utils
 
 import (
-	"os"
-	"path/filepath"
-	"context"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
-	"sigs.k8s.io/yaml"
-	"k8s.io/client-go/dynamic"
+	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
+	"github.com/pluralsh/plural/pkg/application"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubeyaml "k8s.io/apimachinery/pkg/util/yaml"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/rest"
-	"github.com/pluralsh/plural/pkg/application"
-	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
+	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/yaml"
 )
 
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -34,10 +35,10 @@ func InKubernetes() bool {
 }
 
 type Kube struct {
-	Kube  *kubernetes.Clientset
-	Plural *pluralv1alpha1.Clientset
+	Kube        *kubernetes.Clientset
+	Plural      *pluralv1alpha1.Clientset
 	Application *application.ApplicationV1Beta1Client
-	Dynamic dynamic.Interface
+	Dynamic     dynamic.Interface
 }
 
 func InClusterKubernetes() (*Kube, error) {
@@ -53,9 +54,9 @@ func KubeConfig() (*rest.Config, error) {
 	if InKubernetes() {
 		return rest.InClusterConfig()
 	}
-	
+
 	homedir, _ := os.UserHomeDir()
-	conf := filepath.Join(homedir, ".kube", "config")
+	conf := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
 	return clientcmd.BuildConfigFromFlags("", conf)
 }
 
@@ -79,12 +80,12 @@ func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {
 			}
 			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)
 		}
-	
+
 		ext.Raw = bytes.TrimSpace(ext.Raw)
 		if len(ext.Raw) == 0 || bytes.Equal(ext.Raw, []byte("null")) {
 			continue
 		}
-	
+
 		u := &unstructured.Unstructured{}
 		if err := yaml.Unmarshal(ext.Raw, u); err != nil {
 			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)

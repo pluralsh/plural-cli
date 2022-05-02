@@ -22,8 +22,9 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
@@ -124,8 +125,8 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
 	}
 
-	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitignore"), []byte("!/**"))
-	utils.WriteFile(filepath.Join(equinix.Bucket(), ".gitattributes"), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
+	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**"))
+	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
 	scaffold, err := GetProviderScaffold("EQUINIX")
 	if err != nil {
 		return "", err
@@ -142,12 +143,12 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 
 	usr, _ := user.Current()
 
-	input, err := ioutil.ReadFile(filepath.Join(usr.HomeDir, ".kube/config"))
+	input, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")))
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(usr.HomeDir, ".kube/config-plural-backup"), input, 0644)
+	err = ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config-plural-backup")), input, 0644)
 	if err != nil {
 		return err
 	}
@@ -158,8 +159,8 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 	}
 
 	kubeConfigFiles := []string{
-		filepath.Join(usr.HomeDir, ".kube/config-plural-backup"),
-		filepath.Join(repoRoot, "bootstrap/terraform/kube_config_cluster.yaml"),
+		pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config-plural-backup")),
+		pathing.SanitizeFilepath(filepath.Join(repoRoot, "bootstrap/terraform/kube_config_cluster.yaml")),
 	}
 	kubeconfigs := []*clientcmdapi.Config{}
 
@@ -207,7 +208,7 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath.Join(usr.HomeDir, ".kube/config"), output, 0644)
+	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")), output, 0644)
 }
 
 func (equinix *EQUINIXProvider) Name() string {

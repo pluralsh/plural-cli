@@ -2,10 +2,11 @@ package tests
 
 import (
 	"fmt"
-	"os"
 	"io/ioutil"
-	"github.com/pluralsh/plural/pkg/api"
+	"os"
+
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils/git"
 )
@@ -21,7 +22,7 @@ func testGit(ctx *manifest.Context, test *api.RecipeTest) error {
 	if err != nil {
 		return err
 	}
-	
+
 	defer os.RemoveAll(dir)
 	fmt.Println("~~> Attempting to clone repo in a temporary directory...")
 	_, err = git.Clone(auth, url, dir)

@@ -15,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/urfave/cli"
@@ -197,6 +198,7 @@ func deploy(c *cli.Context) error {
 	verbose := c.Bool("verbose")
 	client := api.NewClient()
 	repoRoot, err := git.Root()
+
 	if err != nil {
 		return err
 	}
@@ -221,7 +223,7 @@ func deploy(c *cli.Context) error {
 			continue
 		}
 
-		execution, err := executor.GetExecution(filepath.Join(repoRoot, repo), "deploy")
+		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
 		if err != nil {
 			return err
 		}
@@ -294,7 +296,7 @@ func handleDiff(c *cli.Context) error {
 	fmt.Printf("Diffing applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
 
 	for _, repo := range sorted {
-		d, err := diff.GetDiff(filepath.Join(repoRoot, repo), "diff")
+		d, err := diff.GetDiff(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "diff")
 		if err != nil {
 			return err
 		}
@@ -346,7 +348,7 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 	}
 	workspace.Provider.KubeConfig()
 
-	os.Chdir(filepath.Join(repoRoot, repoName))
+	os.Chdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repoName)))
 	return workspace.Bounce()
 }
 

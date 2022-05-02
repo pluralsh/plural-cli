@@ -17,5 +17,6 @@ func Modified() ([]string, error) {
 			result = append(result, cols[1])
 		}
 	}
+
 	return result, nil
 }

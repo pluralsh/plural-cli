@@ -1,12 +1,13 @@
 package bundle
 
 import (
-	"strings"
 	"fmt"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/manifest"
+	"strings"
+
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 var oidcConfirmed bool
@@ -39,10 +40,10 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	}
 
 	oidcSettings := &api.OidcProviderAttributes{
-		RedirectUris: []string{ redirectUri },
-		AuthMethod: settings.AuthMethod,
+		RedirectUris: []string{redirectUri},
+		AuthMethod:   settings.AuthMethod,
 		Bindings: []api.Binding{
-			{ UserId: me.Id },
+			{UserId: me.Id},
 		},
 	}
 	mergeOidcAttributes(inst, oidcSettings)
@@ -50,9 +51,8 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	return client.OIDCProvider(inst.Id, oidcSettings)
 }
 
-
 func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAttributes) {
-	if (inst.OIDCProvider == nil) {
+	if inst.OIDCProvider == nil {
 		return
 	}
 
@@ -80,7 +80,7 @@ func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (
 
 		uri = strings.ReplaceAll(uri, "{domain}", domain.(string))
 	}
-	
+
 	if settings.Subdomain {
 		proj, err := manifest.FetchProject()
 		if err != nil {

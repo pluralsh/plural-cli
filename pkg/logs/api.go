@@ -1,9 +1,9 @@
 package logs
 
 import (
-	"os"
-	"fmt"
 	"context"
+	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
@@ -26,7 +26,7 @@ func Tail(namespace string, name string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	ctx := context.Background()
 	tail, err := kube.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
 

@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rodaine/hclencoder"
-
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/rodaine/hclencoder"
 )
 
 type Scaffold struct {
@@ -44,7 +44,7 @@ func Scaffolds(wk *wkspace.Workspace) (*Build, error) {
 	}
 
 	name := wk.Installation.Repository.Name
-	wkspaceRoot := filepath.Join(repoRoot, name)
+	wkspaceRoot := pathing.SanitizeFilepath(filepath.Join(repoRoot, name))
 
 	build, err := Read(wkspaceRoot)
 	def := Default(wk, name)
@@ -118,7 +118,7 @@ func (b *Build) Flush(root string) error {
 		return err
 	}
 
-	path, _ := filepath.Abs(filepath.Join(root, b.Metadata.Name, "build.hcl"))
+	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, b.Metadata.Name, "build.hcl")))
 	return ioutil.WriteFile(path, io, 0644)
 }
 
@@ -165,7 +165,7 @@ func (b *Build) Execute(wk *wkspace.Workspace, force bool) error {
 	}
 
 	for _, s := range b.Scaffolds {
-		path := filepath.Join(root, b.Metadata.Name, s.Path)
+		path := pathing.SanitizeFilepath(filepath.Join(root, b.Metadata.Name, s.Path))
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			b.Flush(root)
 			return err

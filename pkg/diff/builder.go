@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -25,7 +26,7 @@ type Metadata struct {
 }
 
 func GetDiff(path, name string) (*Diff, error) {
-	fullpath := filepath.Join(path, name+".hcl")
+	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
 	contents, err := ioutil.ReadFile(fullpath)
 	diff := Diff{}
 	if err != nil {
@@ -41,7 +42,7 @@ func (e *Diff) Execute() error {
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(root, "diffs")
+	path := pathing.SanitizeFilepath(filepath.Join(root, "diffs"))
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (e *Diff) Execute() error {
 }
 
 func (e *Diff) IgnoreFile(root string) ([]string, error) {
-	ignorePath := filepath.Join(root, e.Metadata.Path, ".pluralignore")
+	ignorePath := pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, ".pluralignore"))
 	contents, err := ioutil.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
@@ -93,16 +94,16 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 	steps := []*executor.Step{
 		{
 			Name:    "terraform-init",
-			Wkdir:   filepath.Join(path, "terraform"),
-			Target:  filepath.Join(path, "terraform"),
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
 			Args:    []string{"init"},
 			Sha:     "",
 		},
 		{
 			Name:    "terraform",
-			Wkdir:   filepath.Join(path, "terraform"),
-			Target:  filepath.Join(path, "terraform"),
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "plural",
 			Args:    []string{"wkspace", "terraform-diff", path},
 			Sha:     "",
@@ -117,8 +118,8 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 		},
 		{
 			Name:    "helm",
-			Wkdir:   filepath.Join(path, "helm"),
-			Target:  filepath.Join(path, "helm"),
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "helm")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Command: "plural",
 			Args:    []string{"wkspace", "helm-diff", path},
 			Sha:     "",
@@ -174,10 +175,10 @@ func (d *Diff) Flush(root string) error {
 		return err
 	}
 
-	path, _ := filepath.Abs(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl"))
+	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl")))
 	return ioutil.WriteFile(path, io, 0644)
 }
 
 func pluralfile(base, name string) string {
-	return filepath.Join(base, ".plural", name)
+	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
 }

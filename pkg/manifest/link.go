@@ -6,19 +6,18 @@ import (
 
 type Links struct {
 	Terraform map[string]string
-	Helm map[string]string
+	Helm      map[string]string
 }
-
 
 func (man *Manifest) AddLink(tool, name, path string) {
 	links := man.Links
 	if links == nil {
 		links = &Links{
 			Terraform: map[string]string{},
-			Helm: map[string]string{},
+			Helm:      map[string]string{},
 		}
 	}
-	
+
 	absPath, _ := filepath.Abs(path)
 
 	if tool == "terraform" {

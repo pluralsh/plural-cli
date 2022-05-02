@@ -1,20 +1,21 @@
 package main
 
 import (
-	"time"
-	"fmt"
-	"runtime"
 	"encoding/json"
-	"net/http"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"runtime"
 	"strings"
-	"github.com/urfave/cli"
+	"time"
+
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 var (
 	GitCommit string
-  Version string
+	Version   string
 )
 
 var BuildDate = time.Now()

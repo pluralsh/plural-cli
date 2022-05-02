@@ -2,12 +2,13 @@ package manifest
 
 import (
 	"fmt"
-	"strings"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,7 +19,7 @@ func ProjectManifestPath() string {
 		return path
 	}
 
-	return filepath.Join(root, "workspace.yaml")
+	return pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml"))
 }
 
 func ManifestPath(repo string) (string, error) {
@@ -27,7 +28,7 @@ func ManifestPath(repo string) (string, error) {
 		return "", fmt.Errorf("You're not within an installation repo")
 	}
 
-	return filepath.Join(root, repo, "manifest.yaml"), nil
+	return pathing.SanitizeFilepath(filepath.Join(root, repo, "manifest.yaml")), nil
 }
 
 func (m *ProjectManifest) Write(path string) error {
@@ -130,7 +131,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 	if pluralDns {
 		modifier = ", must be a subdomain under onplural.sh"
 	}
-	
+
 	subdomain := utils.UntilInputValid(
 		func() (string, error) {
 			return utils.ReadLine(fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier))
@@ -139,7 +140,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 			if err := utils.ValidateDns(val); err != nil {
 				return err
 			}
-	
+
 			if pluralDns && !strings.HasSuffix(val, "onplural.sh") {
 				return fmt.Errorf("Not an onplural.sh domain")
 			}

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/hcl"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -27,12 +28,12 @@ const (
 )
 
 func Ignore(root string) error {
-	ignoreFile := filepath.Join(root, ".pluralignore")
+	ignoreFile := pathing.SanitizeFilepath(filepath.Join(root, ".pluralignore"))
 	return ioutil.WriteFile(ignoreFile, []byte(pluralIgnore), 0644)
 }
 
 func GetExecution(path, name string) (*Execution, error) {
-	fullpath := filepath.Join(path, name+".hcl")
+	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
 	contents, err := ioutil.ReadFile(fullpath)
 	ex := Execution{}
 	if err != nil {
@@ -78,7 +79,7 @@ func (e *Execution) Execute(verbose bool) error {
 }
 
 func (e *Execution) IgnoreFile(root string) ([]string, error) {
-	ignorePath := filepath.Join(root, e.Metadata.Path, ".pluralignore")
+	ignorePath := pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, ".pluralignore"))
 	contents, err := ioutil.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
@@ -149,10 +150,10 @@ func (e *Execution) Flush(root string) error {
 		return err
 	}
 
-	path, _ := filepath.Abs(filepath.Join(root, e.Metadata.Path, e.Metadata.Name+".hcl"))
+	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, e.Metadata.Name+".hcl")))
 	return ioutil.WriteFile(path, io, 0644)
 }
 
 func pluralfile(base, name string) string {
-	return filepath.Join(base, ".plural", name)
+	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
 }

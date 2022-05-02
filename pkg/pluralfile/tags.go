@@ -1,15 +1,15 @@
 package pluralfile
 
 import (
-	"fmt"
-	"os"
-	"io"
 	"errors"
-	"gopkg.in/yaml.v3"
+	"fmt"
+	"io"
+	"os"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/api"
+	"gopkg.in/yaml.v3"
 )
 
 type VersionSpec struct {
@@ -64,10 +64,10 @@ func (t *Tags) Push(repo string, sha string) (string, error) {
 		}
 
 		vspec := &api.VersionSpec{
-			Repository: repo, 
-			Chart: tagSpec.Spec.Chart, 
-			Terraform: tagSpec.Spec.Terraform, 
-			Version: tagSpec.Spec.Version,
+			Repository: repo,
+			Chart:      tagSpec.Spec.Chart,
+			Terraform:  tagSpec.Spec.Terraform,
+			Version:    tagSpec.Spec.Version,
 		}
 		if err := client.UpdateVersion(vspec, tagSpec.Tags); err != nil {
 			fmt.Println("")

@@ -1,9 +1,9 @@
 package wkspace
 
 import (
-	"os"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
@@ -11,10 +11,11 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/output"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 type MinimalWorkspace struct {
@@ -35,35 +36,43 @@ func Minimal(name string) (*MinimalWorkspace, error) {
 		return nil, err
 	}
 
-	project, _ := manifest.ReadProject(filepath.Join(root, "workspace.yaml"))
+	project, _ := manifest.ReadProject(pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml")))
 	conf := config.Read()
 	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf, Manifest: project}, nil
 }
 
 func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	tmpl, err := template.New("gotpl").Parse(vals)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 	err = tmpl.Execute(w, map[string]interface{}{"Import": *output})
 	return
 }
 
 func templateVals(app, path string) (backup string, err error) {
 	root, _ := utils.ProjectRoot()
-	valsFile := filepath.Join(path, "values.yaml")
+	valsFile := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml"))
 	vals, err := utils.ReadFile(valsFile)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
-	out, err := output.Read(filepath.Join(root, app, "output.yaml"))
-	if err != nil { 
+	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, app, "output.yaml")))
+	if err != nil {
 		out = output.New()
 	}
 
 	backup = fmt.Sprintf("%s.bak", valsFile)
 	err = os.Rename(valsFile, backup)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	f, err := os.Create(valsFile)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 	defer f.Close()
 
 	err = FormatValues(f, vals, out)
@@ -71,13 +80,13 @@ func templateVals(app, path string) (backup string, err error) {
 }
 
 func (m *MinimalWorkspace) BounceHelm() error {
-	path, err := filepath.Abs(filepath.Join("helm", m.Name))
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
 	}
 	backup, err := templateVals(m.Name, path)
 	if err == nil {
-		defer os.Rename(backup, filepath.Join(path, "values.yaml"))
+		defer os.Rename(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
@@ -93,7 +102,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	}
 	backup, err := templateVals(m.Name, path)
 	if err == nil {
-		defer os.Rename(backup, filepath.Join(path, "values.yaml"))
+		defer os.Rename(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
@@ -110,7 +119,7 @@ func (m *MinimalWorkspace) DiffTerraform() error {
 
 func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
 	diffFolder, err := m.constructDiffFolder()
-	outfile, err := os.Create(filepath.Join(diffFolder, command))
+	outfile, err := os.Create(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(diffFolder, command))))
 	if err != nil {
 		return err
 	}
@@ -128,7 +137,7 @@ func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
 		return "", err
 	}
 
-	diffFolder, _ := filepath.Abs(filepath.Join(root, "diffs", m.Name))
+	diffFolder, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, "diffs", m.Name)))
 	if err := os.MkdirAll(diffFolder, os.ModePerm); err != nil {
 		return diffFolder, err
 	}

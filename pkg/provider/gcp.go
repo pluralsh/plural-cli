@@ -6,8 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	v1 "k8s.io/api/core/v1"
-
+	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
@@ -15,9 +14,8 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
-
-	compute "cloud.google.com/go/compute/apiv1"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 type GCPProvider struct {

@@ -1,34 +1,36 @@
 package crypto
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
-	"io/ioutil"
-	"io"
-	"bytes"
 	"strings"
 	"time"
+
 	"filippo.io/age"
-	"gopkg.in/yaml.v2"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"gopkg.in/yaml.v2"
 )
 
 const (
 	identityFile = "identities.yml"
-	gitignore = "identity\n"
+	gitignore    = "identity\n"
 )
 
 type AgeProvider struct {
 	Identity *age.X25519Identity
-	Key *AESKey
+	Key      *AESKey
 }
 
 type Age struct {
-	RepoKey string
+	RepoKey    string
 	Identities []*AgeIdentity
 }
 
@@ -50,8 +52,8 @@ func (prov *AgeProvider) ID() string {
 func (prov *AgeProvider) Marshall() ([]byte, error) {
 	conf := Config{
 		Version: "crypto.plural.sh/v1",
-		Type: AGE,
-		Id: prov.ID(),
+		Type:    AGE,
+		Id:      prov.ID(),
 		Context: map[string]interface{}{},
 	}
 
@@ -78,7 +80,7 @@ func BuildAgeProvider() (prov *AgeProvider, err error) {
 	}
 
 	prov = &AgeProvider{Identity: ident}
-	contents, err := ioutil.ReadFile(filepath.Join(cryptPath(), "key"))
+	contents, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key")))
 	if err != nil {
 		return
 	}
@@ -118,7 +120,7 @@ func SetupAge(emails []string) error {
 		age.Identities = idents
 	}
 
-	keyPath := filepath.Join(cryptPath(), "key")
+	keyPath := pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key"))
 	// repo key already exists, so re-encrypt using new age config
 	if utils.Exists(keyPath) {
 		prov, err := BuildAgeProvider()
@@ -189,7 +191,7 @@ func (age *Age) Flush() error {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath.Join(cryptPath(), identityFile), contents, 0644)
+	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), identityFile)), contents, 0644)
 }
 
 func SetupIdentity(name string) error {
@@ -198,7 +200,7 @@ func SetupIdentity(name string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return client.CreateKey(name, userIdentity.Recipient().String())
 }
 
@@ -210,7 +212,7 @@ func setupAgeConfig() (*Age, error) {
 		return nil, err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(base, ".gitignore"), []byte(gitignore), 0644); err != nil {
+	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(base, ".gitignore")), []byte(gitignore), 0644); err != nil {
 		return nil, err
 	}
 
@@ -225,10 +227,10 @@ func setupAgeConfig() (*Age, error) {
 		return nil, err
 	}
 
-	// create the 
+	// create the
 	conf := config.Read()
 	age := &Age{
-		RepoKey: repoIdentity.Recipient().String(), 
+		RepoKey: repoIdentity.Recipient().String(),
 		Identities: []*AgeIdentity{
 			{Email: conf.Email, Key: userIdentity.Recipient().String()},
 		},
@@ -238,7 +240,9 @@ func setupAgeConfig() (*Age, error) {
 
 func identityFromString(contents string) (*age.X25519Identity, error) {
 	for _, line := range strings.Split(string(contents), "\n") {
-		if strings.HasPrefix(line, "#") || line == "" { continue }
+		if strings.HasPrefix(line, "#") || line == "" {
+			continue
+		}
 		return age.ParseX25519Identity(line)
 	}
 
@@ -274,10 +278,10 @@ func generateIdentity(path string) (*age.X25519Identity, error) {
 
 func getAgePath() string {
 	folder, _ := os.UserHomeDir()
-	return filepath.Join(folder, ".plural", "identity")
+	return pathing.SanitizeFilepath(filepath.Join(folder, ".plural", "identity"))
 }
 
 func cryptPath() string {
 	root, _ := git.Root()
-	return filepath.Join(root, ".plural-crypt")
+	return pathing.SanitizeFilepath(filepath.Join(root, ".plural-crypt"))
 }

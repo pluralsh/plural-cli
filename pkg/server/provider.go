@@ -2,6 +2,7 @@ package server
 
 import (
 	"io/ioutil"
+
 	homedir "github.com/mitchellh/go-homedir"
 	prov "github.com/pluralsh/plural/pkg/provider"
 )

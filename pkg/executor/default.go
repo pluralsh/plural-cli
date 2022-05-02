@@ -2,24 +2,27 @@ package executor
 
 import (
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func defaultSteps(path string) []*Step {
-	app := filepath.Base(path)
+	app := pathing.SanitizeFilepath(filepath.Base(path))
+	sanitizedPath := pathing.SanitizeFilepath(path)
 
 	return []*Step{
 		{
 			Name:    "terraform-init",
-			Wkdir:   filepath.Join(path, "terraform"),
-			Target:  filepath.Join(path, "terraform"),
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
 			Args:    []string{"init", "-upgrade"},
 			Sha:     "",
 		},
 		{
 			Name:    "terraform-apply",
-			Wkdir:   filepath.Join(path, "terraform"),
-			Target:  filepath.Join(path, "terraform"),
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
 			Args:    []string{"apply", "-auto-approve"},
 			Sha:     "",
@@ -28,33 +31,33 @@ func defaultSteps(path string) []*Step {
 		{
 			Name:    "terraform-output",
 			Wkdir:   app,
-			Target:  filepath.Join(path, "terraform"),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "plural",
 			Args:    []string{"output", "terraform", app},
 			Sha:     "",
 		},
 		{
 			Name:    "kube-init",
-			Wkdir:   path,
-			Target:  pluralfile(path, "NONCE"),
+			Wkdir:   sanitizedPath,
+			Target:  pathing.SanitizeFilepath(pluralfile(path, "NONCE")),
 			Command: "plural",
 			Args:    []string{"wkspace", "kube-init"},
 			Sha:     "",
 		},
 		{
 			Name:    "crds",
-			Wkdir:   path,
-			Target:  filepath.Join(path, "crds"),
+			Wkdir:   sanitizedPath,
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "crds")),
 			Command: "plural",
-			Args:    []string{"wkspace", "crds", path},
+			Args:    []string{"wkspace", "crds", sanitizedPath},
 			Sha:     "",
 		},
 		{
 			Name:    "bounce",
-			Wkdir:   path,
-			Target:  filepath.Join(path, "helm"),
+			Wkdir:   sanitizedPath,
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Command: "plural",
-			Args:    []string{"wkspace", "helm", path},
+			Args:    []string{"wkspace", "helm", sanitizedPath},
 			Sha:     "",
 			Retries: 1,
 		},

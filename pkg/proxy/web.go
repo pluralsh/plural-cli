@@ -2,9 +2,10 @@ package proxy
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/utils"
-	"time"
 )
 
 func execWeb(namespace string, proxy *v1alpha1.Proxy, kube *utils.Kube) error {
@@ -26,8 +27,8 @@ func execWeb(namespace string, proxy *v1alpha1.Proxy, kube *utils.Kube) error {
 
 func printCredentials(proxy *v1alpha1.Proxy, namespace string, kube *utils.Kube) error {
 	creds := proxy.Spec.Credentials
-	if creds == nil { 
-		return nil 
+	if creds == nil {
+		return nil
 	}
 
 	secret, err := kube.Secret(namespace, creds.Secret)
@@ -49,4 +50,3 @@ func highlightedEntry(label, value string) {
 	utils.Highlight(label + ": ")
 	fmt.Println(value)
 }
-

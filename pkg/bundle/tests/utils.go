@@ -6,7 +6,7 @@ import (
 )
 
 type ContextValue struct {
-	Val interface{}
+	Val     interface{}
 	Present bool
 }
 

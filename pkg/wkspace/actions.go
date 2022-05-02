@@ -1,14 +1,16 @@
 package wkspace
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/executor"
-	"os"
-	"fmt"
-	"time"
-	"strings"
-	"path/filepath"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func execSuppressed(command string, args ...string) (err error) {
@@ -32,7 +34,7 @@ func (w *Workspace) DestroyHelm() error {
 
 	ns := w.Config.Namespace(name)
 	if err := execSuppressed("helm", "get", "values", name, "-n", ns); err != nil {
-		fmt.Println("Helm already uninstalled, continuing...\n")
+		fmt.Println("Helm already uninstalled, continuing...")
 		return nil
 	}
 
@@ -66,19 +68,19 @@ func (w *Workspace) Reset() error {
 		return err
 	}
 
-	deployfile := filepath.Join(repoRoot, repo.Name, "deploy.hcl")
+	deployfile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "deploy.hcl"))
 	os.Remove(deployfile)
 	return nil
 }
 
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
-	path, err := filepath.Abs(filepath.Join(repo.Name, "terraform"))
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repo.Name, "terraform")))
 	if err != nil {
 		return err
 	}
 
-	time.AfterFunc(1 * time.Minute, func() {
+	time.AfterFunc(1*time.Minute, func() {
 		kube, err := utils.Kubernetes()
 		if err != nil {
 			fmt.Println("could not set up k8s client due to %s", err)
