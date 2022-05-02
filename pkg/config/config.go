@@ -22,6 +22,7 @@ type Config struct {
 	Endpoint        string    `yaml:"endpoint"`
 	LockProfile     string    `yaml:"lockProfile"`
 	metadata        *Metadata ``
+	ReportErrors    bool      `yaml:"reportErrors"`
 }
 
 type VersionedConfig struct {

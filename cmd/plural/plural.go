@@ -46,7 +46,7 @@ func main() {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: owned(build),
+			Action: tracked(owned(build), "cli.build"),
 		},
 		{
 			Name:      "deploy",
@@ -79,7 +79,7 @@ func main() {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: owned(rooted(deploy)),
+			Action: tracked(owned(rooted(deploy)), "cli.deploy"),
 		},
 		{
 			Name:      "diff",
@@ -173,7 +173,7 @@ func main() {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: confirmed(owned(destroy), "Are you sure you want to destroy this workspace?"),
+			Action: tracked(confirmed(owned(destroy), "Are you sure you want to destroy this workspace?"), "cli.destroy"),
 		},
 		{
 			Name:  "init",
@@ -188,7 +188,7 @@ func main() {
 					Usage: "email for the service account you'd like to use for this workspace",
 				},
 			},
-			Action: handleInit,
+			Action: tracked(handleInit, "cli.init"),
 		},
 		{
 			Name:   "login",
