@@ -167,7 +167,7 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
-	if err := mkdir(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural")))); err != nil {
+	if err := mkdir(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural"))); err != nil {
 		return err
 	}
 
@@ -225,8 +225,6 @@ func DiffedRepos() ([]string, error) {
 		result[count] = repo
 		count++
 	}
-
-	fmt.Printf(" files %s    repos %s \n", files, repos)
 
 	return result, nil
 }

@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -19,6 +18,5 @@ func Modified() ([]string, error) {
 		}
 	}
 
-	fmt.Printf(" res %s    result %s \n", res, result)
 	return result, nil
 }
