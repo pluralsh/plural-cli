@@ -206,7 +206,8 @@ func DiffedRepos() ([]string, error) {
 	}
 
 	for _, file := range files {
-		parts := strings.Split(file, string([]byte{ filepath.Separator }))
+		// we don't want to respect the OS separators here, it is always a forwards slash on git
+		parts := strings.Split(file, "/")
 		if len(parts) <= 1 {
 			continue
 		}
@@ -223,6 +224,9 @@ func DiffedRepos() ([]string, error) {
 		result[count] = repo
 		count++
 	}
+
+	fmt.Printf(" files %s    repos %s \n", files, repos)
+
 	return result, nil
 }
 

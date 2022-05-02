@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
 )
 
@@ -88,6 +90,8 @@ func repoRoot() error {
 	if err != nil {
 		return err
 	}
+	//santiize the filepath, respecting the OS
+	dir = pathing.GenOSFilepathString(dir)
 
 	root, err := git.Root()
 	if err != nil {

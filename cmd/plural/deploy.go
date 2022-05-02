@@ -197,6 +197,7 @@ func deploy(c *cli.Context) error {
 	verbose := c.Bool("verbose")
 	client := api.NewClient()
 	repoRoot, err := git.Root()
+
 	if err != nil {
 		return err
 	}
