@@ -35,7 +35,7 @@ require (
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/thoas/go-funk v0.9.1
-	github.com/urfave/cli v1.22.5
+	github.com/urfave/cli v1.22.8
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/mod v0.4.2
 	google.golang.org/genproto v0.0.0-20210929214142-896c89f843d2
