@@ -15,14 +15,3 @@ func SanitizeFilepath(filepath string) string {
 		return filepath
 	}
 }
-
-// returns a string (filepath) with appropriate slashes, dependent on OS if error is empty. Optional parameters and method overloading unavailable in Go.
-func SanitizeFilePathWithError(filepath string, err error) (string, error) {
-	os := runtime.GOOS
-	switch os {
-	case "windows":
-		return strings.Replace(filepath, "\\", "/", -1), err
-	default:
-		return filepath, err
-	}
-}
