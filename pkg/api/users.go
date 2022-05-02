@@ -109,8 +109,9 @@ type UpgradeAttributes struct {
 }
 
 type UserEventAttributes struct {
-	Event string
-	Data  string
+	Event  string
+	Data   string
+	Status string
 }
 
 type DeviceLogin struct {
@@ -305,13 +306,13 @@ func (client *Client) DeleteEabCredential(cluster, provider string) error {
 	return client.Run(req, &resp)
 }
 
-func (client *Client) CreateEvent(event, data string) error {
+func (client *Client) CreateEvent(event *UserEventAttributes) error {
 	var resp struct {
 		CreateUserEvent bool
 	}
 
 	req := client.Build(createEvent)
-	req.Var("attrs", UserEventAttributes{Event: event, Data: data})
+	req.Var("attrs", event)
 	return client.Run(req, &resp)
 }
 

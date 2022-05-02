@@ -61,20 +61,21 @@ func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error
 
 func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		data := ""
+		event := api.UserEventAttributes{Data: "", Event: event, Status: "OK"}
 		err := fn(c)
 		if err != nil {
+			event.Status = "ERROR"
 			if we, ok := err.(*executor.WrappedError); ok {
-				data = we.Output
+				event.Data = we.Output
 			} else {
-				data = fmt.Sprint(err)
+				event.Data = fmt.Sprint(err)
 			}
 		}
 
 		conf := config.Read()
 		if conf.ReportErrors {
 			client := api.FromConfig(&conf)
-			client.CreateEvent(event, data)
+			client.CreateEvent(&event)
 		}
 		return err
 	}
