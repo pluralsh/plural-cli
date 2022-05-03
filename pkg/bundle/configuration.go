@@ -89,13 +89,14 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	case Bucket:
 		var res string
 		def = prevDefault(ctx, item, def)
-		prompt, opts := bucketSurvey(def, item, proj, context, section)
+		prompt, opts := bucketSurvey(def, item, proj, context)
 		survey.AskOne(prompt, &res, opts...)
 		if res != def {
 			ctx[item.Name] = bucketName(res, proj)
 		} else {
 			ctx[item.Name] = res
 		}
+		context.AddBucket(ctx[item.Name].(string))
 	case File:
 		var res string
 		prompt, opts := fileSurvey(def, item, proj)
