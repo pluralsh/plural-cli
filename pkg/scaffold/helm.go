@@ -27,6 +27,7 @@ type dependency struct {
 	Name       string
 	Version    string
 	Repository string
+	Condition  string
 }
 
 type chart struct {
@@ -72,6 +73,7 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace, name string) []depend
 			chartInstallation.Chart.Name,
 			chartInstallation.Version.Version,
 			repoUrl(w, repo.Name, chartInstallation.Chart.Name),
+			fmt.Sprintf("%s.enabled", chartInstallation.Chart.Name),
 		}
 	}
 	return dependencies
@@ -221,6 +223,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		if err := yaml.Unmarshal(buf.Bytes(), &subVals); err != nil {
 			return err
 		}
+		subVals["enabled"] = true
 
 		// need to handle globals in a dedicated way
 		if glob, ok := subVals["global"]; ok {

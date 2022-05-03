@@ -2,26 +2,37 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
-	"os"
-	"path/filepath"
 )
 
 func workspaceCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:      "kube-init",
-			Usage:     "generates kubernetes credentials for this subworkspace",
-			Action:    kubeInit,
+			Name:   "kube-init",
+			Usage:  "generates kubernetes credentials for this subworkspace",
+			Action: kubeInit,
 		},
 		{
 			Name:      "helm",
 			Usage:     "upgrade/installs the helm chart for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    bounceHelm,
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:  "skip",
+					Usage: "helm sub-chart to skip. can be passed multiple times",
+				},
+				cli.BoolFlag{
+					Name:  "wait",
+					Usage: "have helm wait until all pods are in ready state",
+				},
+			},
+			Action: bounceHelm,
 		},
 		{
 			Name:      "helm-diff",
@@ -65,7 +76,19 @@ func bounceHelm(c *cli.Context) error {
 		return err
 	}
 
-	return minimal.BounceHelm()
+	args := []string{}
+	if c.IsSet("wait") {
+		args = append(args, "--wait")
+	}
+	if c.IsSet("skip") {
+		for _, skipChart := range c.StringSlice("skip") {
+			skipString := fmt.Sprintf("%s.enabled=false", skipChart)
+			skip := []string{"--set", skipString}
+			args = append(args, skip...)
+		}
+	}
+
+	return minimal.BounceHelm(args...)
 }
 
 func diffHelm(c *cli.Context) error {
