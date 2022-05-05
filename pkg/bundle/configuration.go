@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	homedir "github.com/mitchellh/go-homedir"
 )
 
-func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
+func EvaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	if cond == nil {
 		return true
 	}
@@ -19,7 +19,9 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	switch cond.Operation {
 	case "NOT":
 		val, ok := ctx[cond.Field]
-		if !ok { return true }
+		if !ok {
+			return true
+		}
 		booled, ok := val.(bool)
 		return ok && !booled
 	case "PREFIX":
@@ -34,7 +36,7 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 }
 
 func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, section *api.RecipeSection) error {
-	if !evaluateCondition(ctx, item.Condition) {
+	if !EvaluateCondition(ctx, item.Condition) {
 		return nil
 	}
 
@@ -55,7 +57,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	fmt.Println("")
 	utils.Highlight(item.Name)
 	fmt.Printf("\n>> %s\n", item.Documentation)
-	def := getDefault(item.Default, item, proj)
+	def := GetDefault(item.Default, item, proj)
 
 	switch item.Type {
 	case Int:
@@ -70,29 +72,29 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		ctx[item.Name] = res
 	case Domain:
 		var res string
-		def = prevDefault(ctx, item, def)
+		def = PrevDefault(ctx, item, def)
 		prompt, opts := domainSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case String:
 		var res string
-		def = prevDefault(ctx, item, def)
+		def = PrevDefault(ctx, item, def)
 		prompt, opts := stringSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Password:
 		var res string
-		def = prevDefault(ctx, item, def)
+		def = PrevDefault(ctx, item, def)
 		prompt, opts := passwordSurvey(def, item, proj)
 		survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:
 		var res string
-		def = prevDefault(ctx, item, def)
+		def = PrevDefault(ctx, item, def)
 		prompt, opts := bucketSurvey(def, item, proj, context, section)
 		survey.AskOne(prompt, &res, opts...)
 		if res != def {
-			ctx[item.Name] = bucketName(res, proj)
+			ctx[item.Name] = BucketName(res, proj)
 		} else {
 			ctx[item.Name] = res
 		}
@@ -114,7 +116,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	return nil
 }
 
-func prevDefault(ctx map[string]interface{}, item *api.ConfigurationItem, def string) string {
+func PrevDefault(ctx map[string]interface{}, item *api.ConfigurationItem, def string) string {
 	if val, ok := ctx[item.Name]; ok {
 		if v, ok := val.(string); ok {
 			return v
@@ -124,7 +126,7 @@ func prevDefault(ctx map[string]interface{}, item *api.ConfigurationItem, def st
 	return def
 }
 
-func getDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
+func GetDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) string {
 	if def == "" {
 		return def
 	}
@@ -133,10 +135,10 @@ func getDefault(def string, item *api.ConfigurationItem, proj *manifest.ProjectM
 		return def
 	}
 
-	return bucketName(def, proj)
+	return BucketName(def, proj)
 }
 
-func bucketName(value string, proj *manifest.ProjectManifest) string {
+func BucketName(value string, proj *manifest.ProjectManifest) string {
 	if proj.BucketPrefix == "" {
 		return value
 	}

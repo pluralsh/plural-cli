@@ -310,6 +310,12 @@ func main() {
 			Category:    "Miscellaneous",
 		},
 		{
+			Name:     "interactive",
+			Usage:    "test plural interactive mode",
+			Action:   handleInteractive,
+			Category: "Miscellaneous",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",

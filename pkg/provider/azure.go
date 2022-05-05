@@ -32,7 +32,7 @@ type AzureProvider struct {
 }
 
 var (
-	azureRegions = []string{
+	AzureRegions = []string{
 		"eastus",
 		"eastus2",
 		"southcentralus",
@@ -71,7 +71,7 @@ var azureSurvey = []*survey.Question{
 	},
 	{
 		Name:     "region",
-		Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: azureRegions},
+		Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: AzureRegions},
 		Validate: survey.Required,
 	},
 	{

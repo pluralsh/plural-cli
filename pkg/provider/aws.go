@@ -20,14 +20,14 @@ import (
 
 type AWSProvider struct {
 	Clus          string `survey:"cluster"`
-	project       string
-	bucket        string
+	Proj          string
+	Bckt          string
 	Reg           string `survey:"region"`
-	storageClient *s3.S3
+	StorageClient *s3.S3
 }
 
 var (
-	awsRegions = []string{
+	AwsRegions = []string{
 		"af-south-1",
 		"eu-north-1",
 		"ap-south-1",
@@ -61,7 +61,7 @@ var awsSurvey = []*survey.Question{
 	},
 	{
 		Name:     "region",
-		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east-2", Options: awsRegions},
+		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east-2", Options: AwsRegions},
 		Validate: survey.Required,
 	},
 }
@@ -86,8 +86,8 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		return nil, errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
 	}
 
-	provider.project = account
-	provider.storageClient = client
+	provider.Proj = account
+	provider.StorageClient = client
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
@@ -101,7 +101,7 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		return nil, err
 	}
 
-	provider.bucket = projectManifest.Bucket
+	provider.Bckt = projectManifest.Bucket
 	return provider, nil
 }
 
@@ -116,7 +116,7 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 
 func getClient(region string) (*s3.S3, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{Region: aws.String(region)},
+		Config:            aws.Config{Region: aws.String(region)},
 		SharedConfigState: session.SharedConfigEnable,
 	})
 
@@ -128,8 +128,8 @@ func getClient(region string) (*s3.S3, error) {
 }
 
 func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
-	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
+	if err := aws.mkBucket(aws.Bckt); err != nil {
+		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.Bckt))
 	}
 
 	ctx["Region"] = aws.Region()
@@ -157,7 +157,7 @@ func (aws *AWSProvider) KubeConfig() error {
 }
 
 func (p *AWSProvider) mkBucket(name string) error {
-	client := p.storageClient
+	client := p.StorageClient
 	_, err := client.HeadBucket(&s3.HeadBucketInput{Bucket: aws.String(name)})
 
 	if err != nil {
@@ -177,11 +177,11 @@ func (aws *AWSProvider) Cluster() string {
 }
 
 func (aws *AWSProvider) Project() string {
-	return aws.project
+	return aws.Proj
 }
 
 func (aws *AWSProvider) Bucket() string {
-	return aws.bucket
+	return aws.Bckt
 }
 
 func (aws *AWSProvider) Region() string {
