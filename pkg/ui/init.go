@@ -80,6 +80,7 @@ func resetFormInputs(providerForm *tview.Form) {
 			providerForm.RemoveFormItem(i)
 		}
 	}
+	providerForm.ClearButtons()
 }
 
 func setupProvider(c *cli.Context, providerForm *tview.Form) {
