@@ -35,7 +35,7 @@ func Init(c *cli.Context, nextSlide func()) (title string, content tview.Primiti
 	// AddButton("Cancel", nextSlide)
 	providerForm.SetBorder(true).SetTitle("Provider Setup")
 
-	providerForm.AddDropDown("Provider", []string{AWS, GCP, AZURE, EQUINIX, KIND}, 0, func(option string, optionIndex int) { buildProviderForm(c, providerForm, option, optionIndex) })
+	providerForm.AddDropDown("Provider", []string{AWS, GCP, AZURE, EQUINIX, KIND}, -1, func(option string, optionIndex int) { buildProviderForm(c, providerForm, option, optionIndex) })
 
 	return "Workspace Config", providerForm
 }
