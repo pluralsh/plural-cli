@@ -33,6 +33,10 @@ func setupGcp(setup *SetupRequest) error {
 		return err
 	}
 
+	if err := execCmd("gcloud", "services", "enable", "serviceusage.googleapis.com", "--project", setup.Workspace.Project); err != nil {
+		return err
+	}
+
 	return nil
 }
 
