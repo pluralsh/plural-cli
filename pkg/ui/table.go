@@ -92,12 +92,23 @@ func Table(c *cli.Context, nextSlide func()) (title string, content tview.Primit
 			SetSeparator(' ')
 	}
 
+	list := tview.NewList()
+
 	inputField := tview.NewInputField().
 		SetLabel("Search for an application: ").
 		SetFieldWidth(10).
 		// SetAcceptanceFunc(tview.InputFieldInteger).
 		SetDoneFunc(func(key tcell.Key) {
-			app.SetFocus(table)
+			switch key {
+			case tcell.KeyEnter:
+				app.SetFocus(table)
+			case tcell.KeyTab:
+				app.SetFocus(table)
+			case tcell.KeyEscape:
+				app.SetFocus(list)
+			case tcell.KeyBacktab:
+				app.SetFocus(list)
+			}
 		}).SetChangedFunc(func(text string) {
 		searchApp(text, table)
 	})
@@ -115,8 +126,6 @@ func Table(c *cli.Context, nextSlide func()) (title string, content tview.Primit
 	bundleTable.SetBorder(true).SetTitle("Bundles")
 	bundleTable.SetSelectable(true, false).
 		SetSeparator(' ')
-
-	list := tview.NewList()
 
 	// selectRow := func() {
 	// 	table.SetBorders(false).
