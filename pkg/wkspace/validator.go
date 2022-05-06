@@ -2,7 +2,6 @@ package wkspace
 
 import (
 	"fmt"
-	"strings"
 	"os/exec"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -19,12 +18,6 @@ func Preflight() error {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if _, err := cmd.CombinedOutput(); err != nil {
 		return utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
-	}
-
-	cmd = exec.Command("helm", "plugin", "list")
-	result, _ := cmd.Output()
-	if !strings.Contains(string(result), "cm-push") {
-		return utils.HighlightError(fmt.Errorf("you need to install the helm push plugin, run `helm plugin install https://github.com/pluralsh/helm-push`"))
 	}
 
 	return nil

@@ -47,8 +47,8 @@ func Default(w *wkspace.Workspace, name string) (b *Build) {
 				Preflight: []*executor.Step{
 					{
 						Name:    "update-deps",
-						Command: "helm",
-						Args:    []string{"dependency", "update"},
+						Command: "plural",
+						Args:    []string{"wkspace", "helm-deps"},
 						Target:  "Chart.yaml",
 						Sha:     "",
 					},

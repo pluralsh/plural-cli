@@ -8,6 +8,7 @@ import (
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/urfave/cli"
 )
 
@@ -39,6 +40,12 @@ func workspaceCommands() []cli.Command {
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
 			Action:    diffHelm,
+		},
+		{
+			Name:      "helm-deps",
+			Usage:     "updates the helm dependencies for this workspace",
+			ArgsUsage: "PATH",
+			Action:    updateDeps,
 		},
 		{
 			Name:      "terraform-diff",
@@ -130,4 +137,13 @@ func createCrds(c *cli.Context) error {
 
 		return nil
 	})
+}
+
+func updateDeps(c *cli.Context) error {
+	path := c.Args().Get(0)
+	if path == "" {
+		path = "."
+	}
+
+	return helm.UpdateDependencies(path)
 }
