@@ -36,22 +36,22 @@ const (
 )
 
 var (
-	gcpRegions = []string{
+	GcpRegions = []string{
 		"asia-east1",
-  		"asia-east2",
-  		"asia-northeast1",
-  		"asia-northeast2",
-  		"asia-northeast3",
-  		"asia-south1",
-  		"asia-southeast1",
-  		"australia-southeast1",
-  		"asia-northeast1",
-  		"europe-central2",
-  		"europe-west2",
-  		"europe-west3",
-  		"us-east1",
-  		"us-west1",
-  		"us-west2",
+		"asia-east2",
+		"asia-northeast1",
+		"asia-northeast2",
+		"asia-northeast3",
+		"asia-south1",
+		"asia-southeast1",
+		"australia-southeast1",
+		"asia-northeast1",
+		"europe-central2",
+		"europe-west2",
+		"europe-west3",
+		"us-east1",
+		"us-west1",
+		"us-west2",
 	}
 )
 
@@ -68,7 +68,7 @@ var gcpSurvey = []*survey.Question{
 	},
 	{
 		Name:     "region",
-		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east1", Options: gcpRegions},
+		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east1", Options: GcpRegions},
 		Validate: survey.Required,
 	},
 }

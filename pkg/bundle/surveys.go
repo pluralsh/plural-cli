@@ -126,7 +126,7 @@ func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 	opts := []survey.AskOpt{
 		survey.WithValidator(func(val interface{}) error {
 			res, _ := val.(string)
-			name := bucketName(res, proj)
+			name := BucketName(res, proj)
 			if len(name) > 63 || len(name) < 3 {
 				return fmt.Errorf("bucket name must be between 3 and 63 characters long")
 			}
