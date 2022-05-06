@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pluralsh/plural/pkg/config"
@@ -79,7 +80,7 @@ func templateVals(app, path string) (backup string, err error) {
 	return
 }
 
-func (m *MinimalWorkspace) BounceHelm() error {
+func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
@@ -90,9 +91,13 @@ func (m *MinimalWorkspace) BounceHelm() error {
 	}
 
 	namespace := m.Config.Namespace(m.Name)
-	utils.Warn("helm upgrade --install --namespace %s %s %s\n", namespace, m.Name, path)
+	utils.Warn("helm upgrade --install --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
+	args := []string{}
+	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--namespace", namespace, m.Name, path}
+	args = append(args, defaultArgs...)
+	args = append(args, extraArgs...)
 	return utils.Cmd(m.Config,
-		"helm", "upgrade", "--install", "--skip-crds", "--namespace", namespace, m.Name, path)
+		"helm", args...)
 }
 
 func (m *MinimalWorkspace) DiffHelm() error {
