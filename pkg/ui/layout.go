@@ -87,6 +87,12 @@ func InteractiveLayout(c *cli.Context) error {
 	}
 	info.Highlight("0")
 
+	// box := tview.NewBox().
+	// 	SetBorder(true).
+	// 	SetTitle("Centered Box")
+
+	// pages.AddPage("error", ErrorModal(c, fmt.Errorf("test error"), 40, 10), true, false)
+
 	// Create the main layout.
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
@@ -105,32 +111,10 @@ func InteractiveLayout(c *cli.Context) error {
 		return event
 	})
 
+	// pages.ShowPage("error")
 	// Start the application.
 	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
 		return err
 	}
 	return nil
-}
-
-func Modal(c *cli.Context, nextSlide func()) (title string, content tview.Primitive) {
-	// modal := func(p tview.Primitive, width, height int) string, tview.Primitive {
-	// 	return "Modal", tview.NewFlex().
-	// 		AddItem(nil, 0, 1, false).
-	// 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-	// 			AddItem(nil, 0, 1, false).
-	// 			AddItem(p, height, 1, false).
-	// 			AddItem(nil, 0, 1, false), width, 1, false).
-	// 		AddItem(nil, 0, 1, false)
-	// }
-	box := tview.NewBox().
-		SetBorder(true).
-		SetTitle("Centered Box")
-
-	return "Modal", tview.NewFlex().
-		AddItem(nil, 0, 1, false).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-			AddItem(nil, 0, 1, false).
-			AddItem(box, 20, 1, false).
-			AddItem(nil, 0, 1, false), 20, 1, false).
-		AddItem(nil, 0, 1, false)
 }
