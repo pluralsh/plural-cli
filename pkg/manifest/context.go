@@ -25,6 +25,7 @@ type SMTP struct {
 
 type Context struct {
 	Bundles       []*Bundle
+	Buckets       []string
 	SMTP          *SMTP `yaml:"smtp,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
@@ -85,6 +86,20 @@ func (c *Context) AddBundle(repo, name string) {
 
 	c.Bundles = append(c.Bundles, &Bundle{Repository: repo, Name: name})
 }
+
+func (c *Context) AddBucket(bucket string) {
+	c.Buckets = append(c.Buckets, bucket)
+}
+
+func (c *Context) HasBucket(bucket string) bool {
+	for _, b := range c.Buckets {
+		if b == bucket {
+			return true
+		}
+	}
+
+	return false
+} 
 
 func (c *Context) Write(path string) error {
 	versioned := &VersionedContext{
