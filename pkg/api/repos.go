@@ -49,6 +49,8 @@ type RepositoryInput struct {
 	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
 	Category      string
 	Notes         string `json:"notes,omitempty" yaml:"notes"`
+	GitUrl        string `json:"gitUrl" yaml:"gitUrl"`
+	Homepage      string `json:"homepage" yaml:"homepage"`
 	OauthSettings *OauthSettings `yaml:"oauthSettings,omitempty"`
 }
 
