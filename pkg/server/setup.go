@@ -17,6 +17,7 @@ func toConfig(setup *SetupRequest) *config.Config {
 	return &config.Config{
 		Email: setup.User.Email,
 		Token: setup.User.AccessToken,
+		ReportErrors: true,
 	}
 }
 
