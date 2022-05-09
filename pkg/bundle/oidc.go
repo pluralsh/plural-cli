@@ -24,7 +24,7 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	}
 
 	settings := recipe.OidcSettings
-	redirectUri, err := formatRedirectUri(settings, ctx)
+	redirectUris, err := formatRedirectUris(settings, ctx)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[
 	}
 
 	oidcSettings := &api.OidcProviderAttributes{
-		RedirectUris: []string{redirectUri},
+		RedirectUris: redirectUris,
 		AuthMethod:   settings.AuthMethod,
 		Bindings: []api.Binding{
 			{UserId: me.Id},
@@ -70,27 +70,45 @@ func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAtt
 	attributes.Bindings = bindings
 }
 
-func formatRedirectUri(settings *api.OIDCSettings, ctx map[string]interface{}) (string, error) {
-	uri := settings.UriFormat
+func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) ([]string, error) {
+	res := make([]string, 0)
+	domain := ""
+
 	if settings.DomainKey != "" {
-		domain, ok := ctx[settings.DomainKey]
+		d, ok := ctx[settings.DomainKey]
 		if !ok {
-			return "", fmt.Errorf("No domain setting for %s in context", settings.DomainKey)
+			return res, fmt.Errorf("No domain setting for %s in context", settings.DomainKey)
 		}
 
-		uri = strings.ReplaceAll(uri, "{domain}", domain.(string))
+		domain = d.(string)
+	}
+	
+	proj, err := manifest.FetchProject()
+	if err != nil {
+		return res, err
 	}
 
-	if settings.Subdomain {
-		proj, err := manifest.FetchProject()
-		if err != nil {
-			return "", err
+	fmtUri := func(uri string) string {
+		if domain != "" {
+			uri = strings.ReplaceAll(uri, "{domain}", domain)
+		}
+	
+		if settings.Subdomain {
+			uri = strings.ReplaceAll(uri, "{subdomain}", proj.Network.Subdomain)
 		}
 
-		uri = strings.ReplaceAll(uri, "{subdomain}", proj.Network.Subdomain)
+		return uri
+	}
+	
+	if settings.UriFormat != "" {
+		return []string { fmtUri(settings.UriFormat) }, err
 	}
 
-	return uri, nil
+	for _, uri := range settings.UriFormats {
+		res = append(res, fmtUri(uri))
+	}
+
+	return res, nil
 }
 
 func confirmOidc(confirm *bool) {

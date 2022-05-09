@@ -21,7 +21,7 @@ type Config struct {
 	NamespacePrefix string    `yaml:"namespacePrefix"`
 	Endpoint        string    `yaml:"endpoint"`
 	LockProfile     string    `yaml:"lockProfile"`
-	metadata        *Metadata ``
+	metadata        *Metadata
 	ReportErrors    bool      `yaml:"reportErrors"`
 }
 
