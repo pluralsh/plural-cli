@@ -1,6 +1,6 @@
 FROM gcr.io/pluralsh/golang:alpine AS cmd
 
-RUN apk update && apk add --no-cache git
+RUN apk update && apk add --no-cache git build-base
 
 WORKDIR $GOPATH/src/plural/
 COPY . .
