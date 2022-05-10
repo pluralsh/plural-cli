@@ -105,9 +105,6 @@ brews:
 
     test: |
       system "#{bin}/plural", "--help"
-    
-    post_install: |
-      system "helm", "plugin", "install", "https://github.com/pluralsh/helm-push"
 
     # Packages your package depends on.
     dependencies:

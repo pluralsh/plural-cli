@@ -17,6 +17,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/urfave/cli"
 )
 
@@ -146,7 +147,7 @@ func handleHelmUpload(c *cli.Context) error {
 	}
 
 	cmUrl := fmt.Sprintf("%s/cm/%s", conf.BaseUrl(), repo)
-	return utils.Cmd(&conf, "helm", "cm-push", "--context-path=/cm", pth, cmUrl)
+	return helm.Push(pth, cmUrl)
 }
 
 func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
