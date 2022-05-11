@@ -40,13 +40,20 @@ func toManifest(setup *SetupRequest) *manifest.ProjectManifest {
 
 func toContext(setup *SetupRequest) *manifest.Context {
 	ctx := manifest.NewContext()
+	consoleConf := map[string]interface{}{
+		"private_key": setup.SshPrivateKey,
+		"public_key":  setup.SshPublicKey,
+		"passphrase":  "",
+		"repo_url":    setup.GitUrl,
+	}
+
+	if setup.GitInfo != nil {
+		consoleConf["git_email"] = setup.GitInfo.Email
+		consoleConf["git_user"] = setup.GitInfo.Username
+	}
+
 	ctx.Configuration = map[string]map[string]interface{}{
-		"console": map[string]interface{}{
-			"private_key": setup.SshPrivateKey,
-			"public_key":  setup.SshPublicKey,
-			"passphrase":  "",
-			"repo_url":    setup.GitUrl,
-		},
+		"console": consoleConf,
 	}
 	return ctx
 }

@@ -29,6 +29,11 @@ type User struct {
 	AccessToken string `json:"access_token"`
 }
 
+type GitInfo struct {
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+}
+
 type SetupRequest struct {
 	Workspace     *Workspace   `json:"workspace"`
 	Credentials   *Credentials `json:"credentials"`
@@ -36,6 +41,7 @@ type SetupRequest struct {
 	Provider      string       `json:"provider"`
 	AesKey        string       `json:"aes_key"`
 	GitUrl        string       `json:"git_url"`
+	GitInfo       *GitInfo     `json:"git_info"`
 	SshPublicKey  string       `json:"ssh_public_key"`
 	SshPrivateKey string       `json:"ssh_private_key"`
 }
