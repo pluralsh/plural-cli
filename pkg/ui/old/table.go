@@ -1,4 +1,4 @@
-package ui
+package ui-old
 
 import (
 	"strings"
@@ -11,6 +11,8 @@ import (
 )
 
 var pages = tview.NewPages()
+
+type 
 
 // Table demonstrates the Table.
 func Table(c *cli.Context, nextSlide func()) (title string, content tview.Primitive) {
