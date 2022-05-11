@@ -71,6 +71,11 @@ var ValidateAlphaNumeric = survey.ComposeValidators(
 	RegexValidator("[a-z][0-9\\-a-z]+", "Must be an alphanumeric string"),
 )
 
+var ValidateAlphaNumExtended = survey.ComposeValidators(
+	survey.Required,
+	RegexValidator("[a-zA-Z][0-9\\-_a-zA-Z]+", "Must be an alphanumeric string"),
+)
+
 func ValidateDns(val string) error {
 	return ValidateRegex(val, dnsRegex, "String must be a dns compliant hostname")
 }
