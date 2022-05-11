@@ -7,20 +7,20 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func Preflight() error {
+func Preflight() (bool, error) {
 	requirements := []string{"helm", "kubectl", "terraform", "git"}
 	for _, req := range requirements {
 		if ok, _ := utils.Which(req); !ok {
-			return utils.HighlightError(fmt.Errorf("%s not installed", req))
+			return true, utils.HighlightError(fmt.Errorf("%s not installed", req))
 		}
 	}
 
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
+		return false, utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
 	}
 
-	return nil
+	return true, nil
 }
 
 func (wk *Workspace) Validate() error {

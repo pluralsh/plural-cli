@@ -79,3 +79,10 @@ var ValidateAlphaNumExtended = survey.ComposeValidators(
 func ValidateDns(val string) error {
 	return ValidateRegex(val, dnsRegex, "String must be a dns compliant hostname")
 }
+
+func Confirm(msg string) bool {
+	res := true
+	prompt := &survey.Confirm{Message: msg}
+	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	return res
+}
