@@ -77,7 +77,7 @@ var azureSurvey = []*survey.Question{
 	{
 		Name:     "resource",
 		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
-		Validate: utils.ValidateAlphaNumeric,
+		Validate: utils.ValidateAlphaNumExtended,
 	},
 }
 
