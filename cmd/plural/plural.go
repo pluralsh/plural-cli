@@ -191,6 +191,11 @@ func main() {
 			Action: tracked(handleInit, "cli.init"),
 		},
 		{
+			Name:   "preflights",
+			Usage:  "runs provider preflight checks",
+			Action: preflights,
+		},
+		{
 			Name:   "login",
 			Usage:  "logs into plural and saves credentials to the current config profile",
 			Action: handleLogin,

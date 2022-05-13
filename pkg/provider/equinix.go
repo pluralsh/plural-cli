@@ -235,6 +235,10 @@ func (equinix *EQUINIXProvider) Context() map[string]interface{} {
 	return equinix.ctx
 }
 
+func (equinix *EQUINIXProvider) Preflights() []*Preflight {
+	return nil
+}
+
 func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
 
 	client := getMetalClient(prov.Context()["ApiToken"].(string))

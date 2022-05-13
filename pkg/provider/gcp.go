@@ -15,6 +15,10 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
+	serviceusage "cloud.google.com/go/serviceusage/apiv1"
+	serviceusagepb "google.golang.org/genproto/googleapis/api/serviceusage/v1"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	resourcemanagerpb "google.golang.org/genproto/googleapis/cloud/resourcemanager/v3"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -245,4 +249,58 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	})
 
 	return errors.ErrorWrap(err, "failed to delete instance")
+}
+
+func (gcp *GCPProvider) Preflights() []*Preflight {
+	return []*Preflight{
+		{Name: "Enabled Services", Callback: gcp.validateEnabled},
+	}
+}
+
+func (gcp *GCPProvider) validateEnabled() error {
+	ctx := context.Background()
+	c, err := serviceusage.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("could not set up gcp client, are your credentials valid?")
+	}
+	defer c.Close()
+
+	enabledErr := fmt.Errorf("You don't have necessary services enabled, please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console")
+	proj, err := gcp.getProject()
+	if err != nil {
+		return enabledErr
+	}
+
+	wrapped := func(name string) string {
+		return fmt.Sprintf("projects/%s/services/%s", proj.ProjectId, name) 
+	}
+	req := &serviceusagepb.BatchGetServicesRequest{
+		Parent: fmt.Sprintf("projects/%s", proj.ProjectId),
+		Names: []string{
+			wrapped("serviceusage.googleapis.com"),
+			wrapped("cloudresourcemanager.googleapis.com"),
+			wrapped("container.googleapis.com"),
+		},
+	}
+	resp, err := c.BatchGetServices(ctx, req)
+	if err != nil {
+		return enabledErr
+	}
+
+	for _, svc := range resp.Services {
+		if svc.State != serviceusagepb.State_ENABLED {
+			return enabledErr
+		}
+	}
+	return nil
+}
+
+func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
+	ctx := context.Background()
+	c, err := resourcemanager.NewProjectsClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
 }
