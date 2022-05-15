@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
-	"github.com/urfave/cli"
+	"github.com/pluralsh/plural/pkg/format"
+	"github.com/urfave/cli"	
 )
 
 func reposCommands() []cli.Command {
@@ -31,6 +29,10 @@ func reposCommands() []cli.Command {
 					Name:  "query",
 					Usage: "string to search by",
 				},
+				cli.StringFlag{
+					Name:  "format",
+					Usage: "format to print the repositories out, eg csv or default is table",
+				},
 			},
 			Action: handleListRepositories,
 		},
@@ -49,13 +51,24 @@ func handleListRepositories(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Description", "Publisher"})
-	for _, repo := range repos {
-		table.Append([]string{repo.Name, repo.Description, repo.Publisher.Name})
+	addIcon := c.String("format") == "csv"
+
+	formatter := format.New(format.FormatType(c.String("format")))
+	header := []string{"Name", "Description", "Publisher"}
+	if addIcon {
+		header = append(header, "Icon")
 	}
 
-	table.Render()
+	formatter.Header(header)
+	for _, repo := range repos {
+		line := []string{repo.Name, repo.Description, repo.Publisher.Name}
+		if addIcon {
+			line = append(line, repo.Icon)
+		}
+		formatter.Write(line)
+	}
+
+	formatter.Flush()
 	return nil
 }
 
