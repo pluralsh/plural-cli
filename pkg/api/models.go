@@ -189,10 +189,11 @@ type TestArgument struct {
 }
 
 type OIDCSettings struct {
-	DomainKey  string `yaml:"domainKey"`
-	UriFormat  string `yaml:"uriFormat"`
-	AuthMethod string `yaml:"authMethod"`
-	Subdomain  bool   `yaml:"subdomain"`
+	DomainKey  string   `yaml:"domainKey"`
+	UriFormat  string   `yaml:"uriFormat"`
+	UriFormats []string `yaml:"uriFormats"`
+	AuthMethod string   `yaml:"authMethod"`
+	Subdomain  bool     `yaml:"subdomain"`
 }
 
 type RecipeSection struct {
@@ -495,6 +496,7 @@ const RecipeFragment = `
 		repository { id name }
 		oidcSettings {
 			uriFormat
+			uriFormats
 			authMethod
 			domainKey
 			subdomain
