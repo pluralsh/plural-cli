@@ -82,7 +82,7 @@ func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) 
 
 		domain = d.(string)
 	}
-	
+
 	proj, err := manifest.FetchProject()
 	if err != nil {
 		return res, err
@@ -92,16 +92,16 @@ func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) 
 		if domain != "" {
 			uri = strings.ReplaceAll(uri, "{domain}", domain)
 		}
-	
+
 		if settings.Subdomain {
 			uri = strings.ReplaceAll(uri, "{subdomain}", proj.Network.Subdomain)
 		}
 
 		return uri
 	}
-	
+
 	if settings.UriFormat != "" {
-		return []string { fmtUri(settings.UriFormat) }, err
+		return []string{fmtUri(settings.UriFormat)}, err
 	}
 
 	for _, uri := range settings.UriFormats {

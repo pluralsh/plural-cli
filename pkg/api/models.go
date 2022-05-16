@@ -496,6 +496,7 @@ const RecipeFragment = `
 		repository { id name }
 		oidcSettings {
 			uriFormat
+			uriFormats
 			authMethod
 			domainKey
 			subdomain
