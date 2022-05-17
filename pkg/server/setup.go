@@ -52,6 +52,14 @@ func toContext(setup *SetupRequest) *manifest.Context {
 		consoleConf["git_user"] = setup.GitInfo.Username
 	}
 
+	if setup.User.Name != "" {
+		consoleConf["admin_name"] = setup.User.Name
+	}
+
+	if setup.User.Email != "" {
+		consoleConf["admin_email"] = setup.User.Email
+	}
+
 	ctx.Configuration = map[string]map[string]interface{}{
 		"console": consoleConf,
 	}

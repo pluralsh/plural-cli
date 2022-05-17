@@ -203,6 +203,10 @@ func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
 }
 
+func (az *AzureProvider) Preflights() []*Preflight {
+	return nil
+}
+
 func (az *AzureProvider) Decommision(node *v1.Node) error {
 	ctx := context.Background()
 	vms := compute.NewVirtualMachinesClient(utils.ToString(az.ctx["SubscriptionId"]))

@@ -31,11 +31,26 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
-	if _, err := provider.GetProvider(); err != nil {
+	if err := preflights(c); err != nil {
 		return err
 	}
 
 	utils.Success("Workspace is properly configured!\n")
+	return nil
+}
+
+func preflights(c *cli.Context) error {
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	for _, pre := range prov.Preflights() {
+		if err := pre.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

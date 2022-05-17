@@ -192,6 +192,10 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
+func (aws *AWSProvider) Preflights() []*Preflight {
+	return nil
+}
+
 func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(prov.Region()),

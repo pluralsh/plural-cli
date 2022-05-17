@@ -22,6 +22,23 @@ type Provider interface {
 	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
+	Preflights() []*Preflight
+}
+
+type Preflight struct {
+	Name string
+	Callback func() error
+}
+
+func (pf *Preflight) Validate() error {
+	utils.Highlight("Executing preflight check :: %s ", pf.Name)
+	if err := pf.Callback(); err != nil {
+		fmt.Println("\nFound error:")
+		return err
+	}
+
+	utils.Success("\u2713\n")
+	return nil
 }
 
 type Providers struct {

@@ -126,3 +126,7 @@ func (kind *KINDProvider) Context() map[string]interface{} {
 func (prov *KINDProvider) Decommision(node *v1.Node) error {
 	return nil
 }
+
+func (prov *KINDProvider) Preflights() []*Preflight {
+	return nil
+}
