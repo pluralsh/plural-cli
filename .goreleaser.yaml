@@ -6,6 +6,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    ldflags:
+    - "-s -w -X main.Version={{.Version}} -X main.GitCommit={{.Commit}}"
     goos:
       - linux
       - windows
