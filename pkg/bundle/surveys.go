@@ -119,7 +119,7 @@ func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 	prompt := "Enter a globally unique object store bucket name "
 
 	if proj.BucketPrefix != "" {
-		prompt = fmt.Sprintf("Enter a globally unique bucket name, will be formatted as %s-%s-<your-input>", proj.BucketPrefix, proj.Cluster)
+		prompt = fmt.Sprintf("Enter a globally unique bucket name, will be prefixed with %s-%s-", proj.BucketPrefix, proj.Cluster)
 	}
 
 	opts := []survey.AskOpt{
