@@ -8,7 +8,7 @@
                                                                                                                                                                                                                                                                                                                  
 Here's a brief primer on some of the commands you might need:
 
-plural init ## initializes your plural git repository
+plural init ## initializes your plural git repository (if you're running in cloud shell, this has been done for you!)
 
 plural bundle list APP ## lists all the bundles available for APP
 plural bundle install APP BUNDLE ## installs the bundle BUNDLE for APP

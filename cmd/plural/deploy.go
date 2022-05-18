@@ -360,6 +360,15 @@ func destroy(c *cli.Context) error {
 		return err
 	}
 
+	infix := "this workspace"
+	if repoName != "" {
+		infix = repoName
+	}
+
+	if !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix)) {
+		return nil
+	}
+
 	if repoName != "" {
 		installation, err := client.GetInstallation(repoName)
 		if err != nil {
@@ -396,8 +405,10 @@ func destroy(c *cli.Context) error {
 		fmt.Printf("no eab key to delete %s\n", err)
 	}
 
-	utils.Success("Finished destroying workspace\n")
-	utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
+	if repoName == "" {
+		utils.Success("Finished destroying workspace\n")
+		utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
+	}
 	
 	utils.Highlight("\n==> Commit and push your changes to record your workspace changes\n\n")
 
