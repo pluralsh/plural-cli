@@ -55,7 +55,7 @@ func (e *Execution) Execute(verbose bool) error {
 	}
 	ignore, err := e.IgnoreFile(root)
 
-	fmt.Printf("deploying %s, hold on to your butts\n", e.Metadata.Path)
+	fmt.Printf("deploying %s.  This may take a while, so hold on to your butts\n", e.Metadata.Path)
 	for i, step := range e.Steps {
 		prev := step.Verbose
 		if verbose {
