@@ -1,7 +1,6 @@
 package scm
 
 import (
-	"fmt"
 	"github.com/cli/oauth"
 	"github.com/xanzy/go-gitlab"
 	"github.com/AlecAivazis/survey/v2"
@@ -27,6 +26,7 @@ func (gl *Gitlab) Init() error {
 		CallbackURI: "http://127.0.0.1:1337/callback",
 		Scopes:   []string{"read_api", "write_repository", "openid", "profile", "email"},
 	}
+
 	accessToken, err := flow.WebAppFlow()
 	if err != nil {
 		return err
@@ -76,26 +76,27 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	if err != nil {
 		return
 	}
-	
-	owner := org
-	if owner == user.Username {
-		owner = ""
-	}
 
 	repoName := repoName()
-	utils.Highlight("\ncreating gitlab repository %s/%s...\n", org, repoName)
-	repo, _, err := gl.Client.Projects.CreateProject(&gitlab.CreateProjectOptions{
-		Path:                 gitlab.String(fmt.Sprintf("%s/%s", owner, repoName)),
+	opts := &gitlab.CreateProjectOptions{
+		Name:                 gitlab.String(repoName),
 		Visibility:           gitlab.Visibility(gitlab.PrivateVisibility),
 		InitializeWithReadme: gitlab.Bool(true),
-	})
+	}
+
+	if org != user.Username {
+		opts.Path = gitlab.String(org)
+	}
+
+	utils.Highlight("\ncreating gitlab repository %s/%s...\n", org, repoName)
+	repo, _, err := gl.Client.Projects.CreateProject(opts)
 	if err != nil {
 		return
 	}
 
 	utils.Highlight("Setting up a read-write deploy key for this repo...\n")
 	_, _, err = gl.Client.DeployKeys.AddDeployKey(repo.ID, &gitlab.AddDeployKeyOptions{
-		Title:   gitlab.String("Plural Key"),
+		Title:   gitlab.String("Plural Deploy Key"),
 		Key:     gitlab.String(pub),
 		CanPush: gitlab.Bool(true),
 	})
