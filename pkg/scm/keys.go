@@ -90,7 +90,7 @@ func saveKeys(pub, priv string) error {
 		return err
 	}
 
-	if sshadd, _ := utils.Which("ssh-add"); sshadd {
+	if sshadd, _ := utils.Which("ssh-add"); sshadd && utils.Confirm("would you like to add this key to your ssh agent (ignore if your git ssh is set up)?") {
 		return utils.Exec("ssh-add", keys.priv)
 	}
 
