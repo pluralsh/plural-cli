@@ -42,6 +42,7 @@ require (
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/thoas/go-funk v0.9.1
 	github.com/urfave/cli v1.22.8
+	github.com/xanzy/go-gitlab v0.65.0
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
 	golang.org/x/mod v0.5.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8

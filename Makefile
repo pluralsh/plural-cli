@@ -7,7 +7,7 @@ BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
-BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN)
+BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN) -X pkg.scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
 OUTFILE ?= plural.o
 
 help:
