@@ -32,6 +32,7 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/michaeljguarino/graphql v0.2.5
+	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.22.0

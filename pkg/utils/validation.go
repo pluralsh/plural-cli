@@ -82,7 +82,7 @@ func ValidateDns(val string) error {
 
 func Confirm(msg string) bool {
 	res := true
-	prompt := &survey.Confirm{Message: msg}
+	prompt := &survey.Confirm{Message: msg, Default: true}
 	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
 	return res
 }

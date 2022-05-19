@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/x509"
 	"encoding/pem"
 	"golang.org/x/crypto/ssh"
+	"github.com/mikesmitty/edkey"
 	"github.com/pluralsh/plural/pkg/utils"
 	homedir "github.com/mitchellh/go-homedir"
 	"path/filepath"
@@ -29,14 +29,9 @@ func generateKeys() (pub string, priv string, err error) {
 		return
 	}
 
-	b, err := x509.MarshalPKCS8PrivateKey(privKey)
-	if err != nil {
-		return
-	}
-
 	priv = string(pem.EncodeToMemory(&pem.Block{
 		Type:  "OPENSSH PRIVATE KEY",
-		Bytes: b,
+		Bytes: edkey.MarshalED25519PrivateKey(privKey),
 	}))
 
 	sshPub, err := ssh.NewPublicKey(pubKey)
