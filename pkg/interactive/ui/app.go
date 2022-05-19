@@ -5,39 +5,41 @@ import (
 	"sync"
 
 	"github.com/derailed/tview"
-	"github.com/gdamore/tcell"
-	"github.com/pluralsh/plural/pkg/config"
+	"github.com/gdamore/tcell/v2"
+	"github.com/pluralsh/plural/pkg/interactive/config"
+	"github.com/pluralsh/plural/pkg/interactive/model"
+	"github.com/urfave/cli"
 )
 
 type App struct {
 	*tview.Application
-	// Configurator
+	Configurator
 
-	Main *Pages
-	// flash   *model.Flash
+	Main    *Pages
+	flash   *model.Flash
 	actions KeyActions
 	views   map[string]tview.Primitive
-	// cmdBuff *model.FishBuff
+	cmdBuff *model.FishBuff
 	running bool
 	mx      sync.RWMutex
 }
 
-func NewApp(cfg *config.Config, context string) *App {
+func NewApp(cfg *cli.Context, context string) *App {
 	a := App{
-		Application: tview.NewApplication(),
-		actions:     make(KeyActions),
-		// Configurator: Configurator{Config: cfg},
-		Main: NewPages(),
-		// flash:        model.NewFlash(model.DefaultFlashDelay),
-		// cmdBuff:      model.NewFishBuff(':', model.CommandBuffer),
+		Application:  tview.NewApplication(),
+		actions:      make(KeyActions),
+		Configurator: Configurator{Config: cfg},
+		Main:         NewPages(),
+		flash:        model.NewFlash(model.DefaultFlashDelay),
+		cmdBuff:      model.NewFishBuff(':', model.CommandBuffer),
 	}
 	a.ReloadStyles(context)
 
 	a.views = map[string]tview.Primitive{
-		"menu":   NewMenu(a.Styles),
-		"logo":   NewLogo(a.Styles),
-		"prompt": NewPrompt(&a, a.Config.K9s.NoIcons, a.Styles),
-		"crumbs": NewCrumbs(a.Styles),
+		"menu": NewMenu(a.Styles),
+		// "logo":   NewLogo(a.Styles),
+		// "prompt": NewPrompt(&a, a.Config.K9s.NoIcons, a.Styles),
+		// "crumbs": NewCrumbs(a.Styles),
 	}
 
 	return &a
@@ -50,7 +52,7 @@ func (a *App) Init() {
 	a.cmdBuff.AddListener(a)
 	a.Styles.AddListener(a)
 
-	a.SetRoot(a.Main, true).EnableMouse(a.Config.K9s.EnableMouse)
+	a.SetRoot(a.Main, true).EnableMouse(true)
 }
 
 // QueueUpdate queues up a ui action.
@@ -132,17 +134,18 @@ func (a *App) ReloadStyles(context string) {
 }
 
 // Conn returns an api server connection.
-func (a *App) Conn() client.Connection {
-	return a.Config.GetConnection()
-}
+// func (a *App) Conn() client.Connection {
+// 	return a.Config.GetConnection()
+// }
 
 func (a *App) bindKeys() {
 	a.actions = KeyActions{
-		KeyColon:       NewKeyAction("Cmd", a.activateCmd, false),
-		tcell.KeyCtrlR: NewKeyAction("Redraw", a.redrawCmd, false),
-		tcell.KeyCtrlC: NewKeyAction("Quit", a.quitCmd, false),
-		tcell.KeyCtrlU: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
-		tcell.KeyCtrlQ: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
+		// KeyColon:       NewKeyAction("Cmd", a.activateCmd, false),
+		tcell.KeyCtrlSpace: NewKeyAction("Cmd", a.activateCmd, false),
+		tcell.KeyCtrlR:     NewKeyAction("Redraw", a.redrawCmd, false),
+		tcell.KeyCtrlC:     NewKeyAction("Quit", a.quitCmd, false),
+		tcell.KeyCtrlU:     NewSharedKeyAction("Clear Filter", a.clearCmd, false),
+		tcell.KeyCtrlQ:     NewSharedKeyAction("Clear Filter", a.clearCmd, false),
 	}
 }
 
@@ -249,14 +252,14 @@ func (a *App) redrawCmd(evt *tcell.EventKey) *tcell.EventKey {
 // View Accessors...
 
 // Crumbs return app crumbs.
-func (a *App) Crumbs() *Crumbs {
-	return a.views["crumbs"].(*Crumbs)
-}
+// func (a *App) Crumbs() *Crumbs {
+// 	return a.views["crumbs"].(*Crumbs)
+// }
 
 // Logo return the app logo.
-func (a *App) Logo() *Logo {
-	return a.views["logo"].(*Logo)
-}
+// func (a *App) Logo() *Logo {
+// 	return a.views["logo"].(*Logo)
+// }
 
 // Prompt returns command prompt.
 func (a *App) Prompt() *Prompt {

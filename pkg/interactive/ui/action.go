@@ -3,7 +3,7 @@ package ui
 import (
 	"sort"
 
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/pluralsh/plural/pkg/interactive/model"
 )
 

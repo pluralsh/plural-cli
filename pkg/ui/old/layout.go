@@ -1,4 +1,4 @@
-package ui-old
+package uiOld
 
 import (
 	"fmt"
