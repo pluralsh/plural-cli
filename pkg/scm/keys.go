@@ -35,7 +35,7 @@ func generateKeys() (pub string, priv string, err error) {
 	}
 
 	priv = string(pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
+		Type:  "OPENSSH PRIVATE KEY",
 		Bytes: b,
 	}))
 
