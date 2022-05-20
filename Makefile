@@ -7,7 +7,7 @@ BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
-BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN)
+BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
 OUTFILE ?= plural.o
 
 help:
@@ -18,10 +18,10 @@ git-push: .PHONY
 	git push
 
 install: .PHONY
-	GOBIN=/usr/local/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
+	GOBIN=~/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
 build-cli: .PHONY
-	GOBIN=/usr/local/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
+	GOBIN=~/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
 
 release: .PHONY
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/

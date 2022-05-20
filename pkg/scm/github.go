@@ -3,7 +3,7 @@ package scm
 import (
 	"context"
 	"github.com/google/go-github/v44/github"
-	"github.com/cli/oauth"
+	"github.com/pluralsh/oauth"
 	"golang.org/x/oauth2"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/utils"

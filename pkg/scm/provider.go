@@ -8,7 +8,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-var providers = []string{"github"}
+var providers = []string{"github", "gitlab"}
 
 type Provider interface {
 	Init() error
@@ -27,6 +27,8 @@ func Setup() (string, error) {
 	switch provider {
 	case "github":
 		prov = &Github{}
+	case "gitlab":
+		prov = &Gitlab{}
 	default:
 		return "", nil
 	}
