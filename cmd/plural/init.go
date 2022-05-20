@@ -15,11 +15,25 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/urfave/cli"
 )
 
 func handleInit(c *cli.Context) error {
-	if err := wkspace.Preflight(); err != nil {
+	git, err := wkspace.Preflight()
+	gitCreated := false
+	repo := ""
+	if err != nil && git {
+		return err
+	}
+
+	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
+		repo, err = scm.Setup()
+		if err != nil {
+			return err
+		}
+		gitCreated = true
+	} else if !git && err != nil {
 		return err
 	}
 
@@ -36,6 +50,10 @@ func handleInit(c *cli.Context) error {
 	}
 
 	utils.Success("Workspace is properly configured!\n")
+
+	if gitCreated {
+		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
+	}
 	return nil
 }
 
