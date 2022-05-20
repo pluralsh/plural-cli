@@ -1,7 +1,7 @@
 package scm
 
 import (
-	"github.com/cli/oauth"
+	"github.com/pluralsh/oauth"
 	"github.com/xanzy/go-gitlab"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -24,7 +24,8 @@ func (gl *Gitlab) Init() error {
 		ClientID: "96dc439ce4bfab647a07b96878210015ab83f173b7f5162218954a95b8c10ebe",
 		ClientSecret: GitlabClientSecret,
 		CallbackURI: "http://127.0.0.1:1337/callback",
-		Scopes:   []string{"read_api", "write_repository", "openid", "profile", "email"},
+		Scopes:   []string{"api", "openid", "profile", "email"},
+		ResponseType: "code",
 	}
 
 	accessToken, err := flow.WebAppFlow()
@@ -60,8 +61,10 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	}
 
 	orgNames := make([]string, len(groups))
+	namespaces := make(map[string]int)
 	for i, g := range groups {
 		orgNames[i] = g.Path
+		namespaces[g.Path] = g.ID
 	}
 	orgNames = append(orgNames, user.Username)
 
@@ -81,11 +84,12 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	opts := &gitlab.CreateProjectOptions{
 		Name:                 gitlab.String(repoName),
 		Visibility:           gitlab.Visibility(gitlab.PrivateVisibility),
+		Description:          gitlab.String("my plural installation repository"),
 		InitializeWithReadme: gitlab.Bool(true),
 	}
 
 	if org != user.Username {
-		opts.Path = gitlab.String(org)
+		opts.NamespaceID = gitlab.Int(namespaces[org])
 	}
 
 	utils.Highlight("\ncreating gitlab repository %s/%s...\n", org, repoName)
