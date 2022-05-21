@@ -45,6 +45,7 @@ func toContext(setup *SetupRequest) *manifest.Context {
 		"public_key":  setup.SshPublicKey,
 		"passphrase":  "",
 		"repo_url":    setup.GitUrl,
+		"console_dns": fmt.Sprintf("console.%s", setup.Workspace.Subdomain),
 	}
 
 	if setup.GitInfo != nil {
