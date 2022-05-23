@@ -110,8 +110,6 @@ brews:
 
     # Packages your package depends on.
     dependencies:
-      - name: go
-        type: build
       - name: helm
         type: recommended
       - name: kubectl
