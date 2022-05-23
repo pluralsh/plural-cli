@@ -19,11 +19,6 @@ type keys struct {
 }
 
 func generateKeys() (pub string, priv string, err error) {
-	pub, priv, found := readKeys()
-	if found {
-		return
-	}
-
 	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return
@@ -41,30 +36,6 @@ func generateKeys() (pub string, priv string, err error) {
 	pub = string(ssh.MarshalAuthorizedKey(sshPub))
 
 	err = saveKeys(pub, priv)
-	return
-}
-
-func readKeys() (pub string, priv string, found bool) {
-	keys, err := keyFiles()
-	if err != nil {
-		return
-	}
-
-	if !utils.Exists(keys.pub) || !utils.Exists(keys.priv) {
-		return
-	}
-
-	pub, err = utils.ReadFile(keys.pub)
-	if err != nil {
-		return
-	}
-
-	priv, err = utils.ReadFile(keys.priv)
-	if err != nil {
-		return
-	}
-
-	found = true
 	return
 }
 
@@ -90,12 +61,7 @@ func saveKeys(pub, priv string) error {
 		return err
 	}
 
-	if sshadd, _ := utils.Which("ssh-add"); sshadd && utils.Confirm("would you like to add this key to your ssh agent (ignore if your git ssh is set up)?") {
-		return utils.Exec("ssh-add", keys.priv)
-	}
-
-	utils.Highlight("It looks like ssh isn't configured locally, once you have it set up, you can run `ssh-add ~/.ssh/id_plural` to add the key to your agent")
-	return err
+	return nil
 }
 
 func keyFiles() (keys keys, err error) {
