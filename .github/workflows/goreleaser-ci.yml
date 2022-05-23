@@ -35,7 +35,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    needs: goreleaser
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -50,7 +49,7 @@ jobs:
           ghcr.io/pluralsh/plural-cli
         # generate Docker tags based on the following events/attributes
         tags: |
-          type=semver,pattern={{raw}},value=${{ needs.goreleaser.outputs.metadata.version }}
+          type=semver,pattern={{version}}
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
@@ -90,7 +89,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    needs: goreleaser
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -100,12 +98,12 @@ jobs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          dkr.plural.sh/plural/plural-cli
-          gcr.io/pluralsh/plural-cli
-          ghcr.io/pluralsh/plural-cli
+          dkr.plural.sh/plural/plural-cli-cloud
+          gcr.io/pluralsh/plural-cli-cloud
+          ghcr.io/pluralsh/plural-cli-cloud
         # generate Docker tags based on the following events/attributes
         tags: |
-          type=semver,pattern={{raw}},value=${{ needs.goreleaser.outputs.metadata.version }}-cloud
+          type=semver,pattern={{version}}
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
