@@ -1,6 +1,7 @@
 package wkspace
 
 import (
+	"regexp"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,12 +14,17 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
-func execSuppressed(command string, args ...string) (err error) {
+type checker func(s string) bool
+
+var alwaysErr checker = func(s string) bool { return false }
+
+
+func (c checker) execSuppressed(command string, args ...string) (err error) {
 	for retry := 2; retry >= 0; retry-- {
 		utils.Highlight("%s %s ~> ", command, strings.Join(args, " "))
 		cmd, out := executor.SuppressedCommand(command, args...)
 		err = executor.RunCommand(cmd, out)
-		if err == nil {
+		if err == nil || c(out.Format()) {
 			break
 		}
 		fmt.Printf("retrying command, number of retries remaining: %d\n", retry)
@@ -33,12 +39,14 @@ func (w *Workspace) DestroyHelm() error {
 	name := w.Installation.Repository.Name
 
 	ns := w.Config.Namespace(name)
-	if err := execSuppressed("helm", "get", "values", name, "-n", ns); err != nil {
+	if err := alwaysErr.execSuppressed("helm", "get", "values", name, "-n", ns); err != nil {
 		fmt.Println("Helm already uninstalled, continuing...")
 		return nil
 	}
 
-	return execSuppressed("helm", "del", name, "-n", ns)
+	r, _ := regexp.Compile("release.*not found")
+	var ignoreNotFound checker = func(s string) bool { return r.MatchString(s) }
+	return ignoreNotFound.execSuppressed("helm", "del", name, "-n", ns)
 }
 
 func (w *Workspace) Bounce() error {
@@ -92,9 +100,9 @@ func (w *Workspace) DestroyTerraform() error {
 	})
 
 	os.Chdir(path)
-	if err := execSuppressed("terraform", "init", "-upgrade"); err != nil {
+	if err := alwaysErr.execSuppressed("terraform", "init", "-upgrade"); err != nil {
 		return err
 	}
 
-	return execSuppressed("terraform", "destroy", "-auto-approve")
+	return alwaysErr.execSuppressed("terraform", "destroy", "-auto-approve")
 }
