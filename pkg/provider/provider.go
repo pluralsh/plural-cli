@@ -23,6 +23,7 @@ type Provider interface {
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
+	Flush() error
 }
 
 type Preflight struct {

@@ -29,6 +29,7 @@ type GCPProvider struct {
 	Reg           string `survey:"region"`
 	storageClient *storage.Client
 	ctx           map[string]interface{}
+	writer        manifest.Writer
 }
 
 type BucketLocation string
@@ -77,15 +78,15 @@ var gcpSurvey = []*survey.Question{
 	},
 }
 
-func mkGCP(conf config.Config) (*GCPProvider, error) {
+func mkGCP(conf config.Config) (prov *GCPProvider, err error) {
 	provider := &GCPProvider{}
-	if err := survey.Ask(gcpSurvey, provider); err != nil {
-		return nil, err
+	if err = survey.Ask(gcpSurvey, provider); err != nil {
+		return
 	}
 
 	client, err := storageClient()
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	provider.storageClient = client
@@ -104,12 +105,9 @@ func mkGCP(conf config.Config) (*GCPProvider, error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	if err := projectManifest.Configure(); err != nil {
-		return nil, err
-	}
-
+	provider.writer = projectManifest.Configure()
 	provider.bucket = projectManifest.Bucket
-	return provider, nil
+	return
 }
 
 func getBucketLocation(region string) BucketLocation {
@@ -160,7 +158,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		man.Write(manifest.ProjectManifestPath())
 	}
 
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context}, nil
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -172,6 +170,13 @@ func (gcp *GCPProvider) KubeConfig() error {
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
 		"--region", gcp.Region(), "--project", gcp.Proj)
 	return utils.Execute(cmd)
+}
+
+func (gcp *GCPProvider) Flush() error {
+	if gcp.writer == nil {
+		return nil
+	}
+	return gcp.writer()
 }
 
 func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
