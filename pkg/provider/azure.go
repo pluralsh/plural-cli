@@ -29,6 +29,7 @@ type AzureProvider struct {
 	bucket        string
 	region        string
 	ctx           map[string]interface{}
+	writer        manifest.Writer
 }
 
 var (
@@ -108,6 +109,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
 		},
+		nil,
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -118,17 +120,13 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Context:  prov.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
-	err = projectManifest.Configure()
-	if err != nil {
-		return
-	}
-
+	prov.writer = projectManifest.Configure()
 	prov.bucket = projectManifest.Bucket
 	return
 }
 
 func azureFromManifest(man *manifest.ProjectManifest) (*AzureProvider, error) {
-	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context}, nil
+	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
 func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
@@ -205,6 +203,13 @@ func (az *AzureProvider) Context() map[string]interface{} {
 
 func (az *AzureProvider) Preflights() []*Preflight {
 	return nil
+}
+
+func (azure *AzureProvider) Flush() error {
+	if azure.writer == nil {
+		return nil
+	}
+	return azure.writer()
 }
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {

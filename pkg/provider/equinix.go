@@ -39,6 +39,7 @@ type EQUINIXProvider struct {
 	bucket string
 	Metro  string `survey:"metro"`
 	ctx    map[string]interface{}
+	writer manifest.Writer
 }
 
 var equinixSurvey = []*survey.Question{
@@ -71,13 +72,14 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 		Project  string
 		ApiToken string
 	}
-	if err := survey.Ask(equinixSurvey, &resp); err != nil {
-		return nil, err
+	if err = survey.Ask(equinixSurvey, &resp); err != nil {
+		return
 	}
 
 	projectID, err := getProjectIDFromName(resp.Project, resp.ApiToken)
 	if err != nil {
-		return nil, errors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
+		err = errors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
+		return 
 	}
 
 	provider = &EQUINIXProvider{
@@ -88,6 +90,7 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 		map[string]interface{}{
 			"ApiToken": resp.ApiToken,
 		},
+		nil,
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -99,16 +102,13 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	if err := projectManifest.Configure(); err != nil {
-		return nil, err
-	}
-
+	provider.writer = projectManifest.Configure()
 	provider.bucket = projectManifest.Bucket
-	return provider, nil
+	return
 }
 
 func equinixFromManifest(man *manifest.ProjectManifest) (*EQUINIXProvider, error) {
-	return &EQUINIXProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context}, nil
+	return &EQUINIXProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
 func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
@@ -237,6 +237,13 @@ func (equinix *EQUINIXProvider) Context() map[string]interface{} {
 
 func (equinix *EQUINIXProvider) Preflights() []*Preflight {
 	return nil
+}
+
+func (equinix *EQUINIXProvider) Flush() error {
+	if equinix.writer == nil {
+		return nil
+	}
+	return equinix.writer()
 }
 
 func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {

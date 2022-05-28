@@ -27,6 +27,13 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
+	if err := handleLogin(c); err != nil {
+		return err
+	}
+
+	prov, err := runPreflights()
+	defer prov.Flush()
+
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
 		repo, err = scm.Setup()
 		if err != nil {
@@ -37,20 +44,11 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
-	if err := handleLogin(c); err != nil {
-		return err
-	}
-
 	if err := cryptoInit(c); err != nil {
 		return err
 	}
 
-	if err := preflights(c); err != nil {
-		return err
-	}
-
 	utils.Success("Workspace is properly configured!\n")
-
 	if gitCreated {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
 	}
@@ -58,18 +56,23 @@ func handleInit(c *cli.Context) error {
 }
 
 func preflights(c *cli.Context) error {
+	_, err := runPreflights()
+	return err 
+}
+
+func runPreflights() (provider.Provider, error) {
 	prov, err := provider.GetProvider()
 	if err != nil {
-		return err
+		return prov, err
 	}
 
 	for _, pre := range prov.Preflights() {
 		if err := pre.Validate(); err != nil {
-			return err
+			return prov, err
 		}
 	}
 
-	return nil
+	return prov, nil
 }
 
 func handleLogin(c *cli.Context) error {

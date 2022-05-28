@@ -24,6 +24,7 @@ type AWSProvider struct {
 	bucket        string
 	Reg           string `survey:"region"`
 	storageClient *s3.S3
+	writer        manifest.Writer
 }
 
 var (
@@ -66,24 +67,26 @@ var awsSurvey = []*survey.Question{
 	},
 }
 
-func mkAWS(conf config.Config) (*AWSProvider, error) {
-	provider := &AWSProvider{}
-	if err := survey.Ask(awsSurvey, provider); err != nil {
-		return nil, err
+func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
+	provider = &AWSProvider{}
+	if err = survey.Ask(awsSurvey, provider); err != nil {
+		return
 	}
 
 	client, err := getClient(provider.Reg)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	account, err := GetAwsAccount()
 	if err != nil {
-		return nil, errors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
+		err = errors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
+		return 
 	}
 
 	if len(account) <= 0 {
-		return nil, errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+		err = errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+		return
 	}
 
 	provider.project = account
@@ -97,12 +100,9 @@ func mkAWS(conf config.Config) (*AWSProvider, error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	if err := projectManifest.Configure(); err != nil {
-		return nil, err
-	}
-
+	provider.writer = projectManifest.Configure()
 	provider.bucket = projectManifest.Bucket
-	return provider, nil
+	return
 }
 
 func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
@@ -111,7 +111,7 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 		return nil, err
 	}
 
-	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client}, nil
+	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, nil}, nil
 }
 
 func getClient(region string) (*s3.S3, error) {
@@ -194,6 +194,13 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 
 func (aws *AWSProvider) Preflights() []*Preflight {
 	return nil
+}
+
+func (aws *AWSProvider) Flush() error {
+	if aws.writer == nil {
+		return nil
+	}
+	return aws.writer()
 }
 
 func (prov *AWSProvider) Decommision(node *v1.Node) error {

@@ -20,6 +20,7 @@ type KINDProvider struct {
 	bucket string
 	Reg    string
 	ctx    map[string]interface{}
+	writer manifest.Writer
 }
 
 var kindSurvey = []*survey.Question{
@@ -34,8 +35,8 @@ func mkKind(conf config.Config) (provider *KINDProvider, err error) {
 	var resp struct {
 		Cluster string
 	}
-	if err := survey.Ask(kindSurvey, &resp); err != nil {
-		return nil, err
+	if err = survey.Ask(kindSurvey, &resp); err != nil {
+		return
 	}
 
 	provider = &KINDProvider{
@@ -44,6 +45,7 @@ func mkKind(conf config.Config) (provider *KINDProvider, err error) {
 		"",
 		"us-east-1",
 		map[string]interface{}{},
+		nil,
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -55,16 +57,13 @@ func mkKind(conf config.Config) (provider *KINDProvider, err error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	if err := projectManifest.Configure(); err != nil {
-		return nil, err
-	}
-
+	provider.writer = projectManifest.Configure()
 	provider.bucket = projectManifest.Bucket
-	return provider, nil
+	return
 }
 
 func kindFromManifest(man *manifest.ProjectManifest) (*KINDProvider, error) {
-	return &KINDProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context}, nil
+	return &KINDProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
 func (kind *KINDProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
@@ -129,4 +128,12 @@ func (prov *KINDProvider) Decommision(node *v1.Node) error {
 
 func (prov *KINDProvider) Preflights() []*Preflight {
 	return nil
+}
+
+func (kind *KINDProvider) Flush() error {
+	if kind.writer == nil {
+		return nil
+	}
+
+	return kind.writer()
 }
