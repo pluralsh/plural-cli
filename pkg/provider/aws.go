@@ -1,15 +1,17 @@
 package provider
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
@@ -23,7 +25,7 @@ type AWSProvider struct {
 	project       string
 	bucket        string
 	Reg           string `survey:"region"`
-	storageClient *s3.S3
+	storageClient *s3.Client
 	writer        manifest.Writer
 }
 
@@ -81,7 +83,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	account, err := GetAwsAccount()
 	if err != nil {
 		err = errors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
-		return 
+		return
 	}
 
 	if len(account) <= 0 {
@@ -114,17 +116,16 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, nil}, nil
 }
 
-func getClient(region string) (*s3.S3, error) {
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{Region: aws.String(region)},
-		SharedConfigState: session.SharedConfigEnable,
-	})
+func getClient(region string) (*s3.Client, error) {
+	cfg, err := awsConfig.LoadDefaultConfig(context.TODO())
 
 	if err != nil {
 		return nil, errors.ErrorWrap(err, "Failed to initialize aws client: ")
 	}
 
-	return s3.New(sess), nil
+	cfg.Region = region
+
+	return s3.NewFromConfig(cfg), nil
 }
 
 func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
@@ -158,10 +159,17 @@ func (aws *AWSProvider) KubeConfig() error {
 
 func (p *AWSProvider) mkBucket(name string) error {
 	client := p.storageClient
-	_, err := client.HeadBucket(&s3.HeadBucketInput{Bucket: aws.String(name)})
+	_, err := client.HeadBucket(context.TODO(), &s3.HeadBucketInput{Bucket: &name})
 
 	if err != nil {
-		_, err = client.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(name)})
+		_, err = client.CreateBucket(context.TODO(),
+			&s3.CreateBucketInput{
+				Bucket: &name,
+				CreateBucketConfiguration: &s3Types.CreateBucketConfiguration{
+					LocationConstraint: s3Types.BucketLocationConstraint(p.Region()),
+				},
+			},
+		)
 		return err
 	}
 
@@ -204,18 +212,20 @@ func (aws *AWSProvider) Flush() error {
 }
 
 func (prov *AWSProvider) Decommision(node *v1.Node) error {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(prov.Region()),
-	})
+	cfg, err := awsConfig.LoadDefaultConfig(context.TODO())
 
 	if err != nil {
 		return errors.ErrorWrap(err, "Failed to establish aws session")
 	}
 
-	svc := ec2.New(sess)
-	instances, err := svc.DescribeInstances(&ec2.DescribeInstancesInput{
-		Filters: []*ec2.Filter{
-			{Name: aws.String("private-dns-name"), Values: []*string{aws.String(node.ObjectMeta.Name)}},
+	cfg.Region = prov.Region()
+
+	name := "private-dns-name"
+
+	svc := ec2.NewFromConfig(cfg)
+	instances, err := svc.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+		Filters: []ec2Types.Filter{
+			{Name: &name, Values: []string{node.ObjectMeta.Name}},
 		},
 	})
 
@@ -225,8 +235,8 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 
 	instance := instances.Reservations[0].Instances[0]
 
-	_, err = svc.TerminateInstances(&ec2.TerminateInstancesInput{
-		InstanceIds: []*string{instance.InstanceId},
+	_, err = svc.TerminateInstances(context.TODO(), &ec2.TerminateInstancesInput{
+		InstanceIds: []string{*instance.InstanceId},
 	})
 
 	return errors.ErrorWrap(err, "failed to terminate instance")
