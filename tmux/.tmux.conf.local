@@ -37,6 +37,8 @@ tmux_conf_new_pane_reconnect_ssh=false
 #   - false (default)
 tmux_conf_new_session_prompt=false
 
+# scroll tweaks
+set -g @scroll-speed-num-lines-per-scroll 2
 
 # -- display -------------------------------------------------------------------
 
