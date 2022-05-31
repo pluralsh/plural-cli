@@ -83,7 +83,7 @@ func handleLogin(c *cli.Context) error {
 
 	if config.Exists() {
 		conf := config.Read()
-		if !confirm(fmt.Sprintf("It looks like you've already logged in as %s, use a different profile?", conf.Email)) {
+		if !confirm(fmt.Sprintf("It looks like your current Plural user is %s, use a different profile?", conf.Email)) {
 			client = api.FromConfig(&conf)
 			return postLogin(&conf, client, c)
 		}
@@ -94,7 +94,7 @@ func handleLogin(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("logging in at %s\n", device.LoginUrl)
+	fmt.Printf("logging into Plural at %s\n", device.LoginUrl)
 	if err := browser.OpenURL(device.LoginUrl); err != nil {
 		fmt.Println("Open %s in your browser to proceed")
 	}
