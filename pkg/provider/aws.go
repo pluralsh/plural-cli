@@ -27,7 +27,7 @@ type AWSProvider struct {
 	Reg           string `survey:"region"`
 	storageClient *s3.Client
 	writer        manifest.Writer
-	goContext     context.Context
+	goContext     *context.Context
 }
 
 var (
@@ -78,9 +78,9 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 	ctx := context.Background()
 
-	provider.goContext = ctx
+	provider.goContext = &ctx
 
-	client, err := getClient(provider.Reg, provider.goContext)
+	client, err := getClient(provider.Reg, *provider.goContext)
 	if err != nil {
 		return
 	}
@@ -114,12 +114,13 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	ctx := context.Background()
-	client, err := getClient(man.Region, ctx)
+	context := &ctx
+	client, err := getClient(man.Region, *context)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, nil, ctx}, nil
+	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, nil, context}, nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
@@ -165,10 +166,10 @@ func (aws *AWSProvider) KubeConfig() error {
 
 func (p *AWSProvider) mkBucket(name string) error {
 	client := p.storageClient
-	_, err := client.HeadBucket(p.goContext, &s3.HeadBucketInput{Bucket: &name})
+	_, err := client.HeadBucket(*p.goContext, &s3.HeadBucketInput{Bucket: &name})
 
 	if err != nil {
-		_, err = client.CreateBucket(p.goContext,
+		_, err = client.CreateBucket(*p.goContext,
 			&s3.CreateBucketInput{
 				Bucket: &name,
 				CreateBucketConfiguration: &s3Types.CreateBucketConfiguration{
@@ -218,7 +219,7 @@ func (aws *AWSProvider) Flush() error {
 }
 
 func (prov *AWSProvider) Decommision(node *v1.Node) error {
-	cfg, err := awsConfig.LoadDefaultConfig(prov.goContext)
+	cfg, err := awsConfig.LoadDefaultConfig(*prov.goContext)
 
 	if err != nil {
 		return errors.ErrorWrap(err, "Failed to establish aws session")
@@ -229,7 +230,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	name := "private-dns-name"
 
 	svc := ec2.NewFromConfig(cfg)
-	instances, err := svc.DescribeInstances(prov.goContext, &ec2.DescribeInstancesInput{
+	instances, err := svc.DescribeInstances(*prov.goContext, &ec2.DescribeInstancesInput{
 		Filters: []ec2Types.Filter{
 			{Name: &name, Values: []string{node.ObjectMeta.Name}},
 		},
@@ -241,7 +242,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 
 	instance := instances.Reservations[0].Instances[0]
 
-	_, err = svc.TerminateInstances(prov.goContext, &ec2.TerminateInstancesInput{
+	_, err = svc.TerminateInstances(*prov.goContext, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{*instance.InstanceId},
 	})
 
