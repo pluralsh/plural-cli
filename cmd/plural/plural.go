@@ -218,6 +218,12 @@ func main() {
 			Category: "User Profile",
 		},
 		{
+			Name:     "repair",
+			Usage:    "commits any new encrypted changes in your local workspace automatically",
+			Action:   handleRepair,
+			Category: "WORKSPACE",
+		},
+		{
 			Name:     "serve",
 			Usage:    "launch the server",
 			Action:   handleServe,

@@ -3,7 +3,19 @@ package main
 import (
 	"os"
 	"os/exec"
+	"github.com/urfave/cli"
+	"github.com/pluralsh/plural/pkg/utils/git"
 )
+
+
+func handleRepair(c *cli.Context) error {
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	return git.Repair(repoRoot)
+}
 
 func gitConfig(name, val string) error {
 	cmd := gitCommand("config", name, val)
