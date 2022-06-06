@@ -59,6 +59,16 @@ func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error
 	}
 }
 
+func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		if ok := affirm(msg); !ok {
+			return nil
+		}
+
+		return fn(c)
+	}
+}
+
 func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		event := api.UserEventAttributes{Data: "", Event: event, Status: "OK"}

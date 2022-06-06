@@ -18,7 +18,7 @@ type keys struct {
 	priv string
 }
 
-func generateKeys() (pub string, priv string, err error) {
+func GenerateKeys() (pub string, priv string, err error) {
 	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return
