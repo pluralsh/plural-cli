@@ -33,9 +33,9 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	return true
 }
 
-func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, section *api.RecipeSection) error {
+func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, section *api.RecipeSection) (err error) {
 	if !evaluateCondition(ctx, item.Condition) {
-		return nil
+		return
 	}
 
 	if item.Type == Function {
@@ -61,36 +61,36 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	case Int:
 		var res int
 		prompt, opts := intSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bool:
 		res := false
 		prompt, opts := boolSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Domain:
 		var res string
 		def = prevDefault(ctx, item, def)
 		prompt, opts := domainSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case String:
 		var res string
 		def = prevDefault(ctx, item, def)
 		prompt, opts := stringSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Password:
 		var res string
 		def = prevDefault(ctx, item, def)
 		prompt, opts := passwordSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:
 		var res string
 		def = prevDefault(ctx, item, def)
 		prompt, opts := bucketSurvey(def, item, proj, context)
-		survey.AskOne(prompt, &res, opts...)
+		err = survey.AskOne(prompt, &res, opts...)
 		if res != def {
 			ctx[item.Name] = bucketName(res, proj)
 		} else {
@@ -100,7 +100,9 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	case File:
 		var res string
 		prompt, opts := fileSurvey(def, item, proj)
-		survey.AskOne(prompt, &res, opts...)
+		if err := survey.AskOne(prompt, &res, opts...); err != nil {
+			return err
+		}
 		path, err := homedir.Expand(res)
 		if err != nil {
 			return err
@@ -112,7 +114,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		ctx[item.Name] = contents
 	}
 
-	return nil
+	return
 }
 
 func prevDefault(ctx map[string]interface{}, item *api.ConfigurationItem, def string) string {

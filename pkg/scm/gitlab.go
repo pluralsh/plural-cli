@@ -75,7 +75,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	}
 	survey.AskOne(prompt, &org, survey.WithValidator(survey.Required))
 
-	pub, priv, err := generateKeys()
+	pub, priv, err := GenerateKeys()
 	if err != nil {
 		return
 	}
