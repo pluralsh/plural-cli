@@ -32,6 +32,9 @@ func handleInit(c *cli.Context) error {
 	}
 
 	prov, err := runPreflights()
+	if err != nil {
+		return err
+	}
 	defer prov.Flush()
 
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
