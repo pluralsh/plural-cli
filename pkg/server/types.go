@@ -45,4 +45,5 @@ type SetupRequest struct {
 	GitInfo       *GitInfo     `json:"git_info"`
 	SshPublicKey  string       `json:"ssh_public_key"`
 	SshPrivateKey string       `json:"ssh_private_key"`
+	IsDemo        bool         `json:"is_demo"`
 }

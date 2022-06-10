@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
@@ -37,19 +38,21 @@ func bundleCommands() []cli.Command {
 func bundleList(c *cli.Context) error {
 	client := api.NewClient()
 	man, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	} 
+	repo := c.Args().Get(0)
+	prov := ""
+	if err == nil {
+		prov = strings.ToUpper(man.Provider)
+	}
 
-	recipes, err := client.ListRecipes(c.Args().Get(0), strings.ToUpper(man.Provider))
+	recipes, err := client.ListRecipes(repo, prov)
 	if err != nil {
 		return err
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Description", "Provider"})
+	table.SetHeader([]string{"Name", "Description", "Provider", "Install Command"})
 	for _, recipe := range recipes {
-		table.Append([]string{recipe.Name, recipe.Description, recipe.Provider})
+		table.Append([]string{recipe.Name, recipe.Description, recipe.Provider, fmt.Sprintf("plural bundle install %s %s", repo, recipe.Name)})
 	}
 
 	table.Render()
