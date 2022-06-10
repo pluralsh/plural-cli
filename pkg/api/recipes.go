@@ -146,7 +146,9 @@ func (client *Client) ListRecipes(repo, provider string) (recipes []*Recipe, err
 
 	req := client.Build(listRecipes)
 	req.Var("repo", repo)
-	req.Var("provider", NormalizeProvider(provider))
+	if provider != "" {
+		req.Var("provider", NormalizeProvider(provider))
+	}
 	err = client.Run(req, &resp)
 	if err != nil {
 		return

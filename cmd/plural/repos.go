@@ -54,7 +54,7 @@ func handleListRepositories(c *cli.Context) error {
 	addIcon := c.String("format") == "csv"
 
 	formatter := format.New(format.FormatType(c.String("format")))
-	header := []string{"Name", "Description", "Publisher"}
+	header := []string{"Repo", "Description", "Publisher"}
 	if addIcon {
 		header = append(header, "Icon")
 	}
