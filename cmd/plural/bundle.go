@@ -17,13 +17,13 @@ func bundleCommands() []cli.Command {
 		{
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
-			ArgsUsage: "[repo]",
+			ArgsUsage: "REPO",
 			Action:    requireArgs(bundleList, []string{"repo"}),
 		},
 		{
 			Name:      "install",
 			Usage:     "installs a bundle and writes the configuration to this installation's context",
-			ArgsUsage: "[repo] [name]",
+			ArgsUsage: "REPO NAME",
 			Flags:     []cli.Flag{
 				cli.BoolFlag{
 					Name: "refresh",

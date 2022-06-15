@@ -78,8 +78,8 @@ var gcpSurvey = []*survey.Question{
 	},
 }
 
-func mkGCP(conf config.Config) (prov *GCPProvider, err error) {
-	provider := &GCPProvider{}
+func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
+	provider = &GCPProvider{}
 	if err = survey.Ask(gcpSurvey, provider); err != nil {
 		return
 	}
