@@ -15,9 +15,14 @@ func Preflight() (bool, error) {
 		}
 	}
 
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return false, utils.HighlightError(fmt.Errorf("not in a git repository, or repository has no initial commit"))
+		return false, utils.HighlightError(fmt.Errorf("you're not in a git repository, you'll need to clone one before running plural"))
+	}
+
+	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return false, utils.HighlightError(fmt.Errorf("Repository has no initial commit, you can simply commit a blank readme and push to start working"))
 	}
 
 	return true, nil
