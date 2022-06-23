@@ -51,6 +51,9 @@ func authMethod(args map[string]*ContextValue) (transport.AuthMethod, error) {
 		passphrase = passArg.Val.(string)
 	}
 
-	user, _, _, _ := git.UrlComponents(url)
+	user, _, _, _, err := git.UrlComponents(url)
+	if err != nil {
+		return nil, err
+	}
 	return git.SSHAuth(user, pk, passphrase)
 }

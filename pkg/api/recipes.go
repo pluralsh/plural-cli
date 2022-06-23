@@ -9,6 +9,7 @@ type RecipeInput struct {
 	Name         string
 	Description  string
 	Provider     string
+	Restricted   bool
 	Tests        []RecipeTestInput `yaml:"tests",json:"tests,omitempty"`
 	Sections     []RecipeSectionInput
 	Dependencies []DependencyInput

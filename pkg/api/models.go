@@ -168,6 +168,7 @@ type Recipe struct {
 	Name               string
 	Provider           string
 	Description        string
+	Restricted         bool
 	Tests              []*RecipeTest
 	Repository         *Repository
 	RecipeSections     []*RecipeSection
@@ -486,6 +487,7 @@ const RecipeFragment = `
 		id
     name
     description
+	restricted
     provider
 		tests {
 			type
