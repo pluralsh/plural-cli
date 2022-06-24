@@ -231,6 +231,8 @@ github.com/aws/aws-sdk-go v1.25.3/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN
 github.com/aws/aws-sdk-go v1.34.9/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.35.35 h1:o/EbgEcIPWga7GWhJhb3tiaxqk4/goTdo5YEMdnVxgE=
 github.com/aws/aws-sdk-go v1.35.35/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.44.42 h1:sPkafCTLh2diZtDojetwbhU7QWQljYvc3PRjnrgKFlE=
+github.com/aws/aws-sdk-go v1.44.42/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/azure/azure-sdk-for-go v57.4.0+incompatible h1:7PXrQ3NrC+hNtFlZtz8rSJi+mMolgghHh+I5db6yeUw=
 github.com/azure/azure-sdk-for-go v57.4.0+incompatible/go.mod h1:tOiTyk5ut55mEEo/hYwMIa79Jn9AkErVBTmJ3I0ZlfY=
 github.com/benbjohnson/clock v1.0.3/go.mod h1:bGMdMPoPVvcYyt1gHDf4J2KE153Yf9BuiUKYMaxlTDM=

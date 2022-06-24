@@ -15,7 +15,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/aws/aws-sdk-go v1.35.35
+	github.com/aws/aws-sdk-go v1.44.42
 	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
 	github.com/buger/goterm v1.0.0
 	github.com/chartmuseum/helm-push v0.10.2
@@ -38,6 +38,7 @@ require (
 	github.com/packethost/packngo v0.22.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
 	github.com/thoas/go-funk v0.9.1
@@ -171,7 +172,6 @@ require (
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
