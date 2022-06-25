@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/inancgumus/screen"
 	"github.com/pluralsh/plural/pkg/api"
@@ -15,6 +16,10 @@ func Install(repo, name string, refresh bool) error {
 	recipe, err := client.GetRecipe(repo, name)
 	if err != nil {
 		return err
+	}
+
+	if recipe.Restricted && os.Getenv("CLOUD_SHELL") == "1" {
+		return fmt.Errorf("Cannot install this bundle in cloud shell, this is often because it requires a file locally available on your machine like a git ssh key")
 	}
 
 	path := manifest.ContextPath()

@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
@@ -13,9 +14,14 @@ var (
 	scpLikeUrlRegExp = regexp.MustCompile(`^(?:(?P<user>[^@]+)@)?(?P<host>[^:\s]+):(?:(?P<port>[0-9]{1,5})(?:\/|:))?(?P<path>[^\\].*\/[^\\].*)$`)
 )
 
-func UrlComponents(url string) (user, host, port, path string) {
+func UrlComponents(url string) (user, host, port, path string, err error) {
 	m := scpLikeUrlRegExp.FindStringSubmatch(url)
-	return m[1], m[2], m[3], m[4]
+	if len(m) < 5 {
+		err = fmt.Errorf("%s is not a valid git ssh url", url)
+		return
+	}
+
+	return m[1], m[2], m[3], m[4], nil
 }
 
 func BasicAuth(user, password string) (transport.AuthMethod, error) {

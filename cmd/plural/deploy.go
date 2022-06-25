@@ -132,7 +132,7 @@ func doBuild(client *api.Client, installation *api.Installation, force bool) err
 	fmt.Printf("Building workspace for %s\n", repoName)
 
 	if !wkspace.Configured(repoName) {
-		return fmt.Errorf("You have not locally configured %s but have it registered as an installation, either delete it in app.plural.sh or install it locally via a bundle in `plural bundle list %s`", repoName, repoName)
+		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it in app.plural.sh or install it locally via a bundle in `plural bundle list %s`", repoName, repoName)
 	}
 
 	workspace, err := wkspace.New(client, installation)
