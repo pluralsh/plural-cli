@@ -16,7 +16,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
-	github.com/buger/goterm v1.0.0
+	github.com/buger/goterm v1.0.4
 	github.com/chartmuseum/helm-push v0.10.2
 	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.13.0
