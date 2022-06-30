@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"os"
 	"path/filepath"
 
@@ -131,8 +132,16 @@ func createCrds(c *cli.Context) error {
 			return nil
 		}
 
-		if err := utils.Exec("kubectl", "create", "-f", path); err != nil {
-			return utils.Exec("kubectl", "replace", "-f", path)
+		if err = utils.Exec("kubectl", "create", "-f", path); err != nil {
+			err = utils.Exec("kubectl", "replace", "-f", path)
+		}
+
+		if err != nil {
+			errStr := fmt.Sprint(err)
+			if strings.Contains(errStr, "invalid apiVersion \"client.authentication.k8s.io/v1alpha1\"") {
+				return fmt.Errorf("kubectl failed with %s, this is usually due to your aws cli version being out of date", errStr)
+			}
+			return err
 		}
 
 		return nil

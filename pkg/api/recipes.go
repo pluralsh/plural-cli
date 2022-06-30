@@ -10,7 +10,7 @@ type RecipeInput struct {
 	Description  string
 	Provider     string
 	Restricted   bool
-	Tests        []RecipeTestInput `yaml:"tests",json:"tests,omitempty"`
+	Tests        []RecipeTestInput `yaml:"tests" json:"tests,omitempty"`
 	Sections     []RecipeSectionInput
 	Dependencies []DependencyInput
 	OidcSettings *OIDCSettings `yaml:"oidcSettings,omitempty"`
@@ -65,7 +65,7 @@ type ConfigurationItemInput struct {
 	Placeholder   string
 	Longform      string
 	Optional      bool
-	FunctionName  string `yaml:"functionName,omitempty",json:"functionName,omitempty"`
+	FunctionName  string `yaml:"functionName,omitempty" json:"functionName,omitempty"`
 	Condition     *ConditionInput
 	Validation    *ValidationInput
 }
