@@ -169,14 +169,18 @@ func (p *AWSProvider) mkBucket(name string) error {
 	_, err := client.HeadBucket(*p.goContext, &s3.HeadBucketInput{Bucket: &name})
 
 	if err != nil {
-		_, err = client.CreateBucket(*p.goContext,
-			&s3.CreateBucketInput{
-				Bucket: &name,
-				CreateBucketConfiguration: &s3Types.CreateBucketConfiguration{
-					LocationConstraint: s3Types.BucketLocationConstraint(p.Region()),
-				},
-			},
-		)
+
+		bucket := &s3.CreateBucketInput{
+			Bucket: &name,
+		}
+
+		if p.Region() != "us-east-1" {
+			bucket.CreateBucketConfiguration = &s3Types.CreateBucketConfiguration{
+				LocationConstraint: s3Types.BucketLocationConstraint(p.Region()),
+			}
+		}
+
+		_, err = client.CreateBucket(*p.goContext, bucket)
 		return err
 	}
 
