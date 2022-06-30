@@ -3,6 +3,7 @@ package scm
 import (
 	"os"
 	"fmt"
+	"time"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -42,6 +43,7 @@ func Setup() (string, error) {
 		return "", err
 	}
 
+	time.Sleep(3 * time.Second)
 	utils.Highlight("Cloning the repo locally (be sure you have git ssh auth set up, you can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider)\n")
 	auth, _ := git.SSHAuth("git", ctx.priv, "")
 	if _, err := git.Clone(auth, ctx.url, ctx.repoName); err != nil {
