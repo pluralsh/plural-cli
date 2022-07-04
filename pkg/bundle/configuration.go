@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/mitchellh/go-homedir"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
@@ -19,7 +19,9 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 	switch cond.Operation {
 	case "NOT":
 		val, ok := ctx[cond.Field]
-		if !ok { return true }
+		if !ok {
+			return true
+		}
 		booled, ok := val.(bool)
 		return ok && !booled
 	case "PREFIX":
@@ -60,36 +62,37 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	switch item.Type {
 	case Int:
 		var res int
-		prompt, opts := intSurvey(def, item, proj)
+		prompt, opts := intSurvey(def)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bool:
 		res := false
-		prompt, opts := boolSurvey(def, item, proj)
+		prompt, opts := boolSurvey()
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Domain:
 		var res string
 		def = prevDefault(ctx, item, def)
-		prompt, opts := domainSurvey(def, item, proj)
+		prompt, opts := domainSurvey(def, item, proj, context)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
+		context.AddDomain(res)
 	case String:
 		var res string
 		def = prevDefault(ctx, item, def)
-		prompt, opts := stringSurvey(def, item, proj)
+		prompt, opts := stringSurvey(def, item)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Password:
 		var res string
 		def = prevDefault(ctx, item, def)
-		prompt, opts := passwordSurvey(def, item, proj)
+		prompt, opts := passwordSurvey(def, item)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:
 		var res string
 		def = prevDefault(ctx, item, def)
-		prompt, opts := bucketSurvey(def, item, proj, context)
+		prompt, opts := bucketSurvey(def, proj, context)
 		err = survey.AskOne(prompt, &res, opts...)
 		if res != def {
 			ctx[item.Name] = bucketName(res, proj)
@@ -99,7 +102,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		context.AddBucket(ctx[item.Name].(string))
 	case File:
 		var res string
-		prompt, opts := fileSurvey(def, item, proj)
+		prompt, opts := fileSurvey(def)
 		if err := survey.AskOne(prompt, &res, opts...); err != nil {
 			return err
 		}

@@ -25,7 +25,7 @@ func stringValidator(item *api.ConfigurationItem) survey.AskOpt {
 	})
 }
 
-func stringSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func stringSurvey(def string, item *api.ConfigurationItem) (survey.Prompt, []survey.AskOpt) {
 	opts := []survey.AskOpt{stringValidator(item)}
 
 	if !item.Optional {
@@ -38,7 +38,7 @@ func stringSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 	}, opts
 }
 
-func passwordSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func passwordSurvey(def string, item *api.ConfigurationItem) (survey.Prompt, []survey.AskOpt) {
 	opts := []survey.AskOpt{stringValidator(item)}
 
 	if !item.Optional {
@@ -48,18 +48,18 @@ func passwordSurvey(def string, item *api.ConfigurationItem, proj *manifest.Proj
 	return &survey.Password{Message: "Enter the value"}, opts
 }
 
-func boolSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func boolSurvey() (survey.Prompt, []survey.AskOpt) {
 	return &survey.Confirm{Message: "Yes or no?"}, []survey.AskOpt{survey.WithValidator(survey.Required)}
 }
 
-func intSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func intSurvey(def string) (survey.Prompt, []survey.AskOpt) {
 	return &survey.Input{
 		Message: "Enter the value",
 		Default: def,
 	}, []survey.AskOpt{survey.WithValidator(survey.Required)}
 }
 
-func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest, context *manifest.Context) (survey.Prompt, []survey.AskOpt) {
 	opts := []survey.AskOpt{
 		survey.WithValidator(func(val interface{}) error {
 			res, _ := val.(string)
@@ -67,8 +67,12 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 				return nil
 			}
 
+			if context.HasDomain(res) {
+				return fmt.Errorf("domain %s has already been used elsewhere in this project, please chose another", res)
+			}
+
 			if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
-				return fmt.Errorf("Domain must end with %s", proj.Network.Subdomain)
+				return fmt.Errorf("domain must end with %s", proj.Network.Subdomain)
 			}
 
 			if err := utils.ValidateDns(res); err != nil {
@@ -83,7 +87,7 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 	return &survey.Input{Message: msg, Default: def}, opts
 }
 
-func fileSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest) (survey.Prompt, []survey.AskOpt) {
+func fileSurvey(def string) (survey.Prompt, []survey.AskOpt) {
 	return &survey.Input{
 		Message: "select a file (use tab to list files in the directory):",
 		Default: def,
@@ -115,7 +119,7 @@ func cleanPath(path string) string {
 	return path
 }
 
-func bucketSurvey(def string, item *api.ConfigurationItem, proj *manifest.ProjectManifest, context *manifest.Context) (survey.Prompt, []survey.AskOpt) {
+func bucketSurvey(def string, proj *manifest.ProjectManifest, context *manifest.Context) (survey.Prompt, []survey.AskOpt) {
 	prompt := "Enter a globally unique object store bucket name "
 
 	if proj.BucketPrefix != "" {

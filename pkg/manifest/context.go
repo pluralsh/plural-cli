@@ -7,6 +7,8 @@ import (
 
 	"github.com/pluralsh/plural/pkg/api"
 	"gopkg.in/yaml.v2"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type Bundle struct {
@@ -25,7 +27,8 @@ type SMTP struct {
 
 type Context struct {
 	Bundles       []*Bundle
-	Buckets       []string
+	Buckets       sets.String
+	Domains       sets.String
 	SMTP          *SMTP `yaml:"smtp,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
@@ -69,6 +72,8 @@ func NewContext() *Context {
 	return &Context{
 		Bundles:       make([]*Bundle, 0),
 		Configuration: make(map[string]map[string]interface{}),
+		Domains:       sets.NewString(),
+		Buckets:       sets.NewString(),
 	}
 }
 
@@ -88,18 +93,20 @@ func (c *Context) AddBundle(repo, name string) {
 }
 
 func (c *Context) AddBucket(bucket string) {
-	c.Buckets = append(c.Buckets, bucket)
+	c.Buckets.Insert(bucket)
 }
 
 func (c *Context) HasBucket(bucket string) bool {
-	for _, b := range c.Buckets {
-		if b == bucket {
-			return true
-		}
-	}
+	return c.Buckets.Has(bucket)
+}
 
-	return false
-} 
+func (c *Context) AddDomain(bucket string) {
+	c.Domains.Insert(bucket)
+}
+
+func (c *Context) HasDomain(bucket string) bool {
+	return c.Domains.Has(bucket)
+}
 
 func (c *Context) Write(path string) error {
 	versioned := &VersionedContext{
