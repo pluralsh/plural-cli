@@ -1,16 +1,18 @@
 package scm
 
 import (
-	"os"
-	"io/ioutil"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"
-	"golang.org/x/crypto/ssh"
-	"github.com/mikesmitty/edkey"
-	"github.com/pluralsh/plural/pkg/utils"
-	homedir "github.com/mitchellh/go-homedir"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+
+	"github.com/mikesmitty/edkey"
+	"github.com/mitchellh/go-homedir"
+	"golang.org/x/crypto/ssh"
+
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type keys struct {
@@ -18,7 +20,7 @@ type keys struct {
 	priv string
 }
 
-func GenerateKeys() (pub string, priv string, err error) {
+func GenerateKeys(saveKeyFiles bool) (pub string, priv string, err error) {
 	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return
@@ -35,7 +37,11 @@ func GenerateKeys() (pub string, priv string, err error) {
 	}
 	pub = string(ssh.MarshalAuthorizedKey(sshPub))
 
-	err = saveKeys(pub, priv)
+	if saveKeyFiles {
+		err = saveKeys(pub, priv)
+		return
+	}
+
 	return
 }
 

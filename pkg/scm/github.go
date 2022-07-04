@@ -2,10 +2,12 @@ package scm
 
 import (
 	"context"
+
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/google/go-github/v44/github"
 	"github.com/pluralsh/oauth"
 	"golang.org/x/oauth2"
-	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -69,11 +71,11 @@ func (gh *Github) Setup() (con Context, err error) {
 	}
 	survey.AskOne(prompt, &org, survey.WithValidator(survey.Required))
 
-	pub, priv, err := GenerateKeys()
+	pub, priv, err := GenerateKeys(false)
 	if err != nil {
 		return
 	}
-	
+
 	owner := org
 	if owner == *user.Login {
 		owner = ""
@@ -101,7 +103,7 @@ func (gh *Github) Setup() (con Context, err error) {
 
 	con.pub = pub
 	con.priv = priv
-	con.username = *user.Login 
+	con.username = *user.Login
 	con.url = *repo.SSHURL
 	con.repoName = repoName
 	return
