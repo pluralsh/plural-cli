@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
@@ -14,14 +15,21 @@ func execWeb(namespace string, proxy *v1alpha1.Proxy, kube *utils.Kube) error {
 	if err != nil {
 		return err
 	}
-	defer fwd.Process.Kill()
+	defer func(Process *os.Process) {
+		_ = Process.Kill()
+
+	}(fwd.Process)
 
 	utils.Highlight("Wait a bit while the port-forward boots up\n\n")
 	time.Sleep(5 * time.Second)
 
-	printCredentials(proxy, namespace, kube)
+	if err := printCredentials(proxy, namespace, kube); err != nil {
+		return err
+	}
 	fmt.Printf("\nVisit http://localhost:%d%s\n", config.Port, config.Path)
-	utils.ReadLine("Press enter to close the proxy")
+	if _, err := utils.ReadLine("Press enter to close the proxy"); err != nil {
+		return err
+	}
 	return nil
 }
 

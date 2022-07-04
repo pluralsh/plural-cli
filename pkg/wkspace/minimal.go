@@ -74,7 +74,9 @@ func templateVals(app, path string) (backup string, err error) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	err = FormatValues(f, vals, out)
 	return
@@ -87,12 +89,14 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	}
 	backup, err := templateVals(m.Name, path)
 	if err == nil {
-		defer os.Rename(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+		defer func(oldpath, newpath string) {
+			_ = os.Rename(oldpath, newpath)
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
 	utils.Warn("helm upgrade --install --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
-	args := []string{}
+	var args []string
 	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--namespace", namespace, m.Name, path}
 	args = append(args, defaultArgs...)
 	args = append(args, extraArgs...)
@@ -107,7 +111,9 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	}
 	backup, err := templateVals(m.Name, path)
 	if err == nil {
-		defer os.Rename(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+		defer func(oldpath, newpath string) {
+			_ = os.Rename(oldpath, newpath)
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
@@ -124,11 +130,16 @@ func (m *MinimalWorkspace) DiffTerraform() error {
 
 func (m *MinimalWorkspace) runDiff(command string, args ...string) error {
 	diffFolder, err := m.constructDiffFolder()
+	if err != nil {
+		return err
+	}
 	outfile, err := os.Create(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(diffFolder, command))))
 	if err != nil {
 		return err
 	}
-	defer outfile.Close()
+	defer func(outfile *os.File) {
+		_ = outfile.Close()
+	}(outfile)
 
 	cmd := exec.Command(command, args...)
 	cmd.Stdout = &diff.TeeWriter{File: outfile}

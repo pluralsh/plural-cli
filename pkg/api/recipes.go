@@ -41,8 +41,8 @@ type RecipeSectionInput struct {
 }
 
 type RecipeItemInput struct {
-	Name          string
-	Type          string
+	Name string
+	Type string
 }
 
 type ConditionInput struct {
@@ -174,7 +174,7 @@ func (client *Client) InstallRecipe(id string) error {
 	req.Var("id", id)
 	req.Var("ctx", "{}")
 	return client.Run(req, &resp)
-} 
+}
 
 func ConstructRecipe(marshalled []byte) (recipe RecipeInput, err error) {
 	err = yaml.Unmarshal(marshalled, &recipe)

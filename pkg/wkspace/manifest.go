@@ -18,20 +18,20 @@ func (wk *Workspace) BuildManifest(prev *manifest.Manifest) *manifest.Manifest {
 	}
 
 	return &manifest.Manifest{
-		Id: repository.Id,
-		Name: repository.Name,
-		Cluster: wk.Provider.Cluster(),
-		Project: wk.Provider.Project(),
-		Bucket: wk.Provider.Bucket(),
-		Provider: wk.Provider.Name(),
-		Region: wk.Provider.Region(),
-		License: wk.Installation.LicenseKey,
-		Wait: wk.requiresWait(),
-		Charts: charts,
-		Terraform: terraform,
+		Id:           repository.Id,
+		Name:         repository.Name,
+		Cluster:      wk.Provider.Cluster(),
+		Project:      wk.Provider.Project(),
+		Bucket:       wk.Provider.Bucket(),
+		Provider:     wk.Provider.Name(),
+		Region:       wk.Provider.Region(),
+		License:      wk.Installation.LicenseKey,
+		Wait:         wk.requiresWait(),
+		Charts:       charts,
+		Terraform:    terraform,
 		Dependencies: buildDependencies(repository.Name, wk.Charts, wk.Terraform),
-		Context: wk.Provider.Context(),
-		Links: prev.Links,
+		Context:      wk.Provider.Context(),
+		Links:        prev.Links,
 	}
 }
 
@@ -47,7 +47,7 @@ func buildDependencies(repo string, charts []*api.ChartInstallation, tfs []*api.
 			}
 
 			if dep.Repo != repo {
-				deps = append(deps, &manifest.Dependency{dep.Repo})
+				deps = append(deps, &manifest.Dependency{Repo: dep.Repo})
 				seen[dep.Repo] = true
 			}
 		}
@@ -61,7 +61,7 @@ func buildDependencies(repo string, charts []*api.ChartInstallation, tfs []*api.
 			}
 
 			if dep.Repo != repo {
-				deps = append(deps, &manifest.Dependency{dep.Repo})
+				deps = append(deps, &manifest.Dependency{Repo: dep.Repo})
 				seen[dep.Repo] = true
 			}
 		}
@@ -73,10 +73,10 @@ func buildDependencies(repo string, charts []*api.ChartInstallation, tfs []*api.
 func buildChartManifest(chartInstallation *api.ChartInstallation) *manifest.ChartManifest {
 	chart := chartInstallation.Chart
 	version := chartInstallation.Version
-	return &manifest.ChartManifest{chart.Id, chart.Name, version.Id, version.Version}
+	return &manifest.ChartManifest{Id: chart.Id, Name: chart.Name, VersionId: version.Id, Version: version.Version}
 }
 
 func buildTerraformManifest(tfInstallation *api.TerraformInstallation) *manifest.TerraformManifest {
 	terraform := tfInstallation.Terraform
-	return &manifest.TerraformManifest{terraform.Id, terraform.Name}
+	return &manifest.TerraformManifest{Id: terraform.Id, Name: terraform.Name}
 }

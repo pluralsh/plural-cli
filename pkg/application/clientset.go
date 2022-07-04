@@ -17,7 +17,10 @@ type ApplicationV1Beta1Client struct {
 }
 
 func NewForConfig(c *rest.Config) (*ApplicationV1Beta1Client, error) {
-	AddToScheme(scheme.Scheme)
+	err := AddToScheme(scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
 	config := *c
 	config.ContentConfig.GroupVersion = &v1beta1.GroupVersion
 	config.APIPath = "/apis"

@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
@@ -49,16 +49,6 @@ func owned(fn func(*cli.Context) error) func(*cli.Context) error {
 	}
 }
 
-func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		if ok := confirm(msg); !ok {
-			return nil
-		}
-
-		return fn(c)
-	}
-}
-
 func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if ok := affirm(msg); !ok {
@@ -85,7 +75,10 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 		conf := config.Read()
 		if conf.ReportErrors {
 			client := api.FromConfig(&conf)
-			client.CreateEvent(&event)
+			err := client.CreateEvent(&event)
+			if err != nil {
+				return err
+			}
 		}
 		return err
 	}
@@ -115,14 +108,20 @@ func validateOwner() error {
 func confirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg}
-	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	if err != nil {
+		return false
+	}
 	return res
 }
 
 func affirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg, Default: true}
-	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	if err != nil {
+		return false
+	}
 	return res
 }
 

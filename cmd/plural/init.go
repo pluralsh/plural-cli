@@ -11,11 +11,11 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/server"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/urfave/cli"
 )
 
@@ -35,7 +35,10 @@ func handleInit(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer prov.Flush()
+	defer func(prov provider.Provider) {
+		_ = prov.Flush()
+
+	}(prov)
 
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
 		repo, err = scm.Setup()
@@ -58,9 +61,9 @@ func handleInit(c *cli.Context) error {
 	return nil
 }
 
-func preflights(c *cli.Context) error {
+func preflights(*cli.Context) error {
 	_, err := runPreflights()
-	return err 
+	return err
 }
 
 func runPreflights() (provider.Provider, error) {
@@ -99,7 +102,7 @@ func handleLogin(c *cli.Context) error {
 
 	fmt.Printf("logging into Plural at %s\n", device.LoginUrl)
 	if err := browser.OpenURL(device.LoginUrl); err != nil {
-		fmt.Println("Open %s in your browser to proceed")
+		fmt.Printf("Open %s in your browser to proceed\n", device.LoginUrl)
 	}
 
 	var jwt string
@@ -182,6 +185,6 @@ func handleImport(c *cli.Context) error {
 	return nil
 }
 
-func handleServe(c *cli.Context) error {
+func handleServe(*cli.Context) error {
 	return server.Run()
 }

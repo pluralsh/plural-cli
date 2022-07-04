@@ -79,7 +79,7 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 	projectID, err := getProjectIDFromName(resp.Project, resp.ApiToken)
 	if err != nil {
 		err = errors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
-		return 
+		return
 	}
 
 	provider = &EQUINIXProvider{
@@ -125,8 +125,12 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
 	}
 
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**"))
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**")); err != nil {
+		return "", err
+	}
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
+		return "", err
+	}
 	scaffold, err := GetProviderScaffold("EQUINIX")
 	if err != nil {
 		return "", err
@@ -170,36 +174,46 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 			continue
 		}
 
-		config, err := clientcmd.LoadFromFile(filename)
+		fromFile, err := clientcmd.LoadFromFile(filename)
 
 		if err != nil {
 			return err
 		}
 
-		kubeconfigs = append(kubeconfigs, config)
+		kubeconfigs = append(kubeconfigs, fromFile)
 	}
 
 	// first merge all of our maps
 	mapConfig := clientcmdapi.NewConfig()
 
 	for _, kubeconfig := range kubeconfigs {
-		mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride)
+		err := mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride)
+		if err != nil {
+			return err
+		}
 	}
 
 	// merge all of the struct values
 	nonMapConfig := clientcmdapi.NewConfig()
 	for i := range kubeconfigs {
 		kubeconfig := kubeconfigs[i]
-		mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride)
+		err := mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride)
+		if err != nil {
+			return err
+		}
 	}
 
 	// since values are overwritten, but maps values are not, we can merge the non-map config on top of the map config and
 	// get the values we expect.
-	config := clientcmdapi.NewConfig()
-	mergo.Merge(config, mapConfig, mergo.WithOverride)
-	mergo.Merge(config, nonMapConfig, mergo.WithOverride)
+	newConfig := clientcmdapi.NewConfig()
+	if err := mergo.Merge(newConfig, mapConfig, mergo.WithOverride); err != nil {
+		return err
+	}
+	if err := mergo.Merge(newConfig, nonMapConfig, mergo.WithOverride); err != nil {
+		return err
+	}
 
-	json, err := runtime.Encode(clientcmdlatest.Codec, config)
+	json, err := runtime.Encode(clientcmdlatest.Codec, newConfig)
 	if err != nil {
 		return err
 	}
@@ -276,7 +290,7 @@ func getMetalClient(apiToken string) *metal.Client {
 	return client
 }
 
-func MetalRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
+func MetalRetryPolicy(ctx context.Context, _ *http.Response, err error) (bool, error) {
 	var redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
 
 	if ctx.Err() != nil {

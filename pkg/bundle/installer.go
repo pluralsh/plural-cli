@@ -6,9 +6,9 @@ import (
 
 	"github.com/inancgumus/screen"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bundle/tests"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/bundle/tests"
 )
 
 func Install(repo, name string, refresh bool) error {
@@ -19,7 +19,7 @@ func Install(repo, name string, refresh bool) error {
 	}
 
 	if recipe.Restricted && os.Getenv("CLOUD_SHELL") == "1" {
-		return fmt.Errorf("Cannot install this bundle in cloud shell, this is often because it requires a file locally available on your machine like a git ssh key")
+		return fmt.Errorf("cannot install this bundle in cloud shell, this is often because it requires a file locally available on your machine like a git ssh key")
 	}
 
 	path := manifest.ContextPath()
@@ -53,9 +53,12 @@ func Install(repo, name string, refresh bool) error {
 			}
 
 			seen[configItem.Name] = true
-			if err := configure(ctx, configItem, context, section); err != nil {
+			if err := configure(ctx, configItem, context); err != nil {
 				context.Configuration[section.Repository.Name] = ctx
-				context.Write(path)
+				err := context.Write(path)
+				if err != nil {
+					return err
+				}
 				return err
 			}
 		}
@@ -84,7 +87,7 @@ func Install(repo, name string, refresh bool) error {
 	if err := configureOidc(repo, client, recipe, context.Configuration[repo], &confirm); err != nil {
 		return err
 	}
-	
+
 	for _, r := range recipe.RecipeDependencies {
 		repo := r.Repository.Name
 		if err := configureOidc(repo, client, r, context.Configuration[repo], &confirm); err != nil {
@@ -108,40 +111,4 @@ func performTests(ctx *manifest.Context, recipe *api.Recipe) error {
 	}
 
 	return nil
-}
-
-func getName(item *api.RecipeItem) string {
-	if item.Terraform != nil {
-		return item.Terraform.Name
-	}
-
-	if item.Chart != nil {
-		return item.Chart.Name
-	}
-
-	return ""
-}
-
-func getType(item *api.RecipeItem) string {
-	if item.Terraform != nil {
-		return "terraform"
-	}
-
-	if item.Chart != nil {
-		return "helm"
-	}
-
-	return ""
-}
-
-func getDescription(item *api.RecipeItem) string {
-	if item.Terraform != nil {
-		return item.Terraform.Description
-	}
-
-	if item.Chart != nil {
-		return item.Chart.Description
-	}
-
-	return ""
 }

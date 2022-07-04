@@ -12,17 +12,19 @@ import (
 
 func Ready(app *v1beta1.Application) bool {
 	cond := findReadiness(app)
-	tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version)
+	if _, err := tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version); err != nil {
+		return false
+	}
 	if cond == nil {
 		warn("WAITING")
-		tm.Println("")
-		return false
+		_, err := tm.Println("")
+		return err == nil
 	}
 
 	if cond.Status == "True" {
 		success("READY")
-		tm.Println("")
-		return true
+		_, err := tm.Println("")
+		return err == nil
 	}
 
 	if cond.Status == "False" {
@@ -31,24 +33,36 @@ func Ready(app *v1beta1.Application) bool {
 		highlight("UNKNOWN")
 	}
 
-	tm.Println("")
+	if _, err := tm.Println(""); err != nil {
+		return false
+	}
 	return false
 }
 
 func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
 	Ready(app)
-	tm.Println(app.Spec.Descriptor.Description)
-	tm.Printf("\nComponents Ready: %s\n", app.Status.ComponentsReady)
+	if _, err := tm.Println(app.Spec.Descriptor.Description); err != nil {
+		return err
+	}
+	if _, err := tm.Printf("\nComponents Ready: %s\n", app.Status.ComponentsReady); err != nil {
+		return err
+	}
 	first := true
 	for _, comp := range app.Status.ComponentList.Objects {
 		if comp.Status != "Ready" {
 			if first {
-				tm.Println("\nUnready Components:")
+				if _, err := tm.Println("\nUnready Components:"); err != nil {
+					return err
+				}
 			}
 			kind := strings.ToLower(comp.Kind)
-			tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status)
+			if _, err := tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status); err != nil {
+				return err
+			}
 			additionalDetails(client, kind, comp.Name, app.Namespace)
-			tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate\n", kind, comp.Name, app.Namespace)
+			if _, err := tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate\n", kind, comp.Name, app.Namespace); err != nil {
+				return err
+			}
 			first = false
 		}
 	}
@@ -57,9 +71,13 @@ func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
 	for _, comp := range app.Status.ComponentList.Objects {
 		if comp.Status == "Ready" {
 			if first {
-				tm.Println("\nReady Components:")
+				if _, err := tm.Println("\nReady Components:"); err != nil {
+					return err
+				}
 			}
-			tm.Printf("- %s/%s :: %s\n", strings.ToLower(comp.Kind), comp.Name, comp.Status)
+			if _, err := tm.Printf("- %s/%s :: %s\n", strings.ToLower(comp.Kind), comp.Name, comp.Status); err != nil {
+				return err
+			}
 			first = false
 		}
 	}
@@ -69,14 +87,23 @@ func Print(client *kubernetes.Clientset, app *v1beta1.Application) (err error) {
 func Flush() {
 	for idx, str := range strings.SplitAfter(tm.Screen.String(), "\n") {
 		if idx == tm.Height()-1 {
-			tm.Output.WriteString("...")
+			_, err := tm.Output.WriteString("...")
+			if err != nil {
+				return
+			}
 			break
 		}
 
-		tm.Output.WriteString(str)
+		_, err := tm.Output.WriteString(str)
+		if err != nil {
+			return
+		}
 	}
 
-	tm.Output.Flush()
+	err := tm.Output.Flush()
+	if err != nil {
+		return
+	}
 	tm.Screen.Reset()
 }
 
@@ -91,13 +118,22 @@ func findReadiness(app *v1beta1.Application) (condition *v1beta1.Condition) {
 }
 
 func warn(line string, args ...interface{}) {
-	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW))
+	_, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW))
+	if err != nil {
+		return
+	}
 }
 
 func success(line string, args ...interface{}) {
-	tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN))
+	_, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN))
+	if err != nil {
+		return
+	}
 }
 
 func highlight(line string, args ...interface{}) {
-	tm.Print(tm.Bold(fmt.Sprintf(line, args...)))
+	_, err := tm.Print(tm.Bold(fmt.Sprintf(line, args...)))
+	if err != nil {
+		return
+	}
 }

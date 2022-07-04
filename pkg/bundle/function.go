@@ -21,7 +21,7 @@ func fetchFunction(item *api.ConfigurationItem) (interface{}, error) {
 		return branchName()
 	}
 
-	return nil, fmt.Errorf("Unsupported function %s, contact the application developer", item.FunctionName)
+	return nil, fmt.Errorf("unsupported function %s, contact the application developer", item.FunctionName)
 }
 
 func repoRoot() (string, error) {

@@ -121,10 +121,13 @@ func cryptoCommands() []cli.Command {
 	}
 }
 
-func handleEncrypt(c *cli.Context) error {
+func handleEncrypt(*cli.Context) error {
 	data, err := ioutil.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
-		os.Stdout.Write(data)
+		_, err := os.Stdout.Write(data)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -141,8 +144,14 @@ func handleEncrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	os.Stdout.Write(prefix)
-	os.Stdout.Write(result)
+	_, err = os.Stdout.Write(prefix)
+	if err != nil {
+		return err
+	}
+	_, err = os.Stdout.Write(result)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -151,7 +160,9 @@ func handleDecrypt(c *cli.Context) error {
 	if c.Args().Present() {
 		p, _ := filepath.Abs(c.Args().First())
 		f, err := os.Open(p)
-		defer f.Close()
+		defer func(f *os.File) {
+			_ = f.Close()
+		}(f)
 		if err != nil {
 			return err
 		}
@@ -165,7 +176,10 @@ func handleDecrypt(c *cli.Context) error {
 		return err
 	}
 	if !bytes.HasPrefix(data, prefix) {
-		os.Stdout.Write(data)
+		_, err := os.Stdout.Write(data)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -179,11 +193,14 @@ func handleDecrypt(c *cli.Context) error {
 		return err
 	}
 
-	os.Stdout.Write(result)
+	_, err = os.Stdout.Write(result)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func cryptoInit(c *cli.Context) error {
+func cryptoInit(*cli.Context) error {
 	encryptConfig := [][]string{
 		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
 		{"filter.plural-crypt.clean", "plural crypto encrypt"},
@@ -233,7 +250,7 @@ func handleSetupKeys(c *cli.Context) error {
 	return nil
 }
 
-func handleUnlock(c *cli.Context) error {
+func handleUnlock(*cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -248,20 +265,23 @@ func handleUnlock(c *cli.Context) error {
 	return gitCommand("checkout", "HEAD", "--", repoRoot).Run()
 }
 
-func exportKey(c *cli.Context) error {
+func exportKey(*cli.Context) error {
 	key, err := crypto.Materialize()
 	if err != nil {
 		return err
 	}
-	io, err := key.Marshal()
+	marshal, err := key.Marshal()
 	if err != nil {
 		return err
 	}
-	os.Stdout.Write(io)
+	_, err = os.Stdout.Write(marshal)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func importKey(c *cli.Context) error {
+func importKey(*cli.Context) error {
 	data, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -283,7 +303,7 @@ func randString(c *cli.Context) error {
 	return nil
 }
 
-func handleKeygen(c *cli.Context) error {
+func handleKeygen(*cli.Context) error {
 	path, err := homedir.Expand("~/.ssh")
 	if err != nil {
 		return err
@@ -299,7 +319,7 @@ func handleKeygen(c *cli.Context) error {
 	err = survey.AskOne(input, &filename, survey.WithValidator(func(val interface{}) error {
 		name, _ := val.(string)
 		if utils.Exists(filepath.Join(path, name)) {
-			return fmt.Errorf("File ~/.ssh/%s already exists", name)
+			return fmt.Errorf("file ~/.ssh/%s already exists", name)
 		}
 
 		return nil

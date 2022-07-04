@@ -80,15 +80,3 @@ func (t *Tags) Push(repo string, sha string) (string, error) {
 	utils.Success("\u2713\n")
 	return newsha, nil
 }
-
-func specName(spec *VersionSpec) string {
-	if spec.Chart != nil {
-		return fmt.Sprintf("chart[%s:%s]", *spec.Chart, spec.Version)
-	}
-
-	if spec.Terraform != nil {
-		return fmt.Sprintf("terraform[%s:%s]", *spec.Terraform, spec.Version)
-	}
-
-	return ""
-}

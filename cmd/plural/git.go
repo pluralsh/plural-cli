@@ -3,12 +3,12 @@ package main
 import (
 	"os"
 	"os/exec"
-	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/urfave/cli"
 )
 
-
-func handleRepair(c *cli.Context) error {
+func handleRepair(*cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -19,11 +19,6 @@ func handleRepair(c *cli.Context) error {
 
 func gitConfig(name, val string) error {
 	cmd := gitCommand("config", name, val)
-	return cmd.Run()
-}
-
-func removeGitConfig(name string) error {
-	cmd := gitCommand("config", "--remove-section", name)
 	return cmd.Run()
 }
 

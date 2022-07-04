@@ -24,13 +24,13 @@ func bundleCommands() []cli.Command {
 			Name:      "install",
 			Usage:     "installs a bundle and writes the configuration to this installation's context",
 			ArgsUsage: "REPO NAME",
-			Flags:     []cli.Flag{
+			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name: "refresh",
+					Name:  "refresh",
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action:    rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
+			Action: rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
 		},
 	}
 }

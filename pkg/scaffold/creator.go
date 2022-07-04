@@ -73,13 +73,17 @@ func ApplicationScaffold(client *api.Client) error {
 		return err
 	}
 
-	os.Chdir(helmPath)
+	if err := os.Chdir(helmPath); err != nil {
+		return err
+	}
 
 	if err := utils.Exec("helm", "create", app); err != nil {
 		return err
 	}
 
-	os.Chdir(pathing.SanitizeFilepath(filepath.Join(pwd, app)))
+	if err := os.Chdir(pathing.SanitizeFilepath(filepath.Join(pwd, app))); err != nil {
+		return err
+	}
 
 	for _, scaffold := range scaffolds {
 		if err := utils.WriteFile(scaffold.Path, []byte(scaffold.Content)); err != nil {

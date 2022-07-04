@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -34,12 +34,12 @@ func ManifestPath(repo string) (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(root, repo, "manifest.yaml")), nil
 }
 
-func (m *ProjectManifest) Write(path string) error {
+func (man *ProjectManifest) Write(path string) error {
 	versioned := &VersionedProjectManifest{
 		ApiVersion: "plural.sh/v1alpha1",
 		Kind:       "ProjectManifest",
-		Metadata:   &Metadata{Name: m.Cluster},
-		Spec:       m,
+		Metadata:   &Metadata{Name: man.Cluster},
+		Spec:       man,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -136,25 +136,28 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 
 	subdomain := ""
 	input := &survey.Input{Message: fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier)}
-	survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
+	err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
 		res, _ := val.(string)
 		if err := utils.ValidateDns(res); err != nil {
 			return err
 		}
 
 		if pluralDns && !strings.HasSuffix(res, "onplural.sh") {
-			return fmt.Errorf("Not an onplural.sh domain")
+			return fmt.Errorf("not an onplural.sh domain")
 		}
 
 		if pluralDns {
 			client := api.NewClient()
 			if err := client.CreateDomain(res); err != nil {
-				return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
+				return fmt.Errorf("domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
 			}
 		}
 
 		return nil
 	}))
+	if err != nil {
+		return err
+	}
 
 	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
 

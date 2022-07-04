@@ -1,16 +1,15 @@
 package helm
 
-
 import (
-	"os"
-	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/registry"
+	"os"
 )
 
-var providers = []getter.Provider{ ChartMuseumProvider }
+var providers = []getter.Provider{ChartMuseumProvider}
 
 func UpdateDependencies(path string) error {
 	out := os.Stdout

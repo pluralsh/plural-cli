@@ -5,20 +5,9 @@ import (
 )
 
 const (
-	defaultNotes     = `Your {{ .Release.Name }} installation`
-	sep              = string(filepath.Separator)
-	defaultChartfile = `apiVersion: v1
-name: {{ .Values.name }}
-description: A Helm chart for Kubernetes
-version: 0.1.0
-appVersion: 1.16.0
-dependencies:
-{{ range $_ind, $dep := .Values.dependencies }}
-- name: {{ $dep.Name }}
-  repository: {{ $dep.Repository }}
-  version: {{ $dep.Version }}
-{{ end }}
-`
+	defaultNotes = `Your {{ .Release.Name }} installation`
+	sep          = string(filepath.Separator)
+
 	defaultIgnore = `# Patterns to ignore when building packages.
 # This supports shell glob matching, relative path matching, and
 # negation (prefixed with !). Only one pattern per line.

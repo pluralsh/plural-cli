@@ -234,8 +234,8 @@ func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {
 
 func (az *AzureProvider) getStorageAccountsClient() storage.AccountsClient {
 	storageAccountsClient := storage.NewAccountsClient(utils.ToString(az.ctx["SubscriptionId"]))
-	auth, _ := az.Authorizer()
-	storageAccountsClient.Authorizer = auth
+	authorizer, _ := az.Authorizer()
+	storageAccountsClient.Authorizer = authorizer
 	return storageAccountsClient
 }
 
@@ -315,6 +315,8 @@ func getAzureAccount() (string, string, error) {
 		Id       string
 	}
 
-	json.Unmarshal(out, &res)
+	if err := json.Unmarshal(out, &res); err != nil {
+		return "", "", err
+	}
 	return res.Id, res.TenantId, nil
 }

@@ -25,7 +25,7 @@ type chartInstallationsResponse struct {
 }
 
 type packageCacheEntry struct {
-	Charts []*ChartInstallation
+	Charts    []*ChartInstallation
 	Terraform []*TerraformInstallation
 }
 
@@ -157,7 +157,7 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartIns
 	if err == nil {
 		packageCache[repoId] = &packageCacheEntry{Charts: charts, Terraform: tfs}
 	}
-	
+
 	return
 }
 

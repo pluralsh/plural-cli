@@ -11,13 +11,13 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/pluralfile"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/urfave/cli"
 )
 
@@ -119,9 +119,11 @@ func handleHelmTemplate(c *cli.Context) error {
 	conf := config.Read()
 	f, err := tmpValuesFile(c.String("values"), &conf)
 	if err != nil {
-		return fmt.Errorf("Failed to template vals: %w", err)
+		return fmt.Errorf("failed to template vals: %w", err)
 	}
-	defer os.Remove(f.Name())
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(f.Name())
 
 	cmd := exec.Command("helm", "template", c.Args().Get(0), "-f", f.Name())
 	cmd.Stdout = os.Stdout
@@ -138,11 +140,14 @@ func handleHelmUpload(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
+	defer func(name string) {
+		_ = os.Remove(name)
+
+	}(f.Name())
 
 	utils.Highlight("linting helm: ")
-	cmd, output := executor.SuppressedCommand("helm", "lint", pth, "-f", f.Name())
-	if err := executor.RunCommand(cmd, output); err != nil {
+	cmd, o := executor.SuppressedCommand("helm", "lint", pth, "-f", f.Name())
+	if err := executor.RunCommand(cmd, o); err != nil {
 		return err
 	}
 
@@ -181,10 +186,12 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	if err != nil {
 		return
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
-	fmt.Println(string(buf.Bytes()))
-	err = wkspace.FormatValues(f, string(buf.Bytes()), output.New())
+	fmt.Println(buf.String())
+	err = wkspace.FormatValues(f, buf.String(), output.New())
 	return
 }
 

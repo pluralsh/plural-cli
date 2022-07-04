@@ -173,8 +173,8 @@ type Recipe struct {
 	Tests              []*RecipeTest
 	Repository         *Repository
 	RecipeSections     []*RecipeSection
-	OidcSettings       *OIDCSettings `yaml:"oidcSettings",json:"oidcSettings"`
-	RecipeDependencies []*Recipe     `yaml:"recipeDependencies",json:"recipeDependencies"`
+	OidcSettings       *OIDCSettings `yaml:"oidcSettings" json:"oidcSettings"`
+	RecipeDependencies []*Recipe     `yaml:"recipeDependencies" json:"recipeDependencies"`
 }
 
 type RecipeTest struct {
@@ -230,7 +230,7 @@ type ConfigurationItem struct {
 	Documentation string
 	Type          string
 	Placeholder   string
-	FunctionName  string `json:"functionName",yaml:"functionName"`
+	FunctionName  string `json:"functionName" yaml:"functionName"`
 	Optional      bool
 	Condition     *Condition
 	Validation    *Validation
@@ -311,7 +311,7 @@ type ScaffoldFile struct {
 	Content string
 }
 
-var RepositoryFragment = fmt.Sprintf(`
+var RepositoryFragment = `
 	fragment RepositoryFragment on Repository {
 		id
 		name
@@ -322,7 +322,7 @@ var RepositoryFragment = fmt.Sprintf(`
 		publisher { name }
 		recipes { name }
 	}
-`)
+`
 
 const OIDCFragment = `
 	fragment OIDCProvider on OidcProvider {
@@ -439,20 +439,6 @@ var TerraformInstallationFragment = fmt.Sprintf(`
 	%s
 	%s
 `, TerraformFragment, VersionFragment)
-
-const TokenFragment = `
-	fragment TokenFragment on PersistedToken {
-		token
-	}
-`
-
-const WebhookFragment = `
-	fragment WebhookFragment on Webhook {
-		id
-		url
-		secret
-	}
-`
 
 const ArtifactFragment = `
 	fragment ArtifactFragment on Artifact {

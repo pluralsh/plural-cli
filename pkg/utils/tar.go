@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -24,10 +23,14 @@ func Tar(src string, w io.Writer, regex string) error {
 	}
 
 	gzw := gzip.NewWriter(w)
-	defer gzw.Close()
+	defer func(gzw *gzip.Writer) {
+		_ = gzw.Close()
+	}(gzw)
 
 	tw := tar.NewWriter(gzw)
-	defer tw.Close()
+	defer func(tw *tar.Writer) {
+		_ = tw.Close()
+	}(tw)
 
 	// walk path
 	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
@@ -66,7 +69,9 @@ func Tar(src string, w io.Writer, regex string) error {
 			return err
 		}
 
-		f.Close()
+		if err := f.Close(); err != nil {
+			return err
+		}
 
 		return nil
 	})
@@ -162,17 +167,6 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 		}
 	}
 	return nil
-}
-
-func validRelativeDir(dir string) bool {
-	if strings.Contains(dir, `\`) || path.IsAbs(dir) {
-		return false
-	}
-	dir = path.Clean(dir)
-	if strings.HasPrefix(dir, "../") || strings.HasSuffix(dir, "/..") || dir == ".." {
-		return false
-	}
-	return true
 }
 
 func validRelPath(p string) bool {

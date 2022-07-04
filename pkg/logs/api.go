@@ -29,7 +29,9 @@ func Tail(namespace string, name string) error {
 
 	ctx := context.Background()
 	tail, err := kube.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
-
+	if err != nil {
+		return err
+	}
 	args := []string{"logs", fmt.Sprintf("--tail=%d", tail.Spec.Limit)}
 	if tail.Spec.Follow {
 		args = append(args, "-f")

@@ -1,8 +1,8 @@
 package format
 
 import (
-	"os"
 	"github.com/olekukonko/tablewriter"
+	"os"
 )
 
 type tableFormatter struct {

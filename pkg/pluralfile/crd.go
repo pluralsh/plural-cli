@@ -1,10 +1,10 @@
 package pluralfile
 
 import (
+	"fmt"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"os"
-	"fmt"
 	"os/exec"
 	"path/filepath"
 )

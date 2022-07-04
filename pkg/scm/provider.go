@@ -1,12 +1,13 @@
 package scm
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"time"
+
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 )
 
 var providers = []string{"github", "gitlab"}
@@ -22,7 +23,10 @@ func Setup() (string, error) {
 		Message: "Select the SCM provider to use for your repository:",
 		Options: providers,
 	}
-	survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
+	err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
+	if err != nil {
+		return "", err
+	}
 
 	var prov Provider
 	switch provider {
@@ -50,7 +54,9 @@ func Setup() (string, error) {
 		return "", err
 	}
 
-	os.Chdir(ctx.repoName)
+	if err := os.Chdir(ctx.repoName); err != nil {
+		return "", err
+	}
 	if err := buildContext(&ctx); err != nil {
 		return "", err
 	}

@@ -2,11 +2,13 @@ package config
 
 import (
 	"fmt"
+	"golang.org/x/text/language"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
+	"golang.org/x/text/cases"
 	"gopkg.in/oleiade/reflections.v1"
 	"gopkg.in/yaml.v2"
 )
@@ -16,13 +18,13 @@ type Metadata struct {
 }
 
 type Config struct {
-	Email           string    `json:"email"`
-	Token           string    `yaml:"token" json:"token"`
-	NamespacePrefix string    `yaml:"namespacePrefix"`
-	Endpoint        string    `yaml:"endpoint"`
-	LockProfile     string    `yaml:"lockProfile"`
+	Email           string `json:"email"`
+	Token           string `yaml:"token" json:"token"`
+	NamespacePrefix string `yaml:"namespacePrefix"`
+	Endpoint        string `yaml:"endpoint"`
+	LockProfile     string `yaml:"lockProfile"`
 	metadata        *Metadata
-	ReportErrors    bool      `yaml:"reportErrors"`
+	ReportErrors    bool `yaml:"reportErrors"`
 }
 
 type VersionedConfig struct {
@@ -39,10 +41,7 @@ func configFile() string {
 
 func Exists() bool {
 	_, err := os.Stat(configFile())
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 func Read() Config {
@@ -72,7 +71,10 @@ func Profiles() ([]*VersionedConfig, error) {
 			}
 
 			versioned := &VersionedConfig{}
-			yaml.Unmarshal(contents, versioned)
+			err = yaml.Unmarshal(contents, versioned)
+			if err != nil {
+				return nil, err
+			}
 			confs = append(confs, versioned)
 		}
 	}
@@ -87,7 +89,10 @@ func Import(file string) (conf Config) {
 	}
 
 	versioned := &VersionedConfig{Spec: &conf}
-	yaml.Unmarshal(contents, versioned)
+	err = yaml.Unmarshal(contents, versioned)
+	if err != nil {
+		return Config{}
+	}
 	conf.metadata = versioned.Metadata
 	return
 }
@@ -98,9 +103,12 @@ func FromToken(token string) error {
 }
 
 func Amend(key string, value string) error {
-	key = strings.Title(key)
+	key = cases.Title(language.Und, cases.NoLower).String(key)
 	conf := Read()
-	reflections.SetField(&conf, key, value)
+	err := reflections.SetField(&conf, key, value)
+	if err != nil {
+		return err
+	}
 	return conf.Flush()
 }
 

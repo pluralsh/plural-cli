@@ -25,17 +25,17 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
 		booled, ok := val.(bool)
 		return ok && !booled
 	case "PREFIX":
-		val, _ := ctx[cond.Field]
+		val := ctx[cond.Field]
 		return strings.HasPrefix(val.(string), cond.Value)
 	case "SUFFIX":
-		val, _ := ctx[cond.Field]
+		val := ctx[cond.Field]
 		return strings.HasSuffix(val.(string), cond.Value)
 	}
 
 	return true
 }
 
-func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, section *api.RecipeSection) (err error) {
+func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context) (err error) {
 	if !evaluateCondition(ctx, item.Condition) {
 		return
 	}
@@ -87,8 +87,7 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		ctx[item.Name] = res
 	case Password:
 		var res string
-		def = prevDefault(ctx, item, def)
-		prompt, opts := passwordSurvey(def, item)
+		prompt, opts := passwordSurvey(item)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
 	case Bucket:

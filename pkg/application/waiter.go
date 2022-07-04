@@ -1,14 +1,14 @@
 package application
 
 import (
-	"fmt"
-	"time"
 	"context"
+	"fmt"
+	tm "github.com/buger/goterm"
 	"github.com/pluralsh/plural/pkg/config"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/application/api/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	tm "github.com/buger/goterm"
+	"time"
 )
 
 const (

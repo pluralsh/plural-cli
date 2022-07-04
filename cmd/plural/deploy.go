@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -17,7 +18,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/plural/pkg/application"
 	"github.com/urfave/cli"
 )
 
@@ -78,14 +78,14 @@ func getSortedNames(filter bool) ([]string, error) {
 	return sorted, nil
 }
 
-func diffed(c *cli.Context) error {
+func diffed(*cli.Context) error {
 	diffed, err := wkspace.DiffedRepos()
 	if err != nil {
 		return err
 	}
 
-	for _, diff := range diffed {
-		fmt.Println(diff)
+	for _, d := range diffed {
+		fmt.Println(d)
 	}
 
 	return nil
@@ -275,14 +275,17 @@ func commitMsg(c *cli.Context) string {
 
 	if !c.Bool("silence") {
 		var commit string
-		survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit)
+		err := survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit)
+		if err != nil {
+			return ""
+		}
 		return commit
 	}
 
 	return ""
 }
 
-func handleDiff(c *cli.Context) error {
+func handleDiff(*cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -346,9 +349,13 @@ func doBounce(repoRoot string, client *api.Client, installation *api.Installatio
 	if err != nil {
 		return err
 	}
-	workspace.Provider.KubeConfig()
+	if err := workspace.Provider.KubeConfig(); err != nil {
+		return err
+	}
 
-	os.Chdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repoName)))
+	if err := os.Chdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repoName))); err != nil {
+		return err
+	}
 	return workspace.Bounce()
 }
 
@@ -409,7 +416,7 @@ func destroy(c *cli.Context) error {
 		utils.Success("Finished destroying workspace\n")
 		utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
 	}
-	
+
 	utils.Highlight("\n==> Commit and push your changes to record your workspace changes\n\n")
 
 	if commit := commitMsg(c); commit != "" {
@@ -422,7 +429,10 @@ func destroy(c *cli.Context) error {
 }
 
 func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
-	os.Chdir(repoRoot)
+	err := os.Chdir(repoRoot)
+	if err != nil {
+		return err
+	}
 	utils.Error("\nDestroying application %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(client, installation)
 	if err != nil {
@@ -432,7 +442,7 @@ func doDestroy(repoRoot string, client *api.Client, installation *api.Installati
 	return workspace.Destroy()
 }
 
-func buildContext(c *cli.Context) error {
+func buildContext(*cli.Context) error {
 	client := api.NewClient()
 	insts, err := client.GetInstallations()
 	if err != nil {

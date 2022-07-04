@@ -221,7 +221,7 @@ func DiffedRepos() ([]string, error) {
 
 	result := make([]string, len(repos))
 	count := 0
-	for repo, _ := range repos {
+	for repo := range repos {
 		result[count] = repo
 		count++
 	}

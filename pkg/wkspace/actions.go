@@ -1,10 +1,10 @@
 package wkspace
 
 import (
-	"regexp"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,7 +17,6 @@ import (
 type checker func(s string) bool
 
 var alwaysErr checker = func(s string) bool { return false }
-
 
 func (c checker) execSuppressed(command string, args ...string) (err error) {
 	for retry := 2; retry >= 0; retry-- {
@@ -35,7 +34,10 @@ func (c checker) execSuppressed(command string, args ...string) (err error) {
 
 func (w *Workspace) DestroyHelm() error {
 	// ensure current kubeconfig is correct before destroying stuff
-	w.Provider.KubeConfig()
+	err := w.Provider.KubeConfig()
+	if err != nil {
+		return err
+	}
 	name := w.Installation.Repository.Name
 
 	ns := w.Config.Namespace(name)
@@ -76,8 +78,10 @@ func (w *Workspace) Reset() error {
 		return err
 	}
 
-	deployfile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "deploy.hcl"))
-	os.Remove(deployfile)
+	deployFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "deploy.hcl"))
+	if err := os.Remove(deployFile); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -91,15 +95,19 @@ func (w *Workspace) DestroyTerraform() error {
 	time.AfterFunc(1*time.Minute, func() {
 		kube, err := utils.Kubernetes()
 		if err != nil {
-			fmt.Println("could not set up k8s client due to %s", err)
+			fmt.Printf("could not set up k8s client due to %s\n", err)
 			return
 		}
 
 		ns := w.Config.Namespace(repo.Name)
-		kube.FinalizeNamespace(ns)
+		if err := kube.FinalizeNamespace(ns); err != nil {
+			return
+		}
 	})
 
-	os.Chdir(path)
+	if err := os.Chdir(path); err != nil {
+		return err
+	}
 	if err := alwaysErr.execSuppressed("terraform", "init", "-upgrade"); err != nil {
 		return err
 	}

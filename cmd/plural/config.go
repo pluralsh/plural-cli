@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"io/ioutil"
-	
+	"os"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/urfave/cli"
@@ -24,9 +24,9 @@ func configCommands() []cli.Command {
 			Action:    handleRead,
 		},
 		{
-			Name:      "import",
-			Usage:     "imports a new config from a given token",
-			Action:    handleConfigImport,
+			Name:   "import",
+			Usage:  "imports a new config from a given token",
+			Action: handleConfigImport,
 		},
 	}
 }
@@ -64,7 +64,7 @@ func handleAmend(c *cli.Context) error {
 	return config.Amend(c.Args().Get(0), c.Args().Get(1))
 }
 
-func handleRead(c *cli.Context) error {
+func handleRead(*cli.Context) error {
 	conf := config.Read()
 	d, err := conf.Marshal()
 	if err != nil {

@@ -6,8 +6,8 @@ type SmtpService struct {
 }
 
 var smtpConfig = map[string]*SmtpService{
-	"sendgrid":  &SmtpService{Server: "smtp.sendgrid.net", Port: 587},
-	"mailchimp": &SmtpService{Server: "smtp.mandrillapp.com", Port: 587},
-	"mandrill":  &SmtpService{Server: "smtp.mandrillapp.com", Port: 587},
-	"mailgun":   &SmtpService{Server: "smtp.mailgun.org", Port: 465},
+	"sendgrid":  {Server: "smtp.sendgrid.net", Port: 587},
+	"mailchimp": {Server: "smtp.mandrillapp.com", Port: 587},
+	"mandrill":  {Server: "smtp.mandrillapp.com", Port: 587},
+	"mailgun":   {Server: "smtp.mailgun.org", Port: 465},
 }

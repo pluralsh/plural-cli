@@ -69,7 +69,9 @@ func (gh *Github) Setup() (con Context, err error) {
 		Message: "Select the org for your repo:",
 		Options: orgNames,
 	}
-	survey.AskOne(prompt, &org, survey.WithValidator(survey.Required))
+	if err := survey.AskOne(prompt, &org, survey.WithValidator(survey.Required)); err != nil {
+		return Context{}, err
+	}
 
 	pub, priv, err := GenerateKeys(false)
 	if err != nil {
@@ -80,7 +82,10 @@ func (gh *Github) Setup() (con Context, err error) {
 	if owner == *user.Login {
 		owner = ""
 	}
-	repoName := repoName()
+	repoName, err := repoName()
+	if err != nil {
+		return
+	}
 	utils.Highlight("\ncreating github repository %s/%s...\n", org, repoName)
 	repo, _, err := gh.Client.Repositories.Create(ctx, owner, &github.Repository{
 		Name:     github.String(repoName),

@@ -5,8 +5,8 @@ import (
 )
 
 type Context struct {
-	pub  	 string
-	priv 	 string
+	pub      string
+	priv     string
 	username string
 	email    string
 	url      string
@@ -16,7 +16,7 @@ type Context struct {
 func buildContext(context *Context) error {
 	ctx := manifest.NewContext()
 	ctx.Configuration = map[string]map[string]interface{}{
-		"console": map[string]interface{}{
+		"console": {
 			"private_key": context.priv,
 			"public_key":  context.pub,
 			"passphrase":  "",

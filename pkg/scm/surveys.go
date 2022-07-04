@@ -10,10 +10,10 @@ var validRepo = survey.ComposeValidators(
 	survey.MaxLength(20),
 )
 
-func repoName() (name string) {
+func repoName() (name string, err error) {
 	prompt := &survey.Input{
 		Message: "Choose a memorable repo name:",
 	}
-	survey.AskOne(prompt, &name, survey.WithValidator(validRepo))
+	err = survey.AskOne(prompt, &name, survey.WithValidator(validRepo))
 	return
 }
