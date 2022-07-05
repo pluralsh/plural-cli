@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 func DeepSet(v map[string]interface{}, path []string, val interface{}) map[string]interface{} {
@@ -56,17 +58,7 @@ func cleanUpMapValue(v interface{}) interface{} {
 }
 
 func Dedupe(l []string) []string {
-	res := make([]string, 0)
-	seen := make(map[string]struct{})
-	for _, val := range l {
-		if _, ok := seen[val]; ok {
-			continue
-		}
-		res = append(res, val)
-		seen[val] = struct{}{}
-	}
-
-	return res
+	return sets.NewString(l...).List()
 }
 
 type SimpleType interface {
