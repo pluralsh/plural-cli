@@ -8,13 +8,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/mitchellh/go-homedir"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/scm"
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/urfave/cli"
 )
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
@@ -85,8 +86,8 @@ func cryptoCommands() []cli.Command {
 			},
 		},
 		{
-			Name: "ssh-keygen",
-			Usage: "generate an ed5519 keypair for use in git ssh",
+			Name:   "ssh-keygen",
+			Usage:  "generate an ed5519 keypair for use in git ssh",
 			Action: affirmed(handleKeygen, "This command will autogenerate an ed5519 keypair, without passphrase. Sound good?"),
 		},
 		{
@@ -288,14 +289,14 @@ func handleKeygen(c *cli.Context) error {
 		return err
 	}
 
-	pub, priv, err := scm.GenerateKeys()
+	pub, priv, err := scm.GenerateKeys(false)
 	if err != nil {
 		return err
 	}
 
 	filename := ""
 	input := &survey.Input{Message: "What do you want to name your keypair?", Default: "id_plrl"}
-	err = survey.AskOne(input, &filename, survey.WithValidator(func (val interface{}) error {
+	err = survey.AskOne(input, &filename, survey.WithValidator(func(val interface{}) error {
 		name, _ := val.(string)
 		if utils.Exists(filepath.Join(path, name)) {
 			return fmt.Errorf("File ~/.ssh/%s already exists", name)
@@ -311,7 +312,7 @@ func handleKeygen(c *cli.Context) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(path, filename + ".pub"), []byte(pub), 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(path, filename+".pub"), []byte(pub), 0644); err != nil {
 		return err
 	}
 

@@ -1,9 +1,10 @@
 package scm
 
 import (
-	"github.com/pluralsh/oauth"
-	"github.com/xanzy/go-gitlab"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/xanzy/go-gitlab"
+
+	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -19,12 +20,12 @@ func (gl *Gitlab) Init() error {
 	flow := &oauth.Flow{
 		Host: &oauth.Host{
 			AuthorizeURL: "https://gitlab.com/oauth/authorize",
-			TokenURL: "https://gitlab.com/oauth/token",
+			TokenURL:     "https://gitlab.com/oauth/token",
 		},
-		ClientID: "96dc439ce4bfab647a07b96878210015ab83f173b7f5162218954a95b8c10ebe",
+		ClientID:     "96dc439ce4bfab647a07b96878210015ab83f173b7f5162218954a95b8c10ebe",
 		ClientSecret: GitlabClientSecret,
-		CallbackURI: "http://127.0.0.1:1337/callback",
-		Scopes:   []string{"api", "openid", "profile", "email"},
+		CallbackURI:  "http://127.0.0.1:1337/callback",
+		Scopes:       []string{"api", "openid", "profile", "email"},
 		ResponseType: "code",
 	}
 
@@ -75,7 +76,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	}
 	survey.AskOne(prompt, &org, survey.WithValidator(survey.Required))
 
-	pub, priv, err := GenerateKeys()
+	pub, priv, err := GenerateKeys(false)
 	if err != nil {
 		return
 	}
