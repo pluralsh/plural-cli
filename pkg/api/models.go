@@ -22,6 +22,7 @@ type Repository struct {
 	DarkIcon    string
 	Notes       string
 	Publisher   *Publisher
+	Recipes     []*Recipe
 }
 
 type Chart struct {
@@ -319,6 +320,7 @@ var RepositoryFragment = fmt.Sprintf(`
 		darkIcon
 		description
 		publisher { name }
+		recipes { name }
 	}
 `)
 

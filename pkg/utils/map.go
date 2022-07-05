@@ -57,13 +57,27 @@ func cleanUpMapValue(v interface{}) interface{} {
 
 func Dedupe(l []string) []string {
 	res := make([]string, 0)
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	for _, val := range l {
 		if _, ok := seen[val]; ok {
 			continue
 		}
 		res = append(res, val)
-		seen[val] = true
+		seen[val] = struct{}{}
+	}
+
+	return res
+}
+
+type SimpleType interface {
+	string | int
+}
+
+func Map[T any, R SimpleType](slice []T, mapper func(elem T) R) []R {
+	res := make([]R, 0)
+
+	for _, elem := range slice {
+		res = append(res, mapper(elem))
 	}
 
 	return res

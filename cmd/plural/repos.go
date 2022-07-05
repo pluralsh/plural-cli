@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/format"
-	"github.com/urfave/cli"	
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func reposCommands() []cli.Command {
@@ -54,14 +58,18 @@ func handleListRepositories(c *cli.Context) error {
 	addIcon := c.String("format") == "csv"
 
 	formatter := format.New(format.FormatType(c.String("format")))
-	header := []string{"Repo", "Description", "Publisher"}
+	header := []string{"Repo", "Description", "Publisher", "Bundle Name"}
 	if addIcon {
 		header = append(header, "Icon")
 	}
 
 	formatter.Header(header)
 	for _, repo := range repos {
-		line := []string{repo.Name, repo.Description, repo.Publisher.Name}
+		recipeNames := utils.Map(repo.Recipes, func(recipe *api.Recipe) string {
+			return recipe.Name
+		})
+
+		line := []string{repo.Name, repo.Description, repo.Publisher.Name, strings.Join(recipeNames, ", ")}
 		if addIcon {
 			line = append(line, repo.Icon)
 		}
