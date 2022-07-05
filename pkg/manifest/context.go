@@ -26,6 +26,7 @@ type SMTP struct {
 type Context struct {
 	Bundles       []*Bundle
 	Buckets       []string
+	Domains       []string
 	SMTP          *SMTP `yaml:"smtp,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
@@ -99,7 +100,26 @@ func (c *Context) HasBucket(bucket string) bool {
 	}
 
 	return false
-} 
+}
+
+func (c *Context) AddDomain(bucket string) {
+	c.Domains = append(c.Domains, bucket)
+}
+
+func (c *Context) HasDomain(domain string) bool {
+	// Exclusion for empty string.
+	// There are some cases where an empty string for the hostname is used.
+	if domain == "" {
+		return false
+	}
+	for _, d := range c.Domains {
+		if d == domain {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (c *Context) Write(path string) error {
 	versioned := &VersionedContext{
