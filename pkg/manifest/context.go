@@ -7,8 +7,6 @@ import (
 
 	"github.com/pluralsh/plural/pkg/api"
 	"gopkg.in/yaml.v2"
-
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type Bundle struct {
@@ -27,8 +25,8 @@ type SMTP struct {
 
 type Context struct {
 	Bundles       []*Bundle
-	Buckets       sets.String
-	Domains       sets.String
+	Buckets       []string
+	Domains       []string
 	SMTP          *SMTP `yaml:"smtp,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
@@ -72,8 +70,6 @@ func NewContext() *Context {
 	return &Context{
 		Bundles:       make([]*Bundle, 0),
 		Configuration: make(map[string]map[string]interface{}),
-		Domains:       sets.NewString(),
-		Buckets:       sets.NewString(),
 	}
 }
 
@@ -93,19 +89,31 @@ func (c *Context) AddBundle(repo, name string) {
 }
 
 func (c *Context) AddBucket(bucket string) {
-	c.Buckets.Insert(bucket)
+	c.Buckets = append(c.Buckets, bucket)
 }
 
 func (c *Context) HasBucket(bucket string) bool {
-	return c.Buckets.Has(bucket)
+	for _, b := range c.Buckets {
+		if b == bucket {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Context) AddDomain(bucket string) {
-	c.Domains.Insert(bucket)
+	c.Domains = append(c.Domains, bucket)
 }
 
-func (c *Context) HasDomain(bucket string) bool {
-	return c.Domains.Has(bucket)
+func (c *Context) HasDomain(domain string) bool {
+	for _, d := range c.Domains {
+		if d == domain {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Context) Write(path string) error {
