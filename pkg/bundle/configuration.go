@@ -76,7 +76,9 @@ func configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		prompt, opts := domainSurvey(def, item, proj, context)
 		err = survey.AskOne(prompt, &res, opts...)
 		ctx[item.Name] = res
-		context.AddDomain(res)
+		if res != "" {
+			context.AddDomain(res)
+		}
 	case String:
 		var res string
 		def = prevDefault(ctx, item, def)

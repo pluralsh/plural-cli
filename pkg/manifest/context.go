@@ -107,6 +107,11 @@ func (c *Context) AddDomain(bucket string) {
 }
 
 func (c *Context) HasDomain(domain string) bool {
+	// Exclusion for empty string.
+	// There are some cases where an empty string for the hostname is used.
+	if domain == "" {
+		return false
+	}
 	for _, d := range c.Domains {
 		if d == domain {
 			return true
