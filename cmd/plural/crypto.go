@@ -121,7 +121,7 @@ func cryptoCommands() []cli.Command {
 	}
 }
 
-func handleEncrypt(*cli.Context) error {
+func handleEncrypt(c *cli.Context) error {
 	data, err := ioutil.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
 		_, err := os.Stdout.Write(data)
@@ -200,7 +200,7 @@ func handleDecrypt(c *cli.Context) error {
 	return nil
 }
 
-func cryptoInit(*cli.Context) error {
+func cryptoInit(c *cli.Context) error {
 	encryptConfig := [][]string{
 		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
 		{"filter.plural-crypt.clean", "plural crypto encrypt"},
@@ -250,7 +250,7 @@ func handleSetupKeys(c *cli.Context) error {
 	return nil
 }
 
-func handleUnlock(*cli.Context) error {
+func handleUnlock(c *cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -265,7 +265,7 @@ func handleUnlock(*cli.Context) error {
 	return gitCommand("checkout", "HEAD", "--", repoRoot).Run()
 }
 
-func exportKey(*cli.Context) error {
+func exportKey(c *cli.Context) error {
 	key, err := crypto.Materialize()
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func exportKey(*cli.Context) error {
 	return nil
 }
 
-func importKey(*cli.Context) error {
+func importKey(c *cli.Context) error {
 	data, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -303,7 +303,7 @@ func randString(c *cli.Context) error {
 	return nil
 }
 
-func handleKeygen(*cli.Context) error {
+func handleKeygen(c *cli.Context) error {
 	path, err := homedir.Expand("~/.ssh")
 	if err != nil {
 		return err
