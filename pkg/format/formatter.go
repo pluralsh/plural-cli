@@ -10,8 +10,7 @@ type Formatter interface {
 type FormatType string
 
 const (
-	CsvFormat   FormatType = "csv"
-	TableFormat FormatType = "table"
+	CsvFormat FormatType = "csv"
 )
 
 func New(format FormatType) Formatter {

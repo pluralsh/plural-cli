@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	"golang.org/x/text/language"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"golang.org/x/text/language"
 
 	"golang.org/x/text/cases"
 	"gopkg.in/oleiade/reflections.v1"

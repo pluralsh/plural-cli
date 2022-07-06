@@ -2,11 +2,12 @@ package pluralfile
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type Crd struct {

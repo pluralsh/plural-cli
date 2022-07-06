@@ -3,12 +3,13 @@ package helm
 import (
 	"bytes"
 	"fmt"
-	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
-	"github.com/pluralsh/plural/pkg/config"
-	"helm.sh/helm/v3/pkg/getter"
 	"io"
 	"net/url"
 	"strings"
+
+	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/pluralsh/plural/pkg/config"
+	"helm.sh/helm/v3/pkg/getter"
 )
 
 type ChartMuseum struct{}

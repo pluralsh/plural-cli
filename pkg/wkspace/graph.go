@@ -2,6 +2,7 @@ package wkspace
 
 import (
 	"fmt"
+
 	toposort "github.com/philopon/go-toposort"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"

@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
-	"os"
-	"strings"
 )
 
 func bundleCommands() []cli.Command {
