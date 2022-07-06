@@ -70,8 +70,7 @@ func GetProvider() (Provider, error) {
 	if project, err := manifest.ReadProject(path); err == nil {
 		return FromManifest(project)
 	}
-	err := getAvailableProviders()
-	if err != nil {
+	if err := getAvailableProviders(); err != nil {
 		return nil, err
 	}
 
