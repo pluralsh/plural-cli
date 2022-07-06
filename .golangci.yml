@@ -13,3 +13,6 @@ linters:
     - misspell
     - structcheck
     - unused
+    - gofmt
+    - importas
+    - goconst
