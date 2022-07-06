@@ -15,7 +15,7 @@ var (
 
 var BuildDate = time.Now()
 
-func versionInfo(*cli.Context) error {
+func versionInfo(c *cli.Context) error {
 	fmt.Println("Plural CLI:")
 	fmt.Printf("  Version: %s\n", Version)
 	fmt.Printf("  Git Commit: %s\n", GitCommit)

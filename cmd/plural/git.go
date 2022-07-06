@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func handleRepair(*cli.Context) error {
+func handleRepair(c *cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err

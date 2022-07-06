@@ -280,7 +280,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	ctx := context.Background()
 	c, err := serviceusage.NewClient(ctx)
 	if err != nil {
-		return fmt.Errorf("could not set up gcp client, are your credentials valid")
+		return fmt.Errorf("could not set up gcp client, are your credentials valid?")
 	}
 	defer func(c *serviceusage.Client) {
 		_ = c.Close()

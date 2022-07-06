@@ -119,7 +119,7 @@ func handleHelmTemplate(c *cli.Context) error {
 	conf := config.Read()
 	f, err := tmpValuesFile(c.String("values"), &conf)
 	if err != nil {
-		return fmt.Errorf("failed to template vals: %w", err)
+		return fmt.Errorf("Failed to template vals: %w", err)
 	}
 	defer func(name string) {
 		_ = os.Remove(name)

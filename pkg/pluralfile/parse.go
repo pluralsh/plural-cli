@@ -36,7 +36,7 @@ type Component interface {
 	Push(repo string, sha string) (string, error)
 }
 
-func (plrl *Pluralfile) Execute(_ string, lock *Lockfile) (err error) {
+func (plrl *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
 	defer func(plrl *Pluralfile, lock *Lockfile) {
 		_ = plrl.Flush(lock)
 	}(plrl, lock)

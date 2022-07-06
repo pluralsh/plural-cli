@@ -100,7 +100,7 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 	case KIND:
 		return kindFromManifest(man)
 	default:
-		return nil, fmt.Errorf("invalid provider name: %s", man.Provider)
+		return nil, fmt.Errorf("Invalid provider name: %s", man.Provider)
 	}
 }
 
@@ -118,7 +118,7 @@ func New(provider string) (Provider, error) {
 	case KIND:
 		return mkKind(conf)
 	default:
-		return nil, fmt.Errorf("invalid provider name: %s", provider)
+		return nil, fmt.Errorf("Invalid provider name: %s", provider)
 	}
 }
 

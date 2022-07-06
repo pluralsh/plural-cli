@@ -149,7 +149,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 		if pluralDns {
 			client := api.NewClient()
 			if err := client.CreateDomain(res); err != nil {
-				return fmt.Errorf("domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
+				return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
 			}
 		}
 

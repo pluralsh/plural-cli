@@ -24,7 +24,7 @@ func buildConnection(secret string, proxy *v1alpha1.Proxy) (dbConnection, error)
 	case "postgres":
 		return &postgres{Pwd: secret, Proxy: proxy}, nil
 	default:
-		return nil, fmt.Errorf("unsupported engine %s", proxy.Spec.DbConfig.Engine)
+		return nil, fmt.Errorf("Unsupported engine %s", proxy.Spec.DbConfig.Engine)
 	}
 }
 

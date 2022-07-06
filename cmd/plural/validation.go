@@ -89,13 +89,13 @@ func validateOwner() error {
 	project, err := manifest.ReadProject(path)
 	conf := config.Read()
 	if err != nil {
-		return fmt.Errorf("your workspace hasn't been configured, try running `plural init`")
+		return fmt.Errorf("Your workspace hasn't been configured, try running `plural init`")
 	}
 
 	if owner := project.Owner; owner != nil {
 		if owner.Email != conf.Email || owner.Endpoint != conf.Endpoint {
 			return fmt.Errorf(
-				"the owner of this project is actually %s; plural environment = %s",
+				"The owner of this project is actually %s; plural environment = %s",
 				owner.Email,
 				config.PluralUrl(owner.Endpoint),
 			)
@@ -139,7 +139,7 @@ func repoRoot() error {
 	}
 
 	if root != dir {
-		return fmt.Errorf("you must run this command at the root of your git repository")
+		return fmt.Errorf("You must run this command at the root of your git repository")
 	}
 
 	return nil

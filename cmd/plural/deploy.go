@@ -78,7 +78,7 @@ func getSortedNames(filter bool) ([]string, error) {
 	return sorted, nil
 }
 
-func diffed(*cli.Context) error {
+func diffed(c *cli.Context) error {
 	diffed, err := wkspace.DiffedRepos()
 	if err != nil {
 		return err
@@ -442,7 +442,7 @@ func doDestroy(repoRoot string, client *api.Client, installation *api.Installati
 	return workspace.Destroy()
 }
 
-func buildContext(*cli.Context) error {
+func buildContext(c *cli.Context) error {
 	client := api.NewClient()
 	insts, err := client.GetInstallations()
 	if err != nil {

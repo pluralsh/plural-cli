@@ -61,7 +61,7 @@ func handleInit(c *cli.Context) error {
 	return nil
 }
 
-func preflights(*cli.Context) error {
+func preflights(c *cli.Context) error {
 	_, err := runPreflights()
 	return err
 }
@@ -185,6 +185,6 @@ func handleImport(c *cli.Context) error {
 	return nil
 }
 
-func handleServe(*cli.Context) error {
+func handleServe(c *cli.Context) error {
 	return server.Run()
 }
