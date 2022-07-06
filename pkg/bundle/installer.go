@@ -112,3 +112,39 @@ func performTests(ctx *manifest.Context, recipe *api.Recipe) error {
 
 	return nil
 }
+
+// func getName(item *api.RecipeItem) string {
+// 	if item.Terraform != nil {
+// 		return item.Terraform.Name
+// 	}
+
+// 	if item.Chart != nil {
+// 		return item.Chart.Name
+// 	}
+
+// 	return ""
+// }
+
+// func getType(item *api.RecipeItem) string {
+// 	if item.Terraform != nil {
+// 		return "terraform"
+// 	}
+
+// 	if item.Chart != nil {
+// 		return "helm"
+// 	}
+
+// 	return ""
+// }
+
+// func getDescription(item *api.RecipeItem) string {
+// 	if item.Terraform != nil {
+// 		return item.Terraform.Description
+// 	}
+
+// 	if item.Chart != nil {
+// 		return item.Chart.Description
+// 	}
+
+// 	return ""
+// }

@@ -5,13 +5,29 @@ run:
 linters:
   disable-all: true
   enable:
-    - deadcode
-    - gocyclo
-    - goimports
-    - govet
-    - ineffassign
-    - misspell
-    - unused
-    - gofmt
-    - importas
-    - goconst
+  # default linters
+  - deadcode
+  - errcheck
+  - gosimple
+  - govet
+  - ineffassign
+  - staticcheck
+  # - structcheck # disabled due to Go 1.18
+  - typecheck
+  - unused
+  - varcheck
+
+  # additional linters
+  - errorlint
+  - errname
+  - gocyclo
+  - goimports
+  - misspell
+  - gofmt
+  - importas
+  - goconst
+  - gocritic
+  # - godox
+  # - gosec
+  - misspell
+  # - predeclared

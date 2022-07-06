@@ -65,7 +65,7 @@ func Parse(f string) (*Pluralfile, error) {
 	}(pluralfile)
 
 	scanner := bufio.NewScanner(pluralfile)
-	r, _ := regexp.Compile(`^\s*$`)
+	r := regexp.MustCompile(`^\s*$`)
 	for scanner.Scan() {
 		line := scanner.Text()
 		ignore := r.MatchString(line)

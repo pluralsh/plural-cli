@@ -22,6 +22,11 @@ func gitConfig(name, val string) error {
 	return cmd.Run()
 }
 
+// func removeGitConfig(name string) error {
+// 	cmd := gitCommand("config", "--remove-section", name)
+// 	return cmd.Run()
+// }
+
 func gitCommand(args ...string) *exec.Cmd {
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = os.Stdout

@@ -94,12 +94,12 @@ func diffed(c *cli.Context) error {
 func build(c *cli.Context) error {
 	changed, err := git.HasUpstreamChanges()
 	if err != nil {
-		return errors.ErrorWrap(noGit, "Failed to get git information")
+		return errors.ErrorWrap(errNoGit, "Failed to get git information")
 	}
 
 	force := c.Bool("force")
 	if !changed && !force {
-		return errors.ErrorWrap(remoteDiff, "Local Changes out of Sync")
+		return errors.ErrorWrap(errRemoteDiff, "Local Changes out of Sync")
 	}
 
 	client := api.NewClient()
@@ -285,7 +285,7 @@ func commitMsg(c *cli.Context) string {
 	return ""
 }
 
-func handleDiff(*cli.Context) error {
+func handleDiff(c *cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err

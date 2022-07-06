@@ -214,8 +214,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		// need to handle globals in a dedicated way
 		if glob, ok := subVals["global"]; ok {
 			globMap := utils.CleanUpInterfaceMap(glob.(map[interface{}]interface{}))
-			err := mergo.Merge(&globals, globMap)
-			if err != nil {
+			if err := mergo.Merge(&globals, globMap); err != nil {
 				return err
 			}
 			delete(subVals, "global")
@@ -272,7 +271,7 @@ func prevValues(filename string) (map[string]map[string]interface{}, error) {
 func (s *Scaffold) createChart(w *wkspace.Workspace) error {
 	repo := w.Installation.Repository
 	if len(w.Charts) == 0 {
-		return utils.HighlightError(fmt.Errorf("no charts installed for this repository, you might need to run `plural bundle install %s <bundle-name>`", repo.Name))
+		return utils.HighlightError(fmt.Errorf("No charts installed for this repository. You might need to run `plural bundle install %s <bundle-name>`.", repo.Name))
 	}
 
 	version := "0.1.0"
@@ -356,8 +355,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace) error {
 	// remove old requirements.yaml files to fully migrate to helm v3
 	reqsFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "requirements.yaml"))
 	if utils.Exists(reqsFile) {
-		err := os.Remove(reqsFile)
-		if err != nil {
+		if err := os.Remove(reqsFile); err != nil {
 			return err
 		}
 	}

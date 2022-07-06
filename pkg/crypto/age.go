@@ -174,10 +174,10 @@ func (a *Age) encrypt(content []byte) ([]byte, error) {
 	}
 
 	if _, err := writer.Write(content); err != nil {
-		return nil, err
+		return buf.Bytes(), err
 	}
 	if err := writer.Close(); err != nil {
-		return nil, err
+		return buf.Bytes(), err
 	}
 	return buf.Bytes(), nil
 }
@@ -239,13 +239,13 @@ func setupAgeConfig() (*Age, error) {
 
 	// create the
 	conf := config.Read()
-	a := &Age{
+	ageOutput := &Age{
 		RepoKey: repoIdentity.Recipient().String(),
 		Identities: []*AgeIdentity{
 			{Email: conf.Email, Key: userIdentity.Recipient().String()},
 		},
 	}
-	return a, nil
+	return ageOutput, nil
 }
 
 func identityFromString(contents string) (*age.X25519Identity, error) {

@@ -23,8 +23,7 @@ func Setup() (string, error) {
 		Message: "Select the SCM provider to use for your repository:",
 		Options: providers,
 	}
-	err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
-	if err != nil {
+	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
 		return "", err
 	}
 

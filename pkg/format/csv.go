@@ -27,8 +27,7 @@ func (csv *csvFormatter) Flush() error {
 }
 
 func (csv *csvFormatter) Header(line []string) {
-	err := csv.writer.Write(line)
-	if err != nil {
+	if err := csv.writer.Write(line); err != nil {
 		return
 	}
 }

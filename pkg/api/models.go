@@ -440,6 +440,20 @@ var TerraformInstallationFragment = fmt.Sprintf(`
 	%s
 `, TerraformFragment, VersionFragment)
 
+const TokenFragment = `
+	fragment TokenFragment on PersistedToken {
+		token
+	}
+`
+
+const WebhookFragment = `
+	fragment WebhookFragment on Webhook {
+		id
+		url
+		secret
+	}
+`
+
 const ArtifactFragment = `
 	fragment ArtifactFragment on Artifact {
 		id

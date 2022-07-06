@@ -42,6 +42,7 @@ func (e *Diff) Execute() error {
 	if err != nil {
 		return err
 	}
+
 	path := pathing.SanitizeFilepath(filepath.Join(root, "diffs"))
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
@@ -55,6 +56,7 @@ func (e *Diff) Execute() error {
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("deploying %s, hold on to your butts\n", e.Metadata.Path)
 	for i, step := range e.Steps {
 		newSha, err := step.Execute(root, ignore)

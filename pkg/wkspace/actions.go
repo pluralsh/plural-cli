@@ -34,10 +34,10 @@ func (c checker) execSuppressed(command string, args ...string) (err error) {
 
 func (w *Workspace) DestroyHelm() error {
 	// ensure current kubeconfig is correct before destroying stuff
-	err := w.Provider.KubeConfig()
-	if err != nil {
+	if err := w.Provider.KubeConfig(); err != nil {
 		return err
 	}
+
 	name := w.Installation.Repository.Name
 
 	ns := w.Config.Namespace(name)
@@ -95,7 +95,7 @@ func (w *Workspace) DestroyTerraform() error {
 	time.AfterFunc(1*time.Minute, func() {
 		kube, err := utils.Kubernetes()
 		if err != nil {
-			fmt.Printf("could not set up k8s client due to %s\n", err)
+			fmt.Printf("Could not set up k8s client due to %s\n", err)
 			return
 		}
 

@@ -54,7 +54,7 @@ func Tar(src string, w io.Writer, regex string) error {
 		if err != nil {
 			return err
 		}
-		header.Name = strings.TrimPrefix(strings.Replace(file, dir, "", -1), string(filepath.Separator))
+		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, dir, ""), string(filepath.Separator))
 
 		if err := tw.WriteHeader(header); err != nil {
 			return err
@@ -168,6 +168,17 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 	}
 	return nil
 }
+
+// func validRelativeDir(dir string) bool {
+// 	if strings.Contains(dir, `\`) || path.IsAbs(dir) {
+// 		return false
+// 	}
+// 	dir = path.Clean(dir)
+// 	if strings.HasPrefix(dir, "../") || strings.HasSuffix(dir, "/..") || dir == ".." {
+// 		return false
+// 	}
+// 	return true
+// }
 
 func validRelPath(p string) bool {
 	if p == "" || strings.Contains(p, `\`) || strings.HasPrefix(p, "/") || strings.Contains(p, "../") {

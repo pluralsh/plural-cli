@@ -12,19 +12,17 @@ import (
 
 func Ready(app *v1beta1.Application) bool {
 	cond := findReadiness(app)
-	if _, err := tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version); err != nil {
-		return false
-	}
+	tm.Printf("Application %s (%s) ", app.Name, app.Spec.Descriptor.Version)
 	if cond == nil {
 		warn("WAITING")
-		_, err := tm.Println("")
-		return err == nil
+		tm.Println("")
+		return false
 	}
 
 	if cond.Status == "True" {
 		success("READY")
-		_, err := tm.Println("")
-		return err == nil
+		tm.Println("")
+		return true
 	}
 
 	if cond.Status == "False" {
@@ -33,9 +31,7 @@ func Ready(app *v1beta1.Application) bool {
 		highlight("UNKNOWN")
 	}
 
-	if _, err := tm.Println(""); err != nil {
-		return false
-	}
+	tm.Println("")
 	return false
 }
 
@@ -100,8 +96,7 @@ func Flush() {
 		}
 	}
 
-	err := tm.Output.Flush()
-	if err != nil {
+	if err := tm.Output.Flush(); err != nil {
 		return
 	}
 	tm.Screen.Reset()
@@ -118,22 +113,19 @@ func findReadiness(app *v1beta1.Application) (condition *v1beta1.Condition) {
 }
 
 func warn(line string, args ...interface{}) {
-	_, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW))
-	if err != nil {
+	if _, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.YELLOW)); err != nil {
 		return
 	}
 }
 
 func success(line string, args ...interface{}) {
-	_, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN))
-	if err != nil {
+	if _, err := tm.Print(tm.Color(fmt.Sprintf(line, args...), tm.GREEN)); err != nil {
 		return
 	}
 }
 
 func highlight(line string, args ...interface{}) {
-	_, err := tm.Print(tm.Bold(fmt.Sprintf(line, args...)))
-	if err != nil {
+	if _, err := tm.Print(tm.Bold(fmt.Sprintf(line, args...))); err != nil {
 		return
 	}
 }

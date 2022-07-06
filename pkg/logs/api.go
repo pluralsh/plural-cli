@@ -32,6 +32,7 @@ func Tail(namespace string, name string) error {
 	if err != nil {
 		return err
 	}
+
 	args := []string{"logs", fmt.Sprintf("--tail=%d", tail.Spec.Limit)}
 	if tail.Spec.Follow {
 		args = append(args, "-f")

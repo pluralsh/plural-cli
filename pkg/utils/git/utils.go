@@ -6,7 +6,7 @@ import (
 )
 
 func RepoName(url string) string {
-	reg, _ := regexp.Compile(".*/")
+	reg := regexp.MustCompile(".*/")
 	base := reg.ReplaceAllString(url, "")
 	return strings.TrimSuffix(base, ".git")
 }

@@ -140,32 +140,28 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	// Needed to update legacy deployments
 	if man.Region == "" {
 		man.Region = "us-east1"
-		err := man.Write(manifest.ProjectManifestPath())
-		if err != nil {
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
 			return nil, err
 		}
 	} else if location := strings.Split(man.Region, "-"); len(location) >= 3 {
 		man.Context["Location"] = man.Region
 		man.Region = fmt.Sprintf("%s-%s", location[0], location[1])
 		man.Context["BucketLocation"] = getBucketLocation(man.Region)
-		err := man.Write(manifest.ProjectManifestPath())
-		if err != nil {
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
 			return nil, err
 		}
 	}
 	// Needed to update legacy deployments
 	if _, ok := man.Context["BucketLocation"]; !ok {
 		man.Context["BucketLocation"] = "US"
-		err := man.Write(manifest.ProjectManifestPath())
-		if err != nil {
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
 			return nil, err
 		}
 	}
 	// Needed to update legacy deployments
 	if _, ok := man.Context["Location"]; !ok {
 		man.Context["Location"] = man.Region
-		err := man.Write(manifest.ProjectManifestPath())
-		if err != nil {
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
 			return nil, err
 		}
 	}
@@ -280,16 +276,16 @@ func (gcp *GCPProvider) validateEnabled() error {
 	ctx := context.Background()
 	c, err := serviceusage.NewClient(ctx)
 	if err != nil {
-		return fmt.Errorf("could not set up gcp client, are your credentials valid?")
+		return fmt.Errorf("Could not set up gcp client. Are your credentials valid?")
 	}
 	defer func(c *serviceusage.Client) {
 		_ = c.Close()
 	}(c)
 
-	enabledErr := fmt.Errorf("you don't have necessary services enabled, please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console")
+	errEnabled := fmt.Errorf("You don't have necessary services enabled. Please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console.")
 	proj, err := gcp.getProject()
 	if err != nil {
-		return enabledErr
+		return errEnabled
 	}
 
 	wrapped := func(name string) string {
@@ -305,12 +301,12 @@ func (gcp *GCPProvider) validateEnabled() error {
 	}
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
-		return enabledErr
+		return errEnabled
 	}
 
 	for _, svc := range resp.Services {
 		if svc.State != serviceusagepb.State_ENABLED {
-			return enabledErr
+			return errEnabled
 		}
 	}
 	return nil

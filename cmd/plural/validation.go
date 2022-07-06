@@ -18,11 +18,11 @@ func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) 
 	return func(c *cli.Context) error {
 		nargs := c.NArg()
 		if nargs > len(args) {
-			return fmt.Errorf("Too many args passed to %s.  Try running --help to see usage", c.Command.FullName())
+			return fmt.Errorf("Too many args passed to %s.  Try running --help to see usage.", c.Command.FullName())
 		}
 
 		if nargs < len(args) {
-			return fmt.Errorf("not enough arguments provided, needs %s, try running --help to see usage", args[nargs])
+			return fmt.Errorf("Not enough arguments provided: needs %s. Try running --help to see usage.", args[nargs])
 		}
 
 		return fn(c)
@@ -48,6 +48,16 @@ func owned(fn func(*cli.Context) error) func(*cli.Context) error {
 		return fn(c)
 	}
 }
+
+// func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
+// 	return func(c *cli.Context) error {
+// 		if ok := confirm(msg); !ok {
+// 			return nil
+// 		}
+
+// 		return fn(c)
+// 	}
+// }
 
 func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
@@ -75,8 +85,7 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 		conf := config.Read()
 		if conf.ReportErrors {
 			client := api.FromConfig(&conf)
-			err := client.CreateEvent(&event)
-			if err != nil {
+			if err := client.CreateEvent(&event); err != nil {
 				return err
 			}
 		}
@@ -89,7 +98,7 @@ func validateOwner() error {
 	project, err := manifest.ReadProject(path)
 	conf := config.Read()
 	if err != nil {
-		return fmt.Errorf("Your workspace hasn't been configured, try running `plural init`")
+		return fmt.Errorf("Your workspace hasn't been configured. Try running `plural init`.")
 	}
 
 	if owner := project.Owner; owner != nil {
@@ -108,8 +117,7 @@ func validateOwner() error {
 func confirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg}
-	err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
-	if err != nil {
+	if err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required)); err != nil {
 		return false
 	}
 	return res
@@ -118,8 +126,7 @@ func confirm(msg string) bool {
 func affirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg, Default: true}
-	err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
-	if err != nil {
+	if err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required)); err != nil {
 		return false
 	}
 	return res

@@ -24,8 +24,8 @@ type Config struct {
 	NamespacePrefix string `yaml:"namespacePrefix"`
 	Endpoint        string `yaml:"endpoint"`
 	LockProfile     string `yaml:"lockProfile"`
+	ReportErrors    bool   `yaml:"reportErrors"`
 	metadata        *Metadata
-	ReportErrors    bool `yaml:"reportErrors"`
 }
 
 type VersionedConfig struct {
@@ -72,8 +72,7 @@ func Profiles() ([]*VersionedConfig, error) {
 			}
 
 			versioned := &VersionedConfig{}
-			err = yaml.Unmarshal(contents, versioned)
-			if err != nil {
+			if err = yaml.Unmarshal(contents, versioned); err != nil {
 				return nil, err
 			}
 			confs = append(confs, versioned)
@@ -90,8 +89,7 @@ func Import(file string) (conf Config) {
 	}
 
 	versioned := &VersionedConfig{Spec: &conf}
-	err = yaml.Unmarshal(contents, versioned)
-	if err != nil {
+	if err = yaml.Unmarshal(contents, versioned); err != nil {
 		return Config{}
 	}
 	conf.metadata = versioned.Metadata
@@ -106,8 +104,7 @@ func FromToken(token string) error {
 func Amend(key string, value string) error {
 	key = cases.Title(language.Und, cases.NoLower).String(key)
 	conf := Read()
-	err := reflections.SetField(&conf, key, value)
-	if err != nil {
+	if err := reflections.SetField(&conf, key, value); err != nil {
 		return err
 	}
 	return conf.Flush()

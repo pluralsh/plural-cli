@@ -70,7 +70,7 @@ type GrafanaDashboard struct {
 	}
 }
 
-func formatDashboard(*cli.Context) error {
+func formatDashboard(c *cli.Context) error {
 	if err := v1alpha1.AddToScheme(scheme.Scheme); err != nil {
 		return err
 	}

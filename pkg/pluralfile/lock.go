@@ -41,7 +41,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	client := api.NewClient()
 	applyLock, err := client.AcquireLock(plrl.Repo)
 	if err != nil {
-		return lock(), nil
+		return lock(), err
 	}
 
 	if applyLock == nil {
@@ -49,7 +49,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	}
 
 	if applyLock.Lock == "" {
-		return Lock(path), nil
+		return Lock(path)
 	}
 
 	lock := lock()
@@ -70,19 +70,19 @@ func (plrl *Pluralfile) Flush(lock *Lockfile) error {
 	return err
 }
 
-func Lock(path string) *Lockfile {
+func Lock(path string) (*Lockfile, error) {
 	conf := config.Read()
 	lock := lock()
 	lockfile := lockPath(path, conf.LockProfile)
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
-		return lock
+		return lock, err
 	}
 
 	if err := yaml.Unmarshal(content, lock); err != nil {
-		return nil
+		return nil, err
 	}
-	return lock
+	return lock, nil
 }
 
 func lockPath(path string, profile string) string {

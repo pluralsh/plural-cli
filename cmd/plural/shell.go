@@ -71,7 +71,7 @@ func handleShellSync(c *cli.Context) error {
 
 var destoryShellConfirm = "Are you sure you want to destroy your cloud shell (you should either `plural destroy` anything deployed or `plural shell sync` to sync the contents locally)?"
 
-func handleShellPurge(*cli.Context) error {
+func handleShellPurge(c *cli.Context) error {
 	if ok := confirm(destoryShellConfirm); !ok {
 		return nil
 	}

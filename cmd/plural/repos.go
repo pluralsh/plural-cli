@@ -73,8 +73,7 @@ func handleListRepositories(c *cli.Context) error {
 		if addIcon {
 			line = append(line, repo.Icon)
 		}
-		err := formatter.Write(line)
-		if err != nil {
+		if err := formatter.Write(line); err != nil {
 			return err
 		}
 	}
@@ -85,7 +84,7 @@ func handleListRepositories(c *cli.Context) error {
 	return nil
 }
 
-func handleResetInstallations(*cli.Context) error {
+func handleResetInstallations(c *cli.Context) error {
 	client := api.NewClient()
 	count, err := client.ResetInstallations()
 	if err != nil {

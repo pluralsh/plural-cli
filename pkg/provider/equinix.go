@@ -187,8 +187,7 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 	mapConfig := clientcmdapi.NewConfig()
 
 	for _, kubeconfig := range kubeconfigs {
-		err := mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride)
-		if err != nil {
+		if err := mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride); err != nil {
 			return err
 		}
 	}
@@ -197,8 +196,7 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 	nonMapConfig := clientcmdapi.NewConfig()
 	for i := range kubeconfigs {
 		kubeconfig := kubeconfigs[i]
-		err := mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride)
-		if err != nil {
+		if err := mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride); err != nil {
 			return err
 		}
 	}
@@ -290,7 +288,7 @@ func getMetalClient(apiToken string) *metal.Client {
 	return client
 }
 
-func MetalRetryPolicy(ctx context.Context, _ *http.Response, err error) (bool, error) {
+func MetalRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	var redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
 
 	if ctx.Err() != nil {
