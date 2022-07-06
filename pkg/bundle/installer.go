@@ -76,7 +76,7 @@ func Install(repo, name string, refresh bool) error {
 	}
 
 	if err := client.InstallRecipe(recipe.Id); err != nil {
-		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %s", err)
+		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %w", err)
 	}
 
 	if recipe.OidcSettings == nil {

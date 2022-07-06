@@ -3,6 +3,7 @@ package utils
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -19,7 +20,7 @@ func Tar(src string, w io.Writer, regex string) error {
 	// ensure the src actually exists before trying to tar it
 	dir := filepath.Dir(src)
 	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files - %v", err.Error())
+		return fmt.Errorf("Unable to tar files: %w", err)
 	}
 
 	gzw := gzip.NewWriter(w)
@@ -87,17 +88,17 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 	madeDir := map[string]bool{}
 	zr, err := gzip.NewReader(r)
 	if err != nil {
-		return fmt.Errorf("requires gzip-compressed body: %v", err)
+		return fmt.Errorf("requires gzip-compressed body: %w", err)
 	}
 	tr := tar.NewReader(zr)
 	loggedChtimesError := false
 	for {
 		f, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("tar error: %v", err)
+			return fmt.Errorf("tar error: %w", err)
 		}
 		if !validRelPath(f.Name) {
 			return fmt.Errorf("tar contained invalid name error %q", f.Name)
@@ -132,7 +133,7 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 				err = closeErr
 			}
 			if err != nil {
-				return fmt.Errorf("error writing to %s: %v", abs, err)
+				return fmt.Errorf("error writing to %s: %w", abs, err)
 			}
 			if n != f.Size {
 				return fmt.Errorf("only wrote %d bytes to %s; expected %d", n, abs, f.Size)

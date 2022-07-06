@@ -46,7 +46,7 @@ func (w *Workspace) DestroyHelm() error {
 		return nil
 	}
 
-	r, _ := regexp.Compile("release.*not found")
+	r := regexp.MustCompile("release.*not found")
 	var ignoreNotFound checker = func(s string) bool { return r.MatchString(s) }
 	return ignoreNotFound.execSuppressed("helm", "del", name, "-n", ns)
 }

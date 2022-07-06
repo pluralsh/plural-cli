@@ -112,6 +112,7 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 
 func getBucketLocation(region string) BucketLocation {
 	reg := strings.ToLower(region)
+	//nolint:gocritic
 	if strings.Contains(reg, "us") ||
 		strings.Contains(reg, "northamerica") ||
 		strings.Contains(reg, "southamerica") {

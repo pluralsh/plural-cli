@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -32,7 +33,7 @@ func Run() error {
 		fail <- teardown()
 	}()
 
-	if err := r.Run(":8080"); err != nil && err != http.ErrServerClosed {
+	if err := r.Run(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 

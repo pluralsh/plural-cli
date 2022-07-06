@@ -91,7 +91,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		return
 	}
 
-	if len(account) <= 0 {
+	if len(account) == 0 {
 		err = errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
 		return
 	}

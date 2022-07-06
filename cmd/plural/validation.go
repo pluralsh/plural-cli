@@ -75,7 +75,7 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 		err := fn(c)
 		if err != nil {
 			event.Status = "ERROR"
-			if we, ok := err.(*executor.WrappedError); ok {
+			if we, ok := err.(*executor.WrappedError); ok { //nolint:errorlint
 				event.Data = we.Output
 			} else {
 				event.Data = fmt.Sprint(err)
@@ -137,7 +137,7 @@ func repoRoot() error {
 	if err != nil {
 		return err
 	}
-	//santiize the filepath, respecting the OS
+	// santiize the filepath, respecting the OS
 	dir = pathing.SanitizeFilepath(dir)
 
 	root, err := git.Root()

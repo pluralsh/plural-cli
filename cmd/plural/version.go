@@ -22,7 +22,7 @@ var BuildDate = time.Now()
 
 const latestUri = "https://api.github.com/repos/pluralsh/plural-cli/commits/master"
 
-func latestVersion() (res string, err error) {
+func latestVersion() (res string, err error) { //nolint:deadcode,unused
 	resp, err := http.Get(latestUri)
 	if err != nil {
 		return
@@ -42,7 +42,7 @@ func latestVersion() (res string, err error) {
 	return
 }
 
-func checkRecency() error {
+func checkRecency() error { //nolint:deadcode,unused
 	sha, err := latestVersion()
 	if err != nil {
 		return err
