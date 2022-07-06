@@ -275,8 +275,7 @@ func commitMsg(c *cli.Context) string {
 
 	if !c.Bool("silence") {
 		var commit string
-		err := survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit)
-		if err != nil {
+		if err := survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit); err != nil {
 			return ""
 		}
 		return commit
@@ -429,8 +428,7 @@ func destroy(c *cli.Context) error {
 }
 
 func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
-	err := os.Chdir(repoRoot)
-	if err != nil {
+	if err := os.Chdir(repoRoot); err != nil {
 		return err
 	}
 	utils.Error("\nDestroying application %s\n", installation.Repository.Name)
