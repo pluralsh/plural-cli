@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/michaeljguarino/graphql"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 

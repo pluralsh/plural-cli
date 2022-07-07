@@ -63,6 +63,9 @@ func (prov *AgeProvider) Marshall() ([]byte, error) {
 func (prov *AgeProvider) decrypt(content []byte) ([]byte, error) {
 	buf := bytes.NewBuffer(content)
 	ident, err := Identity()
+	if err != nil {
+		return []byte{}, err
+	}
 	reader, err := age.Decrypt(buf, ident)
 	if err != nil {
 		return []byte{}, err
@@ -90,6 +93,9 @@ func BuildAgeProvider() (prov *AgeProvider, err error) {
 		return
 	}
 	aes, err := DeserializeKey(keycontent)
+	if err != nil {
+		return
+	}
 	prov.Key = aes
 	return
 }
@@ -100,7 +106,7 @@ func Identity() (*age.X25519Identity, error) {
 
 func SetupAge(emails []string) error {
 	client := api.NewClient()
-	age, err := setupAgeConfig()
+	ageConfig, err := setupAgeConfig()
 	if err != nil {
 		return err
 	}
@@ -112,12 +118,12 @@ func SetupAge(emails []string) error {
 			return err
 		}
 
-		idents := age.Identities
+		idents := ageConfig.Identities
 		for _, key := range keys {
 			idents = append(idents, &AgeIdentity{Key: key.Content, Email: key.User.Email})
 		}
 
-		age.Identities = idents
+		ageConfig.Identities = idents
 	}
 
 	keyPath := pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key"))
@@ -129,7 +135,7 @@ func SetupAge(emails []string) error {
 		}
 
 		keydata, _ := prov.Key.Marshal()
-		return age.WriteKeyFile(keyPath, keydata)
+		return ageConfig.WriteKeyFile(keyPath, keydata)
 	}
 
 	key, _ := Materialize()
@@ -138,7 +144,7 @@ func SetupAge(emails []string) error {
 		return err
 	}
 
-	return age.WriteKeyFile(keyPath, keydata)
+	return ageConfig.WriteKeyFile(keyPath, keydata)
 }
 
 func (a *Age) Recipients() []age.Recipient {
@@ -167,8 +173,12 @@ func (a *Age) encrypt(content []byte) ([]byte, error) {
 		return buf.Bytes(), err
 	}
 
-	writer.Write(content)
-	writer.Close()
+	if _, err := writer.Write(content); err != nil {
+		return buf.Bytes(), err
+	}
+	if err := writer.Close(); err != nil {
+		return buf.Bytes(), err
+	}
 	return buf.Bytes(), nil
 }
 
@@ -229,13 +239,13 @@ func setupAgeConfig() (*Age, error) {
 
 	// create the
 	conf := config.Read()
-	age := &Age{
+	ageOutput := &Age{
 		RepoKey: repoIdentity.Recipient().String(),
 		Identities: []*AgeIdentity{
 			{Email: conf.Email, Key: userIdentity.Recipient().String()},
 		},
 	}
-	return age, nil
+	return ageOutput, nil
 }
 
 func identityFromString(contents string) (*age.X25519Identity, error) {
@@ -268,11 +278,19 @@ func generateIdentity(path string) (*age.X25519Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
-	fmt.Fprintf(f, "# created: %s\n", time.Now().Format(time.RFC3339))
-	fmt.Fprintf(f, "# public key: %s\n", k.Recipient())
-	fmt.Fprintf(f, "%s\n", k)
+	if _, err := fmt.Fprintf(f, "# created: %s\n", time.Now().Format(time.RFC3339)); err != nil {
+		return nil, err
+	}
+	if _, err := fmt.Fprintf(f, "# public key: %s\n", k.Recipient()); err != nil {
+		return nil, err
+	}
+	if _, err := fmt.Fprintf(f, "%s\n", k); err != nil {
+		return nil, err
+	}
 	return k, nil
 }
 

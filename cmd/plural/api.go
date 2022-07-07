@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/urfave/cli"
-	"os"
 )
 
 func apiCommands() []cli.Command {

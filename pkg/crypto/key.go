@@ -84,8 +84,8 @@ func Materialize() (*AESKey, error) {
 	return aeskey, aeskey.Flush()
 }
 
-func RandStr(len int) (string, error) {
-	str := make([]byte, len)
+func RandStr(length int) (string, error) {
+	str := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, str); err != nil {
 		return "", err
 	}

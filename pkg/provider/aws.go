@@ -91,7 +91,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		return
 	}
 
-	if len(account) <= 0 {
+	if len(account) == 0 {
 		err = errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
 		return
 	}
@@ -114,13 +114,12 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	ctx := context.Background()
-	context := &ctx
-	client, err := getClient(man.Region, *context)
+	client, err := getClient(man.Region, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AWSProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, nil, context}, nil
+	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx}, nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
@@ -265,6 +264,8 @@ func GetAwsAccount() (string, error) {
 		Account string
 	}
 
-	json.Unmarshal(out, &res)
+	if err := json.Unmarshal(out, &res); err != nil {
+		return "", err
+	}
 	return res.Account, nil
 }

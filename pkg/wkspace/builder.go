@@ -185,7 +185,7 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 		return err
 	}
 
-	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot)), "deploy")
+	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(wkspaceRoot), "deploy")
 
 	return executor.DefaultExecution(name, exec).Flush(repoRoot)
 }
@@ -194,7 +194,7 @@ func (wk *Workspace) buildDiff(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := pathing.SanitizeFilepath(filepath.Join(repoRoot, name))
 
-	d, _ := diff.GetDiff(pathing.SanitizeFilepath(filepath.Join(wkspaceRoot)), "diff")
+	d, _ := diff.GetDiff(pathing.SanitizeFilepath(wkspaceRoot), "diff")
 
 	return diff.DefaultDiff(name, d).Flush(repoRoot)
 }
@@ -221,7 +221,7 @@ func DiffedRepos() ([]string, error) {
 
 	result := make([]string, len(repos))
 	count := 0
-	for repo, _ := range repos {
+	for repo := range repos {
 		result[count] = repo
 		count++
 	}

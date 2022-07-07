@@ -2,11 +2,12 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/utils"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type postgres struct {
@@ -32,7 +33,9 @@ func (pg *postgres) Connect(namespace string) error {
 	if err != nil {
 		return err
 	}
-	defer fwd.Process.Kill()
+	defer func(Process *os.Process) {
+		_ = Process.Kill()
+	}(fwd.Process)
 
 	utils.Highlight("Wait a bit while the port-forward boots up\n")
 	time.Sleep(5 * time.Second)

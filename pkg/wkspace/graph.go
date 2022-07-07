@@ -2,9 +2,10 @@ package wkspace
 
 import (
 	"fmt"
+
+	toposort "github.com/philopon/go-toposort"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
-	toposort "github.com/philopon/go-toposort"
 )
 
 type depsFetcher func(string) ([]*manifest.Dependency, error)
@@ -109,7 +110,7 @@ func topsorter(repos []string, fn depsFetcher) ([]string, error) {
 	// need to reverse the order
 	result := make([]string, len(sorted))
 	for i := 1; i <= len(result); i++ {
-		result[len(result) - i] = sorted[i - 1]
+		result[len(result)-i] = sorted[i-1]
 	}
 
 	return result, nil

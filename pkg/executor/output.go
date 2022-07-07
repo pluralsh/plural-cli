@@ -17,7 +17,10 @@ func (out *OutputWriter) Write(line []byte) (int, error) {
 	}
 
 	out.lines = append(out.lines, string(line))
-	out.delegate.Write([]byte("."))
+	_, err := out.delegate.Write([]byte("."))
+	if err != nil {
+		return 0, err
+	}
 	return len(line), nil
 }
 

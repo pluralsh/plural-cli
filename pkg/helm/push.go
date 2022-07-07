@@ -1,13 +1,15 @@
 package helm
 
 import (
-	"os"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"strings"
+
+	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/chartmuseum/helm-push/pkg/helm"
 	"github.com/pluralsh/plural/pkg/config"
-	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 )
 
 func Push(chartName, repoUrl string) error {
@@ -29,12 +31,17 @@ func Push(chartName, repoUrl string) error {
 		cm.AccessToken(conf.Token),
 		cm.ContextPath("/cm"),
 	)
+	if err != nil {
+		return err
+	}
 
 	tmp, err := ioutil.TempDir("", "helm-push-")
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmp)
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(tmp)
 
 	chartPackagePath, err := helm.CreateChartPackage(chart, tmp)
 	if err != nil {
@@ -45,7 +52,9 @@ func Push(chartName, repoUrl string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	if resp.StatusCode != 201 && resp.StatusCode != 202 {
 		b, err := ioutil.ReadAll(resp.Body)

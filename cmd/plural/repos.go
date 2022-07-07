@@ -73,10 +73,14 @@ func handleListRepositories(c *cli.Context) error {
 		if addIcon {
 			line = append(line, repo.Icon)
 		}
-		formatter.Write(line)
+		if err := formatter.Write(line); err != nil {
+			return err
+		}
 	}
 
-	formatter.Flush()
+	if err := formatter.Flush(); err != nil {
+		return err
+	}
 	return nil
 }
 

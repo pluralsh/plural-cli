@@ -41,7 +41,7 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	client := api.NewClient()
 	applyLock, err := client.AcquireLock(plrl.Repo)
 	if err != nil {
-		return lock(), nil
+		return lock(), err
 	}
 
 	if applyLock == nil {
@@ -49,11 +49,13 @@ func (plrl *Pluralfile) Lock(path string) (*Lockfile, error) {
 	}
 
 	if applyLock.Lock == "" {
-		return Lock(path), nil
+		return Lock(path)
 	}
 
 	lock := lock()
-	yaml.Unmarshal([]byte(applyLock.Lock), lock)
+	if err := yaml.Unmarshal([]byte(applyLock.Lock), lock); err != nil {
+		return nil, err
+	}
 	return lock, nil
 }
 
@@ -68,17 +70,19 @@ func (plrl *Pluralfile) Flush(lock *Lockfile) error {
 	return err
 }
 
-func Lock(path string) *Lockfile {
+func Lock(path string) (*Lockfile, error) {
 	conf := config.Read()
 	lock := lock()
 	lockfile := lockPath(path, conf.LockProfile)
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
-		return lock
+		return lock, err
 	}
 
-	yaml.Unmarshal(content, lock)
-	return lock
+	if err := yaml.Unmarshal(content, lock); err != nil {
+		return nil, err
+	}
+	return lock, nil
 }
 
 func lockPath(path string, profile string) string {
@@ -101,31 +105,31 @@ func (lock *Lockfile) Flush(path string) error {
 func (lock *Lockfile) getSha(name ComponentName, key string) string {
 	switch name {
 	case HELM:
-		sha, _ := lock.Helm[key]
+		sha := lock.Helm[key]
 		return sha
 	case TERRAFORM:
-		sha, _ := lock.Terraform[key]
+		sha := lock.Terraform[key]
 		return sha
 	case RECIPE:
-		sha, _ := lock.Recipe[key]
+		sha := lock.Recipe[key]
 		return sha
 	case ARTIFACT:
-		sha, _ := lock.Artifact[key]
+		sha := lock.Artifact[key]
 		return sha
 	case INTEGRATION:
-		sha, _ := lock.Integration[key]
+		sha := lock.Integration[key]
 		return sha
 	case CRD:
-		sha, _ := lock.Crd[key]
+		sha := lock.Crd[key]
 		return sha
 	case IRD:
-		sha, _ := lock.Ird[key]
+		sha := lock.Ird[key]
 		return sha
 	case TAG:
-		sha, _ := lock.Tag[key]
+		sha := lock.Tag[key]
 		return sha
 	case REPO_ATTRS:
-		sha, _ := lock.Attrs[key]
+		sha := lock.Attrs[key]
 		return sha
 	default:
 		return ""

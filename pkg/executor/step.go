@@ -14,7 +14,7 @@ import (
 )
 
 type WrappedError struct {
-	inner error
+	inner  error
 	Output string
 }
 

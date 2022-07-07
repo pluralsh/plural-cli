@@ -27,7 +27,7 @@ type Provider interface {
 }
 
 type Preflight struct {
-	Name string
+	Name     string
 	Callback func() error
 }
 
@@ -70,14 +70,18 @@ func GetProvider() (Provider, error) {
 	if project, err := manifest.ReadProject(path); err == nil {
 		return FromManifest(project)
 	}
-	getAvailableProviders()
+	if err := getAvailableProviders(); err != nil {
+		return nil, err
+	}
 
 	provider := ""
 	prompt := &survey.Select{
 		Message: "Select one of the following providers:",
 		Options: providers.AvailableProviders,
 	}
-	survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required))
+	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
+		return nil, err
+	}
 	utils.Success("Using provider %s\n", provider)
 	return New(provider)
 }

@@ -2,6 +2,7 @@ package format
 
 import (
 	"os"
+
 	"github.com/olekukonko/tablewriter"
 )
 

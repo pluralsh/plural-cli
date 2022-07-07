@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +23,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/errors"
+	pluralErrors "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	v1 "k8s.io/api/core/v1"
@@ -78,8 +79,8 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 
 	projectID, err := getProjectIDFromName(resp.Project, resp.ApiToken)
 	if err != nil {
-		err = errors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
-		return 
+		err = pluralErrors.ErrorWrap(err, "Failed to get metal project ID (is your metal cli configured?)")
+		return
 	}
 
 	provider = &EQUINIXProvider{
@@ -125,8 +126,12 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
 	}
 
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**"))
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**")); err != nil {
+		return "", err
+	}
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
+		return "", err
+	}
 	scaffold, err := GetProviderScaffold("EQUINIX")
 	if err != nil {
 		return "", err
@@ -170,36 +175,44 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 			continue
 		}
 
-		config, err := clientcmd.LoadFromFile(filename)
+		fromFile, err := clientcmd.LoadFromFile(filename)
 
 		if err != nil {
 			return err
 		}
 
-		kubeconfigs = append(kubeconfigs, config)
+		kubeconfigs = append(kubeconfigs, fromFile)
 	}
 
 	// first merge all of our maps
 	mapConfig := clientcmdapi.NewConfig()
 
 	for _, kubeconfig := range kubeconfigs {
-		mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride)
+		if err := mergo.Merge(mapConfig, kubeconfig, mergo.WithOverride); err != nil {
+			return err
+		}
 	}
 
 	// merge all of the struct values
 	nonMapConfig := clientcmdapi.NewConfig()
 	for i := range kubeconfigs {
 		kubeconfig := kubeconfigs[i]
-		mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride)
+		if err := mergo.Merge(nonMapConfig, kubeconfig, mergo.WithOverride); err != nil {
+			return err
+		}
 	}
 
 	// since values are overwritten, but maps values are not, we can merge the non-map config on top of the map config and
 	// get the values we expect.
-	config := clientcmdapi.NewConfig()
-	mergo.Merge(config, mapConfig, mergo.WithOverride)
-	mergo.Merge(config, nonMapConfig, mergo.WithOverride)
+	newConfig := clientcmdapi.NewConfig()
+	if err := mergo.Merge(newConfig, mapConfig, mergo.WithOverride); err != nil {
+		return err
+	}
+	if err := mergo.Merge(newConfig, nonMapConfig, mergo.WithOverride); err != nil {
+		return err
+	}
 
-	json, err := runtime.Encode(clientcmdlatest.Codec, config)
+	json, err := runtime.Encode(clientcmdlatest.Codec, newConfig)
 	if err != nil {
 		return err
 	}
@@ -250,12 +263,12 @@ func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
 
 	client := getMetalClient(prov.Context()["ApiToken"].(string))
 
-	deviceID := strings.Replace(node.Spec.ProviderID, "equinixmetal://", "", -1)
+	deviceID := strings.ReplaceAll(node.Spec.ProviderID, "equinixmetal://", "")
 
 	_, err := client.Devices.Delete(deviceID, false)
 
 	if err != nil {
-		return errors.ErrorWrap(err, "failed to terminate instance")
+		return pluralErrors.ErrorWrap(err, "failed to terminate instance")
 	}
 
 	return nil
@@ -284,14 +297,15 @@ func MetalRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool
 	}
 
 	if err != nil {
-		if v, ok := err.(*url.Error); ok {
+		if v, ok := err.(*url.Error); ok { //nolint:errorlint
 			// Don't retry if the error was due to too many redirects.
-			if redirectsErrorRe.MatchString(v.Error()) {
+			if redirectsErrorRe.MatchString(v.Err.Error()) {
 				return false, nil
 			}
 
 			// Don't retry if the error was due to TLS cert verification failure.
-			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
+			var certErr *x509.UnknownAuthorityError
+			if errors.As(v.Err, certErr) {
 				return false, nil
 			}
 		}
@@ -307,7 +321,7 @@ func getProjectIDFromName(projectName, apiToken string) (string, error) {
 
 	projects, _, err := client.Projects.List(nil)
 	if err != nil {
-		return "", errors.ErrorWrap(err, "Error getting project using Metal Client")
+		return "", pluralErrors.ErrorWrap(err, "Error getting project using Metal Client")
 	}
 
 	var projectID string
@@ -319,7 +333,7 @@ func getProjectIDFromName(projectName, apiToken string) (string, error) {
 		}
 	}
 	if projectID == "" {
-		return "", errors.ErrorWrap(err, fmt.Sprintf("Project with name %s not found", projectName))
+		return "", pluralErrors.ErrorWrap(err, fmt.Sprintf("Project with name %s not found", projectName))
 	}
 
 	return projectID, nil

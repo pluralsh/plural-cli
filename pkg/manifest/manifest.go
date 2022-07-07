@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -34,12 +34,12 @@ func ManifestPath(repo string) (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(root, repo, "manifest.yaml")), nil
 }
 
-func (m *ProjectManifest) Write(path string) error {
+func (pMan *ProjectManifest) Write(path string) error {
 	versioned := &VersionedProjectManifest{
 		ApiVersion: "plural.sh/v1alpha1",
 		Kind:       "ProjectManifest",
-		Metadata:   &Metadata{Name: m.Cluster},
-		Spec:       m,
+		Metadata:   &Metadata{Name: pMan.Cluster},
+		Spec:       pMan,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -74,12 +74,12 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 	return
 }
 
-func (m *Manifest) Write(path string) error {
+func (man *Manifest) Write(path string) error {
 	versioned := &VersionedManifest{
 		ApiVersion: "plural.sh/v1alpha1",
 		Kind:       "Manifest",
-		Metadata:   &Metadata{Name: m.Name},
-		Spec:       m,
+		Metadata:   &Metadata{Name: man.Name},
+		Spec:       man,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -108,22 +108,22 @@ func Read(path string) (man *Manifest, err error) {
 	return
 }
 
-func (man *ProjectManifest) Configure() Writer {
+func (pMan *ProjectManifest) Configure() Writer {
 	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
 
 	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
-	man.BucketPrefix = res
-	man.Bucket = fmt.Sprintf("%s-tf-state", res)
+	pMan.BucketPrefix = res
+	pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
 
-	if err := man.ConfigureNetwork(); err != nil {
+	if err := pMan.ConfigureNetwork(); err != nil {
 		return nil
 	}
 
-	return func() error { return man.Write(ProjectManifestPath()) }
+	return func() error { return pMan.Write(ProjectManifestPath()) }
 }
 
-func (man *ProjectManifest) ConfigureNetwork() error {
-	if man.Network != nil {
+func (pMan *ProjectManifest) ConfigureNetwork() error {
+	if pMan.Network != nil {
 		return nil
 	}
 
@@ -136,7 +136,7 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 
 	subdomain := ""
 	input := &survey.Input{Message: fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier)}
-	survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
+	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
 		res, _ := val.(string)
 		if err := utils.ValidateDns(res); err != nil {
 			return err
@@ -154,9 +154,11 @@ func (man *ProjectManifest) ConfigureNetwork() error {
 		}
 
 		return nil
-	}))
+	})); err != nil {
+		return err
+	}
 
-	man.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
+	pMan.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
 
 	return nil
 }

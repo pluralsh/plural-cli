@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	compute "cloud.google.com/go/compute/apiv1"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
@@ -14,10 +16,8 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	serviceusagepb "google.golang.org/genproto/googleapis/api/serviceusage/v1"
-	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	resourcemanagerpb "google.golang.org/genproto/googleapis/cloud/resourcemanager/v3"
 	v1 "k8s.io/api/core/v1"
 )
@@ -43,20 +43,20 @@ const (
 var (
 	gcpRegions = []string{
 		"asia-east1",
-  		"asia-east2",
-  		"asia-northeast1",
-  		"asia-northeast2",
-  		"asia-northeast3",
-  		"asia-south1",
-  		"asia-southeast1",
-  		"australia-southeast1",
-  		"asia-northeast1",
-  		"europe-central2",
-  		"europe-west2",
-  		"europe-west3",
-  		"us-east1",
-  		"us-west1",
-  		"us-west2",
+		"asia-east2",
+		"asia-northeast1",
+		"asia-northeast2",
+		"asia-northeast3",
+		"asia-south1",
+		"asia-southeast1",
+		"australia-southeast1",
+		"asia-northeast1",
+		"europe-central2",
+		"europe-west2",
+		"europe-west3",
+		"us-east1",
+		"us-west1",
+		"us-west2",
 	}
 )
 
@@ -112,6 +112,7 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 
 func getBucketLocation(region string) BucketLocation {
 	reg := strings.ToLower(region)
+	//nolint:gocritic
 	if strings.Contains(reg, "us") ||
 		strings.Contains(reg, "northamerica") ||
 		strings.Contains(reg, "southamerica") {
@@ -140,22 +141,30 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	// Needed to update legacy deployments
 	if man.Region == "" {
 		man.Region = "us-east1"
-		man.Write(manifest.ProjectManifestPath())
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
+			return nil, err
+		}
 	} else if location := strings.Split(man.Region, "-"); len(location) >= 3 {
 		man.Context["Location"] = man.Region
 		man.Region = fmt.Sprintf("%s-%s", location[0], location[1])
 		man.Context["BucketLocation"] = getBucketLocation(man.Region)
-		man.Write(manifest.ProjectManifestPath())
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
+			return nil, err
+		}
 	}
 	// Needed to update legacy deployments
 	if _, ok := man.Context["BucketLocation"]; !ok {
 		man.Context["BucketLocation"] = "US"
-		man.Write(manifest.ProjectManifestPath())
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
+			return nil, err
+		}
 	}
 	// Needed to update legacy deployments
 	if _, ok := man.Context["Location"]; !ok {
 		man.Context["Location"] = man.Region
-		man.Write(manifest.ProjectManifestPath())
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
+			return nil, err
+		}
 	}
 
 	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil}, nil
@@ -181,7 +190,7 @@ func (gcp *GCPProvider) Flush() error {
 
 func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
-		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket))
+		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
 	}
 
 	ctx["Project"] = gcp.Project()
@@ -209,7 +218,7 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 	bkt := gcp.storageClient.Bucket(name)
 	if _, err := bkt.Attrs(context.Background()); err != nil {
 		return bkt.Create(context.Background(), gcp.Project(), &storage.BucketAttrs{
-			Location: fmt.Sprintf("%s", getBucketLocation(gcp.Reg)),
+			Location: string(getBucketLocation(gcp.Reg)),
 		})
 	}
 	return nil
@@ -245,7 +254,9 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	if err != nil {
 		return errors.ErrorWrap(err, "failed to initialize compute client")
 	}
-	defer c.Close()
+	defer func(c *compute.InstancesClient) {
+		_ = c.Close()
+	}(c)
 
 	_, err = c.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Instance: node.Name,
@@ -266,18 +277,20 @@ func (gcp *GCPProvider) validateEnabled() error {
 	ctx := context.Background()
 	c, err := serviceusage.NewClient(ctx)
 	if err != nil {
-		return fmt.Errorf("could not set up gcp client, are your credentials valid?")
+		return fmt.Errorf("Could not set up gcp client. Are your credentials valid?")
 	}
-	defer c.Close()
+	defer func(c *serviceusage.Client) {
+		_ = c.Close()
+	}(c)
 
-	enabledErr := fmt.Errorf("You don't have necessary services enabled, please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console")
+	errEnabled := fmt.Errorf("You don't have necessary services enabled. Please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console.")
 	proj, err := gcp.getProject()
 	if err != nil {
-		return enabledErr
+		return errEnabled
 	}
 
 	wrapped := func(name string) string {
-		return fmt.Sprintf("projects/%s/services/%s", proj.ProjectId, name) 
+		return fmt.Sprintf("projects/%s/services/%s", proj.ProjectId, name)
 	}
 	req := &serviceusagepb.BatchGetServicesRequest{
 		Parent: fmt.Sprintf("projects/%s", proj.ProjectId),
@@ -289,12 +302,12 @@ func (gcp *GCPProvider) validateEnabled() error {
 	}
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
-		return enabledErr
+		return errEnabled
 	}
 
 	for _, svc := range resp.Services {
 		if svc.State != serviceusagepb.State_ENABLED {
-			return enabledErr
+			return errEnabled
 		}
 	}
 	return nil
@@ -306,6 +319,8 @@ func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer c.Close()
+	defer func(c *resourcemanager.ProjectsClient) {
+		_ = c.Close()
+	}(c)
 	return c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
 }

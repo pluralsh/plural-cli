@@ -1,12 +1,12 @@
 package application
 
 import (
-	"sigs.k8s.io/application/api/v1beta1"
-    v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/application/api/v1beta1"
 )
 
 var Scheme = runtime.NewScheme()

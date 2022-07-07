@@ -59,7 +59,9 @@ func handleShellSync(c *cli.Context) error {
 	}
 
 	dir := git.RepoName(shell.GitUrl)
-	os.Chdir(dir)
+	if err := os.Chdir(dir); err != nil {
+		return err
+	}
 	if err := cryptoInit(c); err != nil {
 		return err
 	}

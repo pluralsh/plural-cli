@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
-	"os"
-	"strings"
 )
 
 func bundleCommands() []cli.Command {
@@ -24,13 +25,13 @@ func bundleCommands() []cli.Command {
 			Name:      "install",
 			Usage:     "installs a bundle and writes the configuration to this installation's context",
 			ArgsUsage: "REPO NAME",
-			Flags:     []cli.Flag{
+			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name: "refresh",
+					Name:  "refresh",
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action:    rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
+			Action: rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
 		},
 	}
 }

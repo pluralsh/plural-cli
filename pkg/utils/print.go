@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func ReadLine(prompt string) (string, error) {
@@ -47,7 +47,7 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 
 func ReadPwd(prompt string) (string, error) {
 	color.New(color.Bold).Printf(prompt)
-	pwd, err := terminal.ReadPassword(int(syscall.Stdin))
+	pwd, err := term.ReadPassword(syscall.Stdin)
 	return strings.TrimSpace(string(pwd)), err
 }
 

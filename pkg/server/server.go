@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,20 +20,20 @@ func Run() error {
 		v1.GET("/health", healthcheck)
 	}
 
-	term := make(chan os.Signal) // OS termination signal
-	fail := make(chan error)     // Teardown failure signal
+	term := make(chan os.Signal, 1) // OS termination signal
+	fail := make(chan error)        // Teardown failure signal
 
 	go func() {
 		signal.Notify(term, syscall.SIGINT, syscall.SIGTERM)
 		<-term // waits for termination signal
 		// context with 30s timeout
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		_, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		// all teardown process must complete within 30 seconds
-		fail <- teardown(ctx)
+		fail <- teardown()
 	}()
 
-	if err := r.Run(":8080"); err != nil && err != http.ErrServerClosed {
+	if err := r.Run(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 
@@ -43,6 +44,6 @@ func healthcheck(c *gin.Context) {
 	c.String(http.StatusOK, "OK")
 }
 
-func teardown(ctx context.Context) error {
+func teardown() error {
 	return syncGit()
 }

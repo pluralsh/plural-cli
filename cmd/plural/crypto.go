@@ -124,7 +124,10 @@ func cryptoCommands() []cli.Command {
 func handleEncrypt(c *cli.Context) error {
 	data, err := ioutil.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
-		os.Stdout.Write(data)
+		_, err := os.Stdout.Write(data)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -141,8 +144,14 @@ func handleEncrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	os.Stdout.Write(prefix)
-	os.Stdout.Write(result)
+	_, err = os.Stdout.Write(prefix)
+	if err != nil {
+		return err
+	}
+	_, err = os.Stdout.Write(result)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -151,7 +160,9 @@ func handleDecrypt(c *cli.Context) error {
 	if c.Args().Present() {
 		p, _ := filepath.Abs(c.Args().First())
 		f, err := os.Open(p)
-		defer f.Close()
+		defer func(f *os.File) {
+			_ = f.Close()
+		}(f)
 		if err != nil {
 			return err
 		}
@@ -165,7 +176,10 @@ func handleDecrypt(c *cli.Context) error {
 		return err
 	}
 	if !bytes.HasPrefix(data, prefix) {
-		os.Stdout.Write(data)
+		_, err := os.Stdout.Write(data)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -179,7 +193,10 @@ func handleDecrypt(c *cli.Context) error {
 		return err
 	}
 
-	os.Stdout.Write(result)
+	_, err = os.Stdout.Write(result)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -253,11 +270,14 @@ func exportKey(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	io, err := key.Marshal()
+	marshal, err := key.Marshal()
 	if err != nil {
 		return err
 	}
-	os.Stdout.Write(io)
+	_, err = os.Stdout.Write(marshal)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

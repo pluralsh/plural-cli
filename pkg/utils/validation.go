@@ -12,36 +12,6 @@ const (
 	dnsRegex = "(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])"
 )
 
-type fetcher func() (string, error)
-type validator func(string) error
-
-func UntilValid(fetch func() error) {
-	for {
-		if err := fetch(); err != nil {
-			fmt.Printf("%s\n", HighlightError(err))
-			continue
-		}
-		break
-	}
-}
-
-func UntilInputValid(fetch fetcher, valid validator) string {
-	for {
-		res, err := fetch()
-		if err != nil {
-			fmt.Printf("%s\n", HighlightError(err))
-			continue
-		}
-
-		if err := valid(res); err != nil {
-			fmt.Printf("%s\n", HighlightError(err))
-			continue
-		}
-
-		return res
-	}
-}
-
 func ValidateRegex(val, regex, message string) error {
 	reg, err := regexp.Compile(fmt.Sprintf("^%s$", regex))
 	if err != nil {
@@ -83,6 +53,8 @@ func ValidateDns(val string) error {
 func Confirm(msg string) bool {
 	res := true
 	prompt := &survey.Confirm{Message: msg, Default: true}
-	survey.AskOne(prompt, &res, survey.WithValidator(survey.Required))
+	if err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required)); err != nil {
+		return false
+	}
 	return res
 }

@@ -53,7 +53,11 @@ func (e *Execution) Execute(verbose bool) error {
 	if err != nil {
 		return err
 	}
+
 	ignore, err := e.IgnoreFile(root)
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("deploying %s.  This may take a while, so hold on to your butts\n", e.Metadata.Path)
 	for i, step := range e.Steps {

@@ -50,7 +50,9 @@ func setupGit(setup *SetupRequest) error {
 		return err
 	}
 
-	os.Chdir(dir)
+	if err := os.Chdir(dir); err != nil {
+		return err
+	}
 	if err := gitConfig("user.email", setup.User.Email); err != nil {
 		return err
 	}
@@ -81,6 +83,9 @@ func syncGit() error {
 		return err
 	}
 
-	os.Chdir(dir)
+	if err := os.Chdir(dir); err != nil {
+		return err
+	}
+
 	return git.Sync(dir, "pushing local cloud shell changes", true)
 }

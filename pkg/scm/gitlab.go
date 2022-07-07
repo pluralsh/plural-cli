@@ -74,14 +74,19 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 		Message: "Select the group or path for your repo:",
 		Options: orgNames,
 	}
-	survey.AskOne(prompt, &org, survey.WithValidator(survey.Required))
+	if err := survey.AskOne(prompt, &org, survey.WithValidator(survey.Required)); err != nil {
+		return Context{}, err
+	}
 
 	pub, priv, err := GenerateKeys(false)
 	if err != nil {
 		return
 	}
 
-	repoName := repoName()
+	repoName, err := repoName()
+	if err != nil {
+		return
+	}
 	opts := &gitlab.CreateProjectOptions{
 		Name:                 gitlab.String(repoName),
 		Visibility:           gitlab.Visibility(gitlab.PrivateVisibility),

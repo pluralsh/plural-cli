@@ -232,15 +232,21 @@ func (az *AzureProvider) Authorizer() (autorest.Authorizer, error) {
 	return auth.NewAuthorizerFromCLI()
 }
 
-func (az *AzureProvider) getStorageAccountsClient() storage.AccountsClient {
+func (az *AzureProvider) getStorageAccountsClient() (storage.AccountsClient, error) {
 	storageAccountsClient := storage.NewAccountsClient(utils.ToString(az.ctx["SubscriptionId"]))
-	auth, _ := az.Authorizer()
-	storageAccountsClient.Authorizer = auth
-	return storageAccountsClient
+	authorizer, err := az.Authorizer()
+	if err != nil {
+		return storage.AccountsClient{}, err
+	}
+	storageAccountsClient.Authorizer = authorizer
+	return storageAccountsClient, nil
 }
 
 func (az *AzureProvider) getStorageAccount(account string) (storage.Account, error) {
-	client := az.getStorageAccountsClient()
+	client, err := az.getStorageAccountsClient()
+	if err != nil {
+		return storage.Account{}, err
+	}
 	return client.GetProperties(context.Background(), az.resourceGroup, account, storage.AccountExpandBlobRestoreStatus)
 }
 
@@ -250,7 +256,10 @@ func (az *AzureProvider) upsertStorageAccount(account string) (acc storage.Accou
 		return
 	}
 
-	client := az.getStorageAccountsClient()
+	client, err := az.getStorageAccountsClient()
+	if err != nil {
+		return
+	}
 	ctx := context.Background()
 	future, err := client.Create(
 		ctx,
@@ -280,7 +289,11 @@ func (az *AzureProvider) upsertStorageContainer(acc storage.Account, name string
 	ctx := context.Background()
 	accountName := *acc.Name
 
-	client := az.getStorageAccountsClient()
+	client, err := az.getStorageAccountsClient()
+	if err != nil {
+		return err
+	}
+
 	resp, err := client.ListKeys(ctx, az.resourceGroup, accountName, storage.Kerb)
 	if err != nil {
 		return err
@@ -315,6 +328,8 @@ func getAzureAccount() (string, string, error) {
 		Id       string
 	}
 
-	json.Unmarshal(out, &res)
+	if err := json.Unmarshal(out, &res); err != nil {
+		return "", "", err
+	}
 	return res.Id, res.TenantId, nil
 }

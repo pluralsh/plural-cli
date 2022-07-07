@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,10 +76,10 @@ func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {
 	for {
 		ext := runtime.RawExtension{}
 		if err := d.Decode(&ext); err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
-			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)
+			return objs, fmt.Errorf("failed to unmarshal manifest: %w", err)
 		}
 
 		ext.Raw = bytes.TrimSpace(ext.Raw)
@@ -88,7 +89,7 @@ func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {
 
 		u := &unstructured.Unstructured{}
 		if err := yaml.Unmarshal(ext.Raw, u); err != nil {
-			return objs, fmt.Errorf("failed to unmarshal manifest: %v", err)
+			return objs, fmt.Errorf("failed to unmarshal manifest: %w", err)
 		}
 		objs = append(objs, u)
 	}

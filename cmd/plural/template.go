@@ -3,15 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/urfave/cli"
-	"io/ioutil"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes/scheme"
-	"os"
 )
 
 func testTemplate(c *cli.Context) error {
@@ -50,7 +51,9 @@ func testTemplate(c *cli.Context) error {
 			return err
 		}
 
-		os.Stdout.Write(buf.Bytes())
+		if _, err := os.Stdout.Write(buf.Bytes()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -68,7 +71,9 @@ type GrafanaDashboard struct {
 }
 
 func formatDashboard(c *cli.Context) error {
-	v1alpha1.AddToScheme(scheme.Scheme)
+	if err := v1alpha1.AddToScheme(scheme.Scheme); err != nil {
+		return err
+	}
 	s := k8sjson.NewYAMLSerializer(k8sjson.DefaultMetaFactory, scheme.Scheme,
 		scheme.Scheme)
 
@@ -79,7 +84,9 @@ func formatDashboard(c *cli.Context) error {
 		return err
 	}
 
-	json.Unmarshal(data, &grafana)
+	if err := json.Unmarshal(data, &grafana); err != nil {
+		return err
+	}
 
 	graphs := make([]*v1alpha1.DashboardGraph, 0)
 	for _, panel := range grafana.Panels {

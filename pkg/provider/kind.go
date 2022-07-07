@@ -80,8 +80,12 @@ func (kind *KINDProvider) CreateBackend(prefix string, ctx map[string]interface{
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, kind.Cluster())
 	}
 
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitignore")), []byte("!/**"))
-	utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff"))
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitignore")), []byte("!/**")); err != nil {
+		return "", err
+	}
+	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
+		return "", err
+	}
 	scaffold, err := GetProviderScaffold("KIND")
 	if err != nil {
 		return "", err

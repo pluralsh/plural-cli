@@ -3,11 +3,11 @@ package utils
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -20,14 +20,18 @@ func Tar(src string, w io.Writer, regex string) error {
 	// ensure the src actually exists before trying to tar it
 	dir := filepath.Dir(src)
 	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files - %v", err.Error())
+		return fmt.Errorf("Unable to tar files: %w", err)
 	}
 
 	gzw := gzip.NewWriter(w)
-	defer gzw.Close()
+	defer func(gzw *gzip.Writer) {
+		_ = gzw.Close()
+	}(gzw)
 
 	tw := tar.NewWriter(gzw)
-	defer tw.Close()
+	defer func(tw *tar.Writer) {
+		_ = tw.Close()
+	}(tw)
 
 	// walk path
 	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
@@ -51,7 +55,7 @@ func Tar(src string, w io.Writer, regex string) error {
 		if err != nil {
 			return err
 		}
-		header.Name = strings.TrimPrefix(strings.Replace(file, dir, "", -1), string(filepath.Separator))
+		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, dir, ""), string(filepath.Separator))
 
 		if err := tw.WriteHeader(header); err != nil {
 			return err
@@ -66,7 +70,9 @@ func Tar(src string, w io.Writer, regex string) error {
 			return err
 		}
 
-		f.Close()
+		if err := f.Close(); err != nil {
+			return err
+		}
 
 		return nil
 	})
@@ -82,17 +88,17 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 	madeDir := map[string]bool{}
 	zr, err := gzip.NewReader(r)
 	if err != nil {
-		return fmt.Errorf("requires gzip-compressed body: %v", err)
+		return fmt.Errorf("requires gzip-compressed body: %w", err)
 	}
 	tr := tar.NewReader(zr)
 	loggedChtimesError := false
 	for {
 		f, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("tar error: %v", err)
+			return fmt.Errorf("tar error: %w", err)
 		}
 		if !validRelPath(f.Name) {
 			return fmt.Errorf("tar contained invalid name error %q", f.Name)
@@ -127,7 +133,7 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 				err = closeErr
 			}
 			if err != nil {
-				return fmt.Errorf("error writing to %s: %v", abs, err)
+				return fmt.Errorf("error writing to %s: %w", abs, err)
 			}
 			if n != f.Size {
 				return fmt.Errorf("only wrote %d bytes to %s; expected %d", n, abs, f.Size)
@@ -162,17 +168,6 @@ func untar(r io.Reader, dir, relpath string) (err error) {
 		}
 	}
 	return nil
-}
-
-func validRelativeDir(dir string) bool {
-	if strings.Contains(dir, `\`) || path.IsAbs(dir) {
-		return false
-	}
-	dir = path.Clean(dir)
-	if strings.HasPrefix(dir, "../") || strings.HasSuffix(dir, "/..") || dir == ".." {
-		return false
-	}
-	return true
 }
 
 func validRelPath(p string) bool {

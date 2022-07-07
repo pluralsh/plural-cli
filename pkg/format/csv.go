@@ -1,8 +1,8 @@
 package format
 
 import (
-	"os"
 	"encoding/csv"
+	"os"
 )
 
 type csvFormatter struct {
@@ -26,6 +26,8 @@ func (csv *csvFormatter) Flush() error {
 	return nil
 }
 
-func (csv *csvFormatter) Header(line []string) { 
-	csv.writer.Write(line)
-} 
+func (csv *csvFormatter) Header(line []string) {
+	if err := csv.writer.Write(line); err != nil {
+		return
+	}
+}

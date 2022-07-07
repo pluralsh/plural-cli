@@ -1,17 +1,18 @@
 package helm
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/url"
 	"strings"
-	"io"
-	"fmt"
-	"bytes"
+
 	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/pluralsh/plural/pkg/config"
 	"helm.sh/helm/v3/pkg/getter"
 )
 
-type ChartMuseum struct {}
+type ChartMuseum struct{}
 
 var ChartMuseumProvider = getter.Provider{
 	Schemes: []string{"cm"},

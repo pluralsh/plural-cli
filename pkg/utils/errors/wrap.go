@@ -11,5 +11,5 @@ func ErrorWrap(err error, explanation string) error {
 		return err
 	}
 
-	return fmt.Errorf("%s: %s", color.New(color.FgRed, color.Bold).Sprint(explanation), err.Error())
+	return fmt.Errorf("%s: %w", color.New(color.FgRed, color.Bold).Sprint(explanation), err)
 }

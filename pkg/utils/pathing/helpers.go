@@ -10,7 +10,7 @@ func SanitizeFilepath(filepath string) string {
 	os := runtime.GOOS
 	switch os {
 	case "windows":
-		return strings.Replace(filepath, "\\", "/", -1)
+		return strings.ReplaceAll(filepath, "\\", "/")
 	default:
 		return filepath
 	}

@@ -38,7 +38,7 @@ func stringSurvey(def string, item *api.ConfigurationItem) (survey.Prompt, []sur
 	}, opts
 }
 
-func passwordSurvey(def string, item *api.ConfigurationItem) (survey.Prompt, []survey.AskOpt) {
+func passwordSurvey(item *api.ConfigurationItem) (survey.Prompt, []survey.AskOpt) {
 	opts := []survey.AskOpt{stringValidator(item)}
 
 	if !item.Optional {
