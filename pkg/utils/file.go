@@ -61,16 +61,6 @@ func WriteFile(name string, content []byte) error {
 	return ioutil.WriteFile(name, content, 0644)
 }
 
-// func WriteFileIfNotPresent(path, contents string) {
-// 	fullpath, _ := filepath.Abs(path)
-// 	if Exists(fullpath) {
-// 		return
-// 	}
-// 	if err := ioutil.WriteFile(fullpath, []byte(contents), 0644); err != nil {
-// 		panic(err)
-// 	}
-// }
-
 func ReadFile(name string) (string, error) {
 	content, err := ioutil.ReadFile(name)
 	return string(content), err

@@ -49,16 +49,6 @@ func owned(fn func(*cli.Context) error) func(*cli.Context) error {
 	}
 }
 
-// func confirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
-// 	return func(c *cli.Context) error {
-// 		if ok := confirm(msg); !ok {
-// 			return nil
-// 		}
-
-// 		return fn(c)
-// 	}
-// }
-
 func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if ok := affirm(msg); !ok {
