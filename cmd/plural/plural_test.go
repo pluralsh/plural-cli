@@ -86,14 +86,14 @@ func TestPluralApplication(t *testing.T) {
 	}{
 		{
 			name:             "test plural CLI without arguments",
-			args:             []string{"plural"},
+			args:             []string{ApplicationName},
 			expectedResponse: pluralOutput,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			app := createNewApp()
-			app.HelpName = "plural"
+			app := CreateNewApp()
+			app.HelpName = ApplicationName
 			writer := &bytes.Buffer{}
 			app.Writer = writer
 

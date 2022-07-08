@@ -14,6 +14,8 @@ func init() {
 	cli.BashCompletionFlag = cli.BoolFlag{Name: "compgen", Hidden: true}
 }
 
+const ApplicationName = "plural"
+
 var commands = []cli.Command{
 	{
 		Name:    "version",
@@ -361,7 +363,7 @@ var commands = []cli.Command{
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	app := createNewApp()
+	app := CreateNewApp()
 
 	if os.Getenv("ENABLE_COLOR") != "" {
 		color.NoColor = false
@@ -373,9 +375,9 @@ func main() {
 	}
 }
 
-func createNewApp() *cli.App {
+func CreateNewApp() *cli.App {
 	app := cli.NewApp()
-	app.Name = "plural"
+	app.Name = ApplicationName
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
 	app.Commands = commands

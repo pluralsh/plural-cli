@@ -14,6 +14,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	pluralDir  = ".plural"
+	ConfigName = "config.yml"
+)
+
 type Metadata struct {
 	Name string `yaml:"name"`
 }
@@ -37,7 +42,7 @@ type VersionedConfig struct {
 
 func configFile() string {
 	folder, _ := os.UserHomeDir()
-	return path.Join(folder, ".plural", "config.yml")
+	return path.Join(folder, pluralDir, ConfigName)
 }
 
 func Exists() bool {
@@ -51,13 +56,13 @@ func Read() Config {
 
 func Profile(name string) error {
 	folder, _ := os.UserHomeDir()
-	conf := Import(path.Join(folder, ".plural", name+".yml"))
+	conf := Import(path.Join(folder, pluralDir, name+".yml"))
 	return conf.Flush()
 }
 
 func Profiles() ([]*VersionedConfig, error) {
 	folder, _ := os.UserHomeDir()
-	confDir := path.Join(folder, ".plural")
+	confDir := path.Join(folder, pluralDir)
 	files, err := ioutil.ReadDir(confDir)
 	confs := []*VersionedConfig{}
 	if err != nil {
@@ -65,7 +70,7 @@ func Profiles() ([]*VersionedConfig, error) {
 	}
 
 	for _, f := range files {
-		if !strings.HasSuffix(f.Name(), "config.yml") && strings.HasSuffix(f.Name(), ".yml") {
+		if !strings.HasSuffix(f.Name(), ConfigName) && strings.HasSuffix(f.Name(), ".yml") {
 			contents, err := ioutil.ReadFile(path.Join(confDir, f.Name()))
 			if err != nil {
 				return confs, err
@@ -156,13 +161,13 @@ func (c *Config) Save(filename string) error {
 	}
 
 	folder, _ := os.UserHomeDir()
-	if err := os.MkdirAll(path.Join(folder, ".plural"), os.ModePerm); err != nil {
+	if err := os.MkdirAll(path.Join(folder, pluralDir), os.ModePerm); err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(path.Join(folder, ".plural", filename), io, 0644)
+	return ioutil.WriteFile(path.Join(folder, pluralDir, filename), io, 0644)
 }
 
 func (c *Config) Flush() error {
-	return c.Save("config.yml")
+	return c.Save(ConfigName)
 }
