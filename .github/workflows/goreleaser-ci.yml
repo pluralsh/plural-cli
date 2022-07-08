@@ -11,7 +11,7 @@ jobs:
       artifacts: ${{ steps.goreleaser-step.outputs.artifacts }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up Go
@@ -38,7 +38,7 @@ jobs:
       packages: 'write'
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -93,7 +93,7 @@ jobs:
       packages: 'write'
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
