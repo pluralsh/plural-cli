@@ -67,3 +67,6 @@ release-vsn: # tags and pushes a new release
 	@read -p "Version: " tag; \
 	git tag -a $$tag -m "new release"; \
 	git push origin $$tag
+
+test: .PHONY
+	go test -v -race ./pkg/... ./cmd/...
