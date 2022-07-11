@@ -19,7 +19,7 @@ type Provider interface {
 	Region() string
 	Bucket() string
 	KubeConfig() error
-	CreateBackend(prefix string, ctx map[string]interface{}) (string, error)
+	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
@@ -49,14 +49,14 @@ type Providers struct {
 
 var providers = Providers{}
 
-func GetProviderScaffold(provider string) (string, error) {
+func GetProviderScaffold(provider, version string) (string, error) {
 	if providers.Scaffolds == nil {
 		providers.Scaffolds = make(map[string]string)
 	}
 	_, ok := providers.Scaffolds[provider]
 	if !ok {
 		client := api.NewClient()
-		scaffold, err := client.GetTfProviderScaffold(provider)
+		scaffold, err := client.GetTfProviderScaffold(provider, version)
 		providers.Scaffolds[provider] = scaffold
 		if err != nil {
 			return "", err

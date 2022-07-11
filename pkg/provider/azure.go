@@ -129,7 +129,7 @@ func azureFromManifest(man *manifest.ProjectManifest) (*AzureProvider, error) {
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
-func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
+func (azure *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := azure.CreateBucket(azure.bucket); err != nil {
 		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", azure.bucket))
 	}
@@ -147,7 +147,7 @@ func (azure *AzureProvider) CreateBackend(prefix string, ctx map[string]interfac
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, azure.Cluster())
 	}
 
-	scaffold, err := GetProviderScaffold("AZURE")
+	scaffold, err := GetProviderScaffold("AZURE", version)
 	if err != nil {
 		return "", err
 	}

@@ -66,7 +66,7 @@ func kindFromManifest(man *manifest.ProjectManifest) (*KINDProvider, error) {
 	return &KINDProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
-func (kind *KINDProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
+func (kind *KINDProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 
 	ctx["Region"] = kind.Region()
 	ctx["Bucket"] = kind.Bucket()
@@ -86,7 +86,7 @@ func (kind *KINDProvider) CreateBackend(prefix string, ctx map[string]interface{
 	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
 		return "", err
 	}
-	scaffold, err := GetProviderScaffold("KIND")
+	scaffold, err := GetProviderScaffold("KIND", version)
 	if err != nil {
 		return "", err
 	}

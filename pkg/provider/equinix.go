@@ -112,7 +112,7 @@ func equinixFromManifest(man *manifest.ProjectManifest) (*EQUINIXProvider, error
 	return &EQUINIXProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
-func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
+func (equinix *EQUINIXProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 
 	ctx["Region"] = equinix.Region()
 	ctx["Bucket"] = equinix.Bucket()
@@ -132,7 +132,7 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, ctx map[string]inte
 	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
 		return "", err
 	}
-	scaffold, err := GetProviderScaffold("EQUINIX")
+	scaffold, err := GetProviderScaffold("EQUINIX", version)
 	if err != nil {
 		return "", err
 	}
