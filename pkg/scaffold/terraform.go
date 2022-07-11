@@ -49,6 +49,8 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		providerVersions = append(providerVersions, wk.Terraform[i].Terraform.Dependencies.ProviderVsn)
 	}
 
+	semver.Sort(providerVersions)
+
 	// use the latest version of the TF template for the provider
 	backend, err := wk.Provider.CreateBackend(repo.Name, providerVersions[providerVersions.Len()-1], providerCtx)
 	if err != nil {
