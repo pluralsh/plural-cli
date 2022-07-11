@@ -47,7 +47,7 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 
 func ReadPwd(prompt string) (string, error) {
 	color.New(color.Bold).Printf(prompt)
-	pwd, err := term.ReadPassword(syscall.Stdin)
+	pwd, err := term.ReadPassword(int(syscall.Stdin))
 	return strings.TrimSpace(string(pwd)), err
 }
 
