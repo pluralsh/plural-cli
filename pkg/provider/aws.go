@@ -134,7 +134,7 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 	return s3.NewFromConfig(cfg), nil
 }
 
-func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
+func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
 		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
 	}
@@ -146,7 +146,7 @@ func (aws *AWSProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	if _, ok := ctx["Cluster"]; !ok {
 		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("AWS")
+	scaffold, err := GetProviderScaffold("AWS", version)
 	if err != nil {
 		return "", err
 	}

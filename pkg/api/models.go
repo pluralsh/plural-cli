@@ -72,6 +72,7 @@ type Dependencies struct {
 	Wait            bool
 	ProviderWirings map[string]interface{}
 	Outputs         map[string]string
+	ProviderVsn     string
 }
 
 type Dependency struct {
@@ -388,6 +389,7 @@ const DependenciesFragment = `
 		wirings { terraform helm }
 		providerWirings
 		outputs
+		providerVsn
 	}
 `
 

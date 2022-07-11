@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -40,7 +42,15 @@ const outputTemplate = `output "{{ .Name }}" {
 func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 	repo := wk.Installation.Repository
 	providerCtx := buildContext(wk, repo.Name, wk.Terraform)
-	backend, err := wk.Provider.CreateBackend(repo.Name, providerCtx)
+
+	var providerVersions semver.ByVersion
+
+	for i := range wk.Terraform {
+		providerVersions = append(providerVersions, wk.Terraform[i].Terraform.Dependencies.ProviderVsn)
+	}
+
+	// use the latest version of the TF template for the provider
+	backend, err := wk.Provider.CreateBackend(repo.Name, providerVersions[providerVersions.Len()-1], providerCtx)
 	if err != nil {
 		return err
 	}

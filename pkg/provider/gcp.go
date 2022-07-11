@@ -188,7 +188,7 @@ func (gcp *GCPProvider) Flush() error {
 	return gcp.writer()
 }
 
-func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{}) (string, error) {
+func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
 		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
 	}
@@ -207,7 +207,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, ctx map[string]interface{})
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("GCP")
+	scaffold, err := GetProviderScaffold("GCP", version)
 	if err != nil {
 		return "", err
 	}
