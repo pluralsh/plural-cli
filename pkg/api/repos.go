@@ -1,16 +1,17 @@
 package api
 
 import (
-	"fmt"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 
 	_ "github.com/AlecAivazis/survey/v2"
-	"github.com/michaeljguarino/graphql"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/gqlclient/pkg/utils"
+	fileutils "github.com/pluralsh/plural/pkg/utils"
 )
 
 type ResourceDefinitionInput struct {
@@ -67,242 +68,189 @@ type ScaffoldInputs struct {
 	Postgres    bool   `survey:"postgres"`
 }
 
-const updateRepository = `
-	mutation UpdateRepository($name: String!, $input: ResourceDefinitionAttributes!) {
-		updateRepository(repositoryName: $name, attributes: {integrationResourceDefinition: $input}) {
-			id
-		}
+func (client *Client) GetRepository(repo string) (*Repository, error) {
+	resp, err := client.pluralClient.GetRepository(client.ctx, &repo)
+	if err != nil {
+		return nil, err
 	}
-`
 
-const upsertRepository = `
-	mutation UpsertRepository($name: String!, $publisher: String!, $attributes: RepositoryAttributes!) {
-		upsertRepository(name: $name, publisher: $publisher, attributes: $attributes) { id }
-	}
-`
+	return &Repository{
+		Id:          resp.Repository.ID,
+		Name:        resp.Repository.Name,
+		Description: utils.ConvertStringPointer(resp.Repository.Description),
+		Icon:        utils.ConvertStringPointer(resp.Repository.Icon),
+		DarkIcon:    utils.ConvertStringPointer(resp.Repository.DarkIcon),
+		Notes:       utils.ConvertStringPointer(resp.Repository.Notes),
+		Publisher: &Publisher{
+			Name: resp.Repository.Publisher.Name,
+		},
+	}, nil
 
-const createIntegration = `
-	mutation CreateIntegration($name: String!, $attrs: IntegrationAttributes!) {
-		createIntegration(repositoryName: $name, attributes: $attrs) { id }
-	}
-`
-
-const updateRepo = `
-	mutation UpdateRepo($name: String!, $attrs: RepositoryAttributes!) {
-		updateRepository(repositoryName: $name, attributes: $attrs) { id }
-	}
-`
-
-var getRepo = fmt.Sprintf(`
-	query Repo($name: String) {
-		repository(name: $name) { ...RepositoryFragment }
-	}
-	%s
-`, RepositoryFragment)
-
-var listRepos = fmt.Sprintf(`
-	query Repos($q: String) {
-		repositories(q: $q, first: 100) {
-			edges { node { ...RepositoryFragment } }
-		}
-	}
-	%s
-`, RepositoryFragment)
-
-var acquireLock = fmt.Sprintf(`
-	mutation Acquire($name: String!) {
-		acquireLock(repository: $name) { ...ApplyLockFragment }
-	}
-	%s
-`, ApplyLockFragment)
-
-var releaseLock = fmt.Sprintf(`
-	mutation Acquire($name: String!, $attrs: LockAttributes!) {
-		releaseLock(repository: $name, attributes: $attrs) { ...ApplyLockFragment	}
-	}
-	%s
-`, ApplyLockFragment)
-
-const scaffoldsQuery = `
-	query Scaffolds($app: String!, $pub: String!, $cat: Category!, $ing: Boolean, $pg: Boolean) {
-		scaffold(application: $app, publisher: $pub, category: $cat, ingress: $ing, postgres: $pg) {
-			path
-			content
-		}
-	}
-`
-
-const unlockRepository = `
-	mutation Unlock($name: String!) {
-		unlockRepository(name: $name)
-	}
-`
-
-func (client *Client) GetRepository(repo string) (repository *Repository, err error) {
-	var resp struct {
-		Repository *Repository
-	}
-	req := client.Build(getRepo)
-	req.Var("name", repo)
-	err = client.Run(req, &resp)
-	repository = resp.Repository
-	return
 }
 
-func (client *Client) CreateResourceDefinition(repoName string, input ResourceDefinitionInput) (string, error) {
-	var resp struct {
-		Id string
+func (client *Client) CreateResourceDefinition(repoName string, input gqlclient.ResourceDefinitionAttributes) (string, error) {
+	resp, err := client.pluralClient.CreateResourceDefinition(client.ctx, repoName, input)
+	if err != nil {
+		return "", err
 	}
-	req := client.Build(updateRepository)
-	req.Var("input", input)
-	req.Var("name", repoName)
-	err := client.Run(req, &resp)
-	return resp.Id, err
+
+	return resp.UpdateRepository.ID, err
 }
 
-func (client *Client) CreateIntegration(name string, input IntegrationInput) (string, error) {
-	var resp struct {
-		Id string
+func (client *Client) CreateIntegration(name string, input gqlclient.IntegrationAttributes) (string, error) {
+	resp, err := client.pluralClient.CreateIntegration(client.ctx, name, input)
+	if err != nil {
+		return "", err
 	}
-	req := client.Build(createIntegration)
-	req.Var("attrs", input)
-	req.Var("name", name)
-	err := client.Run(req, &resp)
-	return resp.Id, err
+	return resp.CreateIntegration.ID, nil
 }
 
-func (client *Client) UpdateRepository(name string, input *RepositoryInput) (string, error) {
-	var resp struct {
-		Id string
+func (client *Client) UpdateRepository(name string, input *gqlclient.RepositoryAttributes) (string, error) {
+	resp, err := client.pluralClient.UpdateRepository(client.ctx, name, *input)
+	if err != nil {
+		return "", err
 	}
-	req := client.Build(updateRepo)
-	req.Var("attrs", input)
-	req.Var("name", name)
-	err := client.Run(req, &resp)
-	return resp.Id, err
+
+	return resp.UpdateRepository.ID, err
 }
 
-func (client *Client) CreateRepository(name, publisher string, input *RepositoryInput) error {
-	var resp struct {
-		UpsertRepository struct {
-			Id string
-		}
-	}
+func (client *Client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {
+	var uploads []gqlclient.Upload
 
-	req := client.Build(upsertRepository)
-	req.Var("name", name)
-	req.Var("publisher", publisher)
-
-	ok, err := getIconReader(input.Icon, "icon", req)
+	iconUpload, err := getIconReader(input.Icon, "icon")
 	if err != nil {
 		return err
 	}
 
-	if ok {
-		input.Icon = "icon"
+	if iconUpload != nil {
+		icon := "icon"
+		input.Icon = &icon
+		uploads = append(uploads, *iconUpload)
 	}
 
-	ok, err = getIconReader(input.DarkIcon, "darkicon", req)
+	darkIconUpload, err := getIconReader(input.DarkIcon, "darkicon")
 	if err != nil {
 		return err
 	}
 
-	if ok {
-		input.DarkIcon = "darkicon"
+	if darkIconUpload != nil {
+		darkIcon := "darkicon"
+		input.DarkIcon = &darkIcon
+		uploads = append(uploads, *darkIconUpload)
 	}
 
-	if input.Notes != "" {
-		file, _ := filepath.Abs(input.Notes)
-		notes, err := utils.ReadFile(file)
+	if input.Notes != nil {
+		file, _ := filepath.Abs(*input.Notes)
+		notes, err := fileutils.ReadFile(file)
 		if err != nil {
 			return err
 		}
 
-		input.Notes = notes
+		input.Notes = &notes
 	}
 
-	req.Var("attributes", input)
-	return client.Run(req, &resp)
+	if _, err := client.pluralClient.CreateRepository(context.Background(), name, publisher, *input, gqlclient.WithFiles(uploads)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (client *Client) AcquireLock(repo string) (*ApplyLock, error) {
-	var resp struct {
-		AcquireLock *ApplyLock
+	resp, err := client.pluralClient.AcquireLock(client.ctx, repo)
+	if err != nil {
+		return nil, err
 	}
 
-	req := client.Build(acquireLock)
-	req.Var("name", repo)
-	err := client.Run(req, &resp)
-	return resp.AcquireLock, err
+	return &ApplyLock{
+		Id:   resp.AcquireLock.ID,
+		Lock: utils.ConvertStringPointer(resp.AcquireLock.Lock),
+	}, err
 }
 
 func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
-	var resp struct {
-		ReleaseLock *ApplyLock
+	resp, err := client.pluralClient.ReleaseLock(client.ctx, repo, gqlclient.LockAttributes{Lock: lock})
+	if err != nil {
+		return nil, err
 	}
 
-	req := client.Build(releaseLock)
-	req.Var("name", repo)
-	req.Var("attrs", LockAttributes{Lock: lock})
-	err := client.Run(req, &resp)
-	return resp.ReleaseLock, err
+	return &ApplyLock{
+		Id:   resp.ReleaseLock.ID,
+		Lock: utils.ConvertStringPointer(resp.ReleaseLock.Lock),
+	}, nil
 }
 
 func (client *Client) UnlockRepository(name string) error {
-	var resp struct {
-		UnlockRepository int
+	_, err := client.pluralClient.UnlockRepository(client.ctx, name)
+	if err != nil {
+		return err
 	}
 
-	req := client.Build(unlockRepository)
-	req.Var("name", name)
-	return client.Run(req, &resp)
+	return nil
 }
 
 func (client *Client) ListRepositories(query string) ([]*Repository, error) {
-	var resp struct {
-		Repositories struct {
-			Edges []*RepositoryEdge
-		}
+	resp, err := client.pluralClient.ListRepositories(client.ctx, &query)
+	if err != nil {
+		return nil, err
 	}
 
-	req := client.Build(listRepos)
-	req.Var("q", query)
-	err := client.Run(req, &resp)
-	res := make([]*Repository, len(resp.Repositories.Edges))
-	for i, edge := range resp.Repositories.Edges {
-		res[i] = edge.Node
+	res := make([]*Repository, 0)
+	for _, edge := range resp.Repositories.Edges {
+		res = append(res, &Repository{
+			Id:          edge.Node.ID,
+			Name:        edge.Node.Name,
+			Description: utils.ConvertStringPointer(edge.Node.Description),
+			Icon:        utils.ConvertStringPointer(edge.Node.Icon),
+			DarkIcon:    utils.ConvertStringPointer(edge.Node.DarkIcon),
+			Notes:       utils.ConvertStringPointer(edge.Node.Notes),
+			Publisher: &Publisher{
+				Name: edge.Node.Publisher.Name,
+			},
+		})
 	}
 
 	return res, err
 }
 
 func (client *Client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
-	var resp struct {
-		Scaffold []*ScaffoldFile
+
+	scaffolds, err := client.pluralClient.Scaffolds(context.Background(), in.Application, in.Publisher, gqlclient.Category(strings.ToUpper(in.Category)), &in.Ingress, &in.Postgres)
+	if err != nil {
+		return nil, err
 	}
 
-	req := client.Build(scaffoldsQuery)
-	req.Var("app", in.Application)
-	req.Var("pub", in.Publisher)
-	req.Var("cat", strings.ToUpper(in.Category))
-	req.Var("ing", in.Ingress)
-	req.Var("pg", in.Postgres)
-	err := client.Run(req, &resp)
-	return resp.Scaffold, err
+	resp := make([]*ScaffoldFile, 0)
+
+	for _, scaffold := range scaffolds.Scaffold {
+		resp = append(resp, &ScaffoldFile{
+			Path:    utils.ConvertStringPointer(scaffold.Path),
+			Content: utils.ConvertStringPointer(scaffold.Content),
+		})
+	}
+
+	return resp, err
 }
 
-func getIconReader(icon, field string, req *graphql.Request) (bool, error) {
-	if icon == "" {
-		return false, nil
+func getIconReader(icon *string, field string) (*gqlclient.Upload, error) {
+	if icon == nil {
+		return nil, nil
 	}
 
-	file, err := filepath.Abs(icon)
+	file, err := filepath.Abs(*icon)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	f, err := os.Open(file)
-	req.File(field, file, f)
-	return true, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &gqlclient.Upload{
+		Field: field,
+		Name:  file,
+		R:     f,
+	}, nil
 }
 
 func ConstructRepositoryInput(marshalled []byte) (input *RepositoryInput, err error) {
@@ -311,34 +259,24 @@ func ConstructRepositoryInput(marshalled []byte) (input *RepositoryInput, err er
 	return
 }
 
-func ConstructResourceDefinition(marshalled []byte) (input ResourceDefinitionInput, err error) {
+func ConstructGqlClientRepositoryInput(marshalled []byte) (*gqlclient.RepositoryAttributes, error) {
+	input := &gqlclient.RepositoryAttributes{}
+	if err := yaml.Unmarshal(marshalled, input); err != nil {
+		return nil, err
+	}
+	return input, nil
+}
+
+func ConstructResourceDefinition(marshalled []byte) (input gqlclient.ResourceDefinitionAttributes, err error) {
 	err = yaml.Unmarshal(marshalled, &input)
 	return
 }
 
-func ConstructIntegration(marshalled []byte) (IntegrationInput, error) {
-	var intg struct {
-		Name        string
-		Description string
-		Icon        string
-		SourceURL   string `yaml:"sourceUrl"`
-		Type        string
-		Tags        []Tag
-		Spec        interface{}
-	}
-	err := yaml.Unmarshal(marshalled, &intg)
+func ConstructIntegration(marshalled []byte) (gqlclient.IntegrationAttributes, error) {
+	intAttr := gqlclient.IntegrationAttributes{}
+	err := yaml.Unmarshal(marshalled, &intAttr)
 	if err != nil {
-		return IntegrationInput{}, err
+		return gqlclient.IntegrationAttributes{}, err
 	}
-
-	str, err := yaml.Marshal(intg.Spec)
-	return IntegrationInput{
-		Name:        intg.Name,
-		Description: intg.Description,
-		Icon:        intg.Icon,
-		Spec:        string(str),
-		Tags:        intg.Tags,
-		Type:        intg.Type,
-		SourceURL:   intg.SourceURL,
-	}, err
+	return intAttr, nil
 }

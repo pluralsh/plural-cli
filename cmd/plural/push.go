@@ -110,7 +110,7 @@ func apply(c *cli.Context) error {
 }
 
 func handleTerraformUpload(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	_, err := client.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
 	return err
 }
@@ -208,7 +208,7 @@ func handleRecipeUpload(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateRecipe(c.Args().Get(1), &recipeInput)
+	_, err = client.CreateRecipe(c.Args().Get(1), recipeInput)
 	return err
 }
 
@@ -246,7 +246,7 @@ func handleIntegration(c *cli.Context) error {
 }
 
 func handleArtifact(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -271,7 +271,7 @@ func handleDashboard(c *cli.Context) error {
 		return err
 	}
 
-	input, err := api.ConstructRepositoryInput(contents)
+	input, err := api.ConstructGqlClientRepositoryInput(contents)
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func handleDashboard(c *cli.Context) error {
 }
 
 func createCrd(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	repo := c.Args().Get(1)
 	chart := c.Args().Get(2)

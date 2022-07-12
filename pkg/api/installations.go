@@ -1,14 +1,8 @@
 package api
 
 import (
-	"fmt"
+	"github.com/pluralsh/gqlclient"
 )
-
-type instResponse struct {
-	Installations struct {
-		Edges []InstallationEdge
-	}
-}
 
 type Binding struct {
 	UserId  string
@@ -21,89 +15,111 @@ type OidcProviderAttributes struct {
 	Bindings     []Binding
 }
 
-var instQuery = fmt.Sprintf(`
-	query Installation($name: String, $id: ID) {
-		installation(name: $name, id: $id) {
-			...InstallationFragment
-		}
+func (client *Client) GetInstallation(name string) (*Installation, error) {
+	resp, err := client.pluralClient.GetInstallation(client.ctx, &name)
+	if err != nil {
+		return nil, err
 	}
-	%s
-`, InstallationFragment)
 
-var instsQuery = fmt.Sprintf(`
-	query {
-		installations(first: %d) {
-			edges { node { ...InstallationFragment } }
-		}
-	}
-	%s
-`, pageSize, InstallationFragment)
+	return convertInstallation(resp.Installation), nil
 
-const oidcProviderMut = `
-	mutation OIDCProvider($id: ID!, $attributes: OidcProviderAttributes!) {
-		upsertOidcProvider(installationId: $id, attributes: $attributes) {
-			id
-		}
-	}
-`
-
-const resetInstallationsMut = `
-	mutation {
-		resetInstallations
-	}
-`
-
-func (client *Client) GetInstallation(name string) (inst *Installation, err error) {
-	var resp struct {
-		Installation *Installation
-	}
-	req := client.Build(instQuery)
-	req.Var("name", name)
-	err = client.Run(req, &resp)
-	inst = resp.Installation
-	return
 }
 
-func (client *Client) GetInstallationById(id string) (inst *Installation, err error) {
-	var resp struct {
-		Installation *Installation
+func (client *Client) GetInstallationById(id string) (*Installation, error) {
+	resp, err := client.pluralClient.GetInstallationByID(client.ctx, &id)
+	if err != nil {
+		return nil, err
 	}
-	req := client.Build(instQuery)
-	req.Var("id", id)
-	err = client.Run(req, &resp)
-	inst = resp.Installation
-	return
+	return convertInstallation(resp.Installation), nil
+}
+
+func convertInstallation(installation *gqlclient.InstallationFragment) *Installation {
+	i := &Installation{
+		Id: installation.ID,
+		Repository: &Repository{
+			Id:   installation.Repository.ID,
+			Name: installation.Repository.Name,
+			Publisher: &Publisher{
+				Name: installation.Repository.Publisher.Name,
+			},
+		},
+	}
+	if installation.Repository.DarkIcon != nil {
+		i.Repository.DarkIcon = *installation.Repository.DarkIcon
+	}
+
+	if installation.Repository.Description != nil {
+		i.Repository.Description = *installation.Repository.Description
+	}
+
+	if installation.Repository.Icon != nil {
+		i.Repository.Icon = *installation.Repository.Icon
+	}
+
+	if installation.Repository.Notes != nil {
+		i.Repository.Notes = *installation.Repository.Notes
+	}
+
+	if installation.LicenseKey != nil {
+		i.LicenseKey = *installation.LicenseKey
+	}
+	if installation.AcmeKeyID != nil {
+		i.AcmeKeyId = *installation.AcmeKeyID
+	}
+	if installation.AcmeSecret != nil {
+		i.AcmeSecret = *installation.AcmeSecret
+	}
+
+	return i
 }
 
 func (client *Client) GetInstallations() ([]*Installation, error) {
-	var resp instResponse
-	err := client.Run(client.Build(instsQuery), &resp)
-	insts := make([]*Installation, len(resp.Installations.Edges))
-	for i, edge := range resp.Installations.Edges {
-		insts[i] = edge.Node
+	result := make([]*Installation, 0)
+
+	resp, err := client.pluralClient.GetInstallations(client.ctx)
+	if err != nil {
+		return result, err
 	}
-	return insts, err
+
+	for _, edge := range resp.Installations.Edges {
+		result = append(result, convertInstallation(edge.Node))
+	}
+
+	return result, err
 }
 
 func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
-	var resp struct {
-		UpsertOidcProvider struct {
-			Id string
-		}
+	var groupId = attributes.Bindings[0].GroupId
+	var userId = attributes.Bindings[0].UserId
+	_, err := client.pluralClient.UpsertOidcProvider(client.ctx, id, gqlclient.OidcAttributes{
+		AuthMethod: gqlclient.OidcAuthMethod(attributes.AuthMethod),
+		Bindings: []*gqlclient.BindingAttributes{
+			{
+				GroupID: &groupId,
+				UserID:  &userId,
+			},
+		},
+		RedirectUris: convertRedirectUris(attributes.RedirectUris),
+	})
+	if err != nil {
+		return err
 	}
-
-	req := client.Build(oidcProviderMut)
-	req.Var("id", id)
-	req.Var("attributes", attributes)
-	return client.Run(req, &resp)
+	return nil
 }
 
 func (client *Client) ResetInstallations() (int, error) {
-	var resp struct {
-		ResetInstallations int
+	resp, err := client.pluralClient.ResetInstallations(client.ctx)
+	if err != nil {
+		return 0, err
 	}
 
-	req := client.Build(resetInstallationsMut)
-	err := client.Run(req, &resp)
-	return resp.ResetInstallations, err
+	return int(*resp.ResetInstallations), err
+}
+
+func convertRedirectUris(uri []string) []*string {
+	res := make([]*string, 0)
+	for _, s := range uri {
+		res = append(res, &s)
+	}
+	return res
 }
