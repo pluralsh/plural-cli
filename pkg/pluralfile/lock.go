@@ -76,7 +76,7 @@ func Lock(path string) (*Lockfile, error) {
 	lockfile := lockPath(path, conf.LockProfile)
 	content, err := ioutil.ReadFile(lockfile)
 	if err != nil {
-		return lock, err
+		return lock, nil
 	}
 
 	if err := yaml.Unmarshal(content, lock); err != nil {
