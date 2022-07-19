@@ -74,6 +74,11 @@ func cryptoCommands() []cli.Command {
 			Action: importKey,
 		},
 		{
+			Name:   "recover",
+			Usage:  "recovers repo encryption keys from a working k8s cluster",
+			Action: handleRecover,
+		},
+		{
 			Name:   "random",
 			Usage:  "generates a random string",
 			Action: randString,
@@ -336,5 +341,30 @@ func handleKeygen(c *cli.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func handleRecover(c *cli.Context) error {
+	kube, err := utils.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	secret, err := kube.Secret("console", "console-conf")
+	if err != nil {
+		return err
+	}
+
+	key, ok := secret.Data["key"]
+	if !ok {
+		return fmt.Errorf("could not find `key` in console-conf secret")
+	}
+
+	if err := crypto.Setup(string(key)); err != nil {
+		return err
+	}
+
+	utils.Success("Key successfully synced locally!\n")
+	fmt.Println("you might need to run `plural crypto init` and `plural crypto setup` to decrypt any repos with your new key")
 	return nil
 }

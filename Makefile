@@ -70,3 +70,6 @@ release-vsn: # tags and pushes a new release
 
 test: .PHONY
 	go test -v -race ./pkg/... ./cmd/...
+
+format: .PHONY # formats all go code to prep for linting
+	gofmt -s -w .
