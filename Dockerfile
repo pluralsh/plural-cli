@@ -1,6 +1,12 @@
+FROM ubuntu:22.10 as user
+
+# Create a nonroot user for final image
+RUN useradd -u 10001 nonroot
+
 FROM gcr.io/pluralsh/golang:1.18.2-alpine3.15 AS builder
 
 WORKDIR /workspace
+
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -16,7 +22,15 @@ COPY pkg/ pkg/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o plural -ldflags '-s -w' ./cmd/plural/
 
 FROM gcr.io/pluralsh/golang:1.18.2-alpine3.15
-RUN apk update && apk add --no-cache git build-base
+
 WORKDIR /
+
+RUN apk update && apk add --no-cache git build-base
+
 COPY --from=builder /workspace/plural /go/bin/
+
+# Copy nonroot user and switch to it
+COPY --from=user /etc/passwd /etc/passwd
+USER nonroot
+
 RUN /go/bin/plural --help
