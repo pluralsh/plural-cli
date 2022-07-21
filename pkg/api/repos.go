@@ -88,32 +88,6 @@ func (client *Client) GetRepository(repo string) (*Repository, error) {
 
 }
 
-func (client *Client) CreateResourceDefinition(repoName string, input gqlclient.ResourceDefinitionAttributes) (string, error) {
-	resp, err := client.pluralClient.CreateResourceDefinition(client.ctx, repoName, input)
-	if err != nil {
-		return "", err
-	}
-
-	return resp.UpdateRepository.ID, err
-}
-
-func (client *Client) CreateIntegration(name string, input gqlclient.IntegrationAttributes) (string, error) {
-	resp, err := client.pluralClient.CreateIntegration(client.ctx, name, input)
-	if err != nil {
-		return "", err
-	}
-	return resp.CreateIntegration.ID, nil
-}
-
-func (client *Client) UpdateRepository(name string, input *gqlclient.RepositoryAttributes) (string, error) {
-	resp, err := client.pluralClient.UpdateRepository(client.ctx, name, *input)
-	if err != nil {
-		return "", err
-	}
-
-	return resp.UpdateRepository.ID, err
-}
-
 func (client *Client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {
 	var uploads []gqlclient.Upload
 

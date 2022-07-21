@@ -42,18 +42,6 @@ func pushCommands() []cli.Command {
 			Action:    handleRecipeUpload,
 		},
 		{
-			Name:      "resourcedefinition",
-			Usage:     "pushes a resource definition for the repo",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleResourceDefinition,
-		},
-		{
-			Name:      "integration",
-			Usage:     "pushes an integration for the repo",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleIntegration,
-		},
-		{
 			Name:      "artifact",
 			Usage:     "creates an artifact for the repo",
 			ArgsUsage: "path/to/def.yaml REPO",
@@ -70,12 +58,6 @@ func pushCommands() []cli.Command {
 					Usage: "machine architecture the binary is compatible with",
 				},
 			},
-		},
-		{
-			Name:      "dashboard",
-			Usage:     "creates dashboards for a repository",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleDashboard,
 		},
 		{
 			Name:      "crd",
@@ -212,39 +194,6 @@ func handleRecipeUpload(c *cli.Context) error {
 	return err
 }
 
-func handleResourceDefinition(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructResourceDefinition(contents)
-	if err != nil {
-		return err
-	}
-	_, err = client.CreateResourceDefinition(c.Args().Get(1), input)
-	return err
-}
-
-func handleIntegration(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructIntegration(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.CreateIntegration(c.Args().Get(1), input)
-	return err
-}
-
 func handleArtifact(c *cli.Context) error {
 	client := api.NewClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
@@ -260,23 +209,6 @@ func handleArtifact(c *cli.Context) error {
 	input.Platform = c.String("platform")
 	input.Arch = c.String("arch")
 	_, err = client.CreateArtifact(c.Args().Get(1), input)
-	return err
-}
-
-func handleDashboard(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructGqlClientRepositoryInput(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.UpdateRepository(c.Args().Get(1), input)
 	return err
 }
 
