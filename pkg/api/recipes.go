@@ -203,7 +203,9 @@ func convertConfigurationItem(conf *gqlclient.RecipeConfigurationFragment) *Conf
 		Documentation: utils.ConvertStringPointer(conf.Documentation),
 		Placeholder:   utils.ConvertStringPointer(conf.Placeholder),
 		FunctionName:  utils.ConvertStringPointer(conf.FunctionName),
-		Optional:      *conf.Optional,
+	}
+	if conf.Optional != nil {
+		confItem.Optional = *conf.Optional
 	}
 	if conf.Type != nil {
 		confItem.Type = string(*conf.Type)
