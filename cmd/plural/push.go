@@ -42,18 +42,6 @@ func pushCommands() []cli.Command {
 			Action:    handleRecipeUpload,
 		},
 		{
-			Name:      "resourcedefinition",
-			Usage:     "pushes a resource definition for the repo",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleResourceDefinition,
-		},
-		{
-			Name:      "integration",
-			Usage:     "pushes an integration for the repo",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleIntegration,
-		},
-		{
 			Name:      "artifact",
 			Usage:     "creates an artifact for the repo",
 			ArgsUsage: "path/to/def.yaml REPO",
@@ -70,12 +58,6 @@ func pushCommands() []cli.Command {
 					Usage: "machine architecture the binary is compatible with",
 				},
 			},
-		},
-		{
-			Name:      "dashboard",
-			Usage:     "creates dashboards for a repository",
-			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleDashboard,
 		},
 		{
 			Name:      "crd",
@@ -110,7 +92,7 @@ func apply(c *cli.Context) error {
 }
 
 func handleTerraformUpload(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	_, err := client.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
 	return err
 }
@@ -208,45 +190,12 @@ func handleRecipeUpload(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateRecipe(c.Args().Get(1), &recipeInput)
-	return err
-}
-
-func handleResourceDefinition(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructResourceDefinition(contents)
-	if err != nil {
-		return err
-	}
-	_, err = client.CreateResourceDefinition(c.Args().Get(1), input)
-	return err
-}
-
-func handleIntegration(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructIntegration(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.CreateIntegration(c.Args().Get(1), input)
+	_, err = client.CreateRecipe(c.Args().Get(1), recipeInput)
 	return err
 }
 
 func handleArtifact(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -263,25 +212,8 @@ func handleArtifact(c *cli.Context) error {
 	return err
 }
 
-func handleDashboard(c *cli.Context) error {
-	client := api.NewClient()
-	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return err
-	}
-
-	input, err := api.ConstructRepositoryInput(contents)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.UpdateRepository(c.Args().Get(1), input)
-	return err
-}
-
 func createCrd(c *cli.Context) error {
-	client := api.NewUploadClient()
+	client := api.NewClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	repo := c.Args().Get(1)
 	chart := c.Args().Get(2)

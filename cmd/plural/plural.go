@@ -325,23 +325,6 @@ var commands = []cli.Command{
 		Category: "Publishing",
 	},
 	{
-		Name:    "upgrade",
-		Aliases: []string{"up"},
-		Usage:   "Creates an upgrade for a repository",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "name",
-				Usage: "the repository name",
-			},
-			cli.StringFlag{
-				Name:  "message",
-				Usage: "a message describing the upgrade",
-			},
-		},
-		Action:   handleUpgrade,
-		Category: "API",
-	},
-	{
 		Name:     "build-context",
 		Usage:    "creates a fresh context.yaml for legacy repos",
 		Action:   buildContext,

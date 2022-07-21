@@ -1,24 +1,10 @@
 package api
 
-import (
-	"fmt"
-)
-
-var provisionDomain = fmt.Sprintf(`
-	mutation Create($name: String!) {
-		provisionDomain(name: $name) {
-			...DnsDomainFragment
-		}
-	}
-	%s
-`, DnsDomainFragment)
-
 func (client *Client) CreateDomain(name string) error {
-	var resp struct {
-		ProvisionDomain *DnsDomain
+	_, err := client.pluralClient.CreateDomain(client.ctx, name)
+	if err != nil {
+		return err
 	}
 
-	req := client.Build(provisionDomain)
-	req.Var("name", name)
-	return client.Run(req, &resp)
+	return nil
 }

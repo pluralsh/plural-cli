@@ -29,9 +29,8 @@ COMMANDS:
    help, h          Shows a list of commands or help for one command
 
    API:
-     repos        view and manage plural repositories
-     api          inspect the forge api
-     upgrade, up  Creates an upgrade for a repository
+     repos  view and manage plural repositories
+     api    inspect the forge api
 
    Debugging:
      watch  watches applications until they become ready

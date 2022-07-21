@@ -3,6 +3,9 @@ package api
 import (
 	"fmt"
 
+	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/gqlclient/pkg/utils"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -75,109 +78,231 @@ type RecipeEdge struct {
 	Node *Recipe
 }
 
-const createRecipe = `
-	mutation CreateRecipe($name: String!, $attributes: RecipeAttributes!) {
-		createRecipe(repositoryName: $name, attributes: $attributes) {
-			id
-		}
-	}
-`
-
-var getRecipe = fmt.Sprintf(`
-query Recipe($repo: String, $name: String) {
-	recipe(repo: $repo, name: $name) {
-		...RecipeFragment
-		recipeSections { ...RecipeSectionFragment }
-		recipeDependencies { ...RecipeFragment }
-	}
-}
-%s
-%s
-`, RecipeFragment, RecipeSectionFragment)
-
-var listRecipes = fmt.Sprintf(`
-query Recipes($repo: String, $provider: Provider) {
-	recipes(repositoryName: $repo, provider: $provider, first: 500) {
-		edges { node { ...RecipeFragment } }
-	}
-}
-%s
-`, RecipeFragment)
-
-const installRecipe = `
-mutation Install($id: ID!, $ctx: Map!) {
-	installRecipe(recipeId: $id, context: $ctx) {
-		id
-	}
-}
-`
-
-func (client *Client) CreateRecipe(repoName string, attrs *RecipeInput) (string, error) {
-	var resp struct {
-		Id string
-	}
-
+func (client *Client) CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error) {
 	if len(attrs.Tests) == 0 {
-		attrs.Tests = make([]RecipeTestInput, 0)
+		attrs.Tests = make([]*gqlclient.RecipeTestAttributes, 0)
+	}
+	resp, err := client.pluralClient.CreateRecipe(client.ctx, repoName, attrs)
+	if err != nil {
+		return "", err
 	}
 
-	req := client.Build(createRecipe)
-	req.Var("attributes", attrs)
-	req.Var("name", repoName)
-	err := client.Run(req, &resp)
-	return resp.Id, err
+	return resp.CreateRecipe.ID, err
 }
 
-func (client *Client) GetRecipe(repo, name string) (recipe *Recipe, err error) {
-	var resp struct {
-		Recipe *Recipe
+func (client *Client) GetRecipe(repo, name string) (*Recipe, error) {
+	resp, err := client.pluralClient.GetRecipe(client.ctx, &repo, &name)
+	if err != nil {
+		return nil, err
 	}
-	req := client.Build(getRecipe)
-	req.Var("repo", repo)
-	req.Var("name", name)
-	err = client.Run(req, &resp)
-	recipe = resp.Recipe
-	return
+
+	r := &Recipe{
+		Id:                 resp.Recipe.ID,
+		Name:               resp.Recipe.Name,
+		Provider:           string(*resp.Recipe.Provider),
+		Description:        utils.ConvertStringPointer(resp.Recipe.Description),
+		Tests:              []*RecipeTest{},
+		RecipeSections:     []*RecipeSection{},
+		RecipeDependencies: []*Recipe{},
+	}
+	if resp.Recipe.OidcSettings != nil {
+		r.OidcSettings = &OIDCSettings{
+			DomainKey:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.DomainKey),
+			UriFormat:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.URIFormat),
+			UriFormats: utils.ConvertStringArrayPointer(resp.Recipe.OidcSettings.URIFormats),
+			AuthMethod: string(resp.Recipe.OidcSettings.AuthMethod),
+		}
+		if resp.Recipe.OidcSettings.Subdomain != nil {
+			r.OidcSettings.Subdomain = *resp.Recipe.OidcSettings.Subdomain
+		}
+	}
+	if resp.Recipe.Repository != nil {
+		r.Repository = &Repository{
+			Id:   resp.Recipe.Repository.ID,
+			Name: resp.Recipe.Repository.Name,
+		}
+	}
+	if resp.Recipe.Restricted != nil {
+		r.Restricted = *resp.Recipe.Restricted
+	}
+
+	for _, dep := range resp.Recipe.RecipeDependencies {
+		r.RecipeDependencies = append(r.RecipeDependencies, convertRecipe(dep))
+	}
+
+	for _, section := range resp.Recipe.RecipeSections {
+		rs := &RecipeSection{
+			Id: fmt.Sprint(section.Index),
+			Repository: &Repository{
+				Id:          section.Repository.ID,
+				Name:        section.Repository.Name,
+				Description: utils.ConvertStringPointer(section.Repository.Description),
+				Icon:        utils.ConvertStringPointer(section.Repository.Icon),
+				DarkIcon:    utils.ConvertStringPointer(section.Repository.DarkIcon),
+				Notes:       utils.ConvertStringPointer(section.Repository.Notes),
+			},
+			RecipeItems:   []*RecipeItem{},
+			Configuration: []*ConfigurationItem{},
+		}
+		for _, conf := range section.Configuration {
+			rs.Configuration = append(rs.Configuration, convertConfigurationItem(conf))
+		}
+		for _, recipeItem := range section.RecipeItems {
+			rs.RecipeItems = append(rs.RecipeItems, convertRecipeItem(recipeItem))
+		}
+
+		r.RecipeSections = append(r.RecipeSections, rs)
+
+	}
+
+	for _, test := range resp.Recipe.Tests {
+		t := &RecipeTest{
+			Name:    test.Name,
+			Type:    string(test.Type),
+			Message: utils.ConvertStringPointer(test.Message),
+			Args:    []*TestArgument{},
+		}
+		for _, arg := range test.Args {
+			t.Args = append(t.Args, &TestArgument{
+				Name: arg.Name,
+				Repo: arg.Repo,
+				Key:  arg.Key,
+			})
+		}
+
+		r.Tests = append(r.Tests, t)
+	}
+
+	return r, nil
 }
 
-func (client *Client) ListRecipes(repo, provider string) (recipes []*Recipe, err error) {
-	var resp struct {
-		Recipes struct {
-			Edges []*RecipeEdge
+func convertRecipeItem(item *gqlclient.RecipeItemFragment) *RecipeItem {
+	ri := &RecipeItem{
+		Id:        utils.ConvertStringPointer(item.ID),
+		Terraform: convertTerraform(item.Terraform),
+	}
+	for _, conf := range item.Configuration {
+		ri.Configuration = append(ri.Configuration, convertConfigurationItem(conf))
+	}
+	if item.Chart != nil {
+		ri.Chart = &Chart{
+			Id:            utils.ConvertStringPointer(item.Chart.ID),
+			Name:          item.Chart.Name,
+			Description:   utils.ConvertStringPointer(item.Chart.Description),
+			LatestVersion: utils.ConvertStringPointer(item.Chart.LatestVersion),
 		}
 	}
 
-	req := client.Build(listRecipes)
-	req.Var("repo", repo)
-	if provider != "" {
-		req.Var("provider", NormalizeProvider(provider))
+	return ri
+}
+
+func convertConfigurationItem(conf *gqlclient.RecipeConfigurationFragment) *ConfigurationItem {
+	confItem := &ConfigurationItem{
+		Name:          utils.ConvertStringPointer(conf.Name),
+		Default:       utils.ConvertStringPointer(conf.Default),
+		Documentation: utils.ConvertStringPointer(conf.Documentation),
+		Placeholder:   utils.ConvertStringPointer(conf.Placeholder),
+		FunctionName:  utils.ConvertStringPointer(conf.FunctionName),
 	}
-	err = client.Run(req, &resp)
-	if err != nil {
-		return
+	if conf.Optional != nil {
+		confItem.Optional = *conf.Optional
+	}
+	if conf.Type != nil {
+		confItem.Type = string(*conf.Type)
+	}
+	if conf.Condition != nil {
+		confItem.Condition = &Condition{
+			Field:     conf.Condition.Field,
+			Value:     utils.ConvertStringPointer(conf.Condition.Value),
+			Operation: string(conf.Condition.Operation),
+		}
+	}
+	if conf.Validation != nil {
+		confItem.Validation = &Validation{
+			Type:    string(conf.Validation.Type),
+			Regex:   utils.ConvertStringPointer(conf.Validation.Regex),
+			Message: conf.Validation.Message,
+		}
 	}
 
-	recipes = make([]*Recipe, 0)
-	for _, edge := range resp.Recipes.Edges {
-		recipes = append(recipes, edge.Node)
+	return confItem
+}
+
+func convertRecipe(rcp *gqlclient.RecipeFragment) *Recipe {
+	r := &Recipe{
+		Id:                 rcp.ID,
+		Name:               rcp.Name,
+		Description:        utils.ConvertStringPointer(rcp.Description),
+		Tests:              []*RecipeTest{},
+		RecipeSections:     []*RecipeSection{},
+		RecipeDependencies: []*Recipe{},
 	}
-	return
+	if rcp.Repository != nil {
+		r.Repository = &Repository{
+			Id:   rcp.Repository.ID,
+			Name: rcp.Repository.Name,
+		}
+	}
+	if rcp.OidcSettings != nil {
+		r.OidcSettings = &OIDCSettings{
+			DomainKey:  utils.ConvertStringPointer(rcp.OidcSettings.DomainKey),
+			UriFormat:  utils.ConvertStringPointer(rcp.OidcSettings.URIFormat),
+			UriFormats: utils.ConvertStringArrayPointer(rcp.OidcSettings.URIFormats),
+			AuthMethod: string(rcp.OidcSettings.AuthMethod),
+		}
+	}
+	if rcp.Restricted != nil {
+		r.Restricted = *rcp.Restricted
+	}
+	if rcp.Provider != nil {
+		provider := *rcp.Provider
+		r.Provider = string(provider)
+	}
+
+	for _, test := range rcp.Tests {
+		t := &RecipeTest{
+			Name:    test.Name,
+			Type:    string(test.Type),
+			Message: utils.ConvertStringPointer(test.Message),
+			Args:    []*TestArgument{},
+		}
+		for _, arg := range test.Args {
+			t.Args = append(t.Args, &TestArgument{
+				Name: arg.Name,
+				Repo: arg.Repo,
+				Key:  arg.Key,
+			})
+		}
+		r.Tests = append(r.Tests, t)
+	}
+
+	return r
+}
+
+func (client *Client) ListRecipes(repo, provider string) ([]*Recipe, error) {
+	recipes := make([]*Recipe, 0)
+	p := gqlclient.Provider(NormalizeProvider(provider))
+	resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, edge := range resp.Recipes.Edges {
+		recipes = append(recipes, convertRecipe(edge.Node))
+	}
+
+	return recipes, nil
 }
 
 func (client *Client) InstallRecipe(id string) error {
-	var resp struct {
-		InstallRecipe []struct {
-			Id string
-		}
+	_, err := client.pluralClient.InstallRecipe(client.ctx, id)
+	if err != nil {
+		return err
 	}
-
-	req := client.Build(installRecipe)
-	req.Var("id", id)
-	req.Var("ctx", "{}")
-	return client.Run(req, &resp)
+	return nil
 }
 
-func ConstructRecipe(marshalled []byte) (recipe RecipeInput, err error) {
+func ConstructRecipe(marshalled []byte) (recipe gqlclient.RecipeAttributes, err error) {
 	err = yaml.Unmarshal(marshalled, &recipe)
 	return
 }

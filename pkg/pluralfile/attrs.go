@@ -41,8 +41,12 @@ func (a *RepoAttrs) Push(repo string, sha string) (string, error) {
 	}
 
 	utils.Highlight("Setting attributes for %s\n", repo)
-	client := api.NewUploadClient()
-	return newsha, client.CreateRepository(repo, a.Publisher, input)
+	client := api.NewClient()
+	repositoryAttributes, err := api.ConstructGqlClientRepositoryInput(contents)
+	if err != nil {
+		return "", err
+	}
+	return newsha, client.CreateRepository(repo, a.Publisher, repositoryAttributes)
 }
 
 func (a *RepoAttrs) mkSha(fullPath string, input *api.RepositoryInput) (sha string, err error) {

@@ -1,29 +1,15 @@
 package api
 
 import (
-	"fmt"
+	"context"
 	"os"
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/gqlclient/pkg/utils"
+	file "github.com/pluralsh/plural/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
-
-var createArtifact = fmt.Sprintf(`
-	mutation CreateArtifact($repoName: String!, $name: String!, $readme: String!, $type: String!, $platform: String!, $blob: UploadOrUrl!, $arch: String) {
-		createArtifact(repositoryName: $repoName, attributes: {
-			name: $name,
-			blob: $blob,
-			readme: $readme,
-			type: $type,
-			platform: $platform,
-			arch: $arch
-		}) {
-			...ArtifactFragment
-		}
-	}
-	%s
-`, ArtifactFragment)
 
 type ArtifactAttributes struct {
 	Name     string
@@ -34,28 +20,32 @@ type ArtifactAttributes struct {
 	Arch     string
 }
 
-var artifactsQuery = fmt.Sprintf(`
-	query ArtifactsQuery($id: ID!) {
-		repository(id: $id) {
-			artifacts { ...ArtifactFragment }
-		}
-	}
-	%s
-`, ArtifactFragment)
-
 func (client *Client) ListArtifacts(repo string) ([]Artifact, error) {
-	var resp struct {
-		Repository struct {
-			Artifacts []Artifact
-		}
-	}
-	req := client.Build(artifactsQuery)
-	req.Var("id", repo)
-	err := client.Run(req, &resp)
+
+	result := make([]Artifact, 0)
+
+	resp, err := client.pluralClient.ListArtifacts(client.ctx, repo)
 	if err != nil {
-		return resp.Repository.Artifacts, err
+		return result, err
 	}
-	return resp.Repository.Artifacts, nil
+	for _, artifact := range resp.Repository.Artifacts {
+		ar := Artifact{
+			Id:     utils.ConvertStringPointer(artifact.ID),
+			Name:   utils.ConvertStringPointer(artifact.Name),
+			Readme: utils.ConvertStringPointer(artifact.Readme),
+			Blob:   utils.ConvertStringPointer(artifact.Blob),
+			Sha:    utils.ConvertStringPointer(artifact.Sha),
+			Arch:   utils.ConvertStringPointer(artifact.Arch),
+		}
+		if artifact.Platform != nil {
+			ar.Platform = string(*artifact.Platform)
+		}
+		if artifact.Filesize != nil {
+			ar.Filesize = int(*artifact.Filesize)
+		}
+		result = append(result, ar)
+	}
+	return result, nil
 }
 
 func (client *Client) CreateArtifact(repo string, attrs ArtifactAttributes) (Artifact, error) {
@@ -68,21 +58,29 @@ func (client *Client) CreateArtifact(repo string, attrs ArtifactAttributes) (Art
 	defer rf.Close()
 
 	readmePath, _ := filepath.Abs(attrs.Readme)
-	readme, err := utils.ReadFile(readmePath)
+	readme, err := file.ReadFile(readmePath)
 	if err != nil {
 		return artifact, err
 	}
 
-	req := client.Build(createArtifact)
-	req.Var("repoName", repo)
-	req.Var("name", attrs.Name)
-	req.Var("readme", readme)
-	req.Var("type", attrs.Type)
-	req.Var("platform", attrs.Platform)
-	req.Var("arch", attrs.Arch)
-	req.Var("blob", "blob")
-	req.File("blob", attrs.Blob, rf)
-	err = client.Run(req, &artifact)
+	createArtifact, err := client.pluralClient.CreateArtifact(context.Background(), repo, attrs.Name, readme, attrs.Type, attrs.Platform, "blob", &attrs.Arch, gqlclient.WithFiles([]gqlclient.Upload{{
+		Field: "blob",
+		Name:  attrs.Blob,
+		R:     rf,
+	}}))
+	if err != nil {
+		return artifact, err
+	}
+	artifact.Id = utils.ConvertStringPointer(createArtifact.CreateArtifact.ID)
+	artifact.Name = utils.ConvertStringPointer(createArtifact.CreateArtifact.Name)
+	artifact.Readme = utils.ConvertStringPointer(createArtifact.CreateArtifact.Readme)
+	artifact.Arch = utils.ConvertStringPointer(createArtifact.CreateArtifact.Arch)
+	artifact.Sha = utils.ConvertStringPointer(createArtifact.CreateArtifact.Sha)
+	if createArtifact.CreateArtifact.Platform != nil {
+		platform := createArtifact.CreateArtifact.Platform
+		artifact.Platform = string(*platform)
+	}
+
 	return artifact, err
 }
 

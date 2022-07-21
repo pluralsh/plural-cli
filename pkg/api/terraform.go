@@ -1,82 +1,44 @@
 package api
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/gqlclient"
+
+	"github.com/pluralsh/gqlclient/pkg/utils"
+	tarutils "github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
-type terraformResponse struct {
-	Terraform struct {
-		Edges []*TerraformEdge
-	}
-}
-
-type terraformInstallationResponse struct {
-	TerraformInstallations struct {
-		Edges []*TerraformInstallationEdge
-	}
-}
-
-var terraformQuery = fmt.Sprintf(`
-	query terraformQuery($id: ID!) {
-		terraform(repositoryId: $id, first: %d) {
-			edges {
-				node {
-					...TerraformFragment
-				}
-			}
-		}
-	}
-	%s
-`, pageSize, TerraformFragment)
-
-var terraformInstallationQuery = fmt.Sprintf(`
-	query TerraformInstallations($id: ID!) {
-		terraformInstallations(repositoryId: $id, first: %d) {
-			edges {
-				node {
-					...TerraformInstallationFragment
-				}
-			}
-		}
-	}
-	%s
-`, pageSize, TerraformInstallationFragment)
-
-var terraformUpload = fmt.Sprintf(`
-	mutation TerraformUpload($repoName: String!, $name: String!, $package: UploadOrUrl!) {
-		uploadTerraform(repositoryName: $repoName, name: $name, attributes: {name: $name, package: $package}) {
-			...TerraformFragment
-		}
-	}
-	%s
-`, TerraformFragment)
-
 func (client *Client) GetTerraforma(repoId string) ([]*Terraform, error) {
-	var resp terraformResponse
-	req := client.Build(terraformQuery)
-	req.Var("id", repoId)
-	err := client.Run(req, &resp)
-	terraform := make([]*Terraform, len(resp.Terraform.Edges))
-	for i, edge := range resp.Terraform.Edges {
-		terraform[i] = edge.Node
+
+	terraformResponse, err := client.pluralClient.GetTerraform(client.ctx, repoId)
+	if err != nil {
+		return nil, err
+	}
+
+	terraform := make([]*Terraform, 0)
+	for _, edge := range terraformResponse.Terraform.Edges {
+		terraform = append(terraform, convertTerraform(edge.Node))
 	}
 	return terraform, err
 }
 
 func (client *Client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
-	var resp terraformInstallationResponse
-	req := client.Build(terraformInstallationQuery)
-	req.Var("id", repoId)
-	err := client.Run(req, &resp)
-	inst := make([]*TerraformInstallation, len(resp.TerraformInstallations.Edges))
-	for i, edge := range resp.TerraformInstallations.Edges {
-		inst[i] = edge.Node
+	resp, err := client.pluralClient.GetTerraformInstallations(client.ctx, repoId)
+	if err != nil {
+		return nil, err
+	}
+
+	inst := make([]*TerraformInstallation, 0)
+	for _, edge := range resp.TerraformInstallations.Edges {
+		inst = append(inst, &TerraformInstallation{
+			Id:        utils.ConvertStringPointer(edge.Node.ID),
+			Terraform: convertTerraform(edge.Node.Terraform),
+			Version:   convertVersion(edge.Node.Version),
+		})
 	}
 	return inst, err
 }
@@ -84,7 +46,7 @@ func (client *Client) GetTerraformInstallations(repoId string) ([]*TerraformInst
 func (client *Client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	name := path.Base(dir)
 	fullPath, err := filepath.Abs(dir)
-	var tf Terraform
+	tf := Terraform{}
 	if err != nil {
 		return tf, err
 	}
@@ -96,7 +58,7 @@ func (client *Client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	}
 	defer f.Close()
 
-	if err := utils.Tar(fullPath, f, "\\.terraform"); err != nil {
+	if err := tarutils.Tar(fullPath, f, "\\.terraform"); err != nil {
 		return tf, err
 	}
 	rf, err := os.Open(tarFile)
@@ -106,11 +68,49 @@ func (client *Client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	defer rf.Close()
 	defer os.Remove(tarFile)
 
-	req := client.Build(terraformUpload)
-	req.Var("repoName", repoName)
-	req.Var("name", name)
-	req.Var("package", "package")
-	req.File("package", tarFile, rf)
-	err = client.Run(req, &tf)
+	resp, err := client.pluralClient.UploadTerraform(client.ctx, repoName, name, "package", gqlclient.WithFiles([]gqlclient.Upload{
+		{
+			Field: "package",
+			Name:  tarFile,
+			R:     rf,
+		},
+	}))
+	if err != nil {
+		return tf, err
+	}
+
+	if resp.UploadTerraform.Name != nil {
+		tf.Name = *resp.UploadTerraform.Name
+	}
+	if resp.UploadTerraform.ID != nil {
+		tf.Id = *resp.UploadTerraform.ID
+	}
+	if resp.UploadTerraform.Description != nil {
+		tf.Description = *resp.UploadTerraform.Description
+	}
+	if resp.UploadTerraform.ValuesTemplate != nil {
+		tf.ValuesTemplate = *resp.UploadTerraform.ValuesTemplate
+	}
+	if resp.UploadTerraform.Package != nil {
+		tf.Package = *resp.UploadTerraform.Package
+	}
+	if resp.UploadTerraform.Dependencies != nil {
+		tf.Dependencies = convertDependencies(resp.UploadTerraform.Dependencies)
+	}
+
 	return tf, err
+}
+
+func convertTerraform(ter *gqlclient.TerraformFragment) *Terraform {
+	if ter == nil {
+		return nil
+	}
+	return &Terraform{
+		Id:             utils.ConvertStringPointer(ter.ID),
+		Name:           utils.ConvertStringPointer(ter.Name),
+		Description:    utils.ConvertStringPointer(ter.Description),
+		ValuesTemplate: utils.ConvertStringPointer(ter.ValuesTemplate),
+		Dependencies:   convertDependencies(ter.Dependencies),
+		Package:        utils.ConvertStringPointer(ter.Package),
+	}
 }

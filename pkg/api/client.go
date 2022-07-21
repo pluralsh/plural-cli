@@ -2,20 +2,26 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 
-	"github.com/michaeljguarino/graphql"
+	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils"
 )
 
-const (
-	pageSize = 100
-)
+type authedTransport struct {
+	key     string
+	wrapped http.RoundTripper
+}
+
+func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "Bearer "+t.key)
+	return t.wrapped.RoundTrip(req)
+}
 
 type Client struct {
-	gqlClient *graphql.Client
-	config    config.Config
+	ctx          context.Context
+	pluralClient *gqlclient.Client
+	config       config.Config
 }
 
 func NewClient() *Client {
@@ -24,26 +30,16 @@ func NewClient() *Client {
 }
 
 func FromConfig(conf *config.Config) *Client {
-	return &Client{graphql.NewClient(conf.Url()), *conf}
-}
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			key:     conf.Token,
+			wrapped: http.DefaultTransport,
+		},
+	}
 
-func NewUploadClient() *Client {
-	conf := config.Read()
-	client := graphql.NewClient(conf.Url(), graphql.UseMultipartForm())
-	return &Client{client, conf}
-}
-
-func (client *Client) Build(doc string) *graphql.Request {
-	req := graphql.NewRequest(doc)
-	req.Header.Set("Authorization", "Bearer "+client.config.Token)
-	return req
-}
-
-func (client *Client) Run(req *graphql.Request, resp interface{}) error {
-	err := client.gqlClient.Run(context.Background(), req, &resp)
-	return utils.HighlightError(err)
-}
-
-func (client *Client) EnableLogging() {
-	client.gqlClient.Log = func(l string) { fmt.Println(l) }
+	return &Client{
+		pluralClient: gqlclient.NewClient(&httpClient, conf.Url()),
+		config:       *conf,
+		ctx:          context.Background(),
+	}
 }

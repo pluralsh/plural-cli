@@ -1,39 +1,25 @@
 package api
 
-var TfProvidersQuery = `
-	query {
-		terraformProviders
-	}
-`
-
-var TfProviderQuery = `
-	query Provider($name: Provider!, $vsn: String) {
-		terraformProvider(name: $name, vsn: $vsn) {
-			name
-			content
-		}
-	}
-`
+import "github.com/pluralsh/gqlclient"
 
 func (client *Client) GetTfProviders() ([]string, error) {
-	var resp struct {
-		TerraformProviders []string
+	resp, err := client.pluralClient.GetTfProviders(client.ctx)
+	if err != nil {
+		return nil, err
 	}
-	req := client.Build(TfProvidersQuery)
-	err := client.Run(req, &resp)
-	return resp.TerraformProviders, err
+	result := make([]string, 0)
+	for _, provider := range resp.TerraformProviders {
+		result = append(result, string(*provider))
+	}
+
+	return result, nil
 }
 
 func (client *Client) GetTfProviderScaffold(name, version string) (string, error) {
-	var resp struct {
-		TerraformProvider struct {
-			Name    string
-			Content string
-		}
+	resp, err := client.pluralClient.GetTfProviderScaffold(client.ctx, gqlclient.Provider(name), &version)
+	if err != nil {
+		return "", err
 	}
-	req := client.Build(TfProviderQuery)
-	req.Var("name", name)
-	req.Var("vsn", version)
-	err := client.Run(req, &resp)
-	return resp.TerraformProvider.Content, err
+
+	return *resp.TerraformProvider.Content, err
 }

@@ -1,28 +1,13 @@
 package api
 
 import (
-	"fmt"
+	"context"
 	"os"
 	"path"
+
+	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/gqlclient/pkg/utils"
 )
-
-type chartsResponse struct {
-	Charts struct {
-		Edges []*ChartEdge
-	}
-}
-
-type versionsResponse struct {
-	Versions struct {
-		Edges []*VersionEdge
-	}
-}
-
-type chartInstallationsResponse struct {
-	ChartInstallations struct {
-		Edges []*ChartInstallationEdge
-	}
-}
 
 type packageCacheEntry struct {
 	Charts    []*ChartInstallation
@@ -31,95 +16,49 @@ type packageCacheEntry struct {
 
 var packageCache = make(map[string]*packageCacheEntry)
 
-var chartsQuery = fmt.Sprintf(`
-	query ChartsQuery($id: ID!) {
-		charts(repositoryId: $id, first: %d) {
-			edges {
-				node {
-					...ChartFragment
-				}
-			}
-		}
-	}
-	%s
-`, pageSize, ChartFragment)
-
-var versionsQuery = fmt.Sprintf(`
-	query VersionsQuery($id: ID!) {
-		versions(chartId: $id, first: %d) {
-			edges {
-				node {
-					...VersionFragment
-				}
-			}
-		}
-	}
-	%s
-`, pageSize, VersionFragment)
-
-const createCrdQuery = `
-	mutation CrdCreate($chartName: ChartName!, $name: String!, $blob: UploadOrUrl!) {
-		createCrd(chartName: $chartName, attributes: {name: $name, blob: $blob}) {
-			id
-		}
-	}
-`
-
-var chartInstallationsQuery = fmt.Sprintf(`
-	query CIQuery($id: ID!) {
-		chartInstallations(repositoryId: $id, first: %d) {
-			edges { node { ...ChartInstallationFragment } }
-		}
-	}
-	%s
-`, pageSize, ChartInstallationFragment)
-
-var packageInstallationsQuery = fmt.Sprintf(`
-	query Packages($id: ID!) {
-		chartInstallations(repositoryId: $id, first: %d) {
-			edges { node { ...ChartInstallationFragment } }
-		}
-		terraformInstallations(repositoryId: $id, first: %d) {
-			edges { node { ...TerraformInstallationFragment } }
-		}
-	}
-	%s
-	%s
-`, pageSize, pageSize, ChartInstallationFragment, TerraformInstallationFragment)
-
 func (client *Client) GetCharts(repoId string) ([]*Chart, error) {
-	var resp chartsResponse
-	req := client.Build(chartsQuery)
-	req.Var("id", repoId)
-	err := client.Run(req, &resp)
-	charts := make([]*Chart, len(resp.Charts.Edges))
-	for i, edge := range resp.Charts.Edges {
-		charts[i] = edge.Node
+	charts := make([]*Chart, 0)
+	resp, err := client.pluralClient.GetCharts(client.ctx, repoId)
+	if err != nil {
+		return nil, err
 	}
+	for _, edge := range resp.Charts.Edges {
+		charts = append(charts, &Chart{
+			Id:            utils.ConvertStringPointer(edge.Node.ID),
+			Name:          edge.Node.Name,
+			Description:   utils.ConvertStringPointer(edge.Node.Description),
+			LatestVersion: utils.ConvertStringPointer(edge.Node.LatestVersion),
+		})
+	}
+
 	return charts, err
 }
 
 func (client *Client) GetVersions(chartId string) ([]*Version, error) {
-	var resp versionsResponse
-	req := client.Build(versionsQuery)
-	req.Var("id", chartId)
-	err := client.Run(req, &resp)
-	versions := make([]*Version, len(resp.Versions.Edges))
-	for i, edge := range resp.Versions.Edges {
-		versions[i] = edge.Node
+	versions := make([]*Version, 0)
+	resp, err := client.pluralClient.GetVersions(client.ctx, chartId)
+	if err != nil {
+		return nil, err
+	}
+	for _, version := range resp.Versions.Edges {
+		versions = append(versions, convertVersion(version.Node))
 	}
 	return versions, err
 }
 
 func (client *Client) GetChartInstallations(repoId string) ([]*ChartInstallation, error) {
-	var resp chartInstallationsResponse
-	req := client.Build(chartInstallationsQuery)
-	req.Var("id", repoId)
-	err := client.Run(req, &resp)
-	insts := make([]*ChartInstallation, len(resp.ChartInstallations.Edges))
-	for i, edge := range resp.ChartInstallations.Edges {
-		insts[i] = edge.Node
+	insts := make([]*ChartInstallation, 0)
+	resp, err := client.pluralClient.GetChartInstallations(client.ctx, repoId)
+	if err != nil {
+		return nil, err
 	}
+
+	for _, edge := range resp.ChartInstallations.Edges {
+		if edge.Node != nil {
+			insts = append(insts, convertChartInstallation(edge.Node))
+		}
+	}
+
 	return insts, err
 }
 
@@ -128,30 +67,31 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartIns
 		return entry.Charts, entry.Terraform, nil
 	}
 
-	var resp struct {
-		ChartInstallations struct {
-			Edges []*ChartInstallationEdge
-		}
-		TerraformInstallations struct {
-			Edges []*TerraformInstallationEdge
-		}
-	}
-
-	req := client.Build(packageInstallationsQuery)
-	req.Var("id", repoId)
-	err = client.Run(req, &resp)
+	resp, err := client.pluralClient.GetPackageInstallations(client.ctx, repoId)
 	if err != nil {
 		return
 	}
 
-	charts = make([]*ChartInstallation, len(resp.ChartInstallations.Edges))
-	for i, edge := range resp.ChartInstallations.Edges {
-		charts[i] = edge.Node
+	charts = make([]*ChartInstallation, 0)
+	for _, edge := range resp.ChartInstallations.Edges {
+		if edge.Node != nil {
+			charts = append(charts, convertChartInstallation(edge.Node))
+		}
 	}
 
-	tfs = make([]*TerraformInstallation, len(resp.TerraformInstallations.Edges))
-	for i, edge := range resp.TerraformInstallations.Edges {
-		tfs[i] = edge.Node
+	tfs = make([]*TerraformInstallation, 0)
+	for _, edge := range resp.TerraformInstallations.Edges {
+		node := edge.Node
+		if node != nil {
+			tfInstall := &TerraformInstallation{
+				Id:        utils.ConvertStringPointer(node.ID),
+				Terraform: convertTerraform(node.Terraform),
+
+				Version: convertVersion(node.Version),
+			}
+
+			tfs = append(tfs, tfInstall)
+		}
 	}
 
 	if err == nil {
@@ -162,22 +102,123 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartIns
 }
 
 func (client *Client) CreateCrd(repo string, chart string, file string) error {
-	var resp struct {
-		Id string
-	}
 	name := path.Base(file)
 
 	rf, err := os.Open(file)
 	if err != nil {
 		return err
 	}
-	defer rf.Close()
+	defer func(rf *os.File) {
+		_ = rf.Close()
+	}(rf)
 
-	req := client.Build(createCrdQuery)
-	req.Var("chartName", ChartName{Chart: chart, Repo: repo})
-	req.Var("name", name)
-	req.Var("blob", "blob")
-	req.File("blob", file, rf)
+	upload := gqlclient.Upload{
+		R:     rf,
+		Name:  file,
+		Field: "blob",
+	}
 
-	return client.Run(req, &resp)
+	_, err = client.pluralClient.CreateCrd(context.Background(), gqlclient.ChartName{
+		Chart: &chart,
+		Repo:  &repo,
+	}, name, "blob", gqlclient.WithFiles([]gqlclient.Upload{upload}))
+
+	return err
+}
+
+func convertVersion(version *gqlclient.VersionFragment) *Version {
+	if version == nil {
+		return nil
+	}
+	v := &Version{
+		Id:      version.ID,
+		Version: version.Version,
+	}
+	if version.Readme != nil {
+		v.Readme = *version.Readme
+	}
+	if version.Package != nil {
+		v.Package = *version.Package
+	}
+	if version.ValuesTemplate != nil {
+		v.ValuesTemplate = *version.ValuesTemplate
+	}
+
+	v.Crds = make([]Crd, 0)
+	for _, crd := range version.Crds {
+		v.Crds = append(v.Crds, convertCrd(crd))
+	}
+	v.Dependencies = convertDependencies(version.Dependencies)
+
+	return v
+}
+
+func convertCrd(crd *gqlclient.CrdFragment) Crd {
+	c := Crd{
+		Id:   crd.ID,
+		Name: crd.Name,
+		Blob: utils.ConvertStringPointer(crd.Blob),
+	}
+
+	return c
+}
+
+func convertDependencies(depFragment *gqlclient.DependenciesFragment) *Dependencies {
+	if depFragment == nil {
+		return nil
+	}
+	dep := &Dependencies{
+		Outputs:         depFragment.Outputs,
+		Secrets:         utils.ConvertStringArrayPointer(depFragment.Secrets),
+		Providers:       convertProviders(depFragment.Providers),
+		ProviderWirings: depFragment.ProviderWirings,
+	}
+	if depFragment.Application != nil {
+		dep.Application = *depFragment.Application
+	}
+	if depFragment.Wait != nil {
+		dep.Wait = *depFragment.Wait
+	}
+	dep.Dependencies = make([]*Dependency, 0)
+	for _, dependency := range depFragment.Dependencies {
+		dep.Dependencies = append(dep.Dependencies, &Dependency{
+			Type: string(*dependency.Type),
+			Repo: utils.ConvertStringPointer(dependency.Repo),
+			Name: utils.ConvertStringPointer(dependency.Name),
+		})
+	}
+	if depFragment.Wirings != nil {
+		dep.Wirings = &Wirings{
+			Terraform: utils.ConvertMapInterfaceToString(depFragment.Wirings.Terraform),
+			Helm:      utils.ConvertMapInterfaceToString(depFragment.Wirings.Helm),
+		}
+	}
+
+	return dep
+}
+
+func convertProviders(providers []*gqlclient.Provider) []string {
+	p := make([]string, 0)
+	for _, provider := range providers {
+		p = append(p, string(*provider))
+	}
+
+	return p
+}
+
+func convertChartInstallation(fragment *gqlclient.ChartInstallationFragment) *ChartInstallation {
+	if fragment == nil {
+		return nil
+	}
+	return &ChartInstallation{
+		Id: *fragment.ID,
+		Chart: &Chart{
+			Id:            utils.ConvertStringPointer(fragment.Chart.ID),
+			Name:          fragment.Chart.Name,
+			Description:   utils.ConvertStringPointer(fragment.Chart.Description),
+			LatestVersion: utils.ConvertStringPointer(fragment.Chart.LatestVersion),
+			Dependencies:  convertDependencies(fragment.Chart.Dependencies),
+		},
+		Version: convertVersion(fragment.Version),
+	}
 }

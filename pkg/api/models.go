@@ -71,7 +71,7 @@ type Dependencies struct {
 	Application     bool
 	Wait            bool
 	ProviderWirings map[string]interface{}
-	Outputs         map[string]string
+	Outputs         map[string]interface{}
 	ProviderVsn     string
 }
 
@@ -312,61 +312,6 @@ type ScaffoldFile struct {
 	Content string
 }
 
-var RepositoryFragment = `
-	fragment RepositoryFragment on Repository {
-		id
-		name
-		notes
-		icon
-		darkIcon
-		description
-		publisher { name }
-		recipes { name }
-	}
-`
-
-const OIDCFragment = `
-	fragment OIDCProvider on OidcProvider {
-		id
-		clientId
-		clientSecret
-		redirectUris
-		bindings { 
-			user { id email }
-			group { id name }
-		}
-		configuration {
-			issuer
-      authorizationEndpoint
-      tokenEndpoint
-      jwksUri
-      userinfoEndpoint
-		}
-	}
-`
-
-var InstallationFragment = fmt.Sprintf(`
-	fragment InstallationFragment on Installation {
-		id
-		context
-		licenseKey
-		acmeKeyId
-		acmeSecret
-		repository { ...RepositoryFragment }
-		oidcProvider { ...OIDCProvider }
-	}
-	%s %s
-`, RepositoryFragment, OIDCFragment)
-
-const ChartFragment = `
-	fragment ChartFragment on Chart {
-		id
-		name
-		description
-		latestVersion
-	}
-`
-
 const CrdFragment = `
 	fragment CrdFragment on Crd {
 		id
@@ -406,20 +351,6 @@ var VersionFragment = fmt.Sprintf(`
 	%s
 `, CrdFragment)
 
-var ChartInstallationFragment = fmt.Sprintf(`
-	fragment ChartInstallationFragment on ChartInstallation {
-		id
-		chart {
-			...ChartFragment
-			dependencies { ...DependenciesFragment }
-		}
-		version { ...VersionFragment }
-	}
-	%s
-	%s
-	%s
-`, ChartFragment, DependenciesFragment, VersionFragment)
-
 var TerraformFragment = fmt.Sprintf(`
 	fragment TerraformFragment on Terraform {
 		id
@@ -442,20 +373,6 @@ var TerraformInstallationFragment = fmt.Sprintf(`
 	%s
 `, TerraformFragment, VersionFragment)
 
-const TokenFragment = `
-	fragment TokenFragment on PersistedToken {
-		token
-	}
-`
-
-const WebhookFragment = `
-	fragment WebhookFragment on Webhook {
-		id
-		url
-		secret
-	}
-`
-
 const ArtifactFragment = `
 	fragment ArtifactFragment on Artifact {
 		id
@@ -467,114 +384,4 @@ const ArtifactFragment = `
 		sha
 		filesize
 	}
-`
-
-const UserFragment = `
-	fragment UserFragment on User {
-		id
-		name
-		email
-	}
-`
-
-var PublicKeyFragment = fmt.Sprintf(`
-	fragment PublicKeyFragment on PublicKey {
-		id
-		content
-		user { ...UserFragment }
-	}
-	%s
-`, UserFragment)
-
-const RecipeFragment = `
-	fragment RecipeFragment on Recipe {
-		id
-    name
-    description
-	restricted
-    provider
-		tests {
-			type
-			name
-			message
-			args { name repo key }
-		}
-		repository { id name }
-		oidcSettings {
-			uriFormat
-			uriFormats
-			authMethod
-			domainKey
-			subdomain
-		}
-	}
-`
-
-const RecipeConfigurationFragment = `
-	fragment RecipeConfigurationFragment on RecipeConfiguration {
-		name
-		type
-		default
-		documentation
-		optional
-		placeholder
-		functionName
-		condition { field operation value }
-		validation { type regex message }
-	}
-`
-
-var RecipeItemFragment = fmt.Sprintf(`
-	fragment RecipeItemFragment on RecipeItem {
-		id
-		chart { ...ChartFragment }
-		terraform { ...TerraformFragment }
-		configuration { ...RecipeConfigurationFragment }
-	}
-	%s
-	%s
-	%s
-`, ChartFragment, TerraformFragment, RecipeConfigurationFragment)
-
-var RecipeSectionFragment = fmt.Sprintf(`
-fragment RecipeSectionFragment on RecipeSection {
-	index
-	repository { ...RepositoryFragment }
-	recipeItems { ...RecipeItemFragment }
-	configuration { ...RecipeConfigurationFragment }
-}
-%s
-%s
-`, RepositoryFragment, RecipeItemFragment)
-
-const EabCredentialFragment = `
-fragment EabCredentialFragment on EabCredential {
-	id
-	keyId
-	hmacKey
-	cluster
-	provider
-}
-`
-
-const DnsDomainFragment = `
-fragment DnsDomainFragment on DnsDomain {
-	id
-	name
-}
-`
-
-const ApplyLockFragment = `
-fragment ApplyLockFragment on ApplyLock {
-	id
-	lock
-}
-`
-
-const CloudShellFragment = `
-fragment CloudShellFragment on CloudShell {
-	id
-	aesKey
-	gitUrl
-}
 `
