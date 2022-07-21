@@ -97,19 +97,24 @@ func (client *Client) GetRecipe(repo, name string) (*Recipe, error) {
 	}
 
 	r := &Recipe{
-		Id:             resp.Recipe.ID,
-		Name:           resp.Recipe.Name,
-		Provider:       string(*resp.Recipe.Provider),
-		Description:    utils.ConvertStringPointer(resp.Recipe.Description),
-		Tests:          []*RecipeTest{},
-		RecipeSections: []*RecipeSection{},
-		OidcSettings: &OIDCSettings{
+		Id:                 resp.Recipe.ID,
+		Name:               resp.Recipe.Name,
+		Provider:           string(*resp.Recipe.Provider),
+		Description:        utils.ConvertStringPointer(resp.Recipe.Description),
+		Tests:              []*RecipeTest{},
+		RecipeSections:     []*RecipeSection{},
+		RecipeDependencies: []*Recipe{},
+	}
+	if resp.Recipe.OidcSettings != nil {
+		r.OidcSettings = &OIDCSettings{
 			DomainKey:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.DomainKey),
 			UriFormat:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.URIFormat),
 			UriFormats: utils.ConvertStringArrayPointer(resp.Recipe.OidcSettings.URIFormats),
 			AuthMethod: string(resp.Recipe.OidcSettings.AuthMethod),
-		},
-		RecipeDependencies: []*Recipe{},
+		}
+		if resp.Recipe.OidcSettings.Subdomain != nil {
+			r.OidcSettings.Subdomain = *resp.Recipe.OidcSettings.Subdomain
+		}
 	}
 	if resp.Recipe.Repository != nil {
 		r.Repository = &Repository{
@@ -119,9 +124,6 @@ func (client *Client) GetRecipe(repo, name string) (*Recipe, error) {
 	}
 	if resp.Recipe.Restricted != nil {
 		r.Restricted = *resp.Recipe.Restricted
-	}
-	if resp.Recipe.OidcSettings.Subdomain != nil {
-		r.OidcSettings.Subdomain = *resp.Recipe.OidcSettings.Subdomain
 	}
 
 	for _, dep := range resp.Recipe.RecipeDependencies {
