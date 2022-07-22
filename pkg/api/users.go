@@ -32,7 +32,7 @@ type Me struct {
 	Email string
 }
 
-func (client *Client) Me() (*Me, error) {
+func (client *client) Me() (*Me, error) {
 	resp, err := client.pluralClient.Me(client.ctx)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (client *Client) Me() (*Me, error) {
 	}, nil
 }
 
-func (client *Client) LoginMethod(email string) (*LoginMethod, error) {
+func (client *client) LoginMethod(email string) (*LoginMethod, error) {
 	resp, err := client.pluralClient.GetLoginMethod(client.ctx, email)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (client *Client) LoginMethod(email string) (*LoginMethod, error) {
 	}, nil
 }
 
-func (client *Client) PollLoginToken(token string) (string, error) {
+func (client *client) PollLoginToken(token string) (string, error) {
 	resp, err := client.pluralClient.PollLoginToken(client.ctx, token)
 	if err != nil {
 		return "", err
@@ -67,7 +67,7 @@ func (client *Client) PollLoginToken(token string) (string, error) {
 	return "", fmt.Errorf("the JWT token is empty")
 }
 
-func (client *Client) DeviceLogin() (*DeviceLogin, error) {
+func (client *client) DeviceLogin() (*DeviceLogin, error) {
 	resp, err := client.pluralClient.DevLogin(client.ctx)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (client *Client) DeviceLogin() (*DeviceLogin, error) {
 	return nil, fmt.Errorf("the response DeviceLogin is nil")
 }
 
-func (client *Client) Login(email, pwd string) (string, error) {
+func (client *client) Login(email, pwd string) (string, error) {
 	resp, err := client.pluralClient.Login(client.ctx, email, pwd)
 	if err != nil {
 		return "", err
@@ -95,7 +95,7 @@ func (client *Client) Login(email, pwd string) (string, error) {
 	return "", fmt.Errorf("the JWT token is empty")
 }
 
-func (client *Client) ImpersonateServiceAccount(email string) (string, string, error) {
+func (client *client) ImpersonateServiceAccount(email string) (string, string, error) {
 	resp, err := client.pluralClient.ImpersonateServiceAccount(client.ctx, &email)
 	if err != nil {
 		return "", "", err
@@ -106,7 +106,7 @@ func (client *Client) ImpersonateServiceAccount(email string) (string, string, e
 	return "", "", fmt.Errorf("the response ImpersonateServiceAccount is nil")
 }
 
-func (client *Client) CreateAccessToken() (string, error) {
+func (client *client) CreateAccessToken() (string, error) {
 	resp, err := client.pluralClient.CreateAccessToken(client.ctx)
 	if err != nil {
 		return "", err
@@ -114,7 +114,7 @@ func (client *Client) CreateAccessToken() (string, error) {
 	return *resp.CreateToken.Token, err
 }
 
-func (client *Client) GrabAccessToken() (string, error) {
+func (client *client) GrabAccessToken() (string, error) {
 	resp, err := client.pluralClient.ListTokens(client.ctx)
 	if err != nil {
 		return "", err
@@ -127,7 +127,7 @@ func (client *Client) GrabAccessToken() (string, error) {
 	return client.CreateAccessToken()
 }
 
-func (client *Client) ListKeys(emails []string) ([]*PublicKey, error) {
+func (client *client) ListKeys(emails []string) ([]*PublicKey, error) {
 	emailsInput := make([]*string, 0)
 	for _, email := range emails {
 		emailsInput = append(emailsInput, &email)
@@ -153,7 +153,7 @@ func (client *Client) ListKeys(emails []string) ([]*PublicKey, error) {
 	return keys, nil
 }
 
-func (client *Client) CreateKey(name, content string) error {
+func (client *client) CreateKey(name, content string) error {
 	_, err := client.pluralClient.CreateKey(client.ctx, content, name)
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (client *Client) CreateKey(name, content string) error {
 	return nil
 }
 
-func (client *Client) GetEabCredential(cluster, provider string) (*EabCredential, error) {
+func (client *client) GetEabCredential(cluster, provider string) (*EabCredential, error) {
 	resp, err := client.pluralClient.GetEabCredential(client.ctx, cluster, gqlclient.Provider(toProvider(provider)))
 	if err != nil {
 		return nil, err
@@ -176,7 +176,7 @@ func (client *Client) GetEabCredential(cluster, provider string) (*EabCredential
 	}, nil
 }
 
-func (client *Client) DeleteEabCredential(cluster, provider string) error {
+func (client *client) DeleteEabCredential(cluster, provider string) error {
 	_, err := client.pluralClient.DeleteEabCredential(client.ctx, cluster, gqlclient.Provider(toProvider(provider)))
 	if err != nil {
 		return err
@@ -184,7 +184,7 @@ func (client *Client) DeleteEabCredential(cluster, provider string) error {
 	return nil
 }
 
-func (client *Client) CreateEvent(event *UserEventAttributes) error {
+func (client *client) CreateEvent(event *UserEventAttributes) error {
 	status := gqlclient.UserEventStatus(event.Status)
 	_, err := client.pluralClient.CreateEvent(client.ctx, gqlclient.UserEventAttributes{
 		Data:   &event.Data,

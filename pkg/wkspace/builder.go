@@ -30,7 +30,7 @@ type Workspace struct {
 	Links        *manifest.Links
 }
 
-func New(client *api.Client, inst *api.Installation) (*Workspace, error) {
+func New(client api.Client, inst *api.Installation) (*Workspace, error) {
 	ci, ti, err := client.GetPackageInstallations(inst.Repository.Id)
 	if err != nil {
 		return nil, err

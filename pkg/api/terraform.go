@@ -12,7 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
-func (client *Client) GetTerraforma(repoId string) ([]*Terraform, error) {
+func (client *client) GetTerraforma(repoId string) ([]*Terraform, error) {
 
 	terraformResponse, err := client.pluralClient.GetTerraform(client.ctx, repoId)
 	if err != nil {
@@ -26,7 +26,7 @@ func (client *Client) GetTerraforma(repoId string) ([]*Terraform, error) {
 	return terraform, err
 }
 
-func (client *Client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
+func (client *client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
 	resp, err := client.pluralClient.GetTerraformInstallations(client.ctx, repoId)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (client *Client) GetTerraformInstallations(repoId string) ([]*TerraformInst
 	return inst, err
 }
 
-func (client *Client) UploadTerraform(dir, repoName string) (Terraform, error) {
+func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	name := path.Base(dir)
 	fullPath, err := filepath.Abs(dir)
 	tf := Terraform{}

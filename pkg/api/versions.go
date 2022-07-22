@@ -17,7 +17,7 @@ type VersionAttributes struct {
 	Tags []*TagAttributes
 }
 
-func (client *Client) UpdateVersion(spec *VersionSpec, tags []string) error {
+func (client *client) UpdateVersion(spec *VersionSpec, tags []string) error {
 	tagAttrs := make([]*gqlclient.VersionTagAttributes, 0)
 	for _, tag := range tags {
 		tagAttrs = append(tagAttrs, &gqlclient.VersionTagAttributes{

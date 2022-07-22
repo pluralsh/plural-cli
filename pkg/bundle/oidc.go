@@ -12,7 +12,7 @@ import (
 
 var oidcConfirmed bool
 
-func configureOidc(repo string, client *api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
+func configureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
 	if recipe.OidcSettings == nil {
 		return nil
 	}

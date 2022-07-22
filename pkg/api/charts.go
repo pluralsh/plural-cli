@@ -16,7 +16,7 @@ type packageCacheEntry struct {
 
 var packageCache = make(map[string]*packageCacheEntry)
 
-func (client *Client) GetCharts(repoId string) ([]*Chart, error) {
+func (client *client) GetCharts(repoId string) ([]*Chart, error) {
 	charts := make([]*Chart, 0)
 	resp, err := client.pluralClient.GetCharts(client.ctx, repoId)
 	if err != nil {
@@ -34,7 +34,7 @@ func (client *Client) GetCharts(repoId string) ([]*Chart, error) {
 	return charts, err
 }
 
-func (client *Client) GetVersions(chartId string) ([]*Version, error) {
+func (client *client) GetVersions(chartId string) ([]*Version, error) {
 	versions := make([]*Version, 0)
 	resp, err := client.pluralClient.GetVersions(client.ctx, chartId)
 	if err != nil {
@@ -46,7 +46,7 @@ func (client *Client) GetVersions(chartId string) ([]*Version, error) {
 	return versions, err
 }
 
-func (client *Client) GetChartInstallations(repoId string) ([]*ChartInstallation, error) {
+func (client *client) GetChartInstallations(repoId string) ([]*ChartInstallation, error) {
 	insts := make([]*ChartInstallation, 0)
 	resp, err := client.pluralClient.GetChartInstallations(client.ctx, repoId)
 	if err != nil {
@@ -62,7 +62,7 @@ func (client *Client) GetChartInstallations(repoId string) ([]*ChartInstallation
 	return insts, err
 }
 
-func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error) {
+func (client *client) GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error) {
 	if entry, ok := packageCache[repoId]; ok {
 		return entry.Charts, entry.Terraform, nil
 	}
@@ -101,7 +101,7 @@ func (client *Client) GetPackageInstallations(repoId string) (charts []*ChartIns
 	return
 }
 
-func (client *Client) CreateCrd(repo string, chart string, file string) error {
+func (client *client) CreateCrd(repo string, chart string, file string) error {
 	name := path.Base(file)
 
 	rf, err := os.Open(file)

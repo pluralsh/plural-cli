@@ -15,7 +15,7 @@ type OidcProviderAttributes struct {
 	Bindings     []Binding
 }
 
-func (client *Client) GetInstallation(name string) (*Installation, error) {
+func (client *client) GetInstallation(name string) (*Installation, error) {
 	resp, err := client.pluralClient.GetInstallation(client.ctx, &name)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (client *Client) GetInstallation(name string) (*Installation, error) {
 
 }
 
-func (client *Client) GetInstallationById(id string) (*Installation, error) {
+func (client *client) GetInstallationById(id string) (*Installation, error) {
 	resp, err := client.pluralClient.GetInstallationByID(client.ctx, &id)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func convertInstallation(installation *gqlclient.InstallationFragment) *Installa
 	return i
 }
 
-func (client *Client) GetInstallations() ([]*Installation, error) {
+func (client *client) GetInstallations() ([]*Installation, error) {
 	result := make([]*Installation, 0)
 
 	resp, err := client.pluralClient.GetInstallations(client.ctx)
@@ -88,7 +88,7 @@ func (client *Client) GetInstallations() ([]*Installation, error) {
 	return result, err
 }
 
-func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
+func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
 	var groupId = attributes.Bindings[0].GroupId
 	var userId = attributes.Bindings[0].UserId
 	_, err := client.pluralClient.UpsertOidcProvider(client.ctx, id, gqlclient.OidcAttributes{
@@ -107,7 +107,7 @@ func (client *Client) OIDCProvider(id string, attributes *OidcProviderAttributes
 	return nil
 }
 
-func (client *Client) ResetInstallations() (int, error) {
+func (client *client) ResetInstallations() (int, error) {
 	resp, err := client.pluralClient.ResetInstallations(client.ctx)
 	if err != nil {
 		return 0, err

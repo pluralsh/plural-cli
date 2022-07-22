@@ -68,7 +68,7 @@ type ScaffoldInputs struct {
 	Postgres    bool   `survey:"postgres"`
 }
 
-func (client *Client) GetRepository(repo string) (*Repository, error) {
+func (client *client) GetRepository(repo string) (*Repository, error) {
 	resp, err := client.pluralClient.GetRepository(client.ctx, &repo)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (client *Client) GetRepository(repo string) (*Repository, error) {
 
 }
 
-func (client *Client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {
+func (client *client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {
 	var uploads []gqlclient.Upload
 
 	iconUpload, err := getIconReader(input.Icon, "icon")
@@ -130,7 +130,7 @@ func (client *Client) CreateRepository(name, publisher string, input *gqlclient.
 	return nil
 }
 
-func (client *Client) AcquireLock(repo string) (*ApplyLock, error) {
+func (client *client) AcquireLock(repo string) (*ApplyLock, error) {
 	resp, err := client.pluralClient.AcquireLock(client.ctx, repo)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (client *Client) AcquireLock(repo string) (*ApplyLock, error) {
 	}, err
 }
 
-func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
+func (client *client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
 	resp, err := client.pluralClient.ReleaseLock(client.ctx, repo, gqlclient.LockAttributes{Lock: lock})
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (client *Client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
 	}, nil
 }
 
-func (client *Client) UnlockRepository(name string) error {
+func (client *client) UnlockRepository(name string) error {
 	_, err := client.pluralClient.UnlockRepository(client.ctx, name)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func (client *Client) UnlockRepository(name string) error {
 	return nil
 }
 
-func (client *Client) ListRepositories(query string) ([]*Repository, error) {
+func (client *client) ListRepositories(query string) ([]*Repository, error) {
 	resp, err := client.pluralClient.ListRepositories(client.ctx, &query)
 	if err != nil {
 		return nil, err
@@ -187,7 +187,7 @@ func (client *Client) ListRepositories(query string) ([]*Repository, error) {
 	return res, err
 }
 
-func (client *Client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
+func (client *client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
 
 	scaffolds, err := client.pluralClient.Scaffolds(context.Background(), in.Application, in.Publisher, gqlclient.Category(strings.ToUpper(in.Category)), &in.Ingress, &in.Postgres)
 	if err != nil {
