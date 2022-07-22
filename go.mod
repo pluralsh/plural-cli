@@ -73,6 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.6 // indirect
 	github.com/aws/smithy-go v1.11.2 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.4.6 // indirect
 )
 
