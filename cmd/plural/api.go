@@ -4,11 +4,10 @@ import (
 	"os"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/urfave/cli"
 )
 
-func apiCommands() []cli.Command {
+func (p *Plural) apiCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:  "list",
@@ -18,54 +17,53 @@ func apiCommands() []cli.Command {
 					Name:      "installations",
 					Usage:     "lists your installations",
 					ArgsUsage: "",
-					Action:    handleInstallations,
+					Action:    p.handleInstallations,
 				},
 				{
 					Name:      "charts",
 					Usage:     "lists charts for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    handleCharts,
+					Action:    p.handleCharts,
 				},
 				{
 					Name:      "terraform",
 					Usage:     "lists terraform modules for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    handleTerraforma,
+					Action:    p.handleTerraforma,
 				},
 				{
 					Name:      "versions",
 					Usage:     "lists versions of a chart",
 					ArgsUsage: "CHART_ID",
-					Action:    handleVersions,
+					Action:    p.handleVersions,
 				},
 				{
 					Name:      "chartinstallations",
 					Aliases:   []string{"ci"},
 					Usage:     "lists chart installations for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    handleChartInstallations,
+					Action:    p.handleChartInstallations,
 				},
 				{
 					Name:      "terraforminstallations",
 					Aliases:   []string{"ti"},
 					Usage:     "lists terraform installations for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    handleTerraformInstallations,
+					Action:    p.handleTerraformInstallations,
 				},
 				{
 					Name:      "artifacts",
 					Usage:     "Lists artifacts for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    handleArtifacts,
+					Action:    p.handleArtifacts,
 				},
 			},
 		},
 	}
 }
 
-func handleInstallations(c *cli.Context) error {
-	client := api.NewClient()
-	installations, err := client.GetInstallations()
+func (p *Plural) handleInstallations(c *cli.Context) error {
+	installations, err := p.GetInstallations()
 	if err != nil {
 		return err
 	}
@@ -73,16 +71,21 @@ func handleInstallations(c *cli.Context) error {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Repository", "Repository Id", "Publisher"})
 	for _, inst := range installations {
-		repo := inst.Repository
-		table.Append([]string{repo.Name, repo.Id, repo.Publisher.Name})
+		if inst.Repository != nil {
+			repo := inst.Repository
+			publisherName := ""
+			if repo.Publisher != nil {
+				publisherName = repo.Publisher.Name
+			}
+			table.Append([]string{repo.Name, repo.Id, publisherName})
+		}
 	}
 	table.Render()
 	return nil
 }
 
-func handleCharts(c *cli.Context) error {
-	client := api.NewClient()
-	charts, err := client.GetCharts(c.Args().First())
+func (p *Plural) handleCharts(c *cli.Context) error {
+	charts, err := p.GetCharts(c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -96,9 +99,8 @@ func handleCharts(c *cli.Context) error {
 	return nil
 }
 
-func handleTerraforma(c *cli.Context) error {
-	client := api.NewClient()
-	tfs, err := client.GetTerraforma(c.Args().First())
+func (p *Plural) handleTerraforma(c *cli.Context) error {
+	tfs, err := p.GetTerraforma(c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -112,9 +114,8 @@ func handleTerraforma(c *cli.Context) error {
 	return nil
 }
 
-func handleVersions(c *cli.Context) error {
-	client := api.NewClient()
-	versions, err := client.GetVersions(c.Args().First())
+func (p *Plural) handleVersions(c *cli.Context) error {
+	versions, err := p.GetVersions(c.Args().First())
 
 	if err != nil {
 		return err
@@ -129,9 +130,8 @@ func handleVersions(c *cli.Context) error {
 	return nil
 }
 
-func handleChartInstallations(c *cli.Context) error {
-	client := api.NewClient()
-	chartInstallations, err := client.GetChartInstallations(c.Args().First())
+func (p *Plural) handleChartInstallations(c *cli.Context) error {
+	chartInstallations, err := p.GetChartInstallations(c.Args().First())
 
 	if err != nil {
 		return err
@@ -140,15 +140,16 @@ func handleChartInstallations(c *cli.Context) error {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Id", "Chart Id", "Chart Name", "Version"})
 	for _, ci := range chartInstallations {
-		table.Append([]string{ci.Id, ci.Chart.Id, ci.Chart.Name, ci.Version.Version})
+		if ci.Chart != nil && ci.Version != nil {
+			table.Append([]string{ci.Id, ci.Chart.Id, ci.Chart.Name, ci.Version.Version})
+		}
 	}
 	table.Render()
 	return nil
 }
 
-func handleTerraformInstallations(c *cli.Context) error {
-	client := api.NewClient()
-	terraformInstallations, err := client.GetTerraformInstallations(c.Args().First())
+func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
+	terraformInstallations, err := p.GetTerraformInstallations(c.Args().First())
 
 	if err != nil {
 		return err
@@ -158,15 +159,16 @@ func handleTerraformInstallations(c *cli.Context) error {
 	table.SetHeader([]string{"Id", "Terraform Id", "Name"})
 	for _, ti := range terraformInstallations {
 		tf := ti.Terraform
-		table.Append([]string{ti.Id, tf.Id, tf.Name})
+		if tf != nil {
+			table.Append([]string{ti.Id, tf.Id, tf.Name})
+		}
 	}
 	table.Render()
 	return nil
 }
 
-func handleArtifacts(c *cli.Context) error {
-	client := api.NewClient()
-	artifacts, err := client.ListArtifacts(c.Args().First())
+func (p *Plural) handleArtifacts(c *cli.Context) error {
+	artifacts, err := p.ListArtifacts(c.Args().First())
 
 	if err != nil {
 		return err

@@ -91,7 +91,7 @@ func TestPluralApplication(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			app := CreateNewApp()
+			app := CreateNewApp(nil)
 			app.HelpName = ApplicationName
 			writer := &bytes.Buffer{}
 			app.Writer = writer
