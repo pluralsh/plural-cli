@@ -1,6 +1,6 @@
 package api
 
-func (client *Client) GetShell() (CloudShell, error) {
+func (client *client) GetShell() (CloudShell, error) {
 	resp, err := client.pluralClient.GetShell(client.ctx)
 	if err != nil {
 		return CloudShell{}, err
@@ -16,7 +16,7 @@ func (client *Client) GetShell() (CloudShell, error) {
 	return CloudShell{}, err
 }
 
-func (client *Client) DeleteShell() error {
+func (client *client) DeleteShell() error {
 	_, err := client.pluralClient.DeleteShell(client.ctx)
 	if err != nil {
 		return err

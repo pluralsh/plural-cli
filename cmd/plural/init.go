@@ -122,7 +122,7 @@ func handleLogin(c *cli.Context) error {
 	return postLogin(conf, client, c)
 }
 
-func postLogin(conf *config.Config, client *api.Client, c *cli.Context) error {
+func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 	me, err := client.Me()
 	if err != nil {
 		return err

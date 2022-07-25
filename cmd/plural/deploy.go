@@ -21,7 +21,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getSortedInstallations(repo string, client *api.Client) ([]*api.Installation, error) {
+func getSortedInstallations(repo string, client api.Client) ([]*api.Installation, error) {
 	installations, err := client.GetInstallations()
 	if err != nil {
 		return installations, err
@@ -39,7 +39,7 @@ func getSortedInstallations(repo string, client *api.Client) ([]*api.Installatio
 	return sorted, nil
 }
 
-func allSortedRepos(client *api.Client) ([]string, error) {
+func allSortedRepos(client api.Client) ([]string, error) {
 	insts, err := client.GetInstallations()
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func build(c *cli.Context) error {
 	return nil
 }
 
-func doBuild(client *api.Client, installation *api.Installation, force bool) error {
+func doBuild(client api.Client, installation *api.Installation, force bool) error {
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 
@@ -184,7 +184,7 @@ func validate(c *cli.Context) error {
 	return nil
 }
 
-func doValidate(client *api.Client, installation *api.Installation) error {
+func doValidate(client api.Client, installation *api.Installation) error {
 	utils.Highlight("Validating repository %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(client, installation)
 	if err != nil {
@@ -341,7 +341,7 @@ func bounce(c *cli.Context) error {
 	return nil
 }
 
-func doBounce(repoRoot string, client *api.Client, installation *api.Installation) error {
+func doBounce(repoRoot string, client api.Client, installation *api.Installation) error {
 	repoName := installation.Repository.Name
 	utils.Warn("bouncing deployments in %s\n", repoName)
 	workspace, err := wkspace.New(client, installation)
@@ -427,7 +427,7 @@ func destroy(c *cli.Context) error {
 	return nil
 }
 
-func doDestroy(repoRoot string, client *api.Client, installation *api.Installation) error {
+func doDestroy(repoRoot string, client api.Client, installation *api.Installation) error {
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
 	}

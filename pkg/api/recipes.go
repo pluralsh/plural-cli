@@ -78,7 +78,7 @@ type RecipeEdge struct {
 	Node *Recipe
 }
 
-func (client *Client) CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error) {
+func (client *client) CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error) {
 	if len(attrs.Tests) == 0 {
 		attrs.Tests = make([]*gqlclient.RecipeTestAttributes, 0)
 	}
@@ -90,7 +90,7 @@ func (client *Client) CreateRecipe(repoName string, attrs gqlclient.RecipeAttrib
 	return resp.CreateRecipe.ID, err
 }
 
-func (client *Client) GetRecipe(repo, name string) (*Recipe, error) {
+func (client *client) GetRecipe(repo, name string) (*Recipe, error) {
 	resp, err := client.pluralClient.GetRecipe(client.ctx, &repo, &name)
 	if err != nil {
 		return nil, err
@@ -279,7 +279,7 @@ func convertRecipe(rcp *gqlclient.RecipeFragment) *Recipe {
 	return r
 }
 
-func (client *Client) ListRecipes(repo, provider string) ([]*Recipe, error) {
+func (client *client) ListRecipes(repo, provider string) ([]*Recipe, error) {
 	recipes := make([]*Recipe, 0)
 	p := gqlclient.Provider(NormalizeProvider(provider))
 	resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
@@ -294,7 +294,7 @@ func (client *Client) ListRecipes(repo, provider string) ([]*Recipe, error) {
 	return recipes, nil
 }
 
-func (client *Client) InstallRecipe(id string) error {
+func (client *client) InstallRecipe(id string) error {
 	_, err := client.pluralClient.InstallRecipe(client.ctx, id)
 	if err != nil {
 		return err

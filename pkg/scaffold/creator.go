@@ -51,7 +51,7 @@ var scaffoldSurvey = []*survey.Question{
 	},
 }
 
-func ApplicationScaffold(client *api.Client) error {
+func ApplicationScaffold(client api.Client) error {
 	input := api.ScaffoldInputs{}
 	if err := survey.Ask(scaffoldSurvey, &input); err != nil {
 		return err

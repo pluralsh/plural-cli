@@ -20,7 +20,7 @@ type ArtifactAttributes struct {
 	Arch     string
 }
 
-func (client *Client) ListArtifacts(repo string) ([]Artifact, error) {
+func (client *client) ListArtifacts(repo string) ([]Artifact, error) {
 
 	result := make([]Artifact, 0)
 
@@ -48,7 +48,7 @@ func (client *Client) ListArtifacts(repo string) ([]Artifact, error) {
 	return result, nil
 }
 
-func (client *Client) CreateArtifact(repo string, attrs ArtifactAttributes) (Artifact, error) {
+func (client *client) CreateArtifact(repo string, attrs ArtifactAttributes) (Artifact, error) {
 	var artifact Artifact
 	fullPath, _ := filepath.Abs(attrs.Blob)
 	rf, err := os.Open(fullPath)
