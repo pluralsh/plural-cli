@@ -50,7 +50,7 @@ func TestPluralConfigCommand(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			app := plural.CreateNewApp()
+			app := plural.CreateNewApp(nil)
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
