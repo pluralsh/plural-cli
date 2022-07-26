@@ -21,15 +21,6 @@ func Repo() (*gogit.Repository, error) {
 	return gogit.PlainOpen(root)
 }
 
-func Worktree() (*gogit.Worktree, error) {
-	repo, err := Repo()
-	if err != nil {
-		return nil, err
-	}
-
-	return repo.Worktree()
-}
-
 func CurrentBranch() (b string, err error) {
 	repo, err := Repo()
 	if err != nil {
@@ -72,4 +63,8 @@ func HasUpstreamChanges() (bool, error) {
 	}
 
 	return remote == ref.Hash().String(), nil
+}
+
+func Init() (string, error) {
+	return gitRaw("init")
 }

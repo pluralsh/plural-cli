@@ -21,8 +21,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getSortedInstallations(repo string, client api.Client) ([]*api.Installation, error) {
-	installations, err := client.GetInstallations()
+func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {
+	installations, err := p.GetInstallations()
 	if err != nil {
 		return installations, err
 	}
@@ -31,7 +31,7 @@ func getSortedInstallations(repo string, client api.Client) ([]*api.Installation
 		return installations, fmt.Errorf("no installations present, run `plural bundle install <repo> <bundle-name>` to install your first app")
 	}
 
-	sorted, err := wkspace.Dependencies(repo, installations)
+	sorted, err := wkspace.Dependencies(p.Client, repo, installations)
 	if err != nil {
 		sorted = installations // we don't know all the dependencies yet
 	}
@@ -39,8 +39,8 @@ func getSortedInstallations(repo string, client api.Client) ([]*api.Installation
 	return sorted, nil
 }
 
-func allSortedRepos(client api.Client) ([]string, error) {
-	insts, err := client.GetInstallations()
+func (p *Plural) allSortedRepos() ([]string, error) {
+	insts, err := p.GetInstallations()
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func getSortedNames(filter bool) ([]string, error) {
 	return sorted, nil
 }
 
-func diffed(c *cli.Context) error {
+func diffed(_ *cli.Context) error {
 	diffed, err := wkspace.DiffedRepos()
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func diffed(c *cli.Context) error {
 	return nil
 }
 
-func build(c *cli.Context) error {
+func (p *Plural) build(c *cli.Context) error {
 	changed, err := git.HasUpstreamChanges()
 	if err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to get git information")
@@ -102,32 +102,31 @@ func build(c *cli.Context) error {
 		return errors.ErrorWrap(errRemoteDiff, "Local Changes out of Sync")
 	}
 
-	client := api.NewClient()
 	if c.IsSet("only") {
-		installation, err := client.GetInstallation(c.String("only"))
+		installation, err := p.GetInstallation(c.String("only"))
 		if err != nil {
 			return err
 		} else if installation == nil {
 			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
 		}
 
-		return doBuild(client, installation, force)
+		return p.doBuild(installation, force)
 	}
 
-	installations, err := getSortedInstallations("", client)
+	installations, err := p.getSortedInstallations("")
 	if err != nil {
 		return err
 	}
 
 	for _, installation := range installations {
-		if err := doBuild(client, installation, force); err != nil {
+		if err := p.doBuild(installation, force); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doBuild(client api.Client, installation *api.Installation, force bool) error {
+func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 
@@ -135,7 +134,7 @@ func doBuild(client api.Client, installation *api.Installation, force bool) erro
 		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it in app.plural.sh or install it locally via a bundle in `plural bundle list %s`", repoName, repoName)
 	}
 
-	workspace, err := wkspace.New(client, installation)
+	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
 		return err
 	}
@@ -159,23 +158,22 @@ func doBuild(client api.Client, installation *api.Installation, force bool) erro
 	return err
 }
 
-func validate(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) validate(c *cli.Context) error {
 	if c.IsSet("only") {
-		installation, err := client.GetInstallation(c.String("only"))
+		installation, err := p.GetInstallation(c.String("only"))
 		if err != nil {
 			return err
 		}
-		return doValidate(client, installation)
+		return p.doValidate(installation)
 	}
 
-	installations, err := getSortedInstallations("", client)
+	installations, err := p.getSortedInstallations("")
 	if err != nil {
 		return err
 	}
 
 	for _, installation := range installations {
-		if err := doValidate(client, installation); err != nil {
+		if err := p.doValidate(installation); err != nil {
 			return err
 		}
 	}
@@ -184,9 +182,9 @@ func validate(c *cli.Context) error {
 	return nil
 }
 
-func doValidate(client api.Client, installation *api.Installation) error {
+func (p *Plural) doValidate(installation *api.Installation) error {
 	utils.Highlight("Validating repository %s\n", installation.Repository.Name)
-	workspace, err := wkspace.New(client, installation)
+	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
 		return err
 	}
@@ -194,9 +192,8 @@ func doValidate(client api.Client, installation *api.Installation) error {
 	return workspace.Validate()
 }
 
-func deploy(c *cli.Context) error {
+func (p *Plural) deploy(c *cli.Context) error {
 	verbose := c.Bool("verbose")
-	client := api.NewClient()
 	repoRoot, err := git.Root()
 
 	if err != nil {
@@ -209,7 +206,7 @@ func deploy(c *cli.Context) error {
 	}
 
 	if c.Bool("all") {
-		sorted, err = allSortedRepos(client)
+		sorted, err = p.allSortedRepos()
 		if err != nil {
 			return err
 		}
@@ -234,7 +231,7 @@ func deploy(c *cli.Context) error {
 		}
 		fmt.Printf("\n")
 
-		installation, err := client.GetInstallation(repo)
+		installation, err := p.GetInstallation(repo)
 		if err != nil {
 			return err
 		}
@@ -284,7 +281,7 @@ func commitMsg(c *cli.Context) string {
 	return ""
 }
 
-func handleDiff(c *cli.Context) error {
+func handleDiff(_ *cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -312,8 +309,7 @@ func handleDiff(c *cli.Context) error {
 	return nil
 }
 
-func bounce(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) bounce(c *cli.Context) error {
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -321,30 +317,30 @@ func bounce(c *cli.Context) error {
 	repoName := c.Args().Get(0)
 
 	if repoName != "" {
-		installation, err := client.GetInstallation(repoName)
+		installation, err := p.GetInstallation(repoName)
 		if err != nil {
 			return err
 		}
-		return doBounce(repoRoot, client, installation)
+		return p.doBounce(repoRoot, installation)
 	}
 
-	installations, err := getSortedInstallations(repoName, client)
+	installations, err := p.getSortedInstallations(repoName)
 	if err != nil {
 		return err
 	}
 
 	for _, installation := range installations {
-		if err := doBounce(repoRoot, client, installation); err != nil {
+		if err := p.doBounce(repoRoot, installation); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doBounce(repoRoot string, client api.Client, installation *api.Installation) error {
+func (p *Plural) doBounce(repoRoot string, installation *api.Installation) error {
 	repoName := installation.Repository.Name
 	utils.Warn("bouncing deployments in %s\n", repoName)
-	workspace, err := wkspace.New(client, installation)
+	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
 		return err
 	}
@@ -358,8 +354,7 @@ func doBounce(repoRoot string, client api.Client, installation *api.Installation
 	return workspace.Bounce()
 }
 
-func destroy(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) destroy(c *cli.Context) error {
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -376,15 +371,15 @@ func destroy(c *cli.Context) error {
 	}
 
 	if repoName != "" {
-		installation, err := client.GetInstallation(repoName)
+		installation, err := p.GetInstallation(repoName)
 		if err != nil {
 			return err
 		}
 
-		return doDestroy(repoRoot, client, installation)
+		return p.doDestroy(repoRoot, installation)
 	}
 
-	installations, err := getSortedInstallations(repoName, client)
+	installations, err := p.getSortedInstallations(repoName)
 	if err != nil {
 		return err
 	}
@@ -401,13 +396,13 @@ func destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := doDestroy(repoRoot, client, installation); err != nil {
+		if err := p.doDestroy(repoRoot, installation); err != nil {
 			return err
 		}
 	}
 
 	man, _ := manifest.FetchProject()
-	if err := client.DeleteEabCredential(man.Cluster, man.Provider); err != nil {
+	if err := p.DeleteEabCredential(man.Cluster, man.Provider); err != nil {
 		fmt.Printf("no eab key to delete %s\n", err)
 	}
 
@@ -427,12 +422,12 @@ func destroy(c *cli.Context) error {
 	return nil
 }
 
-func doDestroy(repoRoot string, client api.Client, installation *api.Installation) error {
+func (p *Plural) doDestroy(repoRoot string, installation *api.Installation) error {
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
 	}
 	utils.Error("\nDestroying application %s\n", installation.Repository.Name)
-	workspace, err := wkspace.New(client, installation)
+	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
 		return err
 	}
@@ -440,9 +435,8 @@ func doDestroy(repoRoot string, client api.Client, installation *api.Installatio
 	return workspace.Destroy()
 }
 
-func buildContext(c *cli.Context) error {
-	client := api.NewClient()
-	insts, err := client.GetInstallations()
+func (p *Plural) buildContext(_ *cli.Context) error {
+	insts, err := p.GetInstallations()
 	if err != nil {
 		return err
 	}

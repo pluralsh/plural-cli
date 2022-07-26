@@ -3,16 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
 
-func topsort(c *cli.Context) error {
-	client := api.NewClient()
-	installations, _ := client.GetInstallations()
+func (p *Plural) topsort(c *cli.Context) error {
+	installations, _ := p.GetInstallations()
 	repoName := c.Args().Get(0)
-	sorted, err := wkspace.Dependencies(repoName, installations)
+	sorted, err := wkspace.Dependencies(p.Client, repoName, installations)
 	if err != nil {
 		return err
 	}

@@ -6,20 +6,19 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
 
-func bundleCommands() []cli.Command {
+func (p *Plural) bundleCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
 			ArgsUsage: "REPO",
-			Action:    requireArgs(bundleList, []string{"repo"}),
+			Action:    requireArgs(p.bundleList, []string{"repo"}),
 		},
 		{
 			Name:      "install",
@@ -31,13 +30,12 @@ func bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: rooted(requireArgs(bundleInstall, []string{"repo", "bundle-name"})),
+			Action: rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"})),
 		},
 	}
 }
 
-func bundleList(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) bundleList(c *cli.Context) error {
 	man, err := manifest.FetchProject()
 	repo := c.Args().Get(0)
 	prov := ""
@@ -45,7 +43,7 @@ func bundleList(c *cli.Context) error {
 		prov = strings.ToUpper(man.Provider)
 	}
 
-	recipes, err := client.ListRecipes(repo, prov)
+	recipes, err := p.ListRecipes(repo, prov)
 	if err != nil {
 		return err
 	}
@@ -60,9 +58,9 @@ func bundleList(c *cli.Context) error {
 	return nil
 }
 
-func bundleInstall(c *cli.Context) (err error) {
+func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 	args := c.Args()
-	err = bundle.Install(args.Get(0), args.Get(1), c.Bool("refresh"))
+	err = bundle.Install(p.Client, args.Get(0), args.Get(1), c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
 }

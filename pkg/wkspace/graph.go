@@ -21,11 +21,10 @@ func SortAndFilter(installations []*api.Installation) ([]string, error) {
 	return TopSortNames(names)
 }
 
-func TopSort(installations []*api.Installation) ([]*api.Installation, error) {
+func TopSort(client api.Client, installations []*api.Installation) ([]*api.Installation, error) {
 	var repoMap = make(map[string]*api.Installation)
 	var depsMap = make(map[string][]*manifest.Dependency)
 	names := make([]string, len(installations))
-	client := api.NewClient()
 
 	for i, installation := range installations {
 		repo := installation.Repository.Name
@@ -116,8 +115,8 @@ func topsorter(repos []string, fn depsFetcher) ([]string, error) {
 	return result, nil
 }
 
-func Dependencies(repo string, installations []*api.Installation) ([]*api.Installation, error) {
-	topsorted, err := TopSort(installations)
+func Dependencies(client api.Client, repo string, installations []*api.Installation) ([]*api.Installation, error) {
+	topsorted, err := TopSort(client, installations)
 	if err != nil {
 		return topsorted, err
 	}
