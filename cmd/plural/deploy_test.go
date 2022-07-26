@@ -61,6 +61,7 @@ func TestBuildContext(t *testing.T) {
 			assert.NoError(t, err)
 
 			dat, err := os.ReadFile(dir + "/context.yaml")
+			assert.NoError(t, err)
 			ctx := manifest.VersionedContext{}
 			err = yaml.Unmarshal(dat, &ctx)
 			assert.NoError(t, err)

@@ -78,8 +78,6 @@ func TestBundleInstallNoGitRootDirectory(t *testing.T) {
 
 			assert.Error(t, err)
 			assert.Equal(t, test.expectedResponse, err.Error())
-			return
-
 		})
 	}
 }
@@ -123,7 +121,7 @@ func TestBundleInstall(t *testing.T) {
 			defer os.RemoveAll(dir)
 			err = os.Chdir(dir)
 			assert.NoError(t, err)
-			res, err := git.Init()
+			_, err = git.Init()
 			assert.NoError(t, err)
 
 			client := mocks.NewClient(t)
@@ -132,7 +130,7 @@ func TestBundleInstall(t *testing.T) {
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err = captureStdout(app, os.Args)
+			res, err := captureStdout(app, os.Args)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResponse, res)
 		})
