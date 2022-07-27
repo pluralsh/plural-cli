@@ -44,7 +44,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: tracked(owned(build), "cli.build"),
+			Action: tracked(owned(p.build), "cli.build"),
 		},
 		{
 			Name:      "deploy",
@@ -77,7 +77,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: tracked(owned(rooted(deploy)), "cli.deploy"),
+			Action: tracked(owned(rooted(p.deploy)), "cli.deploy"),
 		},
 		{
 			Name:      "diff",
@@ -135,14 +135,14 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "repository to (re)build",
 				},
 			},
-			Action:   validate,
+			Action:   p.validate,
 			Category: "Workspace",
 		},
 		{
 			Name:     "topsort",
 			Aliases:  []string{"d"},
 			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
-			Action:   topsort,
+			Action:   p.topsort,
 			Category: "Workspace",
 		},
 		{
@@ -150,7 +150,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
 			ArgsUsage: "WKSPACE",
-			Action:    owned(bounce),
+			Action:    owned(p.bounce),
 		},
 		{
 			Name:      "destroy",
@@ -171,7 +171,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: tracked(owned(destroy), "cli.destroy"),
+			Action: tracked(owned(p.destroy), "cli.destroy"),
 		},
 		{
 			Name:  "init",
@@ -260,7 +260,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "push",
 			Usage:       "utilities for pushing tf or helm packages",
-			Subcommands: pushCommands(),
+			Subcommands: p.pushCommands(),
 			Category:    "Publishing",
 		},
 		{
@@ -304,7 +304,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "bundle",
 			Usage:       "Commands for installing and discovering installation bundles",
-			Subcommands: bundleCommands(),
+			Subcommands: p.bundleCommands(),
 		},
 		{
 			Name:        "ops",
@@ -334,7 +334,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "build-context",
 			Usage:    "creates a fresh context.yaml for legacy repos",
-			Action:   buildContext,
+			Action:   p.buildContext,
 			Category: "Workspace",
 		},
 		{

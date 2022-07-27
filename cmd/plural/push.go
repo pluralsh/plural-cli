@@ -21,13 +21,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-func pushCommands() []cli.Command {
+func (p *Plural) pushCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "terraform",
 			Usage:     "pushes a terraform module",
 			ArgsUsage: "path/to/module REPO",
-			Action:    handleTerraformUpload,
+			Action:    p.handleTerraformUpload,
 		},
 		{
 			Name:      "helm",
@@ -39,13 +39,13 @@ func pushCommands() []cli.Command {
 			Name:      "recipe",
 			Usage:     "pushes a recipe",
 			ArgsUsage: "path/to/recipe.yaml REPO",
-			Action:    handleRecipeUpload,
+			Action:    p.handleRecipeUpload,
 		},
 		{
 			Name:      "artifact",
 			Usage:     "creates an artifact for the repo",
 			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    handleArtifact,
+			Action:    p.handleArtifact,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "platform",
@@ -63,7 +63,7 @@ func pushCommands() []cli.Command {
 			Name:      "crd",
 			Usage:     "registers a new crd for a chart",
 			ArgsUsage: "path/to/def.yaml REPO CHART",
-			Action:    createCrd,
+			Action:    p.createCrd,
 		},
 	}
 }
@@ -91,9 +91,8 @@ func apply(c *cli.Context) error {
 	return plrl.Execute(file, lock)
 }
 
-func handleTerraformUpload(c *cli.Context) error {
-	client := api.NewClient()
-	_, err := client.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
+func (p *Plural) handleTerraformUpload(c *cli.Context) error {
+	_, err := p.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
 	return err
 }
 
@@ -177,8 +176,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	return
 }
 
-func handleRecipeUpload(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) handleRecipeUpload(c *cli.Context) error {
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -190,12 +188,11 @@ func handleRecipeUpload(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateRecipe(c.Args().Get(1), recipeInput)
+	_, err = p.CreateRecipe(c.Args().Get(1), recipeInput)
 	return err
 }
 
-func handleArtifact(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) handleArtifact(c *cli.Context) error {
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -208,14 +205,13 @@ func handleArtifact(c *cli.Context) error {
 	}
 	input.Platform = c.String("platform")
 	input.Arch = c.String("arch")
-	_, err = client.CreateArtifact(c.Args().Get(1), input)
+	_, err = p.CreateArtifact(c.Args().Get(1), input)
 	return err
 }
 
-func createCrd(c *cli.Context) error {
-	client := api.NewClient()
+func (p *Plural) createCrd(c *cli.Context) error {
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	repo := c.Args().Get(1)
 	chart := c.Args().Get(2)
-	return client.CreateCrd(repo, chart, fullPath)
+	return p.CreateCrd(repo, chart, fullPath)
 }

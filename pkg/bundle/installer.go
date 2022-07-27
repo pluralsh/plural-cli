@@ -11,8 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func Install(repo, name string, refresh bool) error {
-	client := api.NewClient()
+func Install(client api.Client, repo, name string, refresh bool) error {
 	recipe, err := client.GetRecipe(repo, name)
 	if err != nil {
 		return err
