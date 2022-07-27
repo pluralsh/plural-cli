@@ -67,6 +67,13 @@ type GrafanaDashboard struct {
 			Expr         string
 			LegendFormat string
 		}
+		Panels []struct {
+			Title   string
+			Targets []struct {
+				Expr         string
+				LegendFormat string
+			}
+		}
 	}
 }
 
@@ -101,6 +108,19 @@ func formatDashboard(c *cli.Context) error {
 			graph.Queries = append(graph.Queries, query)
 		}
 		graphs = append(graphs, graph)
+		for _, nestedPanel := range panel.Panels {
+			graph := &v1alpha1.DashboardGraph{}
+			graph.Name = nestedPanel.Title
+			graph.Queries = make([]*v1alpha1.GraphQuery, 0)
+			for _, target := range nestedPanel.Targets {
+				query := &v1alpha1.GraphQuery{
+					Query:  target.Expr,
+					Legend: target.LegendFormat,
+				}
+				graph.Queries = append(graph.Queries, query)
+			}
+			graphs = append(graphs, graph)
+		}
 	}
 
 	dashboard.Spec.Graphs = graphs
