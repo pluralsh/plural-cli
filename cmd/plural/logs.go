@@ -9,27 +9,27 @@ import (
 	"github.com/urfave/cli"
 )
 
-func logsCommands() []cli.Command {
+func (p *Plural) logsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
 			ArgsUsage: "REPO",
-			Action:    requireArgs(handleLogsList, []string{"REPO"}),
+			Action:    requireArgs(p.handleLogsList, []string{"REPO"}),
 		},
 		{
 			Name:      "tail",
 			Usage:     "execs the specific logtail",
 			ArgsUsage: "REPO NAME",
-			Action:    requireArgs(handleLogTail, []string{"REPO", "NAME"}),
+			Action:    requireArgs(p.handleLogTail, []string{"REPO", "NAME"}),
 		},
 	}
 }
 
-func handleLogsList(c *cli.Context) error {
+func (p *Plural) handleLogsList(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	conf := config.Read()
-	tails, err := logs.List(conf.Namespace(repo))
+	tails, err := logs.List(p.Kube, conf.Namespace(repo))
 	if err != nil {
 		return err
 	}
@@ -48,10 +48,10 @@ func handleLogsList(c *cli.Context) error {
 	return nil
 }
 
-func handleLogTail(c *cli.Context) error {
+func (p *Plural) handleLogTail(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	name := c.Args().Get(1)
 	conf := config.Read()
 
-	return logs.Tail(conf.Namespace(repo), name)
+	return logs.Tail(p.Kube, conf.Namespace(repo), name)
 }

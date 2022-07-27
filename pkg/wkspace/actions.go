@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -93,7 +95,7 @@ func (w *Workspace) DestroyTerraform() error {
 	}
 
 	time.AfterFunc(1*time.Minute, func() {
-		kube, err := utils.Kubernetes()
+		kube, err := kubernetes.Kubernetes()
 		if err != nil {
 			fmt.Printf("Could not set up k8s client due to %s\n", err)
 			return

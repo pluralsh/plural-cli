@@ -9,27 +9,27 @@ import (
 	"github.com/urfave/cli"
 )
 
-func proxyCommands() []cli.Command {
+func (p *Plural) proxyCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
 			ArgsUsage: "REPO",
-			Action:    requireArgs(handleProxyList, []string{"REPO"}),
+			Action:    requireArgs(p.handleProxyList, []string{"REPO"}),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
 			ArgsUsage: "REPO NAME",
-			Action:    requireArgs(handleProxyConnect, []string{"REPO", "NAME"}),
+			Action:    requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}),
 		},
 	}
 }
 
-func handleProxyList(c *cli.Context) error {
+func (p *Plural) handleProxyList(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	conf := config.Read()
-	proxies, err := proxy.List(conf.Namespace(repo))
+	proxies, err := proxy.List(p.Kube, conf.Namespace(repo))
 	if err != nil {
 		return err
 	}
@@ -43,9 +43,9 @@ func handleProxyList(c *cli.Context) error {
 	return nil
 }
 
-func handleProxyConnect(c *cli.Context) error {
+func (p *Plural) handleProxyConnect(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	name := c.Args().Get(1)
 	conf := config.Read()
-	return proxy.Exec(conf.Namespace(repo), name)
+	return proxy.Exec(p.Kube, conf.Namespace(repo), name)
 }

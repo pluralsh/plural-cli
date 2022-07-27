@@ -7,11 +7,13 @@ import (
 	"path"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
-	"gopkg.in/yaml.v2"
 )
 
 func fileExists(path string) bool {
@@ -139,7 +141,7 @@ func namespace(name string) string {
 }
 
 func secret(namespace, name string) map[string]interface{} {
-	kube, _ := utils.Kubernetes()
+	kube, _ := kubernetes.Kubernetes()
 	res := map[string]interface{}{}
 	secret, err := kube.Secret(namespace, name)
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -345,7 +346,7 @@ func handleKeygen(c *cli.Context) error {
 }
 
 func handleRecover(c *cli.Context) error {
-	kube, err := utils.Kubernetes()
+	kube, err := kubernetes.Kubernetes()
 	if err != nil {
 		return err
 	}

@@ -1,34 +1,21 @@
 package logs
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func List(namespace string) (*v1alpha1.LogTailList, error) {
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	return kube.Plural.PlatformV1alpha1().LogTails(namespace).List(ctx, metav1.ListOptions{})
+func List(kube kubernetes.Kube, namespace string) (*v1alpha1.LogTailList, error) {
+	return kube.LogTailList(namespace)
 }
 
-func Tail(namespace string, name string) error {
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-	tail, err := kube.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
+func Tail(kube kubernetes.Kube, namespace string, name string) error {
+	tail, err := kube.LogTail(namespace, name)
 	if err != nil {
 		return err
 	}

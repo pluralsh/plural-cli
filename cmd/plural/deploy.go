@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -241,7 +242,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 
 		if man, err := fetchManifest(repo); err == nil && man.Wait {
-			if kubeConf, err := utils.KubeConfig(); err == nil {
+			if kubeConf, err := kubernetes.KubeConfig(); err == nil {
 				fmt.Println("")
 				if err := application.Wait(kubeConf, repo); err != nil {
 					return err

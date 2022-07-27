@@ -10,35 +10,30 @@ import (
 	"github.com/urfave/cli"
 )
 
-func opsCommands() []cli.Command {
+func (p *Plural) opsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
 			ArgsUsage: "NAME",
-			Action:    handleTerminateNode,
+			Action:    p.handleTerminateNode,
 		},
 		{
 			Name:   "cluster",
 			Usage:  "list the nodes in your cluster",
-			Action: handleListNodes,
+			Action: p.handleListNodes,
 		},
 	}
 }
 
-func handleTerminateNode(c *cli.Context) error {
+func (p *Plural) handleTerminateNode(c *cli.Context) error {
 	name := c.Args().Get(0)
 	provider, err := getProvider()
 	if err != nil {
 		return err
 	}
 
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	node, err := kube.Node(name)
+	node, err := p.Node(name)
 	if err != nil {
 		return err
 	}
@@ -46,13 +41,8 @@ func handleTerminateNode(c *cli.Context) error {
 	return provider.Decommision(node)
 }
 
-func handleListNodes(cli *cli.Context) error {
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	nodes, err := kube.Nodes()
+func (p *Plural) handleListNodes(cli *cli.Context) error {
+	nodes, err := p.Nodes()
 	if err != nil {
 		return err
 	}

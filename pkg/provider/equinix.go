@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/AlecAivazis/survey/v2"
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -142,7 +144,7 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, version string, ctx
 func (equinix *EQUINIXProvider) KubeConfig() error {
 	// TODO: deal with current configured KUBECONFIG
 	// TODO: deal with KUBECONFIG env var if it is set, as then the output KUBECONFIG file will be used
-	if utils.InKubernetes() {
+	if kubernetes.InKubernetes() {
 		return nil
 	}
 

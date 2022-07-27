@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -13,7 +14,7 @@ type UserCredentials struct {
 	Password string
 }
 
-func fetchSecret(namespace string, k *utils.Kube, creds *v1alpha1.Credentials) (string, error) {
+func fetchSecret(namespace string, k kubernetes.Kube, creds *v1alpha1.Credentials) (string, error) {
 	secret, err := k.Secret(namespace, creds.Secret)
 	if err != nil {
 		return "", err
