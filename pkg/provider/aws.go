@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/AlecAivazis/survey/v2"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -154,7 +156,7 @@ func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[str
 }
 
 func (aws *AWSProvider) KubeConfig() error {
-	if utils.InKubernetes() {
+	if kubernetes.InKubernetes() {
 		return nil
 	}
 

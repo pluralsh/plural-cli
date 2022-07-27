@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -94,7 +96,7 @@ func (kind *KINDProvider) CreateBackend(prefix string, version string, ctx map[s
 }
 
 func (kind *KINDProvider) KubeConfig() error {
-	if utils.InKubernetes() {
+	if kubernetes.InKubernetes() {
 		return nil
 	}
 	cmd := exec.Command(

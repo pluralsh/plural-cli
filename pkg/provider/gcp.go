@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	compute "cloud.google.com/go/compute/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
@@ -171,7 +173,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
-	if utils.InKubernetes() {
+	if kubernetes.InKubernetes() {
 		return nil
 	}
 

@@ -1,28 +1,23 @@
-package utils
+package kubernetes
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
 	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
 	"github.com/pluralsh/plural/pkg/application"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	kubeyaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"sigs.k8s.io/yaml"
 )
 
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -32,23 +27,26 @@ func InKubernetes() bool {
 		return false
 	}
 
-	return Exists(tokenFile)
+	return utils.Exists(tokenFile)
 }
 
-type Kube struct {
+type Kube interface {
+	Secret(namespace string, name string) (*v1.Secret, error)
+	Node(name string) (*v1.Node, error)
+	Nodes() (*v1.NodeList, error)
+	FinalizeNamespace(namespace string) error
+	LogTailList(namespace string) (*v1alpha1.LogTailList, error)
+	LogTail(namespace string, name string) (*v1alpha1.LogTail, error)
+	ProxyList(namespace string) (*v1alpha1.ProxyList, error)
+	Proxy(namespace string, name string) (*v1alpha1.Proxy, error)
+	GetClient() *kubernetes.Clientset
+}
+
+type kube struct {
 	Kube        *kubernetes.Clientset
 	Plural      *pluralv1alpha1.Clientset
 	Application *application.ApplicationV1Beta1Client
 	Dynamic     dynamic.Interface
-}
-
-func InClusterKubernetes() (*Kube, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return buildKubeFromConfig(config)
 }
 
 func KubeConfig() (*rest.Config, error) {
@@ -61,7 +59,7 @@ func KubeConfig() (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", conf)
 }
 
-func Kubernetes() (*Kube, error) {
+func Kubernetes() (Kube, error) {
 	conf, err := KubeConfig()
 	if err != nil {
 		return nil, err
@@ -70,34 +68,7 @@ func Kubernetes() (*Kube, error) {
 	return buildKubeFromConfig(conf)
 }
 
-func ParseYaml(content []byte) ([]*unstructured.Unstructured, error) {
-	d := kubeyaml.NewYAMLOrJSONDecoder(bytes.NewReader(content), 4096)
-	var objs []*unstructured.Unstructured
-	for {
-		ext := runtime.RawExtension{}
-		if err := d.Decode(&ext); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return objs, fmt.Errorf("failed to unmarshal manifest: %w", err)
-		}
-
-		ext.Raw = bytes.TrimSpace(ext.Raw)
-		if len(ext.Raw) == 0 || bytes.Equal(ext.Raw, []byte("null")) {
-			continue
-		}
-
-		u := &unstructured.Unstructured{}
-		if err := yaml.Unmarshal(ext.Raw, u); err != nil {
-			return objs, fmt.Errorf("failed to unmarshal manifest: %w", err)
-		}
-		objs = append(objs, u)
-	}
-
-	return objs, nil
-}
-
-func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
+func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
@@ -118,22 +89,22 @@ func buildKubeFromConfig(config *rest.Config) (*Kube, error) {
 		return nil, err
 	}
 
-	return &Kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn}, nil
+	return &kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn}, nil
 }
 
-func (k *Kube) Secret(namespace string, name string) (*v1.Secret, error) {
+func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {
 	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
-func (k *Kube) Node(name string) (*v1.Node, error) {
+func (k *kube) Node(name string) (*v1.Node, error) {
 	return k.Kube.CoreV1().Nodes().Get(context.Background(), name, metav1.GetOptions{})
 }
 
-func (k *Kube) Nodes() (*v1.NodeList, error) {
+func (k *kube) Nodes() (*v1.NodeList, error) {
 	return k.Kube.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 }
 
-func (k *Kube) FinalizeNamespace(namespace string) error {
+func (k *kube) FinalizeNamespace(namespace string) error {
 	ctx := context.Background()
 	client := k.Kube.CoreV1().Namespaces()
 	ns, err := client.Get(ctx, namespace, metav1.GetOptions{})
@@ -144,4 +115,28 @@ func (k *Kube) FinalizeNamespace(namespace string) error {
 	ns.Spec.Finalizers = []v1.FinalizerName{}
 	_, err = client.Finalize(ctx, ns, metav1.UpdateOptions{})
 	return err
+}
+
+func (k *kube) LogTailList(namespace string) (*v1alpha1.LogTailList, error) {
+	ctx := context.Background()
+	return k.Plural.PlatformV1alpha1().LogTails(namespace).List(ctx, metav1.ListOptions{})
+}
+
+func (k *kube) LogTail(namespace string, name string) (*v1alpha1.LogTail, error) {
+	ctx := context.Background()
+	return k.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (k *kube) ProxyList(namespace string) (*v1alpha1.ProxyList, error) {
+	ctx := context.Background()
+	return k.Plural.PlatformV1alpha1().Proxies(namespace).List(ctx, metav1.ListOptions{})
+}
+
+func (k *kube) Proxy(namespace string, name string) (*v1alpha1.Proxy, error) {
+	ctx := context.Background()
+	return k.Plural.PlatformV1alpha1().Proxies(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (k *kube) GetClient() *kubernetes.Clientset {
+	return k.Kube
 }

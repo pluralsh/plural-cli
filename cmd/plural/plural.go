@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
 
@@ -20,6 +22,7 @@ const ApplicationName = "plural"
 
 type Plural struct {
 	api.Client
+	kubernetes.Kube
 }
 
 func (p *Plural) getCommands() []cli.Command {
@@ -236,7 +239,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "repos",
 			Usage:       "view and manage plural repositories",
-			Subcommands: reposCommands(),
+			Subcommands: p.reposCommands(),
 			Category:    "API",
 		},
 		{
@@ -248,7 +251,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "proxy",
 			Usage:       "proxies into running processes in your cluster",
-			Subcommands: proxyCommands(),
+			Subcommands: p.proxyCommands(),
 			Category:    "Debugging",
 		},
 		{
@@ -298,7 +301,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "logs",
 			Usage:       "Commands for tailing logs for specific apps",
-			Subcommands: logsCommands(),
+			Subcommands: p.logsCommands(),
 			Category:    "Debugging",
 		},
 		{
@@ -309,7 +312,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "ops",
 			Usage:       "Commands for simplifying cluster operations",
-			Subcommands: opsCommands(),
+			Subcommands: p.opsCommands(),
 			Category:    "Debugging",
 		},
 		{
@@ -354,13 +357,17 @@ func (p *Plural) getCommands() []cli.Command {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	app := CreateNewApp(&Plural{api.NewClient()})
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app := CreateNewApp(&Plural{api.NewClient(), kube})
 
 	if os.Getenv("ENABLE_COLOR") != "" {
 		color.NoColor = false
 	}
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

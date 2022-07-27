@@ -1,32 +1,19 @@
 package proxy
 
 import (
-	"context"
 	"fmt"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func List(namespace string) (*v1alpha1.ProxyList, error) {
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	return kube.Plural.PlatformV1alpha1().Proxies(namespace).List(ctx, metav1.ListOptions{})
+func List(kube kubernetes.Kube, namespace string) (*v1alpha1.ProxyList, error) {
+	return kube.ProxyList(namespace)
 }
 
-func Exec(namespace string, name string) error {
-	kube, err := utils.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-	proxy, err := kube.Plural.PlatformV1alpha1().Proxies(namespace).Get(ctx, name, metav1.GetOptions{})
+func Exec(kube kubernetes.Kube, namespace string, name string) error {
+	proxy, err := kube.Proxy(namespace, name)
 	if err != nil {
 		return err
 	}

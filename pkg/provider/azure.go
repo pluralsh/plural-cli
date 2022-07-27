@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
@@ -168,7 +170,7 @@ func (az *AzureProvider) CreateBucket(bucket string) (err error) {
 }
 
 func (azure *AzureProvider) KubeConfig() error {
-	if utils.InKubernetes() {
+	if kubernetes.InKubernetes() {
 		return nil
 	}
 

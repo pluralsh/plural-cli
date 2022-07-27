@@ -11,18 +11,18 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func reposCommands() []cli.Command {
+func (p *Plural) reposCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "REPO",
-			Action:    handleUnlockRepo,
+			Action:    p.handleUnlockRepo,
 		},
 		{
 			Name:   "reset",
 			Usage:  "eliminates your current plural installation set, to change cloud provider or eject from plural",
-			Action: handleResetInstallations,
+			Action: p.handleResetInstallations,
 		},
 		{
 			Name:      "list",
@@ -38,19 +38,17 @@ func reposCommands() []cli.Command {
 					Usage: "format to print the repositories out, eg csv or default is table",
 				},
 			},
-			Action: handleListRepositories,
+			Action: p.handleListRepositories,
 		},
 	}
 }
 
-func handleUnlockRepo(c *cli.Context) error {
-	client := api.NewClient()
-	return client.UnlockRepository(c.Args().First())
+func (p *Plural) handleUnlockRepo(c *cli.Context) error {
+	return p.UnlockRepository(c.Args().First())
 }
 
-func handleListRepositories(c *cli.Context) error {
-	client := api.NewClient()
-	repos, err := client.ListRepositories(c.String("query"))
+func (p *Plural) handleListRepositories(c *cli.Context) error {
+	repos, err := p.ListRepositories(c.String("query"))
 	if err != nil {
 		return err
 	}
@@ -84,9 +82,8 @@ func handleListRepositories(c *cli.Context) error {
 	return nil
 }
 
-func handleResetInstallations(c *cli.Context) error {
-	client := api.NewClient()
-	count, err := client.ResetInstallations()
+func (p *Plural) handleResetInstallations(c *cli.Context) error {
+	count, err := p.ResetInstallations()
 	if err != nil {
 		return err
 	}
