@@ -29,6 +29,9 @@ func (p *Plural) proxyCommands() []cli.Command {
 func (p *Plural) handleProxyList(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	conf := config.Read()
+	if err := p.InitKube(); err != nil {
+		return err
+	}
 	proxies, err := proxy.List(p.Kube, conf.Namespace(repo))
 	if err != nil {
 		return err
@@ -47,5 +50,8 @@ func (p *Plural) handleProxyConnect(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	name := c.Args().Get(1)
 	conf := config.Read()
+	if err := p.InitKube(); err != nil {
+		return err
+	}
 	return proxy.Exec(p.Kube, conf.Namespace(repo), name)
 }
