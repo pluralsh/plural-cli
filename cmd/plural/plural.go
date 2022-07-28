@@ -25,6 +25,17 @@ type Plural struct {
 	kubernetes.Kube
 }
 
+func (p *Plural) InitKube() error {
+	if p.Kube == nil {
+		kube, err := kubernetes.Kubernetes()
+		if err != nil {
+			return err
+		}
+		p.Kube = kube
+	}
+	return nil
+}
+
 func (p *Plural) getCommands() []cli.Command {
 	return []cli.Command{
 		{
@@ -357,17 +368,14 @@ func (p *Plural) getCommands() []cli.Command {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		log.Fatal(err)
-	}
-	app := CreateNewApp(&Plural{api.NewClient(), kube})
+	// init Kube when k8s config exists
+	app := CreateNewApp(&Plural{api.NewClient(), nil})
 
 	if os.Getenv("ENABLE_COLOR") != "" {
 		color.NoColor = false
 	}
 
-	err = app.Run(os.Args)
+	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

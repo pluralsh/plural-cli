@@ -32,7 +32,9 @@ func (p *Plural) handleTerminateNode(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
+	if err := p.InitKube(); err != nil {
+		return err
+	}
 	node, err := p.Node(name)
 	if err != nil {
 		return err
@@ -42,6 +44,9 @@ func (p *Plural) handleTerminateNode(c *cli.Context) error {
 }
 
 func (p *Plural) handleListNodes(cli *cli.Context) error {
+	if err := p.InitKube(); err != nil {
+		return err
+	}
 	nodes, err := p.Nodes()
 	if err != nil {
 		return err
