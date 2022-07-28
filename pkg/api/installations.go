@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/gqlclient/pkg/utils"
 )
 
 type Binding struct {
@@ -35,39 +36,67 @@ func (client *client) GetInstallationById(id string) (*Installation, error) {
 
 func convertInstallation(installation *gqlclient.InstallationFragment) *Installation {
 	i := &Installation{
-		Id: installation.ID,
-		Repository: &Repository{
-			Id:   installation.Repository.ID,
-			Name: installation.Repository.Name,
-			Publisher: &Publisher{
+		Id:         installation.ID,
+		LicenseKey: utils.ConvertStringPointer(installation.LicenseKey),
+		Context:    installation.Context,
+		AcmeKeyId:  utils.ConvertStringPointer(installation.AcmeKeyID),
+		AcmeSecret: utils.ConvertStringPointer(installation.AcmeSecret),
+	}
+	if installation.Repository != nil {
+		i.Repository = &Repository{
+			Id:          installation.Repository.ID,
+			Name:        installation.Repository.Name,
+			Description: utils.ConvertStringPointer(installation.Repository.Description),
+			Icon:        utils.ConvertStringPointer(installation.Repository.Icon),
+			DarkIcon:    utils.ConvertStringPointer(installation.Repository.DarkIcon),
+			Notes:       utils.ConvertStringPointer(installation.Repository.Notes),
+			Recipes:     []*Recipe{},
+		}
+		if installation.Repository.Publisher != nil {
+			i.Repository.Publisher = &Publisher{
 				Name: installation.Repository.Publisher.Name,
-			},
-		},
-	}
-	if installation.Repository.DarkIcon != nil {
-		i.Repository.DarkIcon = *installation.Repository.DarkIcon
-	}
-
-	if installation.Repository.Description != nil {
-		i.Repository.Description = *installation.Repository.Description
+			}
+		}
+		for _, recipe := range installation.Repository.Recipes {
+			i.Repository.Recipes = append(i.Repository.Recipes, &Recipe{
+				Name: recipe.Name,
+			})
+		}
 	}
 
-	if installation.Repository.Icon != nil {
-		i.Repository.Icon = *installation.Repository.Icon
-	}
-
-	if installation.Repository.Notes != nil {
-		i.Repository.Notes = *installation.Repository.Notes
-	}
-
-	if installation.LicenseKey != nil {
-		i.LicenseKey = *installation.LicenseKey
-	}
-	if installation.AcmeKeyID != nil {
-		i.AcmeKeyId = *installation.AcmeKeyID
-	}
-	if installation.AcmeSecret != nil {
-		i.AcmeSecret = *installation.AcmeSecret
+	if installation.OidcProvider != nil {
+		i.OIDCProvider = &OIDCProvider{
+			Id:           installation.OidcProvider.ID,
+			ClientId:     installation.OidcProvider.ClientID,
+			ClientSecret: installation.OidcProvider.ClientSecret,
+			RedirectUris: utils.ConvertStringArrayPointer(installation.OidcProvider.RedirectUris),
+			Bindings:     []*ProviderBinding{},
+		}
+		if installation.OidcProvider.Configuration != nil {
+			i.OIDCProvider.Configuration = &OAuthConfiguration{
+				Issuer:                utils.ConvertStringPointer(installation.OidcProvider.Configuration.Issuer),
+				AuthorizationEndpoint: utils.ConvertStringPointer(installation.OidcProvider.Configuration.AuthorizationEndpoint),
+				TokenEndpoint:         utils.ConvertStringPointer(installation.OidcProvider.Configuration.TokenEndpoint),
+				JwksUri:               utils.ConvertStringPointer(installation.OidcProvider.Configuration.JwksURI),
+				UserinfoEndpoint:      utils.ConvertStringPointer(installation.OidcProvider.Configuration.UserinfoEndpoint),
+			}
+		}
+		for _, binding := range installation.OidcProvider.Bindings {
+			pb := &ProviderBinding{}
+			if binding.User != nil {
+				pb.User = &User{
+					Id:    binding.User.ID,
+					Email: binding.User.Email,
+				}
+			}
+			if binding.Group != nil {
+				pb.Group = &Group{
+					Id:   binding.Group.ID,
+					Name: binding.Group.Name,
+				}
+			}
+			i.OIDCProvider.Bindings = append(i.OIDCProvider.Bindings, pb)
+		}
 	}
 
 	return i
