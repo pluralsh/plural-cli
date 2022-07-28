@@ -234,23 +234,36 @@ func ConstructRepositoryInput(marshalled []byte) (input *RepositoryInput, err er
 }
 
 func ConstructGqlClientRepositoryInput(marshalled []byte) (*gqlclient.RepositoryAttributes, error) {
-	input := &gqlclient.RepositoryAttributes{}
-	if err := yaml.Unmarshal(marshalled, input); err != nil {
+	repoInput, err := ConstructRepositoryInput(marshalled)
+	if err != nil {
 		return nil, err
 	}
-	return input, nil
-}
 
-func ConstructResourceDefinition(marshalled []byte) (input gqlclient.ResourceDefinitionAttributes, err error) {
-	err = yaml.Unmarshal(marshalled, &input)
-	return
-}
+	category := gqlclient.Category(repoInput.Category)
 
-func ConstructIntegration(marshalled []byte) (gqlclient.IntegrationAttributes, error) {
-	intAttr := gqlclient.IntegrationAttributes{}
-	err := yaml.Unmarshal(marshalled, &intAttr)
-	if err != nil {
-		return gqlclient.IntegrationAttributes{}, err
+	resp := &gqlclient.RepositoryAttributes{
+		Category:    &category,
+		DarkIcon:    &repoInput.DarkIcon,
+		Description: &repoInput.Description,
+		GitURL:      &repoInput.GitUrl,
+		Homepage:    &repoInput.Homepage,
+		Icon:        &repoInput.Icon,
+		Name:        &repoInput.Name,
+		Notes:       &repoInput.Notes,
+		Private:     &repoInput.Private,
+		Tags:        []*gqlclient.TagAttributes{},
 	}
-	return intAttr, nil
+	if repoInput.OauthSettings != nil {
+		resp.OauthSettings = &gqlclient.OauthSettingsAttributes{
+			AuthMethod: gqlclient.OidcAuthMethod(repoInput.OauthSettings.AuthMethod),
+			URIFormat:  repoInput.OauthSettings.UriFormat,
+		}
+	}
+	for _, tag := range repoInput.Tags {
+		resp.Tags = append(resp.Tags, &gqlclient.TagAttributes{
+			Tag: tag.Tag,
+		})
+	}
+
+	return resp, nil
 }
