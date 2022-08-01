@@ -2,7 +2,7 @@
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
-APP_VSN ?= $(shell cat VERSION)
+APP_VSN ?= $(shell git describe --tags --always --dirty)
 BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
