@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/resourcemanager v1.2.0
 	cloud.google.com/go/serviceusage v1.2.0
 	cloud.google.com/go/storage v1.12.0
-	filippo.io/age v1.0.0-rc.2
+	filippo.io/age v1.0.0
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Azure/azure-sdk-for-go v56.3.0+incompatible
 	github.com/Azure/azure-storage-blob-go v0.13.0
