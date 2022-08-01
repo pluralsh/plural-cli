@@ -14,7 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/test/mocks"
 	"github.com/pluralsh/plural/pkg/utils/git"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
