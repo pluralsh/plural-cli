@@ -277,7 +277,7 @@ func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {
 }
 
 func getMetalClient(apiToken string) *metal.Client {
-	transport := logging.NewTransport("Equinix Metal", http.DefaultTransport)
+	transport := logging.NewSubsystemLoggingHTTPTransport("Equinix Metal", http.DefaultTransport)
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = transport
 	retryClient.RetryMax = 3
