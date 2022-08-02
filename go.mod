@@ -39,7 +39,8 @@ require (
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.1
-	github.com/urfave/cli v1.22.8
+	github.com/urfave/cli v1.22.2
+	github.com/urfave/cli/v2 v2.11.1
 	github.com/xanzy/go-gitlab v0.65.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
@@ -115,7 +116,7 @@ require (
 	github.com/cli/browser v1.0.0 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/containerd/containerd v1.6.6 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
