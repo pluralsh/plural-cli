@@ -14,7 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/thoas/go-funk"
 	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func utilsCommands() []cli.Command {

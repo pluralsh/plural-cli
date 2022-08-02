@@ -45,7 +45,6 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
 	google.golang.org/genproto v0.0.0-20220728213248-dd149ef739b9
-	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.9.2
 	k8s.io/api v0.24.3
@@ -81,6 +80,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.4.6 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
