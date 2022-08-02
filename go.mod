@@ -38,7 +38,7 @@ require (
 	github.com/pluralsh/gqlclient v1.0.7
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.1
-	github.com/thoas/go-funk v0.9.1
+	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.8
 	github.com/xanzy/go-gitlab v0.65.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
