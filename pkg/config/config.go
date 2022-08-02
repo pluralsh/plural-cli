@@ -8,15 +8,10 @@ import (
 	"strings"
 
 	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
 
 	"github.com/oleiade/reflections"
 	"golang.org/x/text/cases"
-<<<<<<< HEAD
-	"gopkg.in/yaml.v2"
-=======
-	"gopkg.in/oleiade/reflections.v1"
-	"gopkg.in/yaml.v3"
->>>>>>> fix yaml import
 )
 
 const (
