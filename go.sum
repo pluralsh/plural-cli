@@ -977,6 +977,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/gqlclient v1.0.7 h1:MEnKLD9HFMNhXXz2KVDByA20Qv3qGheWyMh6ietEVfM=
 github.com/pluralsh/gqlclient v1.0.7/go.mod h1:1kRMeQmkf7b4RpBs+Qi+bnhsQzEpEpuGRdDNisnxo3E=
+github.com/pluralsh/gqlclient v1.0.9 h1:QdOwFGQtD3aRF+0yQ22rVI7wvRlwbHu2jdSILQIPBgw=
+github.com/pluralsh/gqlclient v1.0.9/go.mod h1:1kRMeQmkf7b4RpBs+Qi+bnhsQzEpEpuGRdDNisnxo3E=
 github.com/pluralsh/gqlgenc v0.0.9 h1:OQKx73h7Tqg46rK75sZz4Kh9d+IleChhpEX0uVLsjw0=
 github.com/pluralsh/gqlgenc v0.0.9/go.mod h1:ehD6EFAAHi1q/k5GSsW7WPnVYM+aO6N5zsgqTALoYBo=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=

@@ -35,7 +35,7 @@ require (
 	github.com/packethost/packngo v0.22.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.0.7
+	github.com/pluralsh/gqlclient v1.0.9
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.1
