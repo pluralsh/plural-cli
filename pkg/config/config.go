@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 
 	"github.com/oleiade/reflections"
 	"golang.org/x/text/cases"

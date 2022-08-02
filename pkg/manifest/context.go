@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 type Bundle struct {

@@ -6,7 +6,7 @@ import (
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 type RecipeInput struct {

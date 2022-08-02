@@ -8,7 +8,7 @@ import (
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 	file "github.com/pluralsh/plural/pkg/utils"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 type ArtifactAttributes struct {
