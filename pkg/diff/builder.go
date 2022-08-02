@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/hcl"
+	hcl "github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -27,13 +27,9 @@ type Metadata struct {
 
 func GetDiff(path, name string) (*Diff, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
 	diff := Diff{}
-	if err != nil {
-		return &diff, nil
-	}
 
-	err = hcl.Decode(&diff, string(contents))
+	err := hcl.DecodeFile(fullpath, nil, &diff)
 	return &diff, err
 }
 

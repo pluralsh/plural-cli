@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/hcl"
+	hcl "github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -34,13 +34,9 @@ func Ignore(root string) error {
 
 func GetExecution(path, name string) (*Execution, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
 	ex := Execution{}
-	if err != nil {
-		return &ex, err
-	}
 
-	err = hcl.Decode(&ex, string(contents))
+	err := hcl.DecodeFile(fullpath, nil, &ex)
 	if err != nil {
 		return &ex, err
 	}

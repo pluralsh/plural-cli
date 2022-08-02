@@ -25,7 +25,6 @@ require (
 	github.com/google/go-github/v44 v44.1.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-retryablehttp v0.7.1
-	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/hcl/v2 v2.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/imdario/mergo v0.3.12
@@ -59,6 +58,8 @@ require (
 
 require (
 	github.com/Yamashou/gqlgenc v0.0.8 // indirect
+	github.com/agext/levenshtein v1.2.2 // indirect
+	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.4 // indirect
@@ -79,9 +80,11 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
 	github.com/googleapis/go-type-adapters v1.0.0 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.4.6 // indirect
+	github.com/zclconf/go-cty v1.9.1 // indirect
 )
 
 require (

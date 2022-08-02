@@ -1,10 +1,9 @@
 package scaffold
 
 import (
-	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hashicorp/hcl"
+	hcl "github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
@@ -12,13 +11,9 @@ import (
 
 func Read(path string) (*Build, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, "build.hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
 	build := Build{}
-	if err != nil {
-		return &build, err
-	}
 
-	err = hcl.Decode(&build, string(contents))
+	err := hcl.DecodeFile(fullpath, nil, &build)
 	if err != nil {
 		return &build, err
 	}
