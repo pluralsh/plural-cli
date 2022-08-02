@@ -74,6 +74,10 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 			if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
 				return fmt.Errorf("domain must end with %s", proj.Network.Subdomain)
 			}
+			// check single level deep
+			if err := utils.ValidateSingleLevelDeep(res, proj.Network.Subdomain); err != nil {
+				return err
+			}
 
 			if err := utils.ValidateDns(res); err != nil {
 				return err

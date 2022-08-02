@@ -13,6 +13,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const pluralDomain = "onplural.sh"
+
 type Writer func() error
 
 func ProjectManifestPath() string {
@@ -142,8 +144,12 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 			return err
 		}
 
-		if pluralDns && !strings.HasSuffix(res, "onplural.sh") {
+		if pluralDns && !strings.HasSuffix(res, pluralDomain) {
 			return fmt.Errorf("Not an onplural.sh domain")
+		}
+
+		if err := utils.ValidateSingleLevelDeep(res, pluralDomain); err != nil {
+			return err
 		}
 
 		if pluralDns {

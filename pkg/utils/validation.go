@@ -12,6 +12,21 @@ const (
 	dnsRegex = "(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])"
 )
 
+func ValidateSingleLevelDeep(val, subdomain string) error {
+	reg, err := regexp.Compile(fmt.Sprintf("\\w+.%s", subdomain))
+	if err != nil {
+		return err
+	}
+	submatch := reg.FindStringSubmatch(val)
+
+	if len(submatch) == 1 {
+		if submatch[0] == val {
+			return nil
+		}
+	}
+	return fmt.Errorf("use single level deep domain: <domainName>.%s", subdomain)
+}
+
 func ValidateRegex(val, regex, message string) error {
 	reg, err := regexp.Compile(fmt.Sprintf("^%s$", regex))
 	if err != nil {
