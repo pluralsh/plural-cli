@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/text/language"
 
+	"github.com/oleiade/reflections"
 	"golang.org/x/text/cases"
-	"gopkg.in/oleiade/reflections.v1"
 	"gopkg.in/yaml.v2"
 )
 
