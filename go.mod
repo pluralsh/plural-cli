@@ -17,7 +17,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/azure/azure-sdk-for-go v57.4.0+incompatible
 	github.com/buger/goterm v1.0.4
-	github.com/chartmuseum/helm-push v0.10.2
+	github.com/chartmuseum/helm-push v0.10.3
 	github.com/coreos/go-semver v0.3.0
 	github.com/fatih/color v1.13.0
 	github.com/gin-gonic/gin v1.8.1
@@ -117,7 +117,7 @@ require (
 	github.com/cli/browser v1.0.0 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/containerd/containerd v1.6.6 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
@@ -215,7 +215,7 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
-	github.com/spf13/cobra v1.4.0 // indirect
+	github.com/spf13/cobra v1.5.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.0
 	github.com/ugorji/go/codec v1.2.7 // indirect
