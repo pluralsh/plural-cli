@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v45/github"
 	"github.com/pluralsh/oauth"
 	"golang.org/x/oauth2"
 
