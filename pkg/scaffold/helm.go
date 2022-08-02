@@ -213,7 +213,14 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 
 		// need to handle globals in a dedicated way
 		if glob, ok := subVals["global"]; ok {
-			globMap := utils.CleanUpInterfaceMap(glob.(map[interface{}]interface{}))
+			var globMap map[string]interface{}
+
+			switch v := glob.(type) {
+			case map[interface{}]interface{}:
+				globMap = utils.CleanUpInterfaceMap(v)
+			case map[string]interface{}:
+				globMap = v
+			}
 			if err := mergo.Merge(&globals, globMap); err != nil {
 				return err
 			}
