@@ -37,7 +37,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.0.7
 	github.com/pluralsh/plural-operator v0.1.4
-	github.com/rodaine/hclencoder v0.0.0-20200910194838-aaa140ee61ed
+	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.1
 	github.com/urfave/cli v1.22.8
 	github.com/xanzy/go-gitlab v0.65.0
