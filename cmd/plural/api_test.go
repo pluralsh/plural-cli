@@ -18,6 +18,7 @@ func TestListArtifacts(t *testing.T) {
 		args             []string
 		artifacts        []api.Artifact
 		expectedResponse string
+		expectedError    string
 	}{
 		{
 			name: `test "api list artifacts" with single response`,
@@ -36,18 +37,30 @@ func TestListArtifacts(t *testing.T) {
 +-----+------+----------+------+-----+
 `,
 		},
+		{
+			name:          `test "api list artifacts" without REPO_ID parameter`,
+			args:          []string{plural.ApplicationName, "api", "list", "artifacts"},
+			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			artifacts:     []api.Artifact{},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("ListArtifacts", mock.AnythingOfType("string")).Return(test.artifacts, nil)
+			if test.expectedError == "" {
+				client.On("ListArtifacts", mock.AnythingOfType("string")).Return(test.artifacts, nil)
+			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 
-			assert.Equal(t, test.expectedResponse, res)
 		})
 	}
 }
@@ -117,6 +130,7 @@ func TestGetCharts(t *testing.T) {
 		args             []string
 		charts           []*api.Chart
 		expectedResponse string
+		expectedError    string
 	}{
 		{
 			name: `test "api list charts" with single response`,
@@ -134,18 +148,29 @@ func TestGetCharts(t *testing.T) {
 +-----+------+-------------+----------------+
 `,
 		},
+		{
+			name:          `test "api list charts" without REPO_ID parameter`,
+			args:          []string{plural.ApplicationName, "api", "list", "charts"},
+			charts:        []*api.Chart{},
+			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("GetCharts", mock.AnythingOfType("string")).Return(test.charts, nil)
+			if test.expectedError == "" {
+				client.On("GetCharts", mock.AnythingOfType("string")).Return(test.charts, nil)
+			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedResponse, res)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 		})
 	}
 }
@@ -156,6 +181,7 @@ func TestGetTerraform(t *testing.T) {
 		args             []string
 		terraform        []*api.Terraform
 		expectedResponse string
+		expectedError    string
 	}{
 		{
 			name: `test "api list terraform"`,
@@ -180,18 +206,30 @@ func TestGetTerraform(t *testing.T) {
 +-----+--------+----------------+
 `,
 		},
+		{
+			name:          `test "api list terraform" without REPO_ID parameter`,
+			args:          []string{plural.ApplicationName, "api", "list", "terraform"},
+			terraform:     []*api.Terraform{},
+			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("GetTerraforma", mock.AnythingOfType("string")).Return(test.terraform, nil)
+			if test.expectedError == "" {
+				client.On("GetTerraforma", mock.AnythingOfType("string")).Return(test.terraform, nil)
+			}
+
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedResponse, res)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 		})
 	}
 }
@@ -202,6 +240,7 @@ func TestGetVersons(t *testing.T) {
 		args             []string
 		versions         []*api.Version
 		expectedResponse string
+		expectedError    string
 	}{
 		{
 			name: `test "api list versions"`,
@@ -224,18 +263,29 @@ func TestGetVersons(t *testing.T) {
 +-----+---------+
 `,
 		},
+		{
+			name:          `test "api list versions" without CHART_ID parameter`,
+			args:          []string{plural.ApplicationName, "api", "list", "versions"},
+			versions:      []*api.Version{},
+			expectedError: "Not enough arguments provided: needs CHART_ID. Try running --help to see usage.",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("GetVersions", mock.AnythingOfType("string")).Return(test.versions, nil)
+			if test.expectedError == "" {
+				client.On("GetVersions", mock.AnythingOfType("string")).Return(test.versions, nil)
+			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedResponse, res)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 		})
 	}
 }
@@ -246,6 +296,7 @@ func TestGetChartInstallations(t *testing.T) {
 		args               []string
 		chartInstallations []*api.ChartInstallation
 		expectedResponse   string
+		expectedError      string
 	}{
 		{
 			name: `test "api list chartinstallations"`,
@@ -280,18 +331,29 @@ func TestGetChartInstallations(t *testing.T) {
 +-----+----------+------------+---------+
 `,
 		},
+		{
+			name:               `test "api list chartinstallations" without REPO_ID parameter`,
+			args:               []string{plural.ApplicationName, "api", "list", "chartinstallations"},
+			chartInstallations: []*api.ChartInstallation{},
+			expectedError:      "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("GetChartInstallations", mock.AnythingOfType("string")).Return(test.chartInstallations, nil)
+			if test.expectedError == "" {
+				client.On("GetChartInstallations", mock.AnythingOfType("string")).Return(test.chartInstallations, nil)
+			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedResponse, res)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 		})
 	}
 }
@@ -302,6 +364,7 @@ func TestGetTerraformInstallations(t *testing.T) {
 		args                   []string
 		terraformInstallations []*api.TerraformInstallation
 		expectedResponse       string
+		expectedError          string
 	}{
 		{
 			name: `test "api list terraforminstallations"`,
@@ -330,18 +393,29 @@ func TestGetTerraformInstallations(t *testing.T) {
 +-----+--------------+------+
 `,
 		},
+		{
+			name:                   `test "api list terraforminstallations" without REPO_ID parameter`,
+			args:                   []string{plural.ApplicationName, "api", "list", "terraforminstallations"},
+			terraformInstallations: []*api.TerraformInstallation{},
+			expectedError:          "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			client.On("GetTerraformInstallations", mock.AnythingOfType("string")).Return(test.terraformInstallations, nil)
+			if test.expectedError == "" {
+				client.On("GetTerraformInstallations", mock.AnythingOfType("string")).Return(test.terraformInstallations, nil)
+			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedResponse, res)
+			if test.expectedError != "" {
+				assert.Equal(t, err.Error(), test.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectedResponse, res)
+			}
 		})
 	}
 }
