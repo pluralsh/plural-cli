@@ -104,8 +104,7 @@ func Identity() (*age.X25519Identity, error) {
 	return generateIdentity(getAgePath())
 }
 
-func SetupAge(emails []string) error {
-	client := api.NewClient()
+func SetupAge(client api.Client, emails []string) error {
 	ageConfig, err := setupAgeConfig()
 	if err != nil {
 		return err
@@ -204,8 +203,7 @@ func (age *Age) Flush() error {
 	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), identityFile)), contents, 0644)
 }
 
-func SetupIdentity(name string) error {
-	client := api.NewClient()
+func SetupIdentity(client api.Client, name string) error {
 	userIdentity, err := generateIdentity(getAgePath())
 	if err != nil {
 		return err

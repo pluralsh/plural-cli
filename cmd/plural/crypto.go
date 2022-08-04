@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mitchellh/go-homedir"
@@ -47,7 +48,7 @@ const gitignore = `/**/.terraform
 .vscode
 `
 
-func cryptoCommands() []cli.Command {
+func (p *Plural) cryptoCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "encrypt",
@@ -111,7 +112,7 @@ func cryptoCommands() []cli.Command {
 					Usage: "a email to share with (multiple allowed)",
 				},
 			},
-			Action: handleCryptoShare,
+			Action: requireArgs(p.handleCryptoShare, []string{"email"}),
 		},
 		{
 			Name:  "setup-keys",
@@ -122,7 +123,7 @@ func cryptoCommands() []cli.Command {
 					Usage: "a name for the key",
 				},
 			},
-			Action: handleSetupKeys,
+			Action: requireArgs(p.handleSetupKeys, []string{"name"}),
 		},
 	}
 }
@@ -233,9 +234,9 @@ func cryptoInit(c *cli.Context) error {
 	return err
 }
 
-func handleCryptoShare(c *cli.Context) error {
-	emails := c.StringSlice("email")
-	if err := crypto.SetupAge(emails); err != nil {
+func (p *Plural) handleCryptoShare(c *cli.Context) error {
+	emails := c.Args()
+	if err := crypto.SetupAge(p.Client, emails); err != nil {
 		return err
 	}
 
@@ -247,8 +248,9 @@ func handleCryptoShare(c *cli.Context) error {
 	return crypto.Flush(prov)
 }
 
-func handleSetupKeys(c *cli.Context) error {
-	if err := crypto.SetupIdentity(c.String("name")); err != nil {
+func (p *Plural) handleSetupKeys(c *cli.Context) error {
+	name := c.Args().Get(0)
+	if err := crypto.SetupIdentity(p.Client, name); err != nil {
 		return err
 	}
 
@@ -300,7 +302,16 @@ func importKey(c *cli.Context) error {
 }
 
 func randString(c *cli.Context) error {
-	str, err := crypto.RandStr(c.Int("len"))
+	var err error
+	intVar := c.Int("len")
+	len := c.Args().Get(0)
+	if len != "" {
+		intVar, err = strconv.Atoi(len)
+		if err != nil {
+			return err
+		}
+	}
+	str, err := crypto.RandStr(intVar)
 	if err != nil {
 		return err
 	}
@@ -366,6 +377,6 @@ func handleRecover(c *cli.Context) error {
 	}
 
 	utils.Success("Key successfully synced locally!\n")
-	fmt.Println("you might need to run `plural crypto init` and `plural crypto setup` to decrypt any repos with your new key")
+	fmt.Println("you might need to run `plural crypto init` and `plural crypto setup-keys` to decrypt any repos with your new key")
 	return nil
 }
