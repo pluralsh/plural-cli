@@ -1,7 +1,6 @@
 package server
 
 import (
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,7 +11,7 @@ import (
 func serverFunc(f func(c *gin.Context) error) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		if err := f(c); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.Error(err)
 		}
 	}
 }

@@ -14,12 +14,13 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
-	v1 "k8s.io/api/core/v1"
 )
 
 type AWSProvider struct {
@@ -258,7 +259,10 @@ func GetAwsAccount() (string, error) {
 	cmd := exec.Command("aws", "sts", "get-caller-identity")
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Println(out)
+		if ee, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("error during 'aws sts get-caller-identity': %s", string(ee.Stderr))
+		}
+
 		return "", err
 	}
 
