@@ -90,5 +90,6 @@ func (p *Plural) handleResetInstallations(c *cli.Context) error {
 
 	fmt.Printf("Deleted %d installations in app.plural.sh\n", count)
 	fmt.Println("(you can recreate these at any time and any running infrastructure is not affected, plural will simply no longer deliver upgrades)")
+	utils.Note("Now run `plural bundle install <repo> <bundle-name>` to install a new app \n")
 	return nil
 }
