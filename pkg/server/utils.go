@@ -11,7 +11,7 @@ import (
 func serverFunc(f func(c *gin.Context) error) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		if err := f(c); err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 		}
 	}
 }

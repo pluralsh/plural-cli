@@ -3,10 +3,9 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
-
-	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	"github.com/AlecAivazis/survey/v2"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
@@ -17,10 +16,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/errors"
+	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
 )
 
 type AWSProvider struct {
@@ -90,12 +90,12 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 	account, err := GetAwsAccount()
 	if err != nil {
-		err = errors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
+		err = plrlErrors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 		return
 	}
 
 	if len(account) == 0 {
-		err = errors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+		err = plrlErrors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
 		return
 	}
 
@@ -129,7 +129,7 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 	cfg, err := awsConfig.LoadDefaultConfig(context)
 
 	if err != nil {
-		return nil, errors.ErrorWrap(err, "Failed to initialize aws client: ")
+		return nil, plrlErrors.ErrorWrap(err, "Failed to initialize aws client: ")
 	}
 
 	cfg.Region = region
@@ -139,7 +139,7 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 
 func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
+		return "", plrlErrors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
 	}
 
 	ctx["Region"] = aws.Region()
@@ -228,7 +228,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	cfg, err := awsConfig.LoadDefaultConfig(*prov.goContext)
 
 	if err != nil {
-		return errors.ErrorWrap(err, "Failed to establish aws session")
+		return plrlErrors.ErrorWrap(err, "Failed to establish aws session")
 	}
 
 	cfg.Region = prov.Region()
@@ -243,7 +243,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	})
 
 	if err != nil {
-		return errors.ErrorWrap(err, "failed to find node in ec2")
+		return plrlErrors.ErrorWrap(err, "failed to find node in ec2")
 	}
 
 	instance := instances.Reservations[0].Instances[0]
@@ -252,15 +252,16 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 		InstanceIds: []string{*instance.InstanceId},
 	})
 
-	return errors.ErrorWrap(err, "failed to terminate instance")
+	return plrlErrors.ErrorWrap(err, "failed to terminate instance")
 }
 
 func GetAwsAccount() (string, error) {
 	cmd := exec.Command("aws", "sts", "get-caller-identity")
 	out, err := cmd.Output()
+	var exitError *exec.ExitError
 	if err != nil {
-		if ee, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf("error during 'aws sts get-caller-identity': %s", string(ee.Stderr))
+		if errors.As(err, &exitError) {
+			return "", fmt.Errorf("error during 'aws sts get-caller-identity': %s", string(exitError.Stderr))
 		}
 
 		return "", err

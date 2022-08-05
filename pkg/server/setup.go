@@ -95,7 +95,7 @@ func setupCli(c *gin.Context) error {
 	}
 
 	if err := setupProvider(&setup); err != nil {
-		return fmt.Errorf("error setting up provider: %s", err)
+		return fmt.Errorf("error setting up provider: %w", err)
 	}
 
 	exists, err := gitExists()
@@ -109,20 +109,20 @@ func setupCli(c *gin.Context) error {
 	}
 
 	if err := setupGit(&setup); err != nil {
-		return fmt.Errorf("error setting up git: %s", err)
+		return fmt.Errorf("error setting up git: %w", err)
 	}
 
 	man := toManifest(&setup)
 	path := manifest.ProjectManifestPath()
 	if err := man.Write(path); err != nil {
-		return fmt.Errorf("error writing manifest: %s", err)
+		return fmt.Errorf("error writing manifest: %w", err)
 	}
 
 	ctx := toContext(&setup)
 	path = manifest.ContextPath()
 	if !utils.Exists(path) {
 		if err := ctx.Write(path); err != nil {
-			return fmt.Errorf("error writing context: %s", err)
+			return fmt.Errorf("error writing context: %w", err)
 		}
 	}
 
