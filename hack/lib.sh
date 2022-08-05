@@ -21,11 +21,12 @@ containerize() {
     mkdir -p "$gomodcache"
 
     exec docker run \
-      -v "$PWD":/go/src/pluralsh/gqlclient \
+      -v "$PWD":/go/src/pluralsh/gqlclient/ \
       -v "$gocache":"$gocache" \
       -v "$gomodcache":"$gomodcache" \
       -w /go/src/pluralsh/gqlclient \
       -e "GOCACHE=$gocache" \
+      -e "GOLANGCI_LINT_CACHE=$gocache" \
       -e "GOMODCACHE=$gomodcache" \
       -u "$(id -u):$(id -g)" \
       --entrypoint="$cmd" \

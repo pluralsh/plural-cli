@@ -73,3 +73,6 @@ test: .PHONY
 
 format: .PHONY # formats all go code to prep for linting
 	gofmt -s -w .
+
+linter: .PHONY
+	hack/run-linter.sh
