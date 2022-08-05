@@ -74,5 +74,5 @@ test: .PHONY
 format: .PHONY # formats all go code to prep for linting
 	gofmt -s -w .
 
-linter: .PHONY
+lint: .PHONY
 	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.46.2 golangci-lint run
