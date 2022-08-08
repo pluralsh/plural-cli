@@ -3,12 +3,12 @@
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
 APP_VSN ?= $(shell git describe --tags --always --dirty)
-APP_TIMESTAMP ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
+APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
-BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN) -X main.CompiledAt=$(APP_TIMESTAMP) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
+BASE_LDFLAGS ?= -X main.version=$(APP_VSN) -X main.commit=$(BUILD) -X main.date=$(APP_DATE) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
 OUTFILE ?= plural.o
 
 help:

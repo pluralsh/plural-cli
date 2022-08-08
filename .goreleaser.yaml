@@ -7,7 +7,7 @@ builds:
   - env:
       - CGO_ENABLED=0
     ldflags:
-    - "-s -w -X main.Version={{.Version}} -X main.GitCommit={{.Commit}} -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{ .Env.GITLAB_CLIENT_SECRET }}"
+    - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{ .Env.GITLAB_CLIENT_SECRET }}"
     goos:
       - linux
       - windows

@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	GitCommit  = "n/a"
-	Version    = "dev"
-	CompiledAt = time.Now().Format(time.RFC3339)
+	version = "dev"
+	commit  = ""
+	date    = time.Now().Format(time.RFC3339)
 )
 
 const latestUri = "https://api.github.com/repos/pluralsh/plural-cli/commits/master"
@@ -47,7 +47,7 @@ func checkRecency() error { //nolint:deadcode,unused
 		return err
 	}
 
-	if !strings.HasPrefix(sha, GitCommit) {
+	if !strings.HasPrefix(sha, commit) {
 		utils.Warn("Your cli version appears out of date, try updating it with your package manager\n\n")
 	}
 
@@ -55,11 +55,10 @@ func checkRecency() error { //nolint:deadcode,unused
 }
 
 func versionInfo(c *cli.Context) error {
-	fmt.Println("Plural CLI:")
-	fmt.Printf("  Version: %s\n", Version)
-	fmt.Printf("  Git Commit: %s\n", GitCommit)
-	fmt.Printf("  Compiled At: %s\n", CompiledAt)
-	fmt.Printf("  OS: %s\n", runtime.GOOS)
-	fmt.Printf("  Arch: %s\n", runtime.GOARCH)
+	fmt.Println("PLURAL CLI:")
+	fmt.Printf("   version\t%s\n", version)
+	fmt.Printf("   git commit\t%s\n", commit)
+	fmt.Printf("   compiled at\t%s\n", date)
+	fmt.Printf("   os/arch\t%s/%s\n", runtime.GOOS, runtime.GOARCH)
 	return nil
 }
