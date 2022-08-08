@@ -19,7 +19,7 @@ COPY cmd/ cmd/
 COPY pkg/ pkg/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o plural -ldflags '-s -w' ./cmd/plural/
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 OUTFILE=plural make build-cli
 
 FROM gcr.io/pluralsh/golang:1.18.2-alpine3.15
 
