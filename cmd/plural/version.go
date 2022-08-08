@@ -14,11 +14,10 @@ import (
 )
 
 var (
-	GitCommit string
-	Version   string
+	GitCommit  = "n/a"
+	Version    = "dev"
+	CompiledAt = time.Now().Format(time.RFC3339)
 )
-
-var BuildDate = time.Now()
 
 const latestUri = "https://api.github.com/repos/pluralsh/plural-cli/commits/master"
 
@@ -59,7 +58,7 @@ func versionInfo(c *cli.Context) error {
 	fmt.Println("Plural CLI:")
 	fmt.Printf("  Version: %s\n", Version)
 	fmt.Printf("  Git Commit: %s\n", GitCommit)
-	fmt.Printf("  Compiled At: %s\n", BuildDate.String())
+	fmt.Printf("  Compiled At: %s\n", CompiledAt)
 	fmt.Printf("  OS: %s\n", runtime.GOOS)
 	fmt.Printf("  Arch: %s\n", runtime.GOARCH)
 	return nil
