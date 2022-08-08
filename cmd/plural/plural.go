@@ -268,7 +268,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:        "crypto",
 			Usage:       "forge encryption utilities",
-			Subcommands: cryptoCommands(),
+			Subcommands: p.cryptoCommands(),
 			Category:    "User Profile",
 		},
 		{
