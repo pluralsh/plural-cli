@@ -35,6 +35,9 @@ func (client *client) GetInstallationById(id string) (*Installation, error) {
 }
 
 func convertInstallation(installation *gqlclient.InstallationFragment) *Installation {
+	if installation == nil {
+		return nil
+	}
 	i := &Installation{
 		Id:         installation.ID,
 		LicenseKey: utils.ConvertStringPointer(installation.LicenseKey),
