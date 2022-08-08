@@ -26,7 +26,7 @@ func defaultSteps(path string) []*Step {
 			Command: "terraform",
 			Args:    []string{"apply", "-auto-approve"},
 			Sha:     "",
-			Retries: 1,
+			Retries: 2,
 		},
 		{
 			Name:    "terraform-output",
@@ -59,7 +59,7 @@ func defaultSteps(path string) []*Step {
 			Command: "plural",
 			Args:    []string{"wkspace", "helm", sanitizedPath},
 			Sha:     "",
-			Retries: 1,
+			Retries: 2,
 		},
 	}
 }

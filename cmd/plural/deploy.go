@@ -1,12 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
@@ -17,7 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
-	pluralerr "github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
@@ -97,12 +95,12 @@ func diffed(_ *cli.Context) error {
 func (p *Plural) build(c *cli.Context) error {
 	changed, err := git.HasUpstreamChanges()
 	if err != nil {
-		return pluralerr.ErrorWrap(errNoGit, "Failed to get git information")
+		return errors.ErrorWrap(errNoGit, "Failed to get git information")
 	}
 
 	force := c.Bool("force")
 	if !changed && !force {
-		return pluralerr.ErrorWrap(errRemoteDiff, "Local Changes out of Sync")
+		return errors.ErrorWrap(errRemoteDiff, "Local Changes out of Sync")
 	}
 
 	if c.IsSet("only") {
@@ -228,7 +226,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 			return err
 		}
 
-		if err := retry(verbose, 2, time.Second*5, execution.Execute); err != nil {
+		if err := execution.Execute(verbose); err != nil {
 			utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
 			return err
 		}
@@ -455,26 +453,4 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 	}
 
 	return manifest.Read(p)
-}
-
-func retry(verbose bool, attempts int, sleep time.Duration, fn func(bool) error) error {
-	if err := fn(verbose); err != nil {
-		var stopError *stop
-		if errors.As(err, &stopError) {
-			// Return the original error for later checking
-			return err
-		}
-
-		if attempts--; attempts > 0 {
-			time.Sleep(sleep)
-			fmt.Printf("retrying, number of attempts remaining: %d\n", attempts)
-			return retry(verbose, attempts, 2*sleep, fn)
-		}
-		return err
-	}
-	return nil
-}
-
-type stop struct {
-	error
 }
