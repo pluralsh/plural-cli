@@ -19,6 +19,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
+          build-args: |
+            APP_VSN=ci
+            APP_COMMIT=$GITHUB_SHA
+            APP_DATE=$(date -u +"%Y-%m-%dT%H:%M:%S%z")
   cloud:
     name: Build cloud image
     runs-on: ubuntu-latest

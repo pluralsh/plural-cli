@@ -33,6 +33,8 @@ plural: .PHONY ## uploads to plural
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
 		-t $(APP_NAME):$(APP_VSN) \
 		-t $(APP_NAME):latest \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
