@@ -68,7 +68,5 @@ func versionInfo(c *cli.Context) error {
 	fmt.Printf("   compiled at\t%s\n", date)
 	fmt.Printf("   os/arch\t%s/%s\n", runtime.GOOS, runtime.GOARCH)
 
-	checkRecency()
-
-	return nil
+	return checkRecency()
 }
