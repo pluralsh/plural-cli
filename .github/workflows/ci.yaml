@@ -22,7 +22,7 @@ jobs:
           build-args: |
             APP_VSN=ci
             APP_COMMIT=$GITHUB_SHA
-            APP_DATE=$(date -u +"%Y-%m-%dT%H:%M:%S%z")
+            APP_DATE=2006-01-02T15:04:05+0700
   cloud:
     name: Build cloud image
     runs-on: ubuntu-latest
