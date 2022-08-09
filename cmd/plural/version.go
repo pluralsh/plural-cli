@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
@@ -16,7 +15,7 @@ import (
 var (
 	version = "dev"
 	commit  = ""
-	date    = time.Now().Format(time.RFC3339)
+	date    = ""
 )
 
 const latestUri = "https://api.github.com/repos/pluralsh/plural-cli/commits/master"
