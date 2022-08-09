@@ -12,16 +12,19 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	devVersion = "dev"
+	latestURI  = "https://api.github.com/repos/pluralsh/plural-cli/releases/latest"
+)
+
 var (
-	version = "dev"
+	version = devVersion
 	commit  = ""
 	date    = ""
 )
 
-const latestUri = "https://api.github.com/repos/pluralsh/plural-cli/commits/master"
-
-func latestVersion() (res string, err error) { //nolint:deadcode,unused
-	resp, err := http.Get(latestUri)
+func latestVersion() (res string, err error) {
+	resp, err := http.Get(latestURI)
 	if err != nil {
 		return
 	}
@@ -33,21 +36,26 @@ func latestVersion() (res string, err error) { //nolint:deadcode,unused
 	}
 
 	var ghResp struct {
-		Sha string
+		Tag_Name string
 	}
 	err = json.Unmarshal(body, &ghResp)
-	res = ghResp.Sha
+
+	res = ghResp.Tag_Name
 	return
 }
 
-func checkRecency() error { //nolint:deadcode,unused
-	sha, err := latestVersion()
+func checkRecency() error {
+	if version == devVersion {
+		return nil
+	}
+
+	latestVersion, err := latestVersion()
 	if err != nil {
 		return err
 	}
 
-	if !strings.HasPrefix(sha, commit) {
-		utils.Warn("Your cli version appears out of date, try updating it with your package manager\n\n")
+	if !strings.HasSuffix(latestVersion, version) {
+		utils.Warn("\nYour version appears out of date, try updating it with your package manager\n")
 	}
 
 	return nil
@@ -59,5 +67,8 @@ func versionInfo(c *cli.Context) error {
 	fmt.Printf("   git commit\t%s\n", commit)
 	fmt.Printf("   compiled at\t%s\n", date)
 	fmt.Printf("   os/arch\t%s/%s\n", runtime.GOOS, runtime.GOARCH)
+
+	checkRecency()
+
 	return nil
 }
