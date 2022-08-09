@@ -1,7 +1,3 @@
-ARG APP_VSN
-ARG APP_COMMIT
-ARG APP_DATE
-
 FROM ubuntu:22.10 as user
 
 # Create a nonroot user for final image
@@ -23,6 +19,10 @@ COPY cmd/ cmd/
 COPY pkg/ pkg/
 
 # Build
+ARG APP_VSN
+ARG APP_COMMIT
+ARG APP_DATE
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -ldflags "-s -w -X main.version=${APP_VSN} -X main.commit=${APP_COMMIT} -X main.date=${APP_DATE}" \
     -o plural ./cmd/plural/
