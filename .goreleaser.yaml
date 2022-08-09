@@ -34,10 +34,6 @@ changelog:
       - '^test:'
 release:
   name_template: "{{.ProjectName}}-v{{.Version}}"
-  header: |
-    ## Plural CLI release ({{ .Date }})
-
-    Welcome to this new release of the Plural CLI!
   footer: |
     ## Thanks!
 
