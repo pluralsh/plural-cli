@@ -20,9 +20,9 @@ jobs:
           file: ./Dockerfile
           push: false
           build-args: |
-            APP_VSN=ci
-            APP_COMMIT=$GITHUB_SHA
-            APP_DATE=2006-01-02T15:04:05+0700
+            APP_VSN=dev
+            APP_COMMIT=
+            APP_DATE=
   cloud:
     name: Build cloud image
     runs-on: ubuntu-latest
