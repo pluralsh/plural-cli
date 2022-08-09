@@ -56,6 +56,7 @@ COPY . .
 RUN make build-cli OUTFILE=/go/bin/plural && \
       cp /go/bin/plural /usr/local/bin/plural && \
       plural --help && \
+      plural version && \
       cp start-session.sh /usr/local/bin/start-session.sh && \
       chmod +x /usr/local/bin/start-session.sh
 
