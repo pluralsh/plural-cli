@@ -40,3 +40,4 @@ COPY --from=user /etc/passwd /etc/passwd
 USER nonroot
 
 RUN /go/bin/plural --help
+RUN /go/bin/plural version
