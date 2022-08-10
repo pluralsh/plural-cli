@@ -1,11 +1,13 @@
 package server
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -31,30 +33,30 @@ func setupGit(setup *SetupRequest) error {
 	}
 
 	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa")), []byte(setup.SshPrivateKey), 0600); err != nil {
-		return err
+		return fmt.Errorf("error writing ssh private key: %w", err)
 	}
 	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa.pub")), []byte(setup.SshPublicKey), 0644); err != nil {
-		return err
+		return fmt.Errorf("error writing ssh public key: %w", err)
 	}
 
 	if err := execCmd("ssh-add", pathing.SanitizeFilepath(filepath.Join(p, "id_rsa"))); err != nil {
-		return err
+		return fmt.Errorf("error adding ssh key to agent: %w", err)
 	}
 
 	dir, err := homedir.Expand("~/workspace")
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting the workspace: %w", err)
 	}
 
 	if err := execCmd("git", "clone", setup.GitUrl, dir); err != nil {
-		return err
+		return fmt.Errorf("error cloning the repository: %w", err)
 	}
 
 	if err := os.Chdir(dir); err != nil {
-		return err
+		return fmt.Errorf("error changing directory: %w", err)
 	}
 	if err := gitConfig("user.email", setup.User.Email); err != nil {
-		return err
+		return fmt.Errorf("error during git config: %w", err)
 	}
 
 	name := "plural-shell"
@@ -62,11 +64,11 @@ func setupGit(setup *SetupRequest) error {
 		name = setup.User.GitUser
 	}
 	if err := gitConfig("user.name", name); err != nil {
-		return err
+		return fmt.Errorf("error during git config: %w", err)
 	}
 
 	if err := execCmd("plural", "crypto", "init"); err != nil {
-		return err
+		return fmt.Errorf("error running plural crypt init: %w", err)
 	}
 
 	return execCmd("plural", "crypto", "unlock")

@@ -38,7 +38,9 @@ build: .PHONY ## Build the Docker image
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
 build-cloud: .PHONY ## build the cloud docker image
-	docker build --platform linux/amd64 -t $(APP_NAME):$(APP_VSN)-cloud \
+	docker build --platform linux/amd64 \
+		-t $(APP_NAME):$(APP_VSN)-cloud \
+		-t $(APP_NAME):latest-cloud \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN)-cloud -f dockerfiles/Dockerfile.cloud  .
 
@@ -62,6 +64,10 @@ up: .PHONY # spin up local server
 
 pull: .PHONY # pulls new server image
 	docker-compose pull
+
+serve: build-cloud .PHONY # build cloud version of plural-cli and start plural serve in docker
+	docker kill plural-cli || true
+	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
 
 release-vsn: # tags and pushes a new release
 	@read -p "Version: " tag; \

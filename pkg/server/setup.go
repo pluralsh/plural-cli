@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -93,6 +94,10 @@ func setupCli(c *gin.Context) error {
 		return err
 	}
 
+	if err := setupProvider(&setup); err != nil {
+		return fmt.Errorf("error setting up provider: %w", err)
+	}
+
 	exists, err := gitExists()
 	if err != nil {
 		return err
@@ -104,24 +109,20 @@ func setupCli(c *gin.Context) error {
 	}
 
 	if err := setupGit(&setup); err != nil {
-		return err
-	}
-
-	if err := setupProvider(&setup); err != nil {
-		return err
+		return fmt.Errorf("error setting up git: %w", err)
 	}
 
 	man := toManifest(&setup)
 	path := manifest.ProjectManifestPath()
 	if err := man.Write(path); err != nil {
-		return err
+		return fmt.Errorf("error writing manifest: %w", err)
 	}
 
 	ctx := toContext(&setup)
 	path = manifest.ContextPath()
 	if !utils.Exists(path) {
 		if err := ctx.Write(path); err != nil {
-			return err
+			return fmt.Errorf("error writing context: %w", err)
 		}
 	}
 

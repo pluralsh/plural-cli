@@ -13,7 +13,9 @@ import (
 )
 
 func Run() error {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.Use(ErrorHandler())
 	v1 := r.Group("/v1")
 	{
 		v1.POST("/setup", serverFunc(setupCli))
