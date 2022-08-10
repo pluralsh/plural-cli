@@ -19,7 +19,13 @@ COPY cmd/ cmd/
 COPY pkg/ pkg/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o plural -ldflags '-s -w' ./cmd/plural/
+ARG APP_VSN
+ARG APP_COMMIT
+ARG APP_DATE
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags "-s -w -X main.version=${APP_VSN} -X main.commit=${APP_COMMIT} -X main.date=${APP_DATE}" \
+    -o plural ./cmd/plural/
 
 FROM gcr.io/pluralsh/golang:1.18.2-alpine3.15
 
@@ -34,3 +40,4 @@ COPY --from=user /etc/passwd /etc/passwd
 USER nonroot
 
 RUN /go/bin/plural --help
+RUN /go/bin/plural version

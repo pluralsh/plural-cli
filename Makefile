@@ -3,11 +3,12 @@
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
 APP_VSN ?= $(shell git describe --tags --always --dirty)
+APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
-BASE_LDFLAGS ?= -X main.GitCommit=$(BUILD) -X main.Version=$(APP_VSN) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
+BASE_LDFLAGS ?= -X main.version=$(APP_VSN) -X main.commit=$(BUILD) -X main.date=$(APP_DATE) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}
 OUTFILE ?= plural.o
 
 help:
@@ -32,6 +33,8 @@ plural: .PHONY ## uploads to plural
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
 		-t $(APP_NAME):$(APP_VSN) \
 		-t $(APP_NAME):latest \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
