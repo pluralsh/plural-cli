@@ -93,7 +93,7 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 	case AWS:
 		return awsFromManifest(man)
 	case AZURE:
-		return azureFromManifest(man)
+		return AzureFromManifest(man, nil)
 	case EQUINIX:
 		return equinixFromManifest(man)
 	case KIND:
