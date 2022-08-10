@@ -13,17 +13,17 @@ import (
 )
 
 const (
-	devVersion = "dev"
-	latestURI  = "https://api.github.com/repos/pluralsh/plural-cli/releases/latest"
+	versionPlaceholder = "dev"
+	latestURI          = "https://api.github.com/repos/pluralsh/plural-cli/releases/latest"
 )
 
 var (
-	version = devVersion
+	version = versionPlaceholder
 	commit  = ""
 	date    = ""
 )
 
-func latestVersion() (res string, err error) {
+func getLatestVersion() (res string, err error) {
 	resp, err := http.Get(latestURI)
 	if err != nil {
 		return
@@ -45,11 +45,13 @@ func latestVersion() (res string, err error) {
 }
 
 func checkRecency() error {
-	if version == devVersion {
+	if version == versionPlaceholder || strings.Contains(version, "-") {
+		utils.Warn("\nThis is a development version, which can be significantly different from official releases")
+		utils.Warn("\nYou can download latest release from https://github.com/pluralsh/plural-cli/releases/latest\n")
 		return nil
 	}
 
-	latestVersion, err := latestVersion()
+	latestVersion, err := getLatestVersion()
 	if err != nil {
 		return err
 	}
