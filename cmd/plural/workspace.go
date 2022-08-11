@@ -62,7 +62,7 @@ func workspaceCommands() []cli.Command {
 		},
 		{
 			Name:      "helm-template",
-			Usage:     "templates the values from terraform",
+			Usage:     "templates the helm values to stdout",
 			ArgsUsage: "NAME",
 			Action:    requireArgs(templateHelm, []string{"NAME"}),
 		},
