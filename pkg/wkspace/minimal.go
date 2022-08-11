@@ -104,6 +104,27 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		"helm", args...)
 }
 
+func (m *MinimalWorkspace) TemplateHelm() error {
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
+	if err != nil {
+		return err
+	}
+	backup, err := templateVals(m.Name, path)
+	if err == nil {
+		defer func(oldpath, newpath string) {
+			_ = os.Rename(oldpath, newpath)
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+	}
+
+	namespace := m.Config.Namespace(m.Name)
+	utils.Warn("helm template --namespace %s %s %s\n", namespace, m.Name, path)
+	var args []string
+	defaultArgs := []string{"template", "--skip-crds", "--namespace", namespace, m.Name, path}
+	args = append(args, defaultArgs...)
+	return utils.Cmd(m.Config,
+		"helm", args...)
+}
+
 func (m *MinimalWorkspace) DiffHelm() error {
 	path, err := filepath.Abs(m.Name)
 	if err != nil {
