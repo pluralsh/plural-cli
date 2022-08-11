@@ -33,15 +33,10 @@ func ReadConfig() (conf *Config, err error) {
 }
 
 func Build() (Provider, error) {
-	fallback, err := fallbackProvider()
-	if err != nil {
-		return nil, err
-	}
 	if utils.Exists(configPath()) {
 		conf, err := ReadConfig()
-
 		if err != nil {
-			return fallback, err
+			return fallbackProvider()
 		}
 
 		switch conf.Type {
@@ -52,7 +47,7 @@ func Build() (Provider, error) {
 		}
 	}
 
-	return fallback, err
+	return fallbackProvider()
 }
 
 func fallbackProvider() (*KeyProvider, error) {
