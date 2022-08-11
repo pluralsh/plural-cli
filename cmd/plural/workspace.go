@@ -34,31 +34,37 @@ func workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: bounceHelm,
+			Action: requireArgs(bounceHelm, []string{"NAME"}),
 		},
 		{
 			Name:      "helm-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    diffHelm,
+			Action:    requireArgs(diffHelm, []string{"NAME"}),
 		},
 		{
 			Name:      "helm-deps",
 			Usage:     "updates the helm dependencies for this workspace",
 			ArgsUsage: "PATH",
-			Action:    updateDeps,
+			Action:    requireArgs(updateDeps, []string{"PATH"}),
 		},
 		{
 			Name:      "terraform-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    diffTerraform,
+			Action:    requireArgs(diffTerraform, []string{"NAME"}),
 		},
 		{
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    createCrds,
+			Action:    requireArgs(createCrds, []string{"NAME"}),
+		},
+		{
+			Name:      "helm-template",
+			Usage:     "templates the helm values to stdout",
+			ArgsUsage: "NAME",
+			Action:    requireArgs(templateHelm, []string{"NAME"}),
 		},
 	}
 }
@@ -155,4 +161,14 @@ func updateDeps(c *cli.Context) error {
 	}
 
 	return helm.UpdateDependencies(path)
+}
+
+func templateHelm(c *cli.Context) error {
+	name := c.Args().Get(0)
+	minimal, err := wkspace.Minimal(name)
+	if err != nil {
+		return err
+	}
+
+	return minimal.TemplateHelm()
 }
