@@ -34,6 +34,9 @@ func ReadConfig() (conf *Config, err error) {
 
 func Build() (Provider, error) {
 	fallback, err := fallbackProvider()
+	if err != nil {
+		return nil, err
+	}
 	if utils.Exists(configPath()) {
 		conf, err := ReadConfig()
 
@@ -54,5 +57,8 @@ func Build() (Provider, error) {
 
 func fallbackProvider() (*KeyProvider, error) {
 	key, err := Materialize()
+	if err != nil {
+		return nil, err
+	}
 	return &KeyProvider{key: key.Key}, err
 }
