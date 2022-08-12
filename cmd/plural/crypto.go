@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mitchellh/go-homedir"
@@ -371,8 +372,14 @@ func handleRecover(c *cli.Context) error {
 	if !ok {
 		return fmt.Errorf("could not find `key` in console-conf secret")
 	}
+	keyValue := string(key)
+	prefix := "key:"
+	// the key has the structure: `key: aaabbbcccxxx\n`
+	// we have to retrieve the value
+	keyValue = strings.TrimPrefix(keyValue, prefix)
+	keyValue = strings.TrimSpace(keyValue)
 
-	if err := crypto.Setup(string(key)); err != nil {
+	if err := crypto.Setup(keyValue); err != nil {
 		return err
 	}
 
