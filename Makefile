@@ -74,6 +74,8 @@ serve: build-cloud .PHONY # build cloud version of plural-cli and start plural s
 
 release-vsn: # tags and pushes a new release
 	@read -p "Version: " tag; \
+	git checkout master; \
+	git pull --rebase; \
 	git tag -a $$tag -m "new release"; \
 	git push origin $$tag
 
