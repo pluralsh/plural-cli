@@ -11,7 +11,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/Azure/azure-sdk-for-go v56.3.0+incompatible
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.0.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.0.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.0.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.0.0
 	github.com/Azure/azure-storage-blob-go v0.13.0
 	github.com/Azure/go-autorest/autorest v0.11.28
@@ -59,7 +59,7 @@ require (
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v0.4.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v0.5.1 // indirect
 	github.com/Yamashou/gqlgenc v0.0.8 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.16.8 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.3 // indirect
