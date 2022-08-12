@@ -372,7 +372,12 @@ func handleRecover(c *cli.Context) error {
 		return fmt.Errorf("could not find `key` in console-conf secret")
 	}
 
-	if err := crypto.Setup(string(key)); err != nil {
+	aesKey, err := crypto.Import(key)
+	if err != nil {
+		return err
+	}
+
+	if err := crypto.Setup(aesKey.Key); err != nil {
 		return err
 	}
 

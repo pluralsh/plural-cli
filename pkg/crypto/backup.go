@@ -12,8 +12,11 @@ import (
 func backupKey(key string) error {
 	p := getKeyPath()
 	if utils.Exists(p) {
-		aes, _ := Read(p)
-		if aes.Key == key {
+		aes, err := Read(p)
+		if err != nil {
+			return err
+		}
+		if aes != nil && aes.Key == key {
 			return nil
 		}
 
