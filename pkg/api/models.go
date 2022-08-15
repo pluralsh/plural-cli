@@ -178,6 +178,14 @@ type Recipe struct {
 	RecipeDependencies []*Recipe     `yaml:"recipeDependencies" json:"recipeDependencies"`
 }
 
+type Stack struct {
+	Id          string
+	Name        string
+	Provider    string
+	Description string
+	Bundles     []*Recipe
+}
+
 type RecipeTest struct {
 	Name    string
 	Type    string

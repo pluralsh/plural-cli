@@ -1,0 +1,27 @@
+name: data
+description: a full opensource datastack deployable on plural
+collections:
+- provider: AWS
+  bundles:
+  - name: airbyte-aws
+    repo: airbyte
+  - name: dagster-aws
+    repo: dagster
+  - name: superset-aws
+    repo: superset
+- provider: GCP
+  bundles:
+  - name: airbyte-gcp
+    repo: airbyte
+  - name: dagster-gcp
+    repo: dagster
+  - name: superset-gcp
+    repo: superset
+- provider: AZURE
+  bundles:
+  - name: airbyte-azure
+    repo: airbyte
+  - name: dagster-azure
+    repo: dagster
+  - name: superset-azure
+    repo: superset

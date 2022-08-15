@@ -1,5 +1,0 @@
-name: plural
-readme: CLI for building and deploying plural workspaces
-type: cli
-blob: plural.o
-readme: plural/readme.md

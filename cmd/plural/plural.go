@@ -321,6 +321,11 @@ func (p *Plural) getCommands() []cli.Command {
 			Subcommands: p.bundleCommands(),
 		},
 		{
+			Name:        "stack",
+			Usage:       "Commands for installing and discovering plural stacks",
+			Subcommands: p.stackCommands(),
+		},
+		{
 			Name:        "ops",
 			Usage:       "Commands for simplifying cluster operations",
 			Subcommands: p.opsCommands(),

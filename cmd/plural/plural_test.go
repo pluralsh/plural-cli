@@ -24,6 +24,7 @@ COMMANDS:
    init             initializes plural within a git repo
    preflights       runs provider preflight checks
    bundle           Commands for installing and discovering installation bundles
+   stack            Commands for installing and discovering plural stacks
    link             links a local package into an installation repo
    unlink           unlinks a linked package
    help, h          Shows a list of commands or help for one command
