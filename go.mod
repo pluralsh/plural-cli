@@ -89,7 +89,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.4.6 // indirect
-	golang.org/x/tools v0.1.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
