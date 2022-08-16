@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/pluralsh/plural/pkg/config"
@@ -14,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestSetupKeys(t *testing.T) {
@@ -139,6 +141,73 @@ func TestShare(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestRecover(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		secret      *v1.Secret
+		keyContent  string
+		expectedKey string
+	}{
+		{
+			name: `test "crypto recover" when key file doesn't exist`,
+			args: []string{plural.ApplicationName, "crypto", "recover"},
+			secret: &v1.Secret{
+				Data: map[string][]byte{
+					"key": []byte("key: gKNJBnflqQA6lfUKLWMwl7CMJk4j+qqG9jnGYdTvwTk="),
+				},
+			},
+			expectedKey: "key: gKNJBnflqQA6lfUKLWMwl7CMJk4j+qqG9jnGYdTvwTk=\n",
+		},
+		{
+			name: `test "crypto recover" when key file is broken`,
+			args: []string{plural.ApplicationName, "crypto", "recover"},
+			secret: &v1.Secret{
+				Data: map[string][]byte{
+					"key": []byte("key: gKNJBnflqQA6lfUKLWMwl7CMJk4j+qqG9jnGYdTvwTk="),
+				},
+			},
+			keyContent:  "      key: |\n        key: |\n          key: abc",
+			expectedKey: "key: gKNJBnflqQA6lfUKLWMwl7CMJk4j+qqG9jnGYdTvwTk=\n",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// create temp environment
+			dir, err := ioutil.TempDir("", "config")
+			assert.NoError(t, err)
+			defer os.RemoveAll(dir)
+
+			os.Setenv("HOME", dir)
+			defer os.Unsetenv("HOME")
+
+			defaultConfig := pluraltest.GenDefaultConfig()
+			err = defaultConfig.Save(config.ConfigName)
+			assert.NoError(t, err)
+
+			client := mocks.NewClient(t)
+			kube := mocks.NewKube(t)
+
+			if test.keyContent != "" {
+				err := ioutil.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.keyContent), 0644)
+				assert.NoError(t, err)
+			}
+
+			kube.On("Secret", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(test.secret, nil)
+
+			app := plural.CreateNewApp(&plural.Plural{Client: client, Kube: kube})
+			app.HelpName = plural.ApplicationName
+			os.Args = test.args
+			_, err = captureStdout(app, os.Args)
+			assert.NoError(t, err)
+
+			b, err := os.ReadFile(dir + "/.plural/key")
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedKey, string(b))
 		})
 	}
 }
