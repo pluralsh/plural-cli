@@ -97,7 +97,7 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	namespace := m.Config.Namespace(m.Name)
 	utils.Warn("helm upgrade --install --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
 	var args []string
-	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--namespace", namespace, m.Name, path}
+	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--timeout", "10m", "--namespace", namespace, m.Name, path}
 	args = append(args, defaultArgs...)
 	args = append(args, extraArgs...)
 	return utils.Cmd(m.Config,
