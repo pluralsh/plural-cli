@@ -28,6 +28,7 @@ const (
 	COMMAND     ComponentName = "run"
 	TAG         ComponentName = "tag"
 	REPO_ATTRS  ComponentName = "attrs"
+	STACK       ComponentName = "stack"
 )
 
 type Component interface {
@@ -132,6 +133,16 @@ func Parse(f string) (*Pluralfile, error) {
 			}
 
 			plrl.Components = append(plrl.Components, recipes...)
+		case "stack":
+			stacks, err := expandGlob(splitline[1], func(targ string) Component {
+				return &Stack{File: targ}
+			})
+
+			if err != nil {
+				return plrl, err
+			}
+
+			plrl.Components = append(plrl.Components, stacks...)
 		case "integration":
 			integs, err := expandGlob(splitline[1], func(targ string) Component {
 				return &Integration{File: targ}

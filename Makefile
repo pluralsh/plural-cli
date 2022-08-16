@@ -27,6 +27,9 @@ build-cli: .PHONY
 release: .PHONY
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/
 
+setup: .PHONY ## sets up your local env (for mac only)
+	brew install golangci-lint
+
 plural: .PHONY ## uploads to plural
 	plural apply
 
@@ -83,7 +86,10 @@ test: .PHONY
 	go test -v -race ./pkg/... ./cmd/...
 
 format: .PHONY # formats all go code to prep for linting
-	gofmt -s -w .
+	golangci-lint run --fix
+
+genmock: .PHONY # generates mocks before running tests
+	hack/gen-client-mocks.sh	
 
 lint: .PHONY
 	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.46.2 golangci-lint run

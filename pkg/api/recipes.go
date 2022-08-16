@@ -276,7 +276,39 @@ func convertRecipe(rcp *gqlclient.RecipeFragment) *Recipe {
 		r.Tests = append(r.Tests, t)
 	}
 
+	for _, section := range rcp.RecipeSections {
+		rs := &RecipeSection{
+			Id: fmt.Sprint(section.Index),
+			Repository: &Repository{
+				Id:          section.Repository.ID,
+				Name:        section.Repository.Name,
+				Description: utils.ConvertStringPointer(section.Repository.Description),
+				Icon:        utils.ConvertStringPointer(section.Repository.Icon),
+				DarkIcon:    utils.ConvertStringPointer(section.Repository.DarkIcon),
+				Notes:       utils.ConvertStringPointer(section.Repository.Notes),
+			},
+			RecipeItems:   []*RecipeItem{},
+			Configuration: []*ConfigurationItem{},
+		}
+		for _, conf := range section.Configuration {
+			rs.Configuration = append(rs.Configuration, convertConfigurationItem(conf))
+		}
+		for _, recipeItem := range section.RecipeItems {
+			rs.RecipeItems = append(rs.RecipeItems, convertRecipeItem(recipeItem))
+		}
+
+		r.RecipeSections = append(r.RecipeSections, rs)
+
+	}
+
 	return r
+}
+
+func convertStack(st *gqlclient.StackFragment) *Stack {
+	return &Stack{
+		Name:        st.Name,
+		Description: utils.ConvertStringPointer(st.Description),
+	}
 }
 
 func (client *client) ListRecipes(repo, provider string) ([]*Recipe, error) {
@@ -300,6 +332,36 @@ func (client *client) InstallRecipe(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (client *client) GetStack(name, provider string) (*Stack, error) {
+	p := gqlclient.Provider(NormalizeProvider(provider))
+	resp, err := client.pluralClient.GetStack(client.ctx, name, p)
+	if err != nil {
+		return nil, err
+	}
+
+	s := convertStack(resp.Stack)
+	s.Bundles = make([]*Recipe, 0)
+	for _, r := range resp.Stack.Bundles {
+		s.Bundles = append(s.Bundles, convertRecipe(r))
+	}
+
+	return s, nil
+}
+
+func (client *client) CreateStack(attributes gqlclient.StackAttributes) (string, error) {
+	resp, err := client.pluralClient.CreateStack(client.ctx, attributes)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.CreateStack.ID, err
+}
+
+func ConstructStack(marshalled []byte) (stack gqlclient.StackAttributes, err error) {
+	err = yaml.Unmarshal(marshalled, &stack)
+	return
 }
 
 func ConstructRecipe(marshalled []byte) (recipe gqlclient.RecipeAttributes, err error) {

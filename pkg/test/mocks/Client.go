@@ -170,6 +170,27 @@ func (_m *Client) CreateRepository(name string, publisher string, input *gqlclie
 	return r0
 }
 
+// CreateStack provides a mock function with given fields: attributes
+func (_m *Client) CreateStack(attributes gqlclient.StackAttributes) (string, error) {
+	ret := _m.Called(attributes)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(gqlclient.StackAttributes) string); ok {
+		r0 = rf(attributes)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(gqlclient.StackAttributes) error); ok {
+		r1 = rf(attributes)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteEabCredential provides a mock function with given fields: cluster, provider
 func (_m *Client) DeleteEabCredential(cluster string, provider string) error {
 	ret := _m.Called(cluster, provider)
@@ -451,6 +472,29 @@ func (_m *Client) GetShell() (api.CloudShell, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetStack provides a mock function with given fields: name, provider
+func (_m *Client) GetStack(name string, provider string) (*api.Stack, error) {
+	ret := _m.Called(name, provider)
+
+	var r0 *api.Stack
+	if rf, ok := ret.Get(0).(func(string, string) *api.Stack); ok {
+		r0 = rf(name, provider)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*api.Stack)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(name, provider)
 	} else {
 		r1 = ret.Error(1)
 	}

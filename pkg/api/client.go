@@ -64,6 +64,8 @@ type Client interface {
 	GetTerraforma(repoId string) ([]*Terraform, error)
 	GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error)
 	UploadTerraform(dir string, repoName string) (Terraform, error)
+	GetStack(name, provider string) (*Stack, error)
+	CreateStack(attributes gqlclient.StackAttributes) (string, error)
 }
 
 type client struct {

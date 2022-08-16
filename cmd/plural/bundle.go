@@ -35,6 +35,23 @@ func (p *Plural) bundleCommands() []cli.Command {
 	}
 }
 
+func (p *Plural) stackCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "install",
+			Usage:     "installs a plural stack for your current provider",
+			ArgsUsage: "NAME",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "refresh",
+					Usage: "re-enter the configuration for all bundles",
+				},
+			},
+			Action: rooted(requireArgs(p.stackInstall, []string{"stack-name"})),
+		},
+	}
+}
+
 func (p *Plural) bundleList(c *cli.Context) error {
 	man, err := manifest.FetchProject()
 	repo := c.Args().Get(0)
@@ -61,6 +78,18 @@ func (p *Plural) bundleList(c *cli.Context) error {
 func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 	args := c.Args()
 	err = bundle.Install(p.Client, args.Get(0), args.Get(1), c.Bool("refresh"))
+	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
+	return
+}
+
+func (p *Plural) stackInstall(c *cli.Context) (err error) {
+	name := c.Args().Get(0)
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return
+	}
+
+	err = bundle.Stack(p.Client, name, man.Provider, c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
 }
