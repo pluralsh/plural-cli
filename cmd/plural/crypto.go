@@ -14,7 +14,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -78,7 +77,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "recover",
 			Usage:  "recovers repo encryption keys from a working k8s cluster",
-			Action: handleRecover,
+			Action: p.handleRecover,
 		},
 		{
 			Name:   "random",
@@ -356,13 +355,12 @@ func handleKeygen(c *cli.Context) error {
 	return nil
 }
 
-func handleRecover(c *cli.Context) error {
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
+func (p *Plural) handleRecover(c *cli.Context) error {
+	if err := p.InitKube(); err != nil {
 		return err
 	}
 
-	secret, err := kube.Secret("console", "console-conf")
+	secret, err := p.Secret("console", "console-conf")
 	if err != nil {
 		return err
 	}
