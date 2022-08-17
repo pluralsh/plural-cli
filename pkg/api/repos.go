@@ -171,7 +171,7 @@ func (client *client) ListRepositories(query string) ([]*Repository, error) {
 
 	res := make([]*Repository, 0)
 	for _, edge := range resp.Repositories.Edges {
-		res = append(res, &Repository{
+		rep := &Repository{
 			Id:          edge.Node.ID,
 			Name:        edge.Node.Name,
 			Description: utils.ConvertStringPointer(edge.Node.Description),
@@ -181,7 +181,12 @@ func (client *client) ListRepositories(query string) ([]*Repository, error) {
 			Publisher: &Publisher{
 				Name: edge.Node.Publisher.Name,
 			},
-		})
+			Recipes: []*Recipe{},
+		}
+		for _, rcp := range edge.Node.Recipes {
+			rep.Recipes = append(rep.Recipes, &Recipe{Name: rcp.Name})
+		}
+		res = append(res, rep)
 	}
 
 	return res, err
