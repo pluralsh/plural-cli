@@ -93,6 +93,9 @@ func diffed(_ *cli.Context) error {
 }
 
 func (p *Plural) build(c *cli.Context) error {
+	if err := CheckGitCrypt(c); err != nil {
+		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
+	}
 	changed, err := git.HasUpstreamChanges()
 	if err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to get git information")

@@ -70,3 +70,11 @@ func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
+
+func CompareFileContent(filename, content string) (bool, error) {
+	c, err := ReadFile(filename)
+	if err != nil {
+		return false, err
+	}
+	return c == content, nil
+}

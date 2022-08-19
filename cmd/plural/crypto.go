@@ -21,7 +21,12 @@ import (
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
 
-const gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
+const (
+	GitAttributesFile = ".gitattributes"
+	GitIgnoreFile     = ".gitignore"
+)
+
+const Gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
 /**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
 /**/terraform/**/main.tf filter=plural-crypt diff=plural-crypt
 /**/terraform/**/main.tf* filter=plural-crypt diff=plural-crypt
@@ -35,7 +40,7 @@ workspace.yaml* filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
 
-const gitignore = `/**/.terraform
+const Gitignore = `/**/.terraform
 /**/.terraform*
 /**/terraform.tfstate*
 /bin
@@ -206,6 +211,27 @@ func handleDecrypt(c *cli.Context) error {
 	return nil
 }
 
+// CheckGitCrypt method checks if the .gitattributes and .gitignore files exist and have desired content.
+// Some old repos can have fewer files to encrypt and must be updated.
+func CheckGitCrypt(c *cli.Context) error {
+	if !utils.Exists(GitAttributesFile) || !utils.Exists(GitIgnoreFile) {
+		return cryptoInit(c)
+	}
+	toCompare := map[string]string{GitAttributesFile: Gitattributes, GitIgnoreFile: Gitignore}
+
+	for file, content := range toCompare {
+		equal, err := utils.CompareFileContent(file, content)
+		if err != nil {
+			return err
+		}
+		if !equal {
+			return cryptoInit(c)
+		}
+	}
+
+	return nil
+}
+
 func cryptoInit(c *cli.Context) error {
 	encryptConfig := [][]string{
 		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
@@ -221,11 +247,11 @@ func cryptoInit(c *cli.Context) error {
 		}
 	}
 
-	if err := utils.WriteFile(".gitattributes", []byte(gitattributes)); err != nil {
+	if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
 		return err
 	}
 
-	if err := utils.WriteFile(".gitignore", []byte(gitignore)); err != nil {
+	if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
 		return err
 	}
 
