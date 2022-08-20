@@ -126,6 +126,11 @@ func (client *client) CreateCrd(repo string, chart string, file string) error {
 	return err
 }
 
+func (client *client) UninstallChart(id string) (err error) {
+	_, err = client.pluralClient.UninstallChart(client.ctx, id)
+	return
+}
+
 func convertVersion(version *gqlclient.VersionFragment) *Version {
 	if version == nil {
 		return nil

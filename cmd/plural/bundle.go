@@ -49,6 +49,17 @@ func (p *Plural) stackCommands() []cli.Command {
 			},
 			Action: rooted(requireArgs(p.stackInstall, []string{"stack-name"})),
 		},
+		{
+			Name:  "list",
+			Usage: "lists stacks to potentially install",
+			Flags: []cli.Flag{
+				cli.BoolTFlag{
+					Name:  "account",
+					Usage: "only list stacks within your account",
+				},
+			},
+			Action: p.stackList,
+		},
 	}
 }
 
@@ -92,4 +103,20 @@ func (p *Plural) stackInstall(c *cli.Context) (err error) {
 	err = bundle.Stack(p.Client, name, man.Provider, c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
+}
+
+func (p *Plural) stackList(c *cli.Context) (err error) {
+	stacks, err := p.Client.ListStacks(c.Bool("featured"))
+	if err != nil {
+		return err
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Description", "Featured"})
+	for _, s := range stacks {
+		table.Append([]string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)})
+	}
+	table.Render()
+
+	return nil
 }

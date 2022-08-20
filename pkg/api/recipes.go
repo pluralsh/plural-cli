@@ -308,6 +308,7 @@ func convertStack(st *gqlclient.StackFragment) *Stack {
 	return &Stack{
 		Name:        st.Name,
 		Description: utils.ConvertStringPointer(st.Description),
+		Featured:    *st.Featured,
 	}
 }
 
@@ -348,6 +349,20 @@ func (client *client) GetStack(name, provider string) (*Stack, error) {
 	}
 
 	return s, nil
+}
+
+func (client *client) ListStacks(featured bool) ([]*Stack, error) {
+	resp, err := client.pluralClient.ListStacks(client.ctx, &featured, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	stacks := make([]*Stack, 0)
+	for _, edge := range resp.Stacks.Edges {
+		stacks = append(stacks, convertStack(edge.Node))
+	}
+
+	return stacks, nil
 }
 
 func (client *client) CreateStack(attributes gqlclient.StackAttributes) (string, error) {

@@ -326,6 +326,11 @@ func (p *Plural) getCommands() []cli.Command {
 			Subcommands: p.stackCommands(),
 		},
 		{
+			Name:        "packages",
+			Usage:       "Commands for managing your installed packages",
+			Subcommands: p.packagesCommands(),
+		},
+		{
 			Name:        "ops",
 			Usage:       "Commands for simplifying cluster operations",
 			Subcommands: p.opsCommands(),

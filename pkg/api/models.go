@@ -182,6 +182,7 @@ type Stack struct {
 	Id          string
 	Name        string
 	Provider    string
+	Featured    bool
 	Description string
 	Bundles     []*Recipe
 }
