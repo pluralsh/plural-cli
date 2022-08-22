@@ -770,6 +770,29 @@ func (_m *Client) ListRepositories(query string) ([]*api.Repository, error) {
 	return r0, r1
 }
 
+// ListStacks provides a mock function with given fields: featured
+func (_m *Client) ListStacks(featured bool) ([]*api.Stack, error) {
+	ret := _m.Called(featured)
+
+	var r0 []*api.Stack
+	if rf, ok := ret.Get(0).(func(bool) []*api.Stack); ok {
+		r0 = rf(featured)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*api.Stack)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(bool) error); ok {
+		r1 = rf(featured)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Login provides a mock function with given fields: email, pwd
 func (_m *Client) Login(email string, pwd string) (string, error) {
 	ret := _m.Called(email, pwd)
@@ -937,6 +960,34 @@ func (_m *Client) Scaffolds(in *api.ScaffoldInputs) ([]*api.ScaffoldFile, error)
 	}
 
 	return r0, r1
+}
+
+// UninstallChart provides a mock function with given fields: id
+func (_m *Client) UninstallChart(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UninstallTerraform provides a mock function with given fields: id
+func (_m *Client) UninstallTerraform(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // UnlockRepository provides a mock function with given fields: name

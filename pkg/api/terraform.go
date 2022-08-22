@@ -43,6 +43,11 @@ func (client *client) GetTerraformInstallations(repoId string) ([]*TerraformInst
 	return inst, err
 }
 
+func (client *client) UninstallTerraform(id string) (err error) {
+	_, err = client.pluralClient.UninstallTerraform(client.ctx, id)
+	return
+}
+
 func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	name := path.Base(dir)
 	fullPath, err := filepath.Abs(dir)

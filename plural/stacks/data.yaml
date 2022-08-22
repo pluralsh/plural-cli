@@ -1,5 +1,6 @@
 name: data
 description: a full opensource datastack deployable on plural
+featured: true
 collections:
 - provider: AWS
   bundles:

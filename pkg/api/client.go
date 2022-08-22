@@ -66,6 +66,9 @@ type Client interface {
 	UploadTerraform(dir string, repoName string) (Terraform, error)
 	GetStack(name, provider string) (*Stack, error)
 	CreateStack(attributes gqlclient.StackAttributes) (string, error)
+	ListStacks(featured bool) ([]*Stack, error)
+	UninstallChart(id string) error
+	UninstallTerraform(id string) error
 }
 
 type client struct {
