@@ -215,6 +215,9 @@ func getIconReader(icon *string, field string) (*gqlclient.Upload, error) {
 	if icon == nil {
 		return nil, nil
 	}
+	if *icon == "" {
+		return nil, nil
+	}
 
 	file, err := filepath.Abs(*icon)
 	if err != nil {
