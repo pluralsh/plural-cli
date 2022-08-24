@@ -148,10 +148,6 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 			return fmt.Errorf("Not an onplural.sh domain")
 		}
 
-		if err := utils.ValidateSingleLevelDeep(res, pluralDomain); err != nil {
-			return err
-		}
-
 		if pluralDns {
 			client := api.NewClient()
 			if err := client.CreateDomain(res); err != nil {
