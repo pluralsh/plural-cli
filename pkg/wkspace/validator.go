@@ -23,7 +23,12 @@ func Preflight() (bool, error) {
 
 	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return false, utils.HighlightError(fmt.Errorf("Repository has no initial commit, you can simply commit a blank readme and push to start working"))
+		return true, utils.HighlightError(fmt.Errorf("repository has no initial commit, you can simply commit a blank readme and push to start working"))
+	}
+
+	cmd = exec.Command("git", "ls-remote", "--exit-code")
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return true, utils.HighlightError(fmt.Errorf("repository has no remotes set, make sure that at least one remote is set"))
 	}
 
 	return true, nil
