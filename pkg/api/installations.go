@@ -121,16 +121,19 @@ func (client *client) GetInstallations() ([]*Installation, error) {
 }
 
 func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
-	var groupId = attributes.Bindings[0].GroupId
-	var userId = attributes.Bindings[0].UserId
+	bindings := make([]*gqlclient.BindingAttributes, 0)
+	for _, bind := range attributes.Bindings {
+		groupId := bind.GroupId
+		userId := bind.UserId
+		bindings = append(bindings, &gqlclient.BindingAttributes{
+			GroupID: &groupId,
+			UserID:  &userId,
+		})
+	}
+
 	_, err := client.pluralClient.UpsertOidcProvider(client.ctx, id, gqlclient.OidcAttributes{
-		AuthMethod: gqlclient.OidcAuthMethod(attributes.AuthMethod),
-		Bindings: []*gqlclient.BindingAttributes{
-			{
-				GroupID: &groupId,
-				UserID:  &userId,
-			},
-		},
+		AuthMethod:   gqlclient.OidcAuthMethod(attributes.AuthMethod),
+		Bindings:     bindings,
 		RedirectUris: convertRedirectUris(attributes.RedirectUris),
 	})
 	if err != nil {
@@ -148,9 +151,9 @@ func (client *client) ResetInstallations() (int, error) {
 	return int(*resp.ResetInstallations), err
 }
 
-func convertRedirectUris(uri []string) []*string {
+func convertRedirectUris(uris []string) []*string {
 	res := make([]*string, 0)
-	for _, s := range uri {
+	for _, s := range uris {
 		res = append(res, &s)
 	}
 	return res
