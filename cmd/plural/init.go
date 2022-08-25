@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -16,7 +18,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
 )
 
 func handleInit(c *cli.Context) error {
@@ -37,7 +38,6 @@ func handleInit(c *cli.Context) error {
 	}
 	defer func(prov provider.Provider) {
 		_ = prov.Flush()
-
 	}(prov)
 
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
