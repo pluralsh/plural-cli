@@ -28,7 +28,7 @@ func Stack(client api.Client, name, provider string, refresh bool) error {
 	}
 
 	for _, recipe := range s.Bundles {
-		if err := doInstall(client, recipe, name, provider, refresh); err != nil {
+		if err := doInstall(client, recipe, recipe.Repository.Name, provider, refresh); err != nil {
 			return err
 		}
 	}
