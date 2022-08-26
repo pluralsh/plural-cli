@@ -67,15 +67,16 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 				return nil
 			}
 
-			if context.HasDomain(res) {
+			if context.HasDomain(res) && res != def {
 				return fmt.Errorf("domain %s has already been used elsewhere in this project, please chose another", res)
 			}
 
 			if proj.Network != nil && !strings.HasSuffix(res, proj.Network.Subdomain) {
 				return fmt.Errorf("domain must end with %s", proj.Network.Subdomain)
 			}
+
 			// check single level deep
-			if err := utils.ValidateSingleLevelDeep(res, proj.Network.Subdomain); err != nil {
+			if err := utils.ValidateSingleLevelDeep(res, proj.Network.Subdomain); err != nil && proj.Network.PluralDns {
 				return err
 			}
 
