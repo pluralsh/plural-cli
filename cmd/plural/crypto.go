@@ -112,8 +112,9 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			ArgsUsage: "",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
-					Name:  "email",
-					Usage: "a email to share with (multiple allowed)",
+					Name:     "email",
+					Usage:    "a email to share with (multiple allowed)",
+					Required: true,
 				},
 			},
 			Action: p.handleCryptoShare,
@@ -123,8 +124,9 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "name",
-					Usage: "a name for the key",
+					Name:     "name",
+					Usage:    "a name for the key",
+					Required: true,
 				},
 			},
 			Action: p.handleSetupKeys,
@@ -261,9 +263,6 @@ func cryptoInit(c *cli.Context) error {
 
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
 	emails := c.StringSlice("email")
-	if len(emails) == 0 {
-		return fmt.Errorf("The `email` flag can not be empty")
-	}
 	if err := crypto.SetupAge(p.Client, emails); err != nil {
 		return err
 	}
@@ -278,9 +277,6 @@ func (p *Plural) handleCryptoShare(c *cli.Context) error {
 
 func (p *Plural) handleSetupKeys(c *cli.Context) error {
 	name := c.String("name")
-	if name == "" {
-		return fmt.Errorf("The `name` flag can not be empty")
-	}
 	if err := crypto.SetupIdentity(p.Client, name); err != nil {
 		return err
 	}

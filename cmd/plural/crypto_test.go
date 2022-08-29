@@ -30,7 +30,7 @@ func TestSetupKeys(t *testing.T) {
 		{
 			name:          `test "crypto setup-keys" without name flag`,
 			args:          []string{plural.ApplicationName, "crypto", "setup-keys"},
-			expectedError: "The `name` flag can not be empty",
+			expectedError: "Required flag \"name\" not set",
 		},
 		{
 			name: `test "crypto setup-keys"`,
@@ -110,7 +110,7 @@ func TestShare(t *testing.T) {
 		{
 			name:          `test "crypto share" without name flag`,
 			args:          []string{plural.ApplicationName, "crypto", "share"},
-			expectedError: "The `email` flag can not be empty",
+			expectedError: "Required flag \"email\" not set",
 		},
 		{
 			name: `test "crypto share"`,
