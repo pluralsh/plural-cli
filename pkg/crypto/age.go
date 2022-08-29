@@ -117,9 +117,20 @@ func SetupAge(client api.Client, emails []string) error {
 			return err
 		}
 
+		dedupeKey := func(id *AgeIdentity) string { return fmt.Sprintf("%s::%s", id.Email, id.Key) }
+
 		idents := ageConfig.Identities
+		present := map[string]bool{}
+		for _, id := range idents {
+			present[dedupeKey(id)] = true
+		}
+
 		for _, key := range keys {
-			idents = append(idents, &AgeIdentity{Key: key.Content, Email: key.User.Email})
+			id := &AgeIdentity{Key: key.Content, Email: key.User.Email}
+			if _, ok := present[dedupeKey(id)]; ok {
+				continue
+			}
+			idents = append(idents, id)
 		}
 
 		ageConfig.Identities = idents
@@ -214,6 +225,18 @@ func SetupIdentity(client api.Client, name string) error {
 
 func setupAgeConfig() (*Age, error) {
 	base := cryptPath()
+	path := pathing.SanitizeFilepath(filepath.Join(base, "identities.yml"))
+
+	if utils.Exists(path) {
+		age := &Age{}
+		contents, err := ioutil.ReadFile(path)
+		if err != nil {
+			return age, err
+		}
+
+		err = yaml.Unmarshal(contents, age)
+		return age, err
+	}
 
 	// first set up directory and gitignore files
 	if err := os.MkdirAll(base, os.ModePerm); err != nil {
