@@ -116,7 +116,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 					Usage: "a email to share with (multiple allowed)",
 				},
 			},
-			Action: requireArgs(p.handleCryptoShare, []string{"email"}),
+			Action: p.handleCryptoShare,
 		},
 		{
 			Name:  "setup-keys",
@@ -127,7 +127,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 					Usage: "a name for the key",
 				},
 			},
-			Action: requireArgs(p.handleSetupKeys, []string{"name"}),
+			Action: p.handleSetupKeys,
 		},
 	}
 }
