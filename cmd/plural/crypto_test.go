@@ -28,13 +28,13 @@ func TestSetupKeys(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          `test "crypto setup-keys" without name argument`,
+			name:          `test "crypto setup-keys" without name flag`,
 			args:          []string{plural.ApplicationName, "crypto", "setup-keys"},
-			expectedError: "Not enough arguments provided: needs name. Try running --help to see usage.",
+			expectedError: "Required flag \"name\" not set",
 		},
 		{
 			name: `test "crypto setup-keys"`,
-			args: []string{plural.ApplicationName, "crypto", "setup-keys", "test"},
+			args: []string{plural.ApplicationName, "crypto", "setup-keys", "--name", "test"},
 		},
 	}
 	for _, test := range tests {
@@ -108,13 +108,13 @@ func TestShare(t *testing.T) {
 		keys          []*api.PublicKey
 	}{
 		{
-			name:          `test "crypto share" without name argument`,
+			name:          `test "crypto share" without name flag`,
 			args:          []string{plural.ApplicationName, "crypto", "share"},
-			expectedError: "Not enough arguments provided: needs email. Try running --help to see usage.",
+			expectedError: "Required flag \"email\" not set",
 		},
 		{
 			name: `test "crypto share"`,
-			args: []string{plural.ApplicationName, "crypto", "share", "test@email.com"},
+			args: []string{plural.ApplicationName, "crypto", "share", "--email", "test@email.com"},
 		},
 	}
 	for _, test := range tests {

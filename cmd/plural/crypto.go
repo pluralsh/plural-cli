@@ -112,22 +112,24 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			ArgsUsage: "",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
-					Name:  "email",
-					Usage: "a email to share with (multiple allowed)",
+					Name:     "email",
+					Usage:    "a email to share with (multiple allowed)",
+					Required: true,
 				},
 			},
-			Action: requireArgs(p.handleCryptoShare, []string{"email"}),
+			Action: p.handleCryptoShare,
 		},
 		{
 			Name:  "setup-keys",
 			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "name",
-					Usage: "a name for the key",
+					Name:     "name",
+					Usage:    "a name for the key",
+					Required: true,
 				},
 			},
-			Action: requireArgs(p.handleSetupKeys, []string{"name"}),
+			Action: p.handleSetupKeys,
 		},
 	}
 }
@@ -260,7 +262,7 @@ func cryptoInit(c *cli.Context) error {
 }
 
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
-	emails := c.Args()
+	emails := c.StringSlice("email")
 	if err := crypto.SetupAge(p.Client, emails); err != nil {
 		return err
 	}
@@ -274,7 +276,7 @@ func (p *Plural) handleCryptoShare(c *cli.Context) error {
 }
 
 func (p *Plural) handleSetupKeys(c *cli.Context) error {
-	name := c.Args().Get(0)
+	name := c.String("name")
 	if err := crypto.SetupIdentity(p.Client, name); err != nil {
 		return err
 	}
