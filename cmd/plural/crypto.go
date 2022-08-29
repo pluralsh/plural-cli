@@ -260,7 +260,10 @@ func cryptoInit(c *cli.Context) error {
 }
 
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
-	emails := c.Args()
+	emails := c.StringSlice("email")
+	if len(emails) == 0 {
+		return fmt.Errorf("The `email` flag can not be empty")
+	}
 	if err := crypto.SetupAge(p.Client, emails); err != nil {
 		return err
 	}
@@ -274,7 +277,10 @@ func (p *Plural) handleCryptoShare(c *cli.Context) error {
 }
 
 func (p *Plural) handleSetupKeys(c *cli.Context) error {
-	name := c.Args().Get(0)
+	name := c.String("name")
+	if name == "" {
+		return fmt.Errorf("The `name` flag can not be empty")
+	}
 	if err := crypto.SetupIdentity(p.Client, name); err != nil {
 		return err
 	}
