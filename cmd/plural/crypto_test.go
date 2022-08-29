@@ -21,53 +21,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func TestSetupKeys(t *testing.T) {
-	tests := []struct {
-		name          string
-		args          []string
-		expectedError string
-	}{
-		{
-			name:          `test "crypto setup-keys" without name argument`,
-			args:          []string{plural.ApplicationName, "crypto", "setup-keys"},
-			expectedError: "Not enough arguments provided: needs name. Try running --help to see usage.",
-		},
-		{
-			name: `test "crypto setup-keys"`,
-			args: []string{plural.ApplicationName, "crypto", "setup-keys", "test"},
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
-			assert.NoError(t, err)
-			defer func(path string) {
-				_ = os.RemoveAll(path)
-			}(dir)
-			os.Setenv("HOME", dir)
-			defer os.Unsetenv("HOME")
-			defaultConfig := pluraltest.GenDefaultConfig()
-			err = defaultConfig.Save(config.ConfigName)
-			assert.NoError(t, err)
-
-			client := mocks.NewClient(t)
-			if test.expectedError == "" {
-				client.On("CreateKey", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil)
-			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
-			app.HelpName = plural.ApplicationName
-			os.Args = test.args
-			_, err = captureStdout(app, os.Args)
-			if test.expectedError != "" {
-				assert.Equal(t, err.Error(), test.expectedError)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestRandom(t *testing.T) {
 	tests := []struct {
 		name        string
