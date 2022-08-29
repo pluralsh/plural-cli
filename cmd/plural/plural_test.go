@@ -76,7 +76,9 @@ COMMANDS:
      changed             shows repos with pending changes
 
 GLOBAL OPTIONS:
-   --help, -h  show help
+   --profile-file FILE         configure your config.yml profile FILE [$PLURAL_PROFILE_FILE]
+   --encryption-key-file FILE  configure your encryption key FILE [$PLURAL_ENCRYPTION_KEY_FILE]
+   --help, -h                  show help
 `
 
 func TestPluralApplication(t *testing.T) {

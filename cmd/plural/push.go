@@ -92,6 +92,7 @@ func apply(c *cli.Context) error {
 }
 
 func (p *Plural) handleTerraformUpload(c *cli.Context) error {
+	p.InitPluralClient()
 	_, err := p.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
 	return err
 }
@@ -177,6 +178,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 }
 
 func (p *Plural) handleRecipeUpload(c *cli.Context) error {
+	p.InitPluralClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -193,6 +195,7 @@ func (p *Plural) handleRecipeUpload(c *cli.Context) error {
 }
 
 func (p *Plural) handleArtifact(c *cli.Context) error {
+	p.InitPluralClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	contents, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -210,6 +213,7 @@ func (p *Plural) handleArtifact(c *cli.Context) error {
 }
 
 func (p *Plural) createCrd(c *cli.Context) error {
+	p.InitPluralClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	repo := c.Args().Get(1)
 	chart := c.Args().Get(2)

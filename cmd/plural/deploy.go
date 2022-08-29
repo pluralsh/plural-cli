@@ -23,6 +23,7 @@ import (
 )
 
 func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {
+	p.InitPluralClient()
 	installations, err := p.GetInstallations()
 	if err != nil {
 		return installations, err
@@ -41,6 +42,7 @@ func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error
 }
 
 func (p *Plural) allSortedRepos() ([]string, error) {
+	p.InitPluralClient()
 	insts, err := p.GetInstallations()
 	if err != nil {
 		return nil, err
@@ -93,6 +95,7 @@ func diffed(_ *cli.Context) error {
 }
 
 func (p *Plural) build(c *cli.Context) error {
+	p.InitPluralClient()
 	if err := CheckGitCrypt(c); err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
@@ -131,6 +134,7 @@ func (p *Plural) build(c *cli.Context) error {
 }
 
 func (p *Plural) doBuild(installation *api.Installation, force bool) error {
+	p.InitPluralClient()
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 
@@ -163,6 +167,7 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 }
 
 func (p *Plural) validate(c *cli.Context) error {
+	p.InitPluralClient()
 	if c.IsSet("only") {
 		installation, err := p.GetInstallation(c.String("only"))
 		if err != nil {
@@ -187,6 +192,7 @@ func (p *Plural) validate(c *cli.Context) error {
 }
 
 func (p *Plural) doValidate(installation *api.Installation) error {
+	p.InitPluralClient()
 	utils.Highlight("Validating repository %s\n", installation.Repository.Name)
 	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
@@ -197,6 +203,7 @@ func (p *Plural) doValidate(installation *api.Installation) error {
 }
 
 func (p *Plural) deploy(c *cli.Context) error {
+	p.InitPluralClient()
 	verbose := c.Bool("verbose")
 	repoRoot, err := git.Root()
 
@@ -314,6 +321,7 @@ func handleDiff(_ *cli.Context) error {
 }
 
 func (p *Plural) bounce(c *cli.Context) error {
+	p.InitPluralClient()
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -342,6 +350,7 @@ func (p *Plural) bounce(c *cli.Context) error {
 }
 
 func (p *Plural) doBounce(repoRoot string, installation *api.Installation) error {
+	p.InitPluralClient()
 	repoName := installation.Repository.Name
 	utils.Warn("bouncing deployments in %s\n", repoName)
 	workspace, err := wkspace.New(p.Client, installation)
@@ -359,6 +368,7 @@ func (p *Plural) doBounce(repoRoot string, installation *api.Installation) error
 }
 
 func (p *Plural) destroy(c *cli.Context) error {
+	p.InitPluralClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -427,6 +437,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 }
 
 func (p *Plural) doDestroy(repoRoot string, installation *api.Installation) error {
+	p.InitPluralClient()
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
 	}
@@ -440,6 +451,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation) erro
 }
 
 func (p *Plural) buildContext(_ *cli.Context) error {
+	p.InitPluralClient()
 	insts, err := p.GetInstallations()
 	if err != nil {
 		return err

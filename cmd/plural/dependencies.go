@@ -8,6 +8,7 @@ import (
 )
 
 func (p *Plural) topsort(c *cli.Context) error {
+	p.InitPluralClient()
 	installations, _ := p.GetInstallations()
 	repoName := c.Args().Get(0)
 	sorted, err := wkspace.Dependencies(p.Client, repoName, installations)

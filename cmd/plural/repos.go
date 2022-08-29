@@ -44,10 +44,12 @@ func (p *Plural) reposCommands() []cli.Command {
 }
 
 func (p *Plural) handleUnlockRepo(c *cli.Context) error {
+	p.InitPluralClient()
 	return p.UnlockRepository(c.Args().First())
 }
 
 func (p *Plural) handleListRepositories(c *cli.Context) error {
+	p.InitPluralClient()
 	repos, err := p.ListRepositories(c.String("query"))
 	if err != nil {
 		return err
@@ -83,6 +85,7 @@ func (p *Plural) handleListRepositories(c *cli.Context) error {
 }
 
 func (p *Plural) handleResetInstallations(c *cli.Context) error {
+	p.InitPluralClient()
 	count, err := p.ResetInstallations()
 	if err != nil {
 		return err

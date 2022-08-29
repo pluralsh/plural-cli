@@ -6,12 +6,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
-
-	"github.com/pluralsh/plural/pkg/api"
 )
 
 func init() {
@@ -34,6 +35,12 @@ func (p *Plural) InitKube() error {
 		p.Kube = kube
 	}
 	return nil
+}
+
+func (p *Plural) InitPluralClient() {
+	if p.Client == nil {
+		p.Client = api.NewClient()
+	}
 }
 
 func (p *Plural) getCommands() []cli.Command {
@@ -379,8 +386,8 @@ func (p *Plural) getCommands() []cli.Command {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	// init Kube when k8s config exists
-	app := CreateNewApp(&Plural{api.NewClient(), nil})
-
+	plural := &Plural{}
+	app := CreateNewApp(plural)
 	if os.Getenv("ENABLE_COLOR") != "" {
 		color.NoColor = false
 	}
@@ -391,11 +398,29 @@ func main() {
 	}
 }
 
+func globalFlags() []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "profile-file",
+			Usage:       "configure your config.yml profile `FILE`",
+			EnvVar:      "PLURAL_PROFILE_FILE",
+			Destination: &config.ProfileFile,
+		},
+		cli.StringFlag{
+			Name:        "encryption-key-file",
+			Usage:       "configure your encryption key `FILE`",
+			EnvVar:      "PLURAL_ENCRYPTION_KEY_FILE",
+			Destination: &crypto.EncryptionKeyFile,
+		},
+	}
+}
+
 func CreateNewApp(plural *Plural) *cli.App {
 	app := cli.NewApp()
 	app.Name = ApplicationName
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
+	app.Flags = globalFlags()
 	app.Commands = plural.getCommands()
 	links := linkCommands()
 	app.Commands = append(app.Commands, links...)

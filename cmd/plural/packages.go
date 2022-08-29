@@ -27,6 +27,7 @@ func (p *Plural) packagesCommands() []cli.Command {
 }
 
 func (p *Plural) listPackages(c *cli.Context) error {
+	p.InitPluralClient()
 	repo := c.Args().Get(0)
 	space, err := p.getWorkspace(repo)
 	if err != nil {
@@ -48,6 +49,7 @@ func (p *Plural) listPackages(c *cli.Context) error {
 }
 
 func (p *Plural) uninstallPackage(c *cli.Context) error {
+	p.InitPluralClient()
 	args := c.Args()
 	t, repo, name := args.Get(0), args.Get(1), args.Get(2)
 
@@ -77,6 +79,7 @@ func (p *Plural) uninstallPackage(c *cli.Context) error {
 }
 
 func (p *Plural) getWorkspace(repo string) (*wkspace.Workspace, error) {
+	p.InitPluralClient()
 	inst, err := p.Client.GetInstallation(repo)
 	if err != nil {
 		return nil, err
