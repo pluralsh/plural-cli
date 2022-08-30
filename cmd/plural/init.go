@@ -89,7 +89,7 @@ func handleLogin(c *cli.Context) error {
 
 	if config.Exists() {
 		conf := config.Read()
-		if !confirm(fmt.Sprintf("It looks like your current Plural user is %s, use a different profile?", conf.Email)) {
+		if affirm(fmt.Sprintf("It looks like your current Plural user is %s, use this profile?", conf.Email)) {
 			client = api.FromConfig(&conf)
 			return postLogin(&conf, client, c)
 		}
