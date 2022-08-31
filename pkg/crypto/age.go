@@ -17,6 +17,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -117,20 +118,19 @@ func SetupAge(client api.Client, emails []string) error {
 			return err
 		}
 
+		present := sets.NewString()
 		dedupeKey := func(id *AgeIdentity) string { return fmt.Sprintf("%s::%s", id.Email, id.Key) }
 
 		idents := ageConfig.Identities
-		present := map[string]bool{}
 		for _, id := range idents {
-			present[dedupeKey(id)] = true
+			present.Insert(dedupeKey(id))
 		}
 
 		for _, key := range keys {
 			id := &AgeIdentity{Key: key.Content, Email: key.User.Email}
-			if _, ok := present[dedupeKey(id)]; ok {
-				continue
+			if !present.Has(dedupeKey(id)) {
+				idents = append(idents, id)
 			}
-			idents = append(idents, id)
 		}
 
 		ageConfig.Identities = idents
