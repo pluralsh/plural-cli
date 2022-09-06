@@ -44,7 +44,7 @@ require (
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.9
 	github.com/xanzy/go-gitlab v0.70.0
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	google.golang.org/genproto v0.0.0-20220902135211-223410557253
