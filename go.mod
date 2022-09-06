@@ -49,7 +49,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959
 	gopkg.in/yaml.v2 v2.4.0
-	helm.sh/helm/v3 v3.9.3
+	helm.sh/helm/v3 v3.9.4
 	k8s.io/api v0.24.3
 	k8s.io/apimachinery v0.24.3
 	k8s.io/client-go v0.24.3
