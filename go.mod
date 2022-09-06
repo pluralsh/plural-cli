@@ -50,9 +50,9 @@ require (
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.9.4
-	k8s.io/api v0.24.3
-	k8s.io/apimachinery v0.24.3
-	k8s.io/client-go v0.24.3
+	k8s.io/api v0.24.4
+	k8s.io/apimachinery v0.24.4
+	k8s.io/client-go v0.24.4
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/yaml v1.3.0
 )
