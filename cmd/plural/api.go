@@ -63,6 +63,7 @@ func (p *Plural) apiCommands() []cli.Command {
 }
 
 func (p *Plural) handleInstallations(c *cli.Context) error {
+	p.InitPluralClient()
 	installations, err := p.GetInstallations()
 	if err != nil {
 		return err
@@ -85,6 +86,7 @@ func (p *Plural) handleInstallations(c *cli.Context) error {
 }
 
 func (p *Plural) handleCharts(c *cli.Context) error {
+	p.InitPluralClient()
 	charts, err := p.GetCharts(c.Args().First())
 	if err != nil {
 		return err
@@ -100,6 +102,7 @@ func (p *Plural) handleCharts(c *cli.Context) error {
 }
 
 func (p *Plural) handleTerraforma(c *cli.Context) error {
+	p.InitPluralClient()
 	tfs, err := p.GetTerraforma(c.Args().First())
 	if err != nil {
 		return err
@@ -115,6 +118,7 @@ func (p *Plural) handleTerraforma(c *cli.Context) error {
 }
 
 func (p *Plural) handleVersions(c *cli.Context) error {
+	p.InitPluralClient()
 	versions, err := p.GetVersions(c.Args().First())
 
 	if err != nil {
@@ -131,6 +135,7 @@ func (p *Plural) handleVersions(c *cli.Context) error {
 }
 
 func (p *Plural) handleChartInstallations(c *cli.Context) error {
+	p.InitPluralClient()
 	chartInstallations, err := p.GetChartInstallations(c.Args().First())
 
 	if err != nil {
@@ -149,6 +154,7 @@ func (p *Plural) handleChartInstallations(c *cli.Context) error {
 }
 
 func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
+	p.InitPluralClient()
 	terraformInstallations, err := p.GetTerraformInstallations(c.Args().First())
 
 	if err != nil {
@@ -168,6 +174,7 @@ func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
 }
 
 func (p *Plural) handleArtifacts(c *cli.Context) error {
+	p.InitPluralClient()
 	artifacts, err := p.ListArtifacts(c.Args().First())
 
 	if err != nil {

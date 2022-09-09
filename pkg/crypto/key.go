@@ -15,6 +15,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func init() {
+	EncryptionKeyFile = ""
+}
+
+var EncryptionKeyFile string
+
 type KeyProvider struct {
 	key string
 }
@@ -94,6 +100,9 @@ func RandStr(length int) (string, error) {
 }
 
 func getKeyPath() string {
+	if EncryptionKeyFile != "" {
+		return EncryptionKeyFile
+	}
 	folder, _ := os.UserHomeDir()
 	return pathing.SanitizeFilepath(filepath.Join(folder, ".plural", "key"))
 }

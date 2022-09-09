@@ -7,17 +7,22 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/text/language"
-	"gopkg.in/yaml.v2"
-
 	"github.com/oleiade/reflections"
 	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"gopkg.in/yaml.v2"
 )
 
 const (
 	pluralDir  = ".plural"
 	ConfigName = "config.yml"
 )
+
+func init() {
+	ProfileFile = ""
+}
+
+var ProfileFile string
 
 type Metadata struct {
 	Name string `yaml:"name"`
@@ -42,6 +47,10 @@ type VersionedConfig struct {
 
 func configFile() string {
 	folder, _ := os.UserHomeDir()
+	if ProfileFile != "" {
+		return ProfileFile
+	}
+
 	return path.Join(folder, pluralDir, ConfigName)
 }
 

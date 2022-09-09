@@ -71,6 +71,7 @@ func (p *Plural) bundleList(c *cli.Context) error {
 		prov = strings.ToUpper(man.Provider)
 	}
 
+	p.InitPluralClient()
 	recipes, err := p.ListRecipes(repo, prov)
 	if err != nil {
 		return err
@@ -88,6 +89,7 @@ func (p *Plural) bundleList(c *cli.Context) error {
 
 func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 	args := c.Args()
+	p.InitPluralClient()
 	err = bundle.Install(p.Client, args.Get(0), args.Get(1), c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
@@ -100,13 +102,15 @@ func (p *Plural) stackInstall(c *cli.Context) (err error) {
 		return
 	}
 
+	p.InitPluralClient()
 	err = bundle.Stack(p.Client, name, man.Provider, c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
 }
 
 func (p *Plural) stackList(c *cli.Context) (err error) {
-	stacks, err := p.Client.ListStacks(c.Bool("featured"))
+	p.InitPluralClient()
+	stacks, err := p.ListStacks(c.Bool("featured"))
 	if err != nil {
 		return err
 	}
