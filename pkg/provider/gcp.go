@@ -6,18 +6,21 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
-
 	compute "cloud.google.com/go/compute/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/cloudresourcemanager/v1"
+	gcompute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 	serviceusagepb "google.golang.org/genproto/googleapis/api/serviceusage/v1"
 	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
 	resourcemanagerpb "google.golang.org/genproto/googleapis/cloud/resourcemanager/v3"
@@ -62,27 +65,60 @@ var (
 	}
 )
 
-var gcpSurvey = []*survey.Question{
-	{
-		Name:     "cluster",
-		Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
-		Validate: validCluster,
-	},
-	{
-		Name:     "project",
-		Prompt:   &survey.Input{Message: "Enter the name of its gcp project"},
-		Validate: utils.ValidateAlphaNumeric,
-	},
-	{
-		Name:     "region",
-		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east1", Options: gcpRegions},
-		Validate: survey.Required,
-	},
+func getGCPSurvey() []*survey.Question {
+	prompt, validate := setProject()
+	return []*survey.Question{
+		{
+			Name:     "cluster",
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
+			Validate: validCluster,
+		},
+		{
+			Name:     "project",
+			Prompt:   prompt,
+			Validate: validate,
+		},
+		{
+			Name:     "region",
+			Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east1", Options: gcpRegions},
+			Validate: survey.Required,
+		},
+	}
+}
+
+func setProject() (survey.Prompt, survey.Validator) {
+	projects, err := getGcpProjects()
+	if err != nil {
+		return &survey.Input{Message: "Enter the name of its gcp project"}, utils.ValidateAlphaNumeric
+	}
+
+	return &survey.Select{Message: "Select the name of gcp project?", Options: projects}, survey.Required
+}
+
+func getGcpProjects() ([]string, error) {
+	client, err := google.DefaultClient(context.Background(),
+		gcompute.ComputeScope)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := cloudresourcemanager.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	projectList := []string{}
+	resp, err := svc.Projects.List().Do()
+	if err != nil {
+		return nil, err
+	}
+	for _, project := range resp.Projects {
+		projectList = append(projectList, project.Name)
+	}
+	return projectList, nil
 }
 
 func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 	provider = &GCPProvider{}
-	if err = survey.Ask(gcpSurvey, provider); err != nil {
+	if err = survey.Ask(getGCPSurvey(), provider); err != nil {
 		return
 	}
 
