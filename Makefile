@@ -31,7 +31,7 @@ setup: .PHONY ## sets up your local env (for mac only)
 	brew install golangci-lint
 
 plural: .PHONY ## uploads to plural
-	plural apply
+	plural apply -f plural/Pluralfile
 
 build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \

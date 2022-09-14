@@ -1,0 +1,28 @@
+name: security
+description: end-to-end k8s security using plural
+featured: true
+collections:
+- provider: AWS
+  bundles:
+  - name: kubescape-aws
+    repo: kubescape
+  - name: istio-aws
+    repo: istio
+  - name: vault-aws
+    repo: vault
+- provider: GCP
+  bundles:
+  - name: kubescape-gcp
+    repo: kubescape
+  - name: istio-gcp
+    repo: istio
+  - name: vault-gcp
+    repo: vault
+- provider: AZURE
+  bundles:
+  - name: kubescape-azure
+    repo: kubescape
+  - name: istio-azure
+    repo: istio
+  - name: vault-azure
+    repo: vault

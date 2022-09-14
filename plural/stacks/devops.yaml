@@ -1,0 +1,34 @@
+name: devops
+description: all the tools you need for your software engineering back office on plural
+featured: true
+collections:
+- provider: AWS
+  bundles:
+  - name: argo-cd-aws
+    repo: argo-cd
+  - name: aws-sentry
+    repo: sentry
+  - name: aws-grafana
+    repo: grafana
+  - name: kubecost-aws
+    repo: kubecost
+- provider: GCP
+  bundles:
+  - name: argo-cd-gcp
+    repo: argo-cd
+  - name: gcp-sentry
+    repo: sentry
+  - name: gcp-grafana
+    repo: grafana
+  - name: kubecost-gcp
+    repo: kubecost
+- provider: AZURE
+  bundles:
+  - name: argo-cd-azure
+    repo: argo-cd
+  - name: azure-sentry
+    repo: sentry
+  - name: azure-grafana
+    repo: grafana
+  - name: kubecost-azure
+    repo: kubecost
