@@ -38,7 +38,7 @@ require (
 	github.com/packethost/packngo v0.25.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.1.4
+	github.com/pluralsh/gqlclient v1.1.6
 	github.com/pluralsh/plural-operator v0.1.4
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.2
@@ -60,7 +60,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.5.1 // indirect
-	github.com/Yamashou/gqlgenc v0.0.8 // indirect
+	github.com/Yamashou/gqlgenc v0.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.16.14 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.18 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.4.6 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -236,7 +236,7 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
 	golang.org/x/text v0.3.7
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
@@ -263,5 +263,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.6 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
-
-replace github.com/Yamashou/gqlgenc => github.com/pluralsh/gqlgenc v0.0.9
