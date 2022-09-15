@@ -178,6 +178,9 @@ func convertDependencies(depFragment *gqlclient.DependenciesFragment) *Dependenc
 		Providers:       convertProviders(depFragment.Providers),
 		ProviderWirings: depFragment.ProviderWirings,
 	}
+	if depFragment.ProviderVsn != nil {
+		dep.ProviderVsn = *depFragment.ProviderVsn
+	}
 	if depFragment.Application != nil {
 		dep.Application = *depFragment.Application
 	}
