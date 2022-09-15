@@ -262,6 +262,7 @@ func cryptoInit(c *cli.Context) error {
 }
 
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
+	p.InitPluralClient()
 	emails := c.StringSlice("email")
 	if err := crypto.SetupAge(p.Client, emails); err != nil {
 		return err
@@ -276,6 +277,7 @@ func (p *Plural) handleCryptoShare(c *cli.Context) error {
 }
 
 func (p *Plural) handleSetupKeys(c *cli.Context) error {
+	p.InitPluralClient()
 	name := c.String("name")
 	if err := crypto.SetupIdentity(p.Client, name); err != nil {
 		return err
