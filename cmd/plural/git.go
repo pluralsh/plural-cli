@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -14,7 +15,11 @@ func handleRepair(c *cli.Context) error {
 		return err
 	}
 
-	return git.Repair(repoRoot)
+	if err := git.Repair(repoRoot); err != nil {
+		fmt.Println(err)
+	}
+
+	return nil
 }
 
 func gitConfig(name, val string) error {
