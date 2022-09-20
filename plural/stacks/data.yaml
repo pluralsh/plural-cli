@@ -1,5 +1,5 @@
-name: data
-description: a full opensource datastack deployable on plural
+name: Data Stack
+description: A full open source datastack deployable on Plural.
 featured: true
 collections:
 - provider: AWS

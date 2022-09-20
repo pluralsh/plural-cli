@@ -1,5 +1,5 @@
-name: devops
-description: all the tools you need for your software engineering back office on plural
+name: DevOps Stack
+description: All the tools you need for your software engineering back office on Plural.
 featured: true
 collections:
 - provider: AWS
