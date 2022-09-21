@@ -113,7 +113,7 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 		uploads = append(uploads, *darkIconUpload)
 	}
 
-	if input.Notes != nil {
+	if input.Notes != nil && *input.Notes != "" {
 		file, _ := filepath.Abs(*input.Notes)
 		notes, err := fileutils.ReadFile(file)
 		if err != nil {
