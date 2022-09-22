@@ -1,5 +1,5 @@
 name: security
-description: end-to-end k8s security using plural
+description: End-to-end K8s security using Plural.
 featured: true
 collections:
 - provider: AWS
