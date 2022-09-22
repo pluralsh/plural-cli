@@ -1,4 +1,4 @@
-name: Security Stack
+name: security
 description: End-to-end K8s security using Plural.
 featured: true
 collections:
