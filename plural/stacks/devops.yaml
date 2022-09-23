@@ -1,6 +1,7 @@
 name: devops
 description: All the tools you need for your software engineering back office on Plural.
 featured: true
+displayName: DevOps
 collections:
 - provider: AWS
   bundles:

@@ -946,6 +946,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/gqlclient v1.1.6 h1:lj6KVfUET9DPyB95+T+hXtCGqqOm+TXOB3jYzuBX1Zc=
 github.com/pluralsh/gqlclient v1.1.6/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
+github.com/pluralsh/gqlclient v1.1.7 h1:wczOD8H1J2N/ov4ohNcDY6mdbARZ1WulMaZToGCHCS0=
+github.com/pluralsh/gqlclient v1.1.7/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.1.4 h1:P+aqlwqN80Tp5c449/6XGYAqWuUrKImiDuBQPmAiy0U=
