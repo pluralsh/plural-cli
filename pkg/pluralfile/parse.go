@@ -57,6 +57,9 @@ func (plrl *Pluralfile) Execute(f string, lock *Lockfile) (err error) {
 
 func Parse(f string) (*Pluralfile, error) {
 	pluralfile, err := os.Open(f)
+	if err != nil {
+		return nil, err
+	}
 	plrl := &Pluralfile{}
 	if err != nil {
 		return plrl, err
