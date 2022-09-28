@@ -22,7 +22,7 @@ func Install(client api.Client, repo, name string, refresh bool) error {
 
 func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh bool) error {
 	if recipe.Restricted && os.Getenv("CLOUD_SHELL") == "1" {
-		return fmt.Errorf("Cannot install this bundle in cloud shell, this is often because it requires a file locally available on your machine like a git ssh key")
+		return fmt.Errorf("Cannot install this bundle for %s in cloud shell, this is often because it requires a file locally available on your machine like a git ssh key", repo)
 	}
 
 	path := manifest.ContextPath()
