@@ -24,7 +24,7 @@ func Repair(root string) error {
 		return nil
 	}
 
-	diff, _ := git(root, "--no-pager", "diff", "--name-only")
+	diff, _ := git(root, "--no-pager", "diff")
 	if strings.TrimSpace(diff) == "" && err != nil {
 		return Sync(root, "committing new encrypted files", false)
 	}
