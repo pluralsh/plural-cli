@@ -10,8 +10,9 @@ import (
 )
 
 type Configuration struct {
-	Workspace WorkspaceConfiguration `json:"workspace"`
-	Git       GitConfiguration       `json:"git"`
+	Workspace            WorkspaceConfiguration            `json:"workspace"`
+	Git                  GitConfiguration                  `json:"git"`
+	ContextConfiguration map[string]map[string]interface{} `json:"context_configuration,omitempty"`
 }
 
 type WorkspaceConfiguration struct {
@@ -38,11 +39,18 @@ func configuration(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
+
+	context, err := manifest.ReadContext(manifest.ContextPath())
+	if err != nil {
+		return err
+	}
+
 	configuration := Configuration{
 		Workspace: WorkspaceConfiguration{
 			BucketPrefix: project.BucketPrefix,
 			Cluster:      project.Cluster,
 		},
+		ContextConfiguration: context.Configuration,
 	}
 	if project.Network != nil {
 		configuration.Workspace.Network = &NetworkConfiguration{

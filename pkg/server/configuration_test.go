@@ -27,7 +27,7 @@ func TestGetConfiguration(t *testing.T) {
 		{
 			name:               `update configuration console email address`,
 			expectedHTTPStatus: http.StatusOK,
-			expectedResponse:   `{"workspace":{},"git":{"url":"git@git.test.com:portfolio/space.space_name.git","root":"%s","name":"%s","branch":"master"}}`,
+			expectedResponse:   `{"workspace":{},"git":{"url":"git@git.test.com:portfolio/space.space_name.git","root":"%s","name":"%s","branch":"master"},"context_configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"}}}`,
 		},
 	}
 	for _, test := range tests {
@@ -46,6 +46,12 @@ func TestGetConfiguration(t *testing.T) {
 			assert.NoError(t, err)
 			err = ioutil.WriteFile(path.Join(dir, "workspace.yaml"), io, 0644)
 			assert.NoError(t, err)
+
+			context := manifest.NewContext()
+			context.Configuration = genDefaultContextConfiguration()
+			err = context.Write(path.Join(dir, "context.yaml"))
+			assert.NoError(t, err)
+
 			_, err = git.Init()
 			assert.NoError(t, err)
 			_, err = git.GitRaw("config", "--global", "user.email", "test@plural.com")
