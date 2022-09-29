@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func gitRaw(args ...string) (string, error) {
+func GitRaw(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	res, err := execute(cmd)
 

@@ -9,7 +9,7 @@ import (
 )
 
 func Root() (string, error) {
-	return gitRaw("rev-parse", "--show-toplevel")
+	return GitRaw("rev-parse", "--show-toplevel")
 }
 
 func Repo() (*gogit.Repository, error) {
@@ -47,7 +47,7 @@ func HasUpstreamChanges() (bool, error) {
 		return false, err
 	}
 
-	res, err := gitRaw("ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", ref.Name().Short()))
+	res, err := GitRaw("ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", ref.Name().Short()))
 	if err != nil {
 		return false, err
 	}
@@ -66,5 +66,9 @@ func HasUpstreamChanges() (bool, error) {
 }
 
 func Init() (string, error) {
-	return gitRaw("init")
+	return GitRaw("init")
+}
+
+func GetURL() (string, error) {
+	return GitRaw("ls-remote", "--get-url")
 }
