@@ -110,7 +110,7 @@ func (p *Plural) stackInstall(c *cli.Context) (err error) {
 
 func (p *Plural) stackList(c *cli.Context) (err error) {
 	p.InitPluralClient()
-	stacks, err := p.ListStacks(c.Bool("featured"))
+	stacks, err := p.ListStacks(c.Bool("account"))
 	if err != nil {
 		return err
 	}
