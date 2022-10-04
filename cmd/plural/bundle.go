@@ -30,7 +30,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"})),
+			Action: tracked(rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"})), "bundle.install"),
 		},
 	}
 }
@@ -47,7 +47,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "re-enter the configuration for all bundles",
 				},
 			},
-			Action: rooted(requireArgs(p.stackInstall, []string{"stack-name"})),
+			Action: tracked(rooted(requireArgs(p.stackInstall, []string{"stack-name"})), "stack.install"),
 		},
 		{
 			Name:  "list",
