@@ -5,7 +5,7 @@ import (
 )
 
 func Modified() ([]string, error) {
-	res, err := gitRaw("status", "--porcelain")
+	res, err := GitRaw("status", "--porcelain")
 	if err != nil {
 		return nil, err
 	}

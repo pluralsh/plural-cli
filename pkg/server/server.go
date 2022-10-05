@@ -12,15 +12,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Run() error {
-	gin.SetMode(gin.ReleaseMode)
+func SetUpRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(ErrorHandler())
 	v1 := r.Group("/v1")
 	{
 		v1.POST("/setup", serverFunc(setupCli))
 		v1.GET("/health", healthcheck)
+		v1.GET("/configuration", serverFunc(configuration))
+		v1.POST("/context/configuration", serverFunc(contextConfiguration))
 	}
+	return r
+}
+
+func Run() error {
+	gin.SetMode(gin.ReleaseMode)
+	r := SetUpRouter()
 
 	term := make(chan os.Signal, 1) // OS termination signal
 	fail := make(chan error)        // Teardown failure signal
