@@ -1,13 +1,21 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"text/template"
 
 	"github.com/mitchellh/go-homedir"
 
 	prov "github.com/pluralsh/plural/pkg/provider"
 )
+
+const azureEnvFile = `
+export AZURE_CLIENT_ID={{ .ClientId }}
+export AZURE_TENTANT_ID={{ .TenantId }}
+export AZURE_CLIENT_SECRET={{ .ClientSecret }}
+`
 
 func setupProvider(setup *SetupRequest) error {
 	if setup.Provider == "aws" {
@@ -16,6 +24,10 @@ func setupProvider(setup *SetupRequest) error {
 
 	if setup.Provider == "gcp" {
 		return setupGcp(setup)
+	}
+
+	if setup.Provider == "azure" {
+		return setupAzure(setup)
 	}
 
 	return nil
@@ -33,6 +45,37 @@ func setupGcp(setup *SetupRequest) error {
 
 	if err := execCmd("gcloud", "auth", "activate-service-account", "--key-file", f, "--project", setup.Workspace.Project); err != nil {
 		return fmt.Errorf("error authenticating to gcloud: %w", err)
+	}
+
+	return nil
+}
+
+func setupAzure(setup *SetupRequest) error {
+	az := setup.Credentials.Azure
+	setup.Context = map[string]interface{}{
+		"TenantId":       az.TenantId,
+		"SubscriptionId": az.SubscriptionId,
+		"StorageAccount": az.StorageAccount,
+	}
+
+	tpl, err := template.New("azure").Parse(azureEnvFile)
+	if err != nil {
+		return err
+	}
+
+	var out bytes.Buffer
+	out.Grow(5 * 1024)
+	if err := tpl.Execute(&out, az); err != nil {
+		return err
+	}
+
+	f, err := homedir.Expand("~/.env")
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(f, out.Bytes(), 0644); err != nil {
+		return fmt.Errorf("error writing azure env file: %w", err)
 	}
 
 	return nil

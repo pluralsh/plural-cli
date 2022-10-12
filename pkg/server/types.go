@@ -18,9 +18,18 @@ type Gcp struct {
 	ApplicationCredentials string `json:"application_credentials"`
 }
 
+type Azure struct {
+	TenantId       string `json:"tenant_id"`
+	ClientId       string `json:"client_id"`
+	ClientSecret   string `json:"client_secret"`
+	StorageAccount string `json:"storage_account"`
+	SubscriptionId string `json:"subscription_id"`
+}
+
 type Credentials struct {
-	Aws *Aws `json:"aws"`
-	Gcp *Gcp `json:"gcp"`
+	Aws   *Aws   `json:"aws"`
+	Gcp   *Gcp   `json:"gcp"`
+	Azure *Azure `json:"azure"`
 }
 
 type User struct {
@@ -46,4 +55,5 @@ type SetupRequest struct {
 	SshPublicKey  string       `json:"ssh_public_key"`
 	SshPrivateKey string       `json:"ssh_private_key"`
 	IsDemo        bool         `json:"is_demo"`
+	Context       map[string]interface{}
 }

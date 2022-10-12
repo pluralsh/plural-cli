@@ -36,6 +36,7 @@ func toManifest(setup *SetupRequest) *manifest.ProjectManifest {
 			PluralDns: true,
 			Subdomain: wk.Subdomain,
 		},
+		Context: setup.Context,
 	}
 }
 
