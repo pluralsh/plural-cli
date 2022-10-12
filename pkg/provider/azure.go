@@ -146,7 +146,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	subId, tenID, err := getAzureAccount()
+	subId, tenID, err := GetAzureAccount()
 	if err != nil {
 		return
 	}
@@ -380,7 +380,7 @@ func (az *AzureProvider) upsertStorageContainer(acc storage.Account, name string
 	return err
 }
 
-func getAzureAccount() (string, string, error) {
+func GetAzureAccount() (string, string, error) {
 	cmd := exec.Command("az", "account", "show")
 	out, err := cmd.Output()
 	if err != nil {
