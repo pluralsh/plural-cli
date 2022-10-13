@@ -13,7 +13,7 @@ import (
 
 const azureEnvFile = `
 export AZURE_CLIENT_ID={{ .ClientId }}
-export AZURE_TENTANT_ID={{ .TenantId }}
+export AZURE_TENANT_ID={{ .TenantId }}
 export AZURE_CLIENT_SECRET={{ .ClientSecret }}
 export ARM_USE_MSI=true
 `
