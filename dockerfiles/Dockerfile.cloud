@@ -58,16 +58,16 @@ RUN make build-cli OUTFILE=/go/bin/plural && \
       plural --help && \
       plural version && \
       cp start-session.sh /usr/local/bin/start-session.sh && \
-      chmod +x /usr/local/bin/start-session.sh
+      chmod +x /usr/local/bin/start-session.sh && \
+      cp boot.sh /home/plural/boot.sh && \
+      chmod +x /home/plural/boot.sh
 
 WORKDIR /home/plural
 USER plural
 
 COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
-COPY boot.sh /hom/plural/boot.sh
 
-RUN chmod +x /home/plural/boot.sh
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \ 
       cp tmux/.tmux.conf /home/plural/.tmux.conf && \ 
       cp tmux/.tmux.conf.local /home/plural/.tmux.conf.local && \
