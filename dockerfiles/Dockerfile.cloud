@@ -5,7 +5,7 @@ RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/s
     apt-get install -t stretch-backports -y tmux
 
 ARG HELM_VERSION=3.7.0
-ARG TERRAFORM_VERSION=v1.2.8
+ARG TERRAFORM_VERSION=1.2.8
 
 # install kubectl, helm and terraform
 # ENV BASE_URL="https://storage.googleapis.com/kubernetes-helm"
