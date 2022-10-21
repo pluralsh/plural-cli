@@ -61,6 +61,21 @@ func Waiter(kubeConf *rest.Config, repo string, appFunc func(app *v1beta1.Applic
 	}
 }
 
+func SilentWait(kubeConf *rest.Config, repo string) error {
+	timeout := func() error {
+		return fmt.Errorf("Failed to become ready after 5 minutes, try running `plural watch %s` to get an idea where to debug", repo)
+	}
+
+	return Waiter(kubeConf, repo, func(app *v1beta1.Application) (bool, error) {
+		cond := findReadiness(app)
+		if cond.Status == "True" {
+			fmt.Printf("%s is finally ready!", repo)
+			return true, nil
+		}
+		return false, nil
+	}, timeout)
+}
+
 func Wait(kubeConf *rest.Config, repo string) error {
 	timeout := func() error {
 		return fmt.Errorf("Failed to become ready after 5 minutes, try running `plural watch %s` to get an idea where to debug", repo)

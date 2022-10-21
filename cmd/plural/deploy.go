@@ -253,8 +253,8 @@ func (p *Plural) deploy(c *cli.Context) error {
 
 		if man, err := fetchManifest(repo); err == nil && man.Wait {
 			if kubeConf, err := kubernetes.KubeConfig(); err == nil {
-				fmt.Println("")
-				if err := application.Wait(kubeConf, repo); err != nil {
+				fmt.Printf("Waiting for %s to become ready...\n", repo)
+				if err := application.SilentWait(kubeConf, repo); err != nil {
 					return err
 				}
 				fmt.Println("")
