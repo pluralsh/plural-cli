@@ -1,5 +1,7 @@
 package api
 
+import "fmt"
+
 func (client *client) GetShell() (CloudShell, error) {
 	resp, err := client.pluralClient.GetShell(client.ctx)
 	if err != nil {
@@ -11,9 +13,9 @@ func (client *client) GetShell() (CloudShell, error) {
 			Id:     resp.Shell.ID,
 			AesKey: resp.Shell.AesKey,
 			GitUrl: resp.Shell.GitURL,
-		}, err
+		}, nil
 	}
-	return CloudShell{}, err
+	return CloudShell{}, fmt.Errorf("Could not find a cloud shell for this user")
 }
 
 func (client *client) DeleteShell() error {
