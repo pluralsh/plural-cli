@@ -83,6 +83,10 @@ func setupAzure(setup *SetupRequest) error {
 		return fmt.Errorf("error writing azure env file: %w", err)
 	}
 
+	if err := execCmd("az", "login", "--service-principal", "-u", az.ClientId, "-p", az.ClientSecret, "--tenant", az.TenantId); err != nil {
+		return fmt.Errorf("error logging into az cli: %w", err)
+	}
+
 	return nil
 }
 
