@@ -99,14 +99,14 @@ func (p *Plural) build(c *cli.Context) error {
 	if err := CheckGitCrypt(c); err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
-	changed, err := git.HasUpstreamChanges()
+	changed, sha, err := git.HasUpstreamChanges()
 	if err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to get git information")
 	}
 
 	force := c.Bool("force")
 	if !changed && !force {
-		return errors.ErrorWrap(errRemoteDiff, "Local Changes out of Sync")
+		return errors.ErrorWrap(errRemoteDiff, fmt.Sprintf("Expecting HEAD at commit=%s", sha))
 	}
 
 	if c.IsSet("only") {
