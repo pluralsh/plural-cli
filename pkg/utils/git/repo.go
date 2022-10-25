@@ -36,20 +36,20 @@ func CurrentBranch() (b string, err error) {
 	return
 }
 
-func HasUpstreamChanges() (bool, error) {
+func HasUpstreamChanges() (bool, string, error) {
 	repo, err := Repo()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	ref, err := repo.Head()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	res, err := GitRaw("ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", ref.Name().Short()))
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(res))
@@ -62,7 +62,7 @@ func HasUpstreamChanges() (bool, error) {
 		}
 	}
 
-	return remote == ref.Hash().String(), nil
+	return remote == ref.Hash().String(), remote, nil
 }
 
 func Init() (string, error) {
