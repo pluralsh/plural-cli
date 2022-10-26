@@ -15,6 +15,8 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
 )
 
 func utilsCommands() []cli.Command {
@@ -34,6 +36,22 @@ func utilsCommands() []cli.Command {
 				},
 			},
 			Action: handleImageBump,
+		},
+		{
+			Name:      "helm-process",
+			ArgsUsage: "PATH",
+			Usage:     "Process a helm chart for use in a Plural artifact",
+			// Flags: []cli.Flag{
+			// 	cli.StringFlag{
+			// 		Name:  "path",
+			// 		Usage: "path to tag in helm values file",
+			// 	},
+			// 	cli.StringFlag{
+			// 		Name:  "tag",
+			// 		Usage: "the image tag to set to",
+			// 	},
+			// },
+			Action: handleHelmProcess,
 		},
 	}
 }
@@ -125,4 +143,94 @@ func writeHelmYaml(path string, vals map[string]interface{}) error {
 	}
 
 	return ioutil.WriteFile(path, io, 0644)
+}
+
+func handleHelmProcess(c *cli.Context) error {
+	// Download chart dependencies
+	// if err := updateDeps(c); err != nil {
+	// 	utils.HighlightError(err)
+	// }
+
+	// Load chart and get CRDs from them and write them to our chart
+	loadedChart, err := loadHelmChart(c)
+	if err != nil {
+		utils.HighlightError(err)
+		return err
+	}
+
+	path := c.Args().Get(0)
+	if path == "" {
+		path = "."
+	}
+
+	//TODO: cleanup this path stuff
+	absPath, _ := filepath.Abs(path)
+
+	chartPath := pathing.SanitizeFilepath(absPath)
+
+	// Get all CRDs from dependent charts and put them in the CRDs folder of the artifact
+	chartDeps := loadedChart.Dependencies()
+
+	var joinedErrors []string
+
+	regKind := regexp.MustCompile("kind: (Deployment|StatefulSet)")
+	// regApiVersion := regexp.MustCompile("apiVersion: .*")
+	regName := regexp.MustCompile("name: .*")
+	regDot := regexp.MustCompile(" . ")
+
+	for _, dep := range chartDeps {
+		for _, crd := range dep.CRDObjects() {
+			splitFileName := strings.Split(crd.File.Name, "/")
+			splitFileName[len(splitFileName)-1] = dep.Name() + "_" + splitFileName[len(splitFileName)-1]
+			newFileName := strings.Join(splitFileName, "/")
+			if err := ioutil.WriteFile(chartPath+"/"+newFileName, crd.File.Data, 0644); err != nil {
+				utils.HighlightError(err)
+				joinedErrors = append(joinedErrors, err.Error())
+			}
+		}
+
+		for _, template := range dep.Templates {
+			// utils.Highlight(fmt.Sprintf("Template Name: %s\n", template.Name))
+			// utils.Highlight(fmt.Sprintf("File is of wanted type: %v\n\n", reg.Match(template.Data)))
+			if regKind.Match(template.Data) {
+				// name := strings.Replace(string(regName.Find(template.Data)), "name: ", "", 1)
+				name := regName.Find(template.Data)
+
+				// utils.Highlight(name)
+
+				replaced := regDot.ReplaceAll(name, []byte(" .Subcharts.test "))
+				utils.Highlight(string(replaced))
+			}
+		}
+	}
+
+	for _, template := range loadedChart.Templates {
+		// utils.Highlight(fmt.Sprintf("Template Name: %s\n", template.Name))
+		// utils.Highlight(fmt.Sprintf("File is of wanted type: %v\n\n", reg.Match(template.Data)))
+		if regKind.Match(template.Data) {
+			utils.Highlight(string(regName.Find(template.Data)))
+		}
+	}
+
+	var outputError error
+	if len(joinedErrors) > 0 {
+		outputError = fmt.Errorf(strings.Join(joinedErrors, " - "))
+	}
+
+	return outputError
+}
+
+// Load a helm chart from a path
+func loadHelmChart(c *cli.Context) (*chart.Chart, error) {
+	path := c.Args().Get(0)
+	if path == "" {
+		path = "."
+	}
+
+	loadedChart, err := loader.Load(path)
+	if err != nil {
+		utils.HighlightError(err)
+		return nil, err
+	}
+	return loadedChart, nil
 }
