@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 )
@@ -131,15 +133,14 @@ func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes
 		})
 	}
 
+	redirectUris := convertRedirectUris(attributes.RedirectUris)
 	_, err := client.pluralClient.UpsertOidcProvider(client.ctx, id, gqlclient.OidcAttributes{
 		AuthMethod:   gqlclient.OidcAuthMethod(attributes.AuthMethod),
 		Bindings:     bindings,
-		RedirectUris: convertRedirectUris(attributes.RedirectUris),
+		RedirectUris: redirectUris,
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	fmt.Printf("%+v", redirectUris)
+	return err
 }
 
 func (client *client) ResetInstallations() (int, error) {
@@ -152,9 +153,9 @@ func (client *client) ResetInstallations() (int, error) {
 }
 
 func convertRedirectUris(uris []string) []*string {
-	res := make([]*string, 0)
-	for _, s := range uris {
-		res = append(res, &s)
+	res := make([]*string, len(uris))
+	for i := range uris {
+		res[i] = &uris[i]
 	}
 	return res
 }
