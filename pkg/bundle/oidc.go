@@ -70,6 +70,8 @@ func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAtt
 		}
 	}
 	attributes.Bindings = bindings
+	fmt.Printf("%+v", attributes)
+
 }
 
 func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) ([]string, error) {
