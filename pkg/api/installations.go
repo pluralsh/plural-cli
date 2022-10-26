@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 )
@@ -139,7 +137,6 @@ func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes
 		Bindings:     bindings,
 		RedirectUris: redirectUris,
 	})
-	fmt.Printf("%+v", redirectUris)
 	return err
 }
 
