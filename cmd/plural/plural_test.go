@@ -32,7 +32,7 @@ COMMANDS:
 
    API:
      repos  view and manage plural repositories
-     api    inspect the forge api
+     api    inspect the plural api
 
    Debugging:
      watch  watches applications until they become ready
@@ -55,7 +55,7 @@ COMMANDS:
    User Profile:
      login         logs into plural and saves credentials to the current config profile
      import        imports plural config from another file
-     crypto        forge encryption utilities
+     crypto        plural encryption utilities
      config, conf  reads/modifies cli configuration
      profile       Commands for managing config profiles for plural
 
