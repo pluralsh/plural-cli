@@ -11,7 +11,7 @@ func (p *Plural) apiCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:  "list",
-			Usage: "lists forge resources",
+			Usage: "lists plural resources",
 			Subcommands: []cli.Command{
 				{
 					Name:      "installations",
@@ -56,6 +56,18 @@ func (p *Plural) apiCommands() []cli.Command {
 					Usage:     "Lists artifacts for a repository",
 					ArgsUsage: "REPO_ID",
 					Action:    requireArgs(p.handleArtifacts, []string{"REPO_ID"}),
+				},
+			},
+		},
+		{
+			Name:  "create",
+			Usage: "creates plural resources",
+			Subcommands: []cli.Command{
+				{
+					Name:      "domain",
+					Usage:     "creates a new domain for your account",
+					ArgsUsage: "DOMAIN",
+					Action:    p.handleCreateDomain,
 				},
 			},
 		},
@@ -188,4 +200,9 @@ func (p *Plural) handleArtifacts(c *cli.Context) error {
 	}
 	table.Render()
 	return nil
+}
+
+func (p *Plural) handleCreateDomain(c *cli.Context) error {
+	p.InitPluralClient()
+	return p.CreateDomain(c.Args().First())
 }

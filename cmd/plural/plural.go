@@ -274,7 +274,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:        "crypto",
-			Usage:       "forge encryption utilities",
+			Usage:       "plural encryption utilities",
 			Subcommands: p.cryptoCommands(),
 			Category:    "User Profile",
 		},
@@ -286,7 +286,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:        "api",
-			Usage:       "inspect the forge api",
+			Usage:       "inspect the plural api",
 			Subcommands: p.apiCommands(),
 			Category:    "API",
 		},
