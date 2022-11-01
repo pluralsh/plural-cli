@@ -187,6 +187,10 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 
 	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(wkspaceRoot), "deploy")
 
+	if wk.Provider.Name() == provider.EQUINIX && name == "bootstrap" {
+		return executor.DefaultClusterAPIExecution(name, exec, "packet", wk.Manifest).Flush(repoRoot)
+	}
+
 	return executor.DefaultExecution(name, exec).Flush(repoRoot)
 }
 

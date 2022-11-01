@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -104,6 +105,53 @@ func (e *Execution) IgnoreFile(root string) ([]string, error) {
 func DefaultExecution(path string, prev *Execution) (e *Execution) {
 	byName := make(map[string]*Step)
 	steps := defaultSteps(path)
+
+	for _, step := range prev.Steps {
+		byName[step.Name] = step
+	}
+
+	for _, step := range steps {
+		prev, ok := byName[step.Name]
+		if ok {
+			step.Sha = prev.Sha
+		}
+		byName[step.Name] = step
+	}
+
+	// set up a topsort between the two orders of operations
+	graph := utils.Graph(len(byName))
+	for k := range byName {
+		graph.AddNode(k)
+	}
+
+	for i := 0; i < len(steps)-1; i++ {
+		graph.AddEdge(steps[i].Name, steps[i+1].Name)
+	}
+
+	for i := 0; i < len(prev.Steps)-1; i++ {
+		graph.AddEdge(prev.Steps[i].Name, prev.Steps[i+1].Name)
+	}
+
+	finalizedSteps := []*Step{}
+	sorted, ok := graph.Topsort()
+	if !ok {
+		panic("deployfile cycle detected")
+	}
+
+	// dump the topsort to a list and use that from now on
+	for _, name := range sorted {
+		finalizedSteps = append(finalizedSteps, byName[name])
+	}
+
+	return &Execution{
+		Metadata: Metadata{Path: path, Name: "deploy"},
+		Steps:    finalizedSteps,
+	}
+}
+
+func DefaultClusterAPIExecution(path string, prev *Execution, provider string, manifest *manifest.ProjectManifest) (e *Execution) {
+	byName := make(map[string]*Step)
+	steps := defaultClusterAPISteps(path, provider, manifest)
 
 	for _, step := range prev.Steps {
 		byName[step.Name] = step
