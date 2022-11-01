@@ -33,7 +33,7 @@ func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error
 		return installations, fmt.Errorf("no installations present, run `plural bundle install <repo> <bundle-name>` to install your first app")
 	}
 
-	sorted, err := wkspace.Dependencies(p.Client, repo, installations)
+	sorted, err := wkspace.UntilRepo(p.Client, repo, installations)
 	if err != nil {
 		sorted = installations // we don't know all the dependencies yet
 	}
@@ -211,16 +211,18 @@ func (p *Plural) deploy(c *cli.Context) error {
 		return err
 	}
 
-	sorted, err := getSortedNames(true)
-	if err != nil {
-		return err
+	var sorted []string
+	switch {
+	case c.String("from") != "":
+		sorted, err = wkspace.Dependencies(c.String("from"))
+	case c.Bool("all"):
+		sorted, err = p.allSortedRepos()
+	default:
+		sorted, err = getSortedNames(true)
 	}
 
-	if c.Bool("all") {
-		sorted, err = p.allSortedRepos()
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))

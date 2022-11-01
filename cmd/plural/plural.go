@@ -93,6 +93,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "commit",
 					Usage: "commits your changes with this message",
 				},
+				cli.StringFlag{
+					Name:  "from",
+					Usage: "deploys only this application and its dependencies",
+				},
 				cli.BoolFlag{
 					Name:  "force",
 					Usage: "use force push when pushing to git",
@@ -164,6 +168,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:  []string{"d"},
 			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
 			Action:   p.topsort,
+			Category: "Workspace",
+		},
+		{
+			Name:     "dependencies",
+			Aliases:  []string{"deps"},
+			Usage:    "prints ordered dependencies for a repo in your workspace",
+			Action:   p.dependencies,
 			Category: "Workspace",
 		},
 		{
