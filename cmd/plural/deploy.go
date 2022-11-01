@@ -246,6 +246,9 @@ func (p *Plural) deploy(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if installation == nil {
+			return fmt.Errorf("The %s was unistalled, run `plural bundle install %s <bundle-name>` ", repo, repo)
+		}
 
 		if c.Bool("silence") {
 			continue
