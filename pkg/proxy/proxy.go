@@ -3,13 +3,20 @@ package proxy
 import (
 	"fmt"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
-
 	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func List(kube kubernetes.Kube, namespace string) (*v1alpha1.ProxyList, error) {
 	return kube.ProxyList(namespace)
+}
+
+func Print(l *v1alpha1.ProxyList) error {
+	headers := []string{"Name", "Type", "Target"}
+	return utils.PrintTable[v1alpha1.Proxy](l.Items, headers, func(p v1alpha1.Proxy) ([]string, error) {
+		return []string{p.Name, string(p.Spec.Type), p.Spec.Target}, nil
+	})
 }
 
 func Exec(kube kubernetes.Kube, namespace string, name string) error {

@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/olekukonko/tablewriter"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -18,7 +17,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
 			ArgsUsage: "REPO",
-			Action:    requireArgs(p.bundleList, []string{"repo"}),
+			Action:    rooted(requireArgs(p.bundleList, []string{"repo"})),
 		},
 		{
 			Name:      "install",
@@ -58,7 +57,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "only list stacks within your account",
 				},
 			},
-			Action: p.stackList,
+			Action: rooted(p.stackList),
 		},
 	}
 }
@@ -77,14 +76,10 @@ func (p *Plural) bundleList(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Description", "Provider", "Install Command"})
-	for _, recipe := range recipes {
-		table.Append([]string{recipe.Name, recipe.Description, recipe.Provider, fmt.Sprintf("plural bundle install %s %s", repo, recipe.Name)})
-	}
-
-	table.Render()
-	return nil
+	headers := []string{"Name", "Description", "Provider", "Install Command"}
+	return utils.PrintTable[*api.Recipe](recipes, headers, func(recipe *api.Recipe) ([]string, error) {
+		return []string{recipe.Name, recipe.Description, recipe.Provider, fmt.Sprintf("plural bundle install %s %s", repo, recipe.Name)}, nil
+	})
 }
 
 func (p *Plural) bundleInstall(c *cli.Context) (err error) {
@@ -115,12 +110,8 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Description", "Featured"})
-	for _, s := range stacks {
-		table.Append([]string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)})
-	}
-	table.Render()
-
-	return nil
+	headers := []string{"Name", "Description", "Featured"}
+	return utils.PrintTable[*api.Stack](stacks, headers, func(s *api.Stack) ([]string, error) {
+		return []string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)}, nil
+	})
 }

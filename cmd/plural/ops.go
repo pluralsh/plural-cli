@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	v1 "k8s.io/api/core/v1"
 )
 
 func (p *Plural) opsCommands() []cli.Command {
@@ -52,22 +51,19 @@ func (p *Plural) handleListNodes(cli *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "CPU", "Memory", "Region", "Zone"})
-	for _, node := range nodes.Items {
+	headers := []string{"Name", "CPU", "Memory", "Region", "Zone"}
+	return utils.PrintTable[v1.Node](nodes.Items, headers, func(node v1.Node) ([]string, error) {
 		status := node.Status
 		labels := node.ObjectMeta.Labels
 		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
-		table.Append([]string{
+		return []string{
 			node.Name,
 			cpu.String(),
 			mem.String(),
 			labels["topology.kubernetes.io/region"],
 			labels["topology.kubernetes.io/zone"],
-		})
-	}
-	table.Render()
-	return nil
+		}, nil
+	})
 }
 
 func getProvider() (provider.Provider, error) {

@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -99,12 +99,8 @@ func listProfiles(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Email", "Endpoint"})
-	for _, profile := range profiles {
-		table.Append([]string{profile.Metadata.Name, profile.Spec.Email, profile.Spec.BaseUrl()})
-	}
-
-	table.Render()
-	return nil
+	headers := []string{"Name", "Email", "Endpoint"}
+	return utils.PrintTable[*config.VersionedConfig](profiles, headers, func(profile *config.VersionedConfig) ([]string, error) {
+		return []string{profile.Metadata.Name, profile.Spec.Email, profile.Spec.BaseUrl()}, nil
+	})
 }
