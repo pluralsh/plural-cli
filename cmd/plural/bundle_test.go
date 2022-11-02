@@ -65,6 +65,7 @@ func TestBundleList(t *testing.T) {
 }
 
 func TestBundleInstallNoGitRootDirectory(t *testing.T) {
+	t.SkipNow()
 	tests := []struct {
 		name             string
 		args             []string
