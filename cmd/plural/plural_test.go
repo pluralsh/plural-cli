@@ -68,6 +68,7 @@ COMMANDS:
    Workspace:
      validate, v         validates your workspace
      topsort, d          renders a dependency-inferred topological sort of the installations in a workspace
+     dependencies, deps  prints ordered dependencies for a repo in your workspace
      serve               launch the server
      shell               manages your cloud shell
      workspace, wkspace  Commands for managing installations in your workspace

@@ -6,6 +6,7 @@ import (
 	toposort "github.com/philopon/go-toposort"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils/containers"
 )
 
 type depsFetcher func(string) ([]*manifest.Dependency, error)
@@ -59,14 +60,16 @@ func TopSort(client api.Client, installations []*api.Installation) ([]*api.Insta
 }
 
 func TopSortNames(repos []string) ([]string, error) {
-	return topsorter(repos, func(repo string) ([]*manifest.Dependency, error) {
-		man, err := manifest.Read(manifestPath(repo))
-		if err != nil {
-			return nil, err
-		}
+	return topsorter(repos, findDependencies)
+}
 
-		return man.Dependencies, nil
-	})
+func findDependencies(repo string) ([]*manifest.Dependency, error) {
+	man, err := manifest.Read(manifestPath(repo))
+	if err != nil {
+		return nil, err
+	}
+
+	return man.Dependencies, nil
 }
 
 func topsorter(repos []string, fn depsFetcher) ([]string, error) {
@@ -115,7 +118,31 @@ func topsorter(repos []string, fn depsFetcher) ([]string, error) {
 	return result, nil
 }
 
-func Dependencies(client api.Client, repo string, installations []*api.Installation) ([]*api.Installation, error) {
+func Dependencies(repo string) ([]string, error) {
+	// dfs from the repo to find all dependencies
+	deps, err := containers.DFS[string](repo, func(r string) ([]string, error) {
+		res := []string{}
+		ds, err := findDependencies(r)
+		if err != nil {
+			return res, err
+		}
+
+		for _, dep := range ds {
+			if isRepo(dep.Repo) {
+				res = append(res, dep.Repo)
+			}
+		}
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// topsort only those to find correct ordering
+	return TopSortNames(deps)
+}
+
+func UntilRepo(client api.Client, repo string, installations []*api.Installation) ([]*api.Installation, error) {
 	topsorted, err := TopSort(client, installations)
 	if err != nil {
 		return topsorted, err
