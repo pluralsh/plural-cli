@@ -43,9 +43,14 @@ func TestBundleList(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			currentDir, err := os.Getwd()
+			assert.NoError(t, err)
 			dir, err := ioutil.TempDir("", "config")
 			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
+			defer func(path, currentDir string) {
+				_ = os.RemoveAll(path)
+				_ = os.Chdir(currentDir)
+			}(dir, currentDir)
 			err = os.Chdir(dir)
 			assert.NoError(t, err)
 			_, err = git.Init()
@@ -65,7 +70,6 @@ func TestBundleList(t *testing.T) {
 }
 
 func TestBundleInstallNoGitRootDirectory(t *testing.T) {
-	t.SkipNow()
 	tests := []struct {
 		name             string
 		args             []string
