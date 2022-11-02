@@ -1,9 +1,6 @@
 package main
 
 import (
-	"os"
-
-	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/logs"
 	"github.com/urfave/cli"
@@ -37,18 +34,7 @@ func (p *Plural) handleLogsList(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Follow", "Target"})
-	for _, t := range tails.Items {
-		follow := "False"
-		if t.Spec.Follow {
-			follow = "True"
-		}
-
-		table.Append([]string{t.Name, follow, t.Spec.Target})
-	}
-	table.Render()
-	return nil
+	return logs.Print(tails)
 }
 
 func (p *Plural) handleLogTail(c *cli.Context) error {

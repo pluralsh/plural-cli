@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
-
-	"github.com/olekukonko/tablewriter"
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/containers"
 	"github.com/urfave/cli"
 )
 
@@ -81,20 +81,19 @@ func (p *Plural) handleInstallations(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Repository", "Repository Id", "Publisher"})
-	for _, inst := range installations {
-		if inst.Repository != nil {
-			repo := inst.Repository
-			publisherName := ""
-			if repo.Publisher != nil {
-				publisherName = repo.Publisher.Name
-			}
-			table.Append([]string{repo.Name, repo.Id, publisherName})
+	installations = containers.Filter[*api.Installation](installations, func(v *api.Installation) bool {
+		return v.Repository != nil
+	})
+
+	headers := []string{"Repository", "Repository Id", "Publisher"}
+	return utils.PrintTable[*api.Installation](installations, headers, func(inst *api.Installation) ([]string, error) {
+		repo := inst.Repository
+		publisherName := ""
+		if repo.Publisher != nil {
+			publisherName = repo.Publisher.Name
 		}
-	}
-	table.Render()
-	return nil
+		return []string{repo.Name, repo.Id, publisherName}, nil
+	})
 }
 
 func (p *Plural) handleCharts(c *cli.Context) error {
@@ -104,13 +103,10 @@ func (p *Plural) handleCharts(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Name", "Description", "Latest Version"})
-	for _, chart := range charts {
-		table.Append([]string{chart.Id, chart.Name, chart.Description, chart.LatestVersion})
-	}
-	table.Render()
-	return nil
+	headers := []string{"Id", "Name", "Description", "Latest Version"}
+	return utils.PrintTable[*api.Chart](charts, headers, func(c *api.Chart) ([]string, error) {
+		return []string{c.Id, c.Name, c.Description, c.LatestVersion}, nil
+	})
 }
 
 func (p *Plural) handleTerraforma(c *cli.Context) error {
@@ -120,13 +116,10 @@ func (p *Plural) handleTerraforma(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Name", "Description"})
-	for _, tf := range tfs {
-		table.Append([]string{tf.Id, tf.Name, tf.Description})
-	}
-	table.Render()
-	return nil
+	headers := []string{"Id", "Name", "Description"}
+	return utils.PrintTable[*api.Terraform](tfs, headers, func(tf *api.Terraform) ([]string, error) {
+		return []string{tf.Id, tf.Name, tf.Description}, nil
+	})
 }
 
 func (p *Plural) handleVersions(c *cli.Context) error {
@@ -137,69 +130,59 @@ func (p *Plural) handleVersions(c *cli.Context) error {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Version"})
-	for _, version := range versions {
-		table.Append([]string{version.Id, version.Version})
-	}
-	table.Render()
-	return nil
+	headers := []string{"Id", "Version"}
+	return utils.PrintTable[*api.Version](versions, headers, func(v *api.Version) ([]string, error) {
+		return []string{v.Id, v.Version}, nil
+	})
 }
 
 func (p *Plural) handleChartInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	chartInstallations, err := p.GetChartInstallations(c.Args().First())
-
 	if err != nil {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Chart Id", "Chart Name", "Version"})
-	for _, ci := range chartInstallations {
-		if ci.Chart != nil && ci.Version != nil {
-			table.Append([]string{ci.Id, ci.Chart.Id, ci.Chart.Name, ci.Version.Version})
-		}
+	cis := containers.Filter[*api.ChartInstallation](chartInstallations, func(ci *api.ChartInstallation) bool {
+		return ci.Chart != nil && ci.Version != nil
+	})
+
+	row := func(ci *api.ChartInstallation) ([]string, error) {
+		return []string{ci.Id, ci.Chart.Id, ci.Chart.Name, ci.Version.Version}, nil
 	}
-	table.Render()
-	return nil
+	headers := []string{"Id", "Chart Id", "Chart Name", "Version"}
+	return utils.PrintTable[*api.ChartInstallation](cis, headers, row)
 }
 
 func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	terraformInstallations, err := p.GetTerraformInstallations(c.Args().First())
-
 	if err != nil {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Terraform Id", "Name"})
-	for _, ti := range terraformInstallations {
+	tis := containers.Filter[*api.TerraformInstallation](terraformInstallations, func(ti *api.TerraformInstallation) bool {
+		return ti != nil
+	})
+
+	headers := []string{"Id", "Terraform Id", "Name"}
+	return utils.PrintTable[*api.TerraformInstallation](tis, headers, func(ti *api.TerraformInstallation) ([]string, error) {
 		tf := ti.Terraform
-		if tf != nil {
-			table.Append([]string{ti.Id, tf.Id, tf.Name})
-		}
-	}
-	table.Render()
-	return nil
+		return []string{ti.Id, tf.Id, tf.Name}, nil
+	})
 }
 
 func (p *Plural) handleArtifacts(c *cli.Context) error {
 	p.InitPluralClient()
 	artifacts, err := p.ListArtifacts(c.Args().First())
-
 	if err != nil {
 		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Name", "Platform", "Blob", "Sha"})
-	for _, artifact := range artifacts {
-		table.Append([]string{artifact.Id, artifact.Name, artifact.Platform, artifact.Blob, artifact.Sha})
-	}
-	table.Render()
-	return nil
+	headers := []string{"Id", "Name", "Platform", "Blob", "Sha"}
+	return utils.PrintTable[api.Artifact](artifacts, headers, func(art api.Artifact) ([]string, error) {
+		return []string{art.Id, art.Name, art.Platform, art.Blob, art.Sha}, nil
+	})
 }
 
 func (p *Plural) handleCreateDomain(c *cli.Context) error {

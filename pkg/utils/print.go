@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/fatih/color"
+	"github.com/olekukonko/tablewriter"
 	"golang.org/x/term"
 )
 
@@ -77,4 +78,23 @@ func HighlightError(err error) error {
 		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error()))
 	}
 	return err
+}
+
+func PrintTable[T any](list []T, headers []string, rowFun func(T) ([]string, error)) error {
+	length := len(headers)
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(headers)
+	for _, v := range list {
+		row, err := rowFun(v)
+		if err != nil {
+			return err
+		}
+		if len(row) != length {
+			return fmt.Errorf("row lengths don't align")
+		}
+		table.Append(row)
+	}
+	table.Render()
+	return nil
 }

@@ -43,6 +43,14 @@ func TestBundleList(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "config")
+			assert.NoError(t, err)
+			defer os.RemoveAll(dir)
+			err = os.Chdir(dir)
+			assert.NoError(t, err)
+			_, err = git.Init()
+			assert.NoError(t, err)
+
 			client := mocks.NewClient(t)
 			client.On("ListRecipes", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(test.recipe, nil)
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
