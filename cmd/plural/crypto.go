@@ -51,6 +51,8 @@ const Gitignore = `/**/.terraform
 .vscode
 `
 
+// IMPORTANT
+// Don't wrap Action methods
 func (p *Plural) cryptoCommands() []cli.Command {
 	return []cli.Command{
 		{
