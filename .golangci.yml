@@ -6,16 +6,13 @@ linters:
   disable-all: true
   enable:
   # default linters
-  - deadcode
   - errcheck
   - gosimple
   - govet
   - ineffassign
   - staticcheck
-  # - structcheck # disabled due to Go 1.18
   - typecheck
   - unused
-  - varcheck
 
   # additional linters
   - errorlint
@@ -27,7 +24,4 @@ linters:
   - importas
   - goconst
   - gocritic
-  # - godox
-  # - gosec
   - misspell
-  # - predeclared
