@@ -1,8 +1,6 @@
 package crypto
 
-import (
-	"io/ioutil"
-)
+import "os"
 
 type IdentityType string
 
@@ -41,5 +39,5 @@ func Flush(prov Provider) error {
 		return err
 	}
 
-	return ioutil.WriteFile(configPath(), io, 0644)
+	return os.WriteFile(configPath(), io, 0644)
 }

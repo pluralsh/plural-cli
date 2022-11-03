@@ -3,7 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"text/template"
 
 	"github.com/mitchellh/go-homedir"
@@ -44,7 +44,7 @@ func setupGcp(setup *SetupRequest) error {
 		return fmt.Errorf("error getting the gcp.json path: %w", err)
 	}
 
-	if err := ioutil.WriteFile(f, []byte(setup.Credentials.Gcp.ApplicationCredentials), 0644); err != nil {
+	if err := os.WriteFile(f, []byte(setup.Credentials.Gcp.ApplicationCredentials), 0644); err != nil {
 		return fmt.Errorf("error writing gcp credentials: %w", err)
 	}
 
@@ -79,7 +79,7 @@ func setupAzure(setup *SetupRequest) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(f, out.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(f, out.Bytes(), 0644); err != nil {
 		return fmt.Errorf("error writing azure env file: %w", err)
 	}
 

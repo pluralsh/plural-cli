@@ -2,7 +2,7 @@ package manifest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -55,7 +55,7 @@ func BuildContext(path string, insts []*api.Installation) error {
 }
 
 func ReadContext(path string) (c *Context, err error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}
@@ -133,7 +133,7 @@ func (c *Context) Write(path string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func (c *Context) ContainsString(str, msg, ignoreRepo, ignoreKey string) error {

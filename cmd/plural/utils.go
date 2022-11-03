@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -106,11 +105,11 @@ func replaceVals(path string, val string) error {
 
 	content := strings.Join(result, "\n")
 
-	return ioutil.WriteFile(path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0644)
 }
 
 func readHelmYaml(path string, result *map[string]interface{}) error {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -124,5 +123,5 @@ func writeHelmYaml(path string, vals map[string]interface{}) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }

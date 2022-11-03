@@ -2,7 +2,7 @@ package pluralfile
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -24,7 +24,7 @@ func (a *RepoAttrs) Key() string {
 
 func (a *RepoAttrs) Push(repo string, sha string) (string, error) {
 	fullPath, _ := filepath.Abs(a.File)
-	contents, err := ioutil.ReadFile(fullPath)
+	contents, err := os.ReadFile(fullPath)
 	if err != nil {
 		return "", err
 	}

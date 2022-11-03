@@ -2,7 +2,7 @@ package pluralfile
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -74,7 +74,7 @@ func Lock(path string) (*Lockfile, error) {
 	conf := config.Read()
 	lock := lock()
 	lockfile := lockPath(path, conf.LockProfile)
-	content, err := ioutil.ReadFile(lockfile)
+	content, err := os.ReadFile(lockfile)
 	if err != nil {
 		return lock, nil
 	}
@@ -99,7 +99,7 @@ func (lock *Lockfile) Flush(path string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(lockPath(path, conf.LockProfile), io, 0644)
+	return os.WriteFile(lockPath(path, conf.LockProfile), io, 0644)
 }
 
 func (lock *Lockfile) getSha(name ComponentName, key string) string {

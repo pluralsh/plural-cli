@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestExists(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -65,7 +64,7 @@ func TestRead(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -109,7 +108,7 @@ func TestProfiles(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -173,7 +172,7 @@ func TestAmend(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 

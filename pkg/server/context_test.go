@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -43,9 +42,7 @@ func TestContextConfiguration(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
-			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 

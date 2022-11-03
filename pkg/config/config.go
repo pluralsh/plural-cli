@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -72,7 +71,7 @@ func Profile(name string) error {
 func Profiles() ([]*VersionedConfig, error) {
 	folder, _ := os.UserHomeDir()
 	confDir := path.Join(folder, pluralDir)
-	files, err := ioutil.ReadDir(confDir)
+	files, err := os.ReadDir(confDir)
 	confs := []*VersionedConfig{}
 	if err != nil {
 		return confs, err
@@ -80,7 +79,7 @@ func Profiles() ([]*VersionedConfig, error) {
 
 	for _, f := range files {
 		if !strings.HasSuffix(f.Name(), ConfigName) && strings.HasSuffix(f.Name(), ".yml") {
-			contents, err := ioutil.ReadFile(path.Join(confDir, f.Name()))
+			contents, err := os.ReadFile(path.Join(confDir, f.Name()))
 			if err != nil {
 				return confs, err
 			}
@@ -97,7 +96,7 @@ func Profiles() ([]*VersionedConfig, error) {
 }
 
 func Import(file string) (conf Config) {
-	contents, err := ioutil.ReadFile(file)
+	contents, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
@@ -174,7 +173,7 @@ func (c *Config) Save(filename string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path.Join(folder, pluralDir, filename), io, 0644)
+	return os.WriteFile(path.Join(folder, pluralDir, filename), io, 0644)
 }
 
 func (c *Config) Flush() error {

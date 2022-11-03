@@ -2,7 +2,7 @@ package manifest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -49,7 +49,7 @@ func (pMan *ProjectManifest) Write(path string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func FetchProject() (*ProjectManifest, error) {
@@ -58,7 +58,7 @@ func FetchProject() (*ProjectManifest, error) {
 }
 
 func ReadProject(path string) (man *ProjectManifest, err error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		err = fmt.Errorf("could not find workspace.yaml file, you might need to run `plural init`")
 		return
@@ -89,11 +89,11 @@ func (man *Manifest) Write(path string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func Read(path string) (man *Manifest, err error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}

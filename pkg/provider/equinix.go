@@ -5,9 +5,9 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -150,12 +150,12 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 
 	usr, _ := user.Current()
 
-	input, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")))
+	input, err := os.ReadFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")))
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config-plural-backup")), input, 0644)
+	err = os.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config-plural-backup")), input, 0644)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 		return err
 	}
 
-	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")), output, 0644)
+	return os.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")), output, 0644)
 }
 
 func (equinix *EQUINIXProvider) Name() string {

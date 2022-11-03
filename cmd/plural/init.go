@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -176,7 +175,7 @@ func handleImport(c *cli.Context) error {
 		return err
 	}
 
-	data, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
+	data, err := os.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
 	if err != nil {
 		return err
 	}

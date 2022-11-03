@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -45,7 +44,7 @@ func TestBundleList(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			currentDir, err := os.Getwd()
 			assert.NoError(t, err)
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer func(path, currentDir string) {
 				_ = os.RemoveAll(path)
@@ -129,7 +128,7 @@ func TestBundleInstall(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 			err = os.Chdir(dir)

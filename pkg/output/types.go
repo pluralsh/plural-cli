@@ -1,7 +1,7 @@
 package output
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/pluralsh/plural/pkg/manifest"
 	"gopkg.in/yaml.v2"
@@ -35,11 +35,11 @@ func (out *Output) Save(app, path string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func Read(path string) (out *Output, err error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}

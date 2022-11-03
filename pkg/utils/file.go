@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -11,12 +10,12 @@ import (
 )
 
 func CopyFile(src, dest string) error {
-	bytesRead, err := ioutil.ReadFile(src)
+	bytesRead, err := os.ReadFile(src)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(dest, bytesRead, 0644)
+	return os.WriteFile(dest, bytesRead, 0644)
 }
 
 func EmptyDirectory(dir string) error {
@@ -58,11 +57,11 @@ func WriteFile(name string, content []byte) error {
 	if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(name, content, 0644)
+	return os.WriteFile(name, content, 0644)
 }
 
 func ReadFile(name string) (string, error) {
-	content, err := ioutil.ReadFile(name)
+	content, err := os.ReadFile(name)
 	return string(content), err
 }
 

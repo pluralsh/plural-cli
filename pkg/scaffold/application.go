@@ -1,7 +1,7 @@
 package scaffold
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/output"
@@ -30,7 +30,7 @@ func NewApplications() (*Applications, error) {
 func (apps *Applications) HelmValues(app string) (map[string]interface{}, error) {
 	var res map[string]interface{}
 	path := pathing.SanitizeFilepath(filepath.Join(apps.Root, app, "helm", app, "values.yaml"))
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return res, err
 	}

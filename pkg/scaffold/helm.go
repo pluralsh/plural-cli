@@ -3,7 +3,6 @@ package scaffold
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -253,7 +252,7 @@ func prevValues(filename string) (map[string]map[string]interface{}, error) {
 		return parsed, nil
 	}
 
-	contents, err := ioutil.ReadFile(filename)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
 		return parsed, err
 	}
@@ -278,7 +277,7 @@ func (s *Scaffold) createChart(w *wkspace.Workspace) error {
 	filename := pathing.SanitizeFilepath(filepath.Join(s.Root, ChartfileName))
 
 	if utils.Exists(filename) {
-		content, err := ioutil.ReadFile(filename)
+		content, err := os.ReadFile(filename)
 		if err != nil {
 			return errors.ErrorWrap(err, "Failed to read existing Chart.yaml")
 		}
