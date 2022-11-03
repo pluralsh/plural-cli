@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
 )

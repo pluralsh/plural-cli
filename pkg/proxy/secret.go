@@ -3,7 +3,7 @@ package proxy
 import (
 	"fmt"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	v1 "k8s.io/api/core/v1"

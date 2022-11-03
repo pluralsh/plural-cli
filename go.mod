@@ -39,7 +39,7 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.1.7
-	github.com/pluralsh/plural-operator v0.1.4
+	github.com/pluralsh/plural-operator v0.5.3
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
@@ -88,6 +88,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
+	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -257,7 +258,7 @@ require (
 	k8s.io/kubectl v0.24.2 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	oras.land/oras-go v1.2.0 // indirect
-	sigs.k8s.io/controller-runtime v0.6.1 // indirect
+	sigs.k8s.io/controller-runtime v0.12.1 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/kustomize/api v0.11.4 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.6 // indirect

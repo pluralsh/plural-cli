@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	plural "github.com/pluralsh/plural/cmd/plural"
 	"github.com/pluralsh/plural/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"

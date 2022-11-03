@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/template"

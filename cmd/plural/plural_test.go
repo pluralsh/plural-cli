@@ -44,6 +44,7 @@ COMMANDS:
 
    Miscellaneous:
      utils  useful plural utilities
+     vpn    interacting with the plural vpn
 
    Publishing:
      apply          applys the current pluralfile

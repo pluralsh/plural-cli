@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
-	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/platform/clientset/versioned"
+	platformv1alpha1 "github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
+	vpnv1alpha1 "github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
+	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/client/clientset/versioned"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -35,10 +36,16 @@ type Kube interface {
 	Node(name string) (*v1.Node, error)
 	Nodes() (*v1.NodeList, error)
 	FinalizeNamespace(namespace string) error
-	LogTailList(namespace string) (*v1alpha1.LogTailList, error)
-	LogTail(namespace string, name string) (*v1alpha1.LogTail, error)
-	ProxyList(namespace string) (*v1alpha1.ProxyList, error)
-	Proxy(namespace string, name string) (*v1alpha1.Proxy, error)
+	LogTailList(namespace string) (*platformv1alpha1.LogTailList, error)
+	LogTail(namespace string, name string) (*platformv1alpha1.LogTail, error)
+	ProxyList(namespace string) (*platformv1alpha1.ProxyList, error)
+	Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error)
+	WireguardServerList(namespace string) (*vpnv1alpha1.WireguardServerList, error)
+	WireguardServer(namespace string, name string) (*vpnv1alpha1.WireguardServer, error)
+	WireguardPeerList(namespace string) (*vpnv1alpha1.WireguardPeerList, error)
+	WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error)
+	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
+	WireguardPeerDelete(namespace string, name string) error
 	GetClient() *kubernetes.Clientset
 }
 
@@ -117,24 +124,54 @@ func (k *kube) FinalizeNamespace(namespace string) error {
 	return err
 }
 
-func (k *kube) LogTailList(namespace string) (*v1alpha1.LogTailList, error) {
+func (k *kube) LogTailList(namespace string) (*platformv1alpha1.LogTailList, error) {
 	ctx := context.Background()
 	return k.Plural.PlatformV1alpha1().LogTails(namespace).List(ctx, metav1.ListOptions{})
 }
 
-func (k *kube) LogTail(namespace string, name string) (*v1alpha1.LogTail, error) {
+func (k *kube) LogTail(namespace string, name string) (*platformv1alpha1.LogTail, error) {
 	ctx := context.Background()
 	return k.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-func (k *kube) ProxyList(namespace string) (*v1alpha1.ProxyList, error) {
+func (k *kube) ProxyList(namespace string) (*platformv1alpha1.ProxyList, error) {
 	ctx := context.Background()
 	return k.Plural.PlatformV1alpha1().Proxies(namespace).List(ctx, metav1.ListOptions{})
 }
 
-func (k *kube) Proxy(namespace string, name string) (*v1alpha1.Proxy, error) {
+func (k *kube) Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error) {
 	ctx := context.Background()
 	return k.Plural.PlatformV1alpha1().Proxies(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (k *kube) WireguardServerList(namespace string) (*vpnv1alpha1.WireguardServerList, error) {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardServers(namespace).List(ctx, metav1.ListOptions{})
+}
+
+func (k *kube) WireguardServer(namespace string, name string) (*vpnv1alpha1.WireguardServer, error) {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardServers(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (k *kube) WireguardPeerList(namespace string) (*vpnv1alpha1.WireguardPeerList, error) {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).List(ctx, metav1.ListOptions{})
+}
+
+func (k *kube) WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error) {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (k *kube) WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Create(ctx, wireguardPeer, metav1.CreateOptions{})
+}
+
+func (k *kube) WireguardPeerDelete(namespace string, name string) error {
+	ctx := context.Background()
+	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func (k *kube) GetClient() *kubernetes.Clientset {
