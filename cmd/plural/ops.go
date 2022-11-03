@@ -15,12 +15,12 @@ func (p *Plural) opsCommands() []cli.Command {
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
 			ArgsUsage: "NAME",
-			Action:    p.handleTerminateNode,
+			Action:    latestVersion(p.handleTerminateNode),
 		},
 		{
 			Name:   "cluster",
 			Usage:  "list the nodes in your cluster",
-			Action: p.handleListNodes,
+			Action: latestVersion(p.handleListNodes),
 		},
 	}
 }

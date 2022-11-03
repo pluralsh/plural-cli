@@ -9,6 +9,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
@@ -140,4 +141,11 @@ func repoRoot() error {
 	}
 
 	return nil
+}
+
+func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		utils.CheckLatestVersion(version)
+		return fn(c)
+	}
 }

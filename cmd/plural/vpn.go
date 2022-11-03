@@ -29,12 +29,12 @@ func (p *Plural) vpnCommands() []cli.Command {
 		{
 			Name:   "list-servers",
 			Usage:  "lists vpn servers",
-			Action: p.handleWireguardServerList,
+			Action: latestVersion(p.handleWireguardServerList),
 		},
 		{
 			Name:   "list-clients",
 			Usage:  "lists vpn clients for a server",
-			Action: p.handleWireguardPeerList,
+			Action: latestVersion(p.handleWireguardPeerList),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -46,7 +46,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "create-client",
 			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    requireArgs(p.handleWireguardPeerCreate, []string{"NAME"}),
+			Action:    latestVersion(requireArgs(p.handleWireguardPeerCreate, []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -58,7 +58,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "delete-client",
 			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    requireArgs(p.handleWireguardPeerDelete, []string{"NAME"}),
+			Action:    latestVersion(requireArgs(p.handleWireguardPeerDelete, []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -70,7 +70,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "client-config",
 			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			Action:    requireArgs(p.handleWireguardPeerConfig, []string{"NAME"}),
+			Action:    latestVersion(requireArgs(p.handleWireguardPeerConfig, []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",

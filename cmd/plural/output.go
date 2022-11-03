@@ -15,7 +15,7 @@ func outputCommands() []cli.Command {
 			Name:      "terraform",
 			Usage:     "generates terraform output",
 			ArgsUsage: "REPO",
-			Action:    handleTerraformOutput,
+			Action:    latestVersion(handleTerraformOutput),
 		},
 	}
 }

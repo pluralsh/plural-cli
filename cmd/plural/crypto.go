@@ -56,37 +56,37 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "encrypt",
 			Usage:  "encrypts stdin and writes to stdout",
-			Action: handleEncrypt,
+			Action: latestVersion(handleEncrypt),
 		},
 		{
 			Name:   "decrypt",
 			Usage:  "decrypts stdin and writes to stdout",
-			Action: handleDecrypt,
+			Action: latestVersion(handleDecrypt),
 		},
 		{
 			Name:   "init",
 			Usage:  "initializes git filters for you",
-			Action: cryptoInit,
+			Action: latestVersion(cryptoInit),
 		},
 		{
 			Name:   "unlock",
 			Usage:  "auto-decrypts all affected files in the repo",
-			Action: handleUnlock,
+			Action: latestVersion(handleUnlock),
 		},
 		{
 			Name:   "import",
 			Usage:  "imports an aes key for plural to use",
-			Action: importKey,
+			Action: latestVersion(importKey),
 		},
 		{
 			Name:   "recover",
 			Usage:  "recovers repo encryption keys from a working k8s cluster",
-			Action: p.handleRecover,
+			Action: latestVersion(p.handleRecover),
 		},
 		{
 			Name:   "random",
 			Usage:  "generates a random string",
-			Action: randString,
+			Action: latestVersion(randString),
 			Flags: []cli.Flag{
 				cli.IntFlag{
 					Name:  "len",
@@ -103,7 +103,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "export",
 			Usage:  "dumps the current aes key to stdout",
-			Action: exportKey,
+			Action: latestVersion(exportKey),
 		},
 		{
 			Name:      "share",
@@ -116,7 +116,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 					Required: true,
 				},
 			},
-			Action: p.handleCryptoShare,
+			Action: latestVersion(p.handleCryptoShare),
 		},
 		{
 			Name:  "setup-keys",
@@ -128,7 +128,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 					Required: true,
 				},
 			},
-			Action: p.handleSetupKeys,
+			Action: latestVersion(p.handleSetupKeys),
 		},
 	}
 }

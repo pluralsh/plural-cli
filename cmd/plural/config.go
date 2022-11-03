@@ -15,18 +15,18 @@ func configCommands() []cli.Command {
 			Name:      "amend",
 			Usage:     "modify config",
 			ArgsUsage: "[key] [value]",
-			Action:    handleAmend,
+			Action:    latestVersion(handleAmend),
 		},
 		{
 			Name:      "read",
 			Usage:     "dumps config",
 			ArgsUsage: "",
-			Action:    handleRead,
+			Action:    latestVersion(handleRead),
 		},
 		{
 			Name:   "import",
 			Usage:  "imports a new config from a given token",
-			Action: handleConfigImport,
+			Action: latestVersion(handleConfigImport),
 		},
 	}
 }
@@ -37,25 +37,25 @@ func profileCommands() []cli.Command {
 			Name:      "use",
 			Usage:     "moves the config in PROFILE to the current config",
 			ArgsUsage: "PROFILE",
-			Action:    handleUseProfile,
+			Action:    latestVersion(handleUseProfile),
 		},
 		{
 			Name:      "save",
 			Usage:     "saves the current config as PROFILE",
 			ArgsUsage: "PROFILE",
-			Action:    handleSaveProfile,
+			Action:    latestVersion(handleSaveProfile),
 		},
 		{
 			Name:      "show",
 			Usage:     "displays the configuration for the current profile",
 			ArgsUsage: "PROFILE",
-			Action:    handleRead,
+			Action:    latestVersion(handleRead),
 		},
 		{
 			Name:      "list",
 			Usage:     "lists all saved profiles",
 			ArgsUsage: "",
-			Action:    listProfiles,
+			Action:    latestVersion(listProfiles),
 		},
 	}
 }

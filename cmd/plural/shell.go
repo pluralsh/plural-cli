@@ -16,7 +16,7 @@ func shellCommands() []cli.Command {
 		{
 			Name:   "sync",
 			Usage:  "syncs the setup in your cloud shell locally",
-			Action: handleShellSync,
+			Action: latestVersion(handleShellSync),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "endpoint",
@@ -31,7 +31,7 @@ func shellCommands() []cli.Command {
 		{
 			Name:   "purge",
 			Usage:  "deletes your cloud shell",
-			Action: handleShellPurge,
+			Action: latestVersion(handleShellPurge),
 		},
 	}
 }

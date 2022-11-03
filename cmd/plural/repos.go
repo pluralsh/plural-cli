@@ -17,12 +17,12 @@ func (p *Plural) reposCommands() []cli.Command {
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "REPO",
-			Action:    p.handleUnlockRepo,
+			Action:    latestVersion(p.handleUnlockRepo),
 		},
 		{
 			Name:   "reset",
 			Usage:  "eliminates your current plural installation set, to change cloud provider or eject from plural",
-			Action: p.handleResetInstallations,
+			Action: latestVersion(p.handleResetInstallations),
 		},
 		{
 			Name:      "list",
@@ -38,7 +38,7 @@ func (p *Plural) reposCommands() []cli.Command {
 					Usage: "format to print the repositories out, eg csv or default is table",
 				},
 			},
-			Action: p.handleListRepositories,
+			Action: latestVersion(p.handleListRepositories),
 		},
 	}
 }
