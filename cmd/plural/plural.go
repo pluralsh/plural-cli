@@ -361,6 +361,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Miscellaneous",
 		},
 		{
+			Name:        "vpn",
+			Usage:       "interacting with the plural vpn",
+			Subcommands: p.vpnCommands(),
+			Category:    "Miscellaneous",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",

@@ -6,7 +6,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/pluralsh/plural-operator/api/platform/v1alpha1"
+	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/stretchr/testify/mock"
 
 	plural "github.com/pluralsh/plural/cmd/plural"
