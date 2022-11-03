@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/server"
@@ -21,15 +22,21 @@ import (
 )
 
 func handleInit(c *cli.Context) error {
-	git, err := wkspace.Preflight()
 	gitCreated := false
 	repo := ""
+
+	git, err := wkspace.Preflight()
 	if err != nil && git {
 		return err
 	}
 
 	if err := handleLogin(c); err != nil {
 		return err
+	}
+
+	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !affirm("This repository's workspace.yaml already exists. Would you like to use it?") {
+		fmt.Println("Run `plural init` from empty repository or outside any in order to start from scratch.")
+		return nil
 	}
 
 	prov, err := runPreflights()
@@ -168,7 +175,7 @@ func handleImport(c *cli.Context) error {
 		return err
 	}
 
-	data, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
+	data, err := os.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
 	if err != nil {
 		return err
 	}

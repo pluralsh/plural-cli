@@ -1,7 +1,6 @@
 package scaffold
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -119,7 +118,7 @@ func (b *Build) Flush(root string) error {
 	}
 
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, b.Metadata.Name, "build.hcl")))
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func (s *Scaffold) Execute(wk *wkspace.Workspace, force bool) error {

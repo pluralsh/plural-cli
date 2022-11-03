@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -66,7 +65,7 @@ type AESKey struct {
 }
 
 func Read(path string) (*AESKey, error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -137,5 +136,5 @@ func (k *AESKey) Flush() error {
 		return err
 	}
 
-	return ioutil.WriteFile(getKeyPath(), io, 0644)
+	return os.WriteFile(getKeyPath(), io, 0644)
 }

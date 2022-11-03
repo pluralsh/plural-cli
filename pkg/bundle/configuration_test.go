@@ -2,7 +2,6 @@ package bundle_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -129,7 +128,7 @@ func TestConfigureEnvVariables(t *testing.T) {
 				}
 			}(test.envVars)
 
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 

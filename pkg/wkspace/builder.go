@@ -2,7 +2,6 @@ package wkspace
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -172,12 +171,12 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 	}
 
 	onceFile := pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural", "ONCE"))
-	if err := ioutil.WriteFile(onceFile, []byte("once"), 0644); err != nil {
+	if err := os.WriteFile(onceFile, []byte("once"), 0644); err != nil {
 		return err
 	}
 
 	nonceFile := pathing.SanitizeFilepath(filepath.Join(wkspaceRoot, ".plural", "NONCE"))
-	if err := ioutil.WriteFile(nonceFile, []byte(crypto.RandString(32)), 0644); err != nil {
+	if err := os.WriteFile(nonceFile, []byte(crypto.RandString(32)), 0644); err != nil {
 		return err
 	}
 

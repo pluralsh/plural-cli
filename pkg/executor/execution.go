@@ -2,7 +2,7 @@ package executor
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -29,12 +29,12 @@ const (
 
 func Ignore(root string) error {
 	ignoreFile := pathing.SanitizeFilepath(filepath.Join(root, ".pluralignore"))
-	return ioutil.WriteFile(ignoreFile, []byte(pluralIgnore), 0644)
+	return os.WriteFile(ignoreFile, []byte(pluralIgnore), 0644)
 }
 
 func GetExecution(path, name string) (*Execution, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
+	contents, err := os.ReadFile(fullpath)
 	ex := Execution{}
 	if err != nil {
 		return &ex, err
@@ -84,7 +84,7 @@ func (e *Execution) Execute(verbose bool) error {
 
 func (e *Execution) IgnoreFile(root string) ([]string, error) {
 	ignorePath := pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, ".pluralignore"))
-	contents, err := ioutil.ReadFile(ignorePath)
+	contents, err := os.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
 	}
@@ -155,7 +155,7 @@ func (e *Execution) Flush(root string) error {
 	}
 
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, e.Metadata.Name+".hcl")))
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func pluralfile(base, name string) string {

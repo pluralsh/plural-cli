@@ -2,7 +2,6 @@ package diff
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +26,7 @@ type Metadata struct {
 
 func GetDiff(path, name string) (*Diff, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
+	contents, err := os.ReadFile(fullpath)
 	diff := Diff{}
 	if err != nil {
 		return &diff, nil
@@ -76,7 +75,7 @@ func (e *Diff) Execute() error {
 
 func (e *Diff) IgnoreFile(root string) ([]string, error) {
 	ignorePath := pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, ".pluralignore"))
-	contents, err := ioutil.ReadFile(ignorePath)
+	contents, err := os.ReadFile(ignorePath)
 	if err != nil {
 		return []string{}, err
 	}
@@ -180,7 +179,7 @@ func (d *Diff) Flush(root string) error {
 	}
 
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl")))
-	return ioutil.WriteFile(path, io, 0644)
+	return os.WriteFile(path, io, 0644)
 }
 
 func pluralfile(base, name string) string {

@@ -52,7 +52,7 @@ func (p *Plural) handleListNodes(cli *cli.Context) error {
 	}
 
 	headers := []string{"Name", "CPU", "Memory", "Region", "Zone"}
-	return utils.PrintTable[v1.Node](nodes.Items, headers, func(node v1.Node) ([]string, error) {
+	return utils.PrintTable(nodes.Items, headers, func(node v1.Node) ([]string, error) {
 		status := node.Status
 		labels := node.ObjectMeta.Labels
 		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
@@ -69,7 +69,7 @@ func (p *Plural) handleListNodes(cli *cli.Context) error {
 func getProvider() (provider.Provider, error) {
 	_, found := utils.ProjectRoot()
 	if !found {
-		return nil, fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
+		return nil, fmt.Errorf("project not initialized, run `plural init` to set up a workspace")
 	}
 
 	return provider.GetProvider()

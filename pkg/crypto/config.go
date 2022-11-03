@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/utils"
@@ -23,7 +23,7 @@ func configPath() string {
 
 func ReadConfig() (conf *Config, err error) {
 	conf = &Config{}
-	contents, err := ioutil.ReadFile(configPath())
+	contents, err := os.ReadFile(configPath())
 	if err != nil {
 		return
 	}

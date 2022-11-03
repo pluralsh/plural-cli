@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -84,7 +83,7 @@ func BuildAgeProvider() (prov *AgeProvider, err error) {
 	}
 
 	prov = &AgeProvider{Identity: ident}
-	contents, err := ioutil.ReadFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key")))
+	contents, err := os.ReadFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key")))
 	if err != nil {
 		return
 	}
@@ -198,7 +197,7 @@ func (age *Age) WriteKeyFile(path string, keydata []byte) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(path, encrypted, 0644); err != nil {
+	if err := os.WriteFile(path, encrypted, 0644); err != nil {
 		return err
 	}
 	// always flush current age config after writing key to preserve state
@@ -211,7 +210,7 @@ func (age *Age) Flush() error {
 		return err
 	}
 
-	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), identityFile)), contents, 0644)
+	return os.WriteFile(pathing.SanitizeFilepath(filepath.Join(cryptPath(), identityFile)), contents, 0644)
 }
 
 func SetupIdentity(client api.Client, name string) error {
@@ -229,7 +228,7 @@ func setupAgeConfig() (*Age, error) {
 
 	if utils.Exists(path) {
 		age := &Age{}
-		contents, err := ioutil.ReadFile(path)
+		contents, err := os.ReadFile(path)
 		if err != nil {
 			return age, err
 		}
@@ -243,7 +242,7 @@ func setupAgeConfig() (*Age, error) {
 		return nil, err
 	}
 
-	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(base, ".gitignore")), []byte(gitignore), 0644); err != nil {
+	if err := os.WriteFile(pathing.SanitizeFilepath(filepath.Join(base, ".gitignore")), []byte(gitignore), 0644); err != nil {
 		return nil, err
 	}
 
@@ -282,7 +281,7 @@ func identityFromString(contents string) (*age.X25519Identity, error) {
 
 func generateIdentity(path string) (*age.X25519Identity, error) {
 	if utils.Exists(path) {
-		contents, err := ioutil.ReadFile(path)
+		contents, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}

@@ -3,7 +3,6 @@ package server_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -34,7 +33,7 @@ func TestGetConfiguration(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -44,7 +43,7 @@ func TestGetConfiguration(t *testing.T) {
 			pm := genProjectManifest()
 			io, err := json.Marshal(pm)
 			assert.NoError(t, err)
-			err = ioutil.WriteFile(path.Join(dir, "workspace.yaml"), io, 0644)
+			err = os.WriteFile(path.Join(dir, "workspace.yaml"), io, 0644)
 			assert.NoError(t, err)
 
 			context := manifest.NewContext()

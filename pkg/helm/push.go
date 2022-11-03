@@ -3,7 +3,6 @@ package helm
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -35,7 +34,7 @@ func Push(chartName, repoUrl string) error {
 		return err
 	}
 
-	tmp, err := ioutil.TempDir("", "helm-push-")
+	tmp, err := os.MkdirTemp("", "helm-push-")
 	if err != nil {
 		return err
 	}
@@ -57,7 +56,7 @@ func Push(chartName, repoUrl string) error {
 	}(resp.Body)
 
 	if resp.StatusCode != 201 && resp.StatusCode != 202 {
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}

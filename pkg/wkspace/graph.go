@@ -45,7 +45,7 @@ func TopSort(client api.Client, installations []*api.Installation) ([]*api.Insta
 			return deps, nil
 		}
 
-		return nil, fmt.Errorf("Unknown repository %s", repo)
+		return nil, fmt.Errorf("unknown repository %s", repo)
 	})
 
 	if err != nil {
@@ -106,7 +106,7 @@ func topsorter(repos []string, fn depsFetcher) ([]string, error) {
 
 	sorted, ok := graph.Toposort()
 	if !ok {
-		return nil, fmt.Errorf("Cycle detected in dependency graph")
+		return nil, fmt.Errorf("cycle detected in dependency graph")
 	}
 
 	// need to reverse the order
@@ -120,7 +120,7 @@ func topsorter(repos []string, fn depsFetcher) ([]string, error) {
 
 func Dependencies(repo string) ([]string, error) {
 	// dfs from the repo to find all dependencies
-	deps, err := containers.DFS[string](repo, func(r string) ([]string, error) {
+	deps, err := containers.DFS(repo, func(r string) ([]string, error) {
 		res := []string{}
 		ds, err := findDependencies(r)
 		if err != nil {

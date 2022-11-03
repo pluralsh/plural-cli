@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -32,10 +31,10 @@ func setupGit(setup *SetupRequest) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa")), []byte(setup.SshPrivateKey), 0600); err != nil {
+	if err := os.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa")), []byte(setup.SshPrivateKey), 0600); err != nil {
 		return fmt.Errorf("error writing ssh private key: %w", err)
 	}
-	if err := ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa.pub")), []byte(setup.SshPublicKey), 0644); err != nil {
+	if err := os.WriteFile(pathing.SanitizeFilepath(filepath.Join(p, "id_rsa.pub")), []byte(setup.SshPublicKey), 0644); err != nil {
 		return fmt.Errorf("error writing ssh public key: %w", err)
 	}
 

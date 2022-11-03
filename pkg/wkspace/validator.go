@@ -63,7 +63,7 @@ func (wk *Workspace) providersValid(providers []string) error {
 	}
 
 	if !pass {
-		return fmt.Errorf("Provider %s is not supported for any of %v", wk.Provider.Name(), providers)
+		return fmt.Errorf("provider %s is not supported for any of %v", wk.Provider.Name(), providers)
 	}
 
 	return nil

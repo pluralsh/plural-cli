@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -40,7 +39,7 @@ func TestSetupKeys(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer func(path string) {
 				_ = os.RemoveAll(path)
@@ -120,7 +119,7 @@ func TestShare(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer func(path string) {
 				_ = os.RemoveAll(path)
@@ -181,7 +180,7 @@ func TestRecover(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -196,7 +195,7 @@ func TestRecover(t *testing.T) {
 			kube := mocks.NewKube(t)
 
 			if test.keyContent != "" {
-				err := ioutil.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.keyContent), 0644)
+				err := os.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.keyContent), 0644)
 				assert.NoError(t, err)
 			}
 
@@ -231,7 +230,7 @@ func TestCheckGitCrypt(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer func(path string) {
 				_ = os.RemoveAll(path)
@@ -241,7 +240,7 @@ func TestCheckGitCrypt(t *testing.T) {
 			defaultConfig := pluraltest.GenDefaultConfig()
 			err = defaultConfig.Save(config.ConfigName)
 			assert.NoError(t, err)
-			err = ioutil.WriteFile(path.Join(dir, ".plural", "key"), []byte("key: abc"), 0644)
+			err = os.WriteFile(path.Join(dir, ".plural", "key"), []byte("key: abc"), 0644)
 			assert.NoError(t, err)
 
 			err = os.Chdir(dir)

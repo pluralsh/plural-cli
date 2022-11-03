@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -135,7 +134,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 }
 
 func handleEncrypt(c *cli.Context) error {
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
 		_, err := os.Stdout.Write(data)
 		if err != nil {
@@ -184,7 +183,7 @@ func handleDecrypt(c *cli.Context) error {
 		file = os.Stdin
 	}
 
-	data, err := ioutil.ReadAll(file)
+	data, err := io.ReadAll(file)
 	if err != nil {
 		return err
 	}
@@ -319,7 +318,7 @@ func exportKey(c *cli.Context) error {
 }
 
 func importKey(c *cli.Context) error {
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -374,11 +373,11 @@ func handleKeygen(c *cli.Context) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(path, filename), []byte(priv), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(path, filename), []byte(priv), 0600); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(path, filename+".pub"), []byte(pub), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(path, filename+".pub"), []byte(pub), 0644); err != nil {
 		return err
 	}
 

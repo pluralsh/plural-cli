@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
@@ -20,7 +20,7 @@ func testTemplate(c *cli.Context) error {
 	client := api.NewClient()
 	installations, _ := client.GetInstallations()
 	repoName := c.Args().Get(0)
-	testTemplate, err := ioutil.ReadAll(os.Stdin)
+	testTemplate, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func formatDashboard(c *cli.Context) error {
 
 	dashboard := v1alpha1.Dashboard{}
 	grafana := GrafanaDashboard{}
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}

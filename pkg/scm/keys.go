@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -59,11 +58,11 @@ func saveKeys(pub, priv string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(keys.priv, []byte(priv), 0600); err != nil {
+	if err := os.WriteFile(keys.priv, []byte(priv), 0600); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(keys.pub, []byte(pub), 0644); err != nil {
+	if err := os.WriteFile(keys.pub, []byte(pub), 0644); err != nil {
 		return err
 	}
 

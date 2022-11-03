@@ -1,7 +1,6 @@
 package crypto_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -34,8 +33,7 @@ func TestBuild(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// create temp environment
-			dir, err := ioutil.TempDir("", "config")
+			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
 			defer os.RemoveAll(dir)
 
@@ -48,13 +46,13 @@ func TestBuild(t *testing.T) {
 			assert.NoError(t, err)
 
 			if test.genConfig {
-				err := ioutil.WriteFile(path.Join(dir, "crypto.yml"), []byte("abc"), 0644)
+				err := os.WriteFile(path.Join(dir, "crypto.yml"), []byte("abc"), 0644)
 				assert.NoError(t, err)
 			}
 
 			err = os.MkdirAll(path.Join(dir, ".plural"), os.ModePerm)
 			assert.NoError(t, err)
-			err = ioutil.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.keyContent), 0644)
+			err = os.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.keyContent), 0644)
 			assert.NoError(t, err)
 
 			provider, err := crypto.Build()

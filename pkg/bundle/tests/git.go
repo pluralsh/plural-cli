@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
@@ -18,7 +17,7 @@ func testGit(ctx *manifest.Context, test *api.RecipeTest) error {
 		return err
 	}
 	url := args["url"].Val.(string)
-	dir, err := ioutil.TempDir("", "repo")
+	dir, err := os.MkdirTemp("", "repo")
 	if err != nil {
 		return err
 	}

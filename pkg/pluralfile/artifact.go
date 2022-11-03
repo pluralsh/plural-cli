@@ -2,7 +2,6 @@ package pluralfile
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -47,7 +46,7 @@ func mkSha(file string) (sha string, err error) {
 		return
 	}
 
-	contents, err := ioutil.ReadFile(fullPath)
+	contents, err := os.ReadFile(fullPath)
 	if err != nil {
 		return
 	}

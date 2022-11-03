@@ -1,7 +1,7 @@
 package scaffold
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/hcl"
@@ -12,7 +12,7 @@ import (
 
 func Read(path string) (*Build, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, "build.hcl"))
-	contents, err := ioutil.ReadFile(fullpath)
+	contents, err := os.ReadFile(fullpath)
 	build := Build{}
 	if err != nil {
 		return &build, err

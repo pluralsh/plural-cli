@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/pluralsh/plural/pkg/config"
@@ -76,7 +76,7 @@ func handleRead(c *cli.Context) error {
 }
 
 func handleConfigImport(c *cli.Context) error {
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func listProfiles(c *cli.Context) error {
 	}
 
 	headers := []string{"Name", "Email", "Endpoint"}
-	return utils.PrintTable[*config.VersionedConfig](profiles, headers, func(profile *config.VersionedConfig) ([]string, error) {
+	return utils.PrintTable(profiles, headers, func(profile *config.VersionedConfig) ([]string, error) {
 		return []string{profile.Metadata.Name, profile.Spec.Email, profile.Spec.BaseUrl()}, nil
 	})
 }

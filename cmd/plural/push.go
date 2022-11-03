@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -164,7 +163,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 		return
 	}
 
-	f, err = ioutil.TempFile("", "values.yaml")
+	f, err = os.CreateTemp("", "values.yaml")
 	if err != nil {
 		return
 	}
@@ -180,7 +179,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 func (p *Plural) handleRecipeUpload(c *cli.Context) error {
 	p.InitPluralClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
+	contents, err := os.ReadFile(fullPath)
 	if err != nil {
 		return err
 	}
@@ -197,7 +196,7 @@ func (p *Plural) handleRecipeUpload(c *cli.Context) error {
 func (p *Plural) handleArtifact(c *cli.Context) error {
 	p.InitPluralClient()
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
-	contents, err := ioutil.ReadFile(fullPath)
+	contents, err := os.ReadFile(fullPath)
 	if err != nil {
 		return err
 	}

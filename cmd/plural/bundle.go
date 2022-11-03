@@ -77,7 +77,7 @@ func (p *Plural) bundleList(c *cli.Context) error {
 	}
 
 	headers := []string{"Name", "Description", "Provider", "Install Command"}
-	return utils.PrintTable[*api.Recipe](recipes, headers, func(recipe *api.Recipe) ([]string, error) {
+	return utils.PrintTable(recipes, headers, func(recipe *api.Recipe) ([]string, error) {
 		return []string{recipe.Name, recipe.Description, recipe.Provider, fmt.Sprintf("plural bundle install %s %s", repo, recipe.Name)}, nil
 	})
 }
@@ -111,7 +111,7 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 	}
 
 	headers := []string{"Name", "Description", "Featured"}
-	return utils.PrintTable[*api.Stack](stacks, headers, func(s *api.Stack) ([]string, error) {
+	return utils.PrintTable(stacks, headers, func(s *api.Stack) ([]string, error) {
 		return []string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)}, nil
 	})
 }

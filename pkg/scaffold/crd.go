@@ -2,8 +2,9 @@ package scaffold
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -34,10 +35,10 @@ func writeCrd(path string, crd *api.Crd) error {
 		return err
 	}
 
-	contents, err := ioutil.ReadAll(resp.Body)
+	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(pathing.SanitizeFilepath(filepath.Join(path, crd.Name)), contents, 0644)
+	return os.WriteFile(pathing.SanitizeFilepath(filepath.Join(path, crd.Name)), contents, 0644)
 }
