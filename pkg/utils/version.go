@@ -40,7 +40,7 @@ func CheckLatestVersion(currentVersion string) {
 		versions = append(versions, v)
 	}
 	sort.Sort(sort.Reverse(versions))
-	if len(versions) >= 0 {
+	if len(versions) > 0 {
 		lv := versions[0]
 		cv, err := semverlib.NewVersion(currentVersion)
 		if err != nil {
