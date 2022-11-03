@@ -24,13 +24,14 @@ func TestTopSort(t *testing.T) {
 		{
 			name: `test "topsort"`,
 			args: []string{plural.ApplicationName, "topsort"},
-			installations: []*api.Installation{{
-				Id: "abc",
-				Repository: &api.Repository{
-					Id:   "abc",
-					Name: "abc",
+			installations: []*api.Installation{
+				{
+					Id: "abc",
+					Repository: &api.Repository{
+						Id:   "abc",
+						Name: "abc",
+					},
 				},
-			},
 				{
 					Id: "cde",
 					Repository: &api.Repository{

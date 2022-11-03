@@ -7,8 +7,6 @@ import (
 	"github.com/pluralsh/polly/containers"
 )
 
-type depsFetcher func(string) ([]*manifest.Dependency, error)
-
 func SortAndFilter(installations []*api.Installation) ([]string, error) {
 	names := algorithms.Map(installations, func(i *api.Installation) string { return i.Repository.Name })
 	names = algorithms.Filter(names, isRepo)
@@ -16,18 +14,19 @@ func SortAndFilter(installations []*api.Installation) ([]string, error) {
 }
 
 func TopSort(client api.Client, installations []*api.Installation) ([]*api.Installation, error) {
-	var repoMap = make(map[string]*api.Installation)
+	repoMap := map[string]*api.Installation{}
 	g := containers.NewGraph[string]()
 	for _, installation := range installations {
 		repo := installation.Repository.Name
 		repoMap[repo] = installation
+		g.AddNode(repo)
+
 		ci, tf, err := client.GetPackageInstallations(installation.Repository.Id)
 		if err != nil {
 			return nil, err
 		}
-
 		deps := algorithms.Map(buildDependencies(repo, ci, tf), func(d *manifest.Dependency) string { return d.Repo })
-		for _, d := range algorithms.Filter(deps, isRepo) {
+		for _, d := range deps {
 			g.AddEdge(d, repo)
 		}
 	}
@@ -37,12 +36,15 @@ func TopSort(client api.Client, installations []*api.Installation) ([]*api.Insta
 		return nil, err
 	}
 
-	return algorithms.Map(names, func(r string) *api.Installation { return repoMap[r] }), nil
+	insts := algorithms.Map(names, func(r string) *api.Installation { return repoMap[r] })
+	insts = algorithms.Filter(insts, func(i *api.Installation) bool { return i != nil })
+	return insts, nil
 }
 
 func TopSortNames(repos []string) ([]string, error) {
 	g := containers.NewGraph[string]()
 	for _, r := range repos {
+		g.AddNode(r)
 		deps, err := findDependencies(r)
 		if err != nil {
 			return nil, err
@@ -63,7 +65,7 @@ func findDependencies(repo string) ([]string, error) {
 	}
 
 	deps := algorithms.Map(man.Dependencies, func(d *manifest.Dependency) string { return d.Repo })
-	return algorithms.Filter(deps, func(r string) bool { return isRepo(r) }), nil
+	return algorithms.Filter(deps, isRepo), nil
 }
 
 func Dependencies(repo string) ([]string, error) {
