@@ -55,7 +55,6 @@ func TestTopSort(t *testing.T) {
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
 			assert.NoError(t, err)
-
 			assert.Equal(t, test.expectedResponse, res)
 		})
 	}

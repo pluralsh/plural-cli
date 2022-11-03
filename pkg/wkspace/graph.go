@@ -5,11 +5,14 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/pluralsh/polly/containers"
+	"github.com/samber/lo"
 )
 
 func SortAndFilter(installations []*api.Installation) ([]string, error) {
-	names := algorithms.Map(installations, func(i *api.Installation) string { return i.Repository.Name })
-	names = algorithms.Filter(names, isRepo)
+	names := lo.FilterMap(installations, func(i *api.Installation, ind int) (string, bool) {
+		name := i.Repository.Name
+		return name, isRepo(name)
+	})
 	return TopSortNames(names)
 }
 
@@ -36,8 +39,10 @@ func TopSort(client api.Client, installations []*api.Installation) ([]*api.Insta
 		return nil, err
 	}
 
-	insts := algorithms.Map(names, func(r string) *api.Installation { return repoMap[r] })
-	insts = algorithms.Filter(insts, func(i *api.Installation) bool { return i != nil })
+	insts := lo.FilterMap(names, func(r string, ind int) (i *api.Installation, ok bool) {
+		i, ok = repoMap[r]
+		return
+	})
 	return insts, nil
 }
 
@@ -64,8 +69,7 @@ func findDependencies(repo string) ([]string, error) {
 		return nil, err
 	}
 
-	deps := algorithms.Map(man.Dependencies, func(d *manifest.Dependency) string { return d.Repo })
-	return algorithms.Filter(deps, isRepo), nil
+	return lo.FilterMap(man.Dependencies, func(d *manifest.Dependency, ind int) (string, bool) { return d.Repo, isRepo(d.Repo) }), nil
 }
 
 func Dependencies(repo string) ([]string, error) {
@@ -85,17 +89,10 @@ func Dependencies(repo string) ([]string, error) {
 
 func UntilRepo(client api.Client, repo string, installations []*api.Installation) ([]*api.Installation, error) {
 	topsorted, err := TopSort(client, installations)
-	if err != nil {
+	if err != nil || repo == "" {
 		return topsorted, err
 	}
 
-	ind := 0
-	for i := 0; i < len(topsorted); i++ {
-		ind = i
-		if topsorted[i].Repository.Name == repo {
-			break
-		}
-	}
-
+	ind := algorithms.Index(topsorted, func(i *api.Installation) bool { return i.Repository.Name == repo })
 	return topsorted[:(ind + 1)], err
 }
