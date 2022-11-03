@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/vpn"
 	"github.com/urfave/cli"
 
@@ -16,9 +18,10 @@ import (
 )
 
 const (
-	wireguardAppName    = "wireguard"
-	wireguardNamespace  = "wireguard"
-	wireguardServerName = "wireguard"
+	wireguardAppName           = "wireguard"
+	wireguardNamespace         = "wireguard"
+	wireguardServerName        = "wireguard"
+	wireguardNotInstalledError = "wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"
 )
 
 func (p *Plural) vpnCommands() []cli.Command {
@@ -89,7 +92,7 @@ func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 	}
 
 	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
 	}
 
 	servers, err := vpn.ListServers(p.Kube, conf.Namespace(wireguardNamespace))
@@ -119,7 +122,7 @@ func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 	}
 
 	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
 	}
 
 	peers, err := vpn.ListPeers(p.Kube, conf.Namespace(wireguardNamespace))
@@ -158,7 +161,7 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 	}
 
 	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
 	}
 
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
@@ -206,7 +209,7 @@ func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 	}
 
 	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
 	}
 
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
@@ -234,7 +237,8 @@ func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 	}
 
 	if c.String("path") != "" {
-		err := utils.WriteFile(c.String("path")+peer.Name+".conf", peerConfig)
+		path := pathing.SanitizeFilepath(filepath.Join(c.String("path"), peer.Name+".conf"))
+		err := utils.WriteFile(path, peerConfig)
 		if err != nil {
 			return utils.HighlightError(err)
 		}
@@ -258,7 +262,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 	}
 
 	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
 	}
 
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
