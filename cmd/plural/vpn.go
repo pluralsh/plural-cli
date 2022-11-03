@@ -15,6 +15,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const wireguardNamespace = "wireguard"
+
 func (p *Plural) vpnCommands() []cli.Command {
 	return []cli.Command{
 		{
@@ -117,8 +119,7 @@ func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
 	}
 
-	//TODO: use namespace from wireguard installation rather than hardcoding
-	peers, err := vpn.ListPeers(p.Kube, conf.Namespace("wireguard"))
+	peers, err := vpn.ListPeers(p.Kube, conf.Namespace(wireguardNamespace))
 	if err != nil {
 		return utils.HighlightError(err)
 	}
@@ -157,8 +158,7 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
 	}
 
-	//TODO: use namespace from wireguard installation rather than hardcoding
-	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
+	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
 		return utils.HighlightError(err)
 	}
@@ -202,8 +202,7 @@ func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
 	}
 
-	//TODO: use namespace from wireguard installation rather than hardcoding
-	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
+	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
 		return utils.HighlightError(err)
 	}
@@ -255,8 +254,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
 	}
 
-	//TODO: use namespace from wireguard installation rather than hardcoding
-	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
+	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
 		return utils.HighlightError(err)
 	}
