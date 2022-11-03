@@ -20,9 +20,10 @@ func CheckLatestVersion(currentVersion string) {
 		if err != nil {
 			return
 		}
-		if cv.Major() == lv.Major() && cv.Minor() == lv.Minor() && cv.Patch() == lv.Patch() {
+		if cv.Major() == lv.Major() && cv.Minor() == lv.Minor() && cv.Patch() >= lv.Patch() {
 			return
 		}
+
 		Warn("** There is a new version of the Plural CLI, please upgrade it with your package manager **\n")
 	}
 }
