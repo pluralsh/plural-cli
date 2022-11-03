@@ -81,12 +81,12 @@ func (p *Plural) handleInstallations(c *cli.Context) error {
 		return err
 	}
 
-	installations = containers.Filter[*api.Installation](installations, func(v *api.Installation) bool {
+	installations = containers.Filter(installations, func(v *api.Installation) bool {
 		return v.Repository != nil
 	})
 
 	headers := []string{"Repository", "Repository Id", "Publisher"}
-	return utils.PrintTable[*api.Installation](installations, headers, func(inst *api.Installation) ([]string, error) {
+	return utils.PrintTable(installations, headers, func(inst *api.Installation) ([]string, error) {
 		repo := inst.Repository
 		publisherName := ""
 		if repo.Publisher != nil {
@@ -104,7 +104,7 @@ func (p *Plural) handleCharts(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Description", "Latest Version"}
-	return utils.PrintTable[*api.Chart](charts, headers, func(c *api.Chart) ([]string, error) {
+	return utils.PrintTable(charts, headers, func(c *api.Chart) ([]string, error) {
 		return []string{c.Id, c.Name, c.Description, c.LatestVersion}, nil
 	})
 }
@@ -117,7 +117,7 @@ func (p *Plural) handleTerraforma(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Description"}
-	return utils.PrintTable[*api.Terraform](tfs, headers, func(tf *api.Terraform) ([]string, error) {
+	return utils.PrintTable(tfs, headers, func(tf *api.Terraform) ([]string, error) {
 		return []string{tf.Id, tf.Name, tf.Description}, nil
 	})
 }
@@ -131,7 +131,7 @@ func (p *Plural) handleVersions(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Version"}
-	return utils.PrintTable[*api.Version](versions, headers, func(v *api.Version) ([]string, error) {
+	return utils.PrintTable(versions, headers, func(v *api.Version) ([]string, error) {
 		return []string{v.Id, v.Version}, nil
 	})
 }
@@ -143,7 +143,7 @@ func (p *Plural) handleChartInstallations(c *cli.Context) error {
 		return err
 	}
 
-	cis := containers.Filter[*api.ChartInstallation](chartInstallations, func(ci *api.ChartInstallation) bool {
+	cis := containers.Filter(chartInstallations, func(ci *api.ChartInstallation) bool {
 		return ci.Chart != nil && ci.Version != nil
 	})
 
@@ -151,7 +151,7 @@ func (p *Plural) handleChartInstallations(c *cli.Context) error {
 		return []string{ci.Id, ci.Chart.Id, ci.Chart.Name, ci.Version.Version}, nil
 	}
 	headers := []string{"Id", "Chart Id", "Chart Name", "Version"}
-	return utils.PrintTable[*api.ChartInstallation](cis, headers, row)
+	return utils.PrintTable(cis, headers, row)
 }
 
 func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
@@ -161,12 +161,12 @@ func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
 		return err
 	}
 
-	tis := containers.Filter[*api.TerraformInstallation](terraformInstallations, func(ti *api.TerraformInstallation) bool {
+	tis := containers.Filter(terraformInstallations, func(ti *api.TerraformInstallation) bool {
 		return ti != nil
 	})
 
 	headers := []string{"Id", "Terraform Id", "Name"}
-	return utils.PrintTable[*api.TerraformInstallation](tis, headers, func(ti *api.TerraformInstallation) ([]string, error) {
+	return utils.PrintTable(tis, headers, func(ti *api.TerraformInstallation) ([]string, error) {
 		tf := ti.Terraform
 		return []string{ti.Id, tf.Id, tf.Name}, nil
 	})
@@ -180,7 +180,7 @@ func (p *Plural) handleArtifacts(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Platform", "Blob", "Sha"}
-	return utils.PrintTable[api.Artifact](artifacts, headers, func(art api.Artifact) ([]string, error) {
+	return utils.PrintTable(artifacts, headers, func(art api.Artifact) ([]string, error) {
 		return []string{art.Id, art.Name, art.Platform, art.Blob, art.Sha}, nil
 	})
 }
