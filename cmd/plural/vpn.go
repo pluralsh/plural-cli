@@ -168,8 +168,7 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 	peer, err := vpn.CreatePeer(p.Kube, server.Namespace,
 		&v1alpha1.WireguardPeer{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: server.Namespace,
+				Name: name,
 			},
 			Spec: v1alpha1.WireguardPeerSpec{
 				WireguardRef: server.Name,
