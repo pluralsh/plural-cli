@@ -23,28 +23,55 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Action: p.handleWireguardServerList,
 		},
 		{
-			Name:      "list-clients",
-			ArgsUsage: "SERVER",
-			Usage:     "lists vpn clients for a server",
-			Action:    requireArgs(p.handleWireguardPeerList, []string{"SERVER"}),
+			Name:   "list-clients",
+			Usage:  "lists vpn clients for a server",
+			Action: p.handleWireguardPeerList,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to list clients for",
+				},
+			},
 		},
 		{
 			Name:      "create-client",
-			ArgsUsage: "SERVER NAME",
+			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    requireArgs(p.handleWireguardPeerCreate, []string{"SERVER", "NAME"}),
+			Action:    requireArgs(p.handleWireguardPeerCreate, []string{"NAME"}),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to create the client for",
+				},
+			},
+		},
+		{
+			Name:      "delete-client",
+			ArgsUsage: "NAME",
+			Usage:     "create a new vpn client for a server",
+			Action:    requireArgs(p.handleWireguardPeerDelete, []string{"NAME"}),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to delete the clients from",
+				},
+			},
 		},
 		{
 			Name:      "client-config",
-			ArgsUsage: "SERVER NAME",
+			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			// Flags: []cli.Flag{
-			// 	cli.BoolFlag{
-			// 		Name:  "qr",
-			// 		Usage: "output a qr code for the config",
-			// 	},
-			// },
-			Action: requireArgs(p.handleWireguardPeerConfig, []string{"SERVER", "NAME"}),
+			Action:    requireArgs(p.handleWireguardPeerConfig, []string{"NAME"}),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to get the client config from",
+				},
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "output path for the config wireguard client config. the filename will be NAME.conf",
+				},
+			},
 		},
 	}
 }
@@ -52,13 +79,17 @@ func (p *Plural) vpnCommands() []cli.Command {
 func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 	conf := config.Read()
 	if err := p.InitKube(); err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
-	//TODO: check if wireguard is installed here and return an error if not
+
+	if err := p.checkIfVPNInstalled(); err != nil {
+		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+	}
+
 	//TODO: use namespace from wireguard installation rather than hardcoding
 	servers, err := vpn.ListServers(p.Kube, conf.Namespace("wireguard"))
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -71,16 +102,25 @@ func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 }
 
 func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
-	server := c.Args().Get(0)
+	var server string
+	server = "wireguard"
+	if c.String("server") != "" {
+		server = c.String("server")
+	}
+
 	conf := config.Read()
 	if err := p.InitKube(); err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
-	//TODO: check if wireguard is installed here and return an error if not
+
+	if err := p.checkIfVPNInstalled(); err != nil {
+		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+	}
+
 	//TODO: use namespace from wireguard installation rather than hardcoding
 	peers, err := vpn.ListPeers(p.Kube, conf.Namespace("wireguard"))
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -101,17 +141,26 @@ func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 }
 
 func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
-	serverName := c.Args().Get(0)
-	name := c.Args().Get(1)
+	var serverName string
+	serverName = "wireguard"
+	if c.String("server") != "" {
+		serverName = c.String("server")
+	}
+
+	name := c.Args().Get(0)
 	conf := config.Read()
 	if err := p.InitKube(); err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
-	//TODO: check if wireguard is installed here and return an error if not
+
+	if err := p.checkIfVPNInstalled(); err != nil {
+		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+	}
+
 	//TODO: use namespace from wireguard installation rather than hardcoding
 	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 	peer, err := vpn.CreatePeer(p.Kube, server.Namespace,
 		&v1alpha1.WireguardPeer{
@@ -137,49 +186,100 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 }
 
 func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
-	serverName := c.Args().Get(0)
-	name := c.Args().Get(1)
+	var serverName string
+	serverName = "wireguard"
+	if c.String("server") != "" {
+		serverName = c.String("server")
+	}
+
+	name := c.Args().Get(0)
 	conf := config.Read()
 	if err := p.InitKube(); err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
-	//TODO: check if wireguard is installed here and return an error if not
+
+	if err := p.checkIfVPNInstalled(); err != nil {
+		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+	}
+
 	//TODO: use namespace from wireguard installation rather than hardcoding
 	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 
 	peer, err := vpn.GetPeer(p.Kube, server.Namespace, name)
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 
 	if !peer.Status.Ready || peer.Status.ConfigRef.Name == "" || peer.Status.ConfigRef.Key == "" {
-		return fmt.Errorf("peer config not ready yet")
+		return utils.HighlightError(fmt.Errorf("peer config not ready yet"))
 	}
 
 	secret, err := vpn.GetPeerConfigSecret(p.Kube, peer.Namespace, peer.Status.ConfigRef.Name)
 	if err != nil {
-		return err
+		return utils.HighlightError(err)
 	}
 
 	peerConfig, ok := secret.Data[peer.Status.ConfigRef.Key]
 	if !ok {
-		return fmt.Errorf("peer config not ready yet")
+		return utils.HighlightError(fmt.Errorf("peer config not ready yet"))
 	}
 
-	//TODO: handle file download. need flag to specify file name/location
-	//TODO: handle qr code generation. use https://github.com/yeqown/go-qrcode
-	utils.Highlight(string(peerConfig))
+	if c.String("path") != "" {
+		err := utils.WriteFile(c.String("path")+peer.Name+".conf", peerConfig)
+		if err != nil {
+			return utils.HighlightError(err)
+		}
+		return nil
+	}
+	fmt.Println(string(peerConfig))
 	return nil
 }
 
-//TODO: handle wireguard peer delete
+func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
+	var serverName string
+	serverName = "wireguard"
+	if c.String("server") != "" {
+		serverName = c.String("server")
+	}
 
-// func (p *Plural) checkIfVPNExists() error {
-// 	conf := config.Read()
-// 	if err := p.InitKube(); err != nil {
-// 		return err
-// 	}
-// }
+	name := c.Args().Get(0)
+	conf := config.Read()
+	if err := p.InitKube(); err != nil {
+		return utils.HighlightError(err)
+	}
+
+	if err := p.checkIfVPNInstalled(); err != nil {
+		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
+	}
+
+	//TODO: use namespace from wireguard installation rather than hardcoding
+	server, err := vpn.GetServer(p.Kube, conf.Namespace("wireguard"), serverName)
+	if err != nil {
+		return utils.HighlightError(err)
+	}
+
+	peer, err := vpn.GetPeer(p.Kube, server.Namespace, name)
+	if err != nil {
+		return utils.HighlightError(err)
+	}
+
+	if err := vpn.DeletePeer(p.Kube, peer.Namespace, peer.Name); err != nil {
+		return utils.HighlightError(err)
+	}
+
+	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully", peer.Name))
+
+	return nil
+}
+
+func (p *Plural) checkIfVPNInstalled() error {
+	p.InitPluralClient()
+	_, err := p.GetInstallation("wireguard")
+	if err != nil {
+		return utils.HighlightError(err)
+	}
+	return nil
+}
