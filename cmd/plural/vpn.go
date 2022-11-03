@@ -174,6 +174,9 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 				WireguardRef: server.Name,
 			},
 		})
+	if err != nil {
+		return utils.HighlightError(err)
+	}
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Address", "Config Secret", "Public Key", "Ready"})
