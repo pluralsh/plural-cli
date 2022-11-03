@@ -9,48 +9,49 @@ import (
 )
 
 const pluralOutput = `NAME:
-   plural - Tooling to manage your installed plural applications
+plural - Tooling to manage your installed plural applications
 
 USAGE:
-   plural [global options] command [command options] [arguments...]
+plural [global options] command [command options] [arguments...]
 
 COMMANDS:
-   version, v, vsn  Gets cli version info
-   build, b         builds your workspace
-   deploy, d        Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.
-   diff, df         diffs the state of the current workspace with the deployed version and dumps results to diffs/
-   bounce, b        redeploys the charts in a workspace
-   destroy, b       iterates through all installations in reverse topological order, deleting helm installations and terraform
-   init             initializes plural within a git repo
-   preflights       runs provider preflight checks
-   bundle           Commands for installing and discovering installation bundles
-   stack            Commands for installing and discovering plural stacks
-   packages         Commands for managing your installed packages
-   link             links a local package into an installation repo
-   unlink           unlinks a linked package
-   help, h          Shows a list of commands or help for one command
+version, v, vsn  Gets cli version info
+build, b         builds your workspace
+deploy, d        Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.
+diff, df         diffs the state of the current workspace with the deployed version and dumps results to diffs/
+bounce, b        redeploys the charts in a workspace
+destroy, b       iterates through all installations in reverse topological order, deleting helm installations and terraform
+init             initializes plural within a git repo
+preflights       runs provider preflight checks
+bundle           Commands for installing and discovering installation bundles
+stack            Commands for installing and discovering plural stacks
+packages         Commands for managing your installed packages
+link             links a local package into an installation repo
+unlink           unlinks a linked package
+help, h          Shows a list of commands or help for one command
 
    API:
      repos  view and manage plural repositories
      api    inspect the plural api
 
-   Debugging:
-     watch  watches applications until they become ready
-     wait   waits on applications until they become ready
-     info   generates a console dashboard for the namespace of this repo
-     proxy  proxies into running processes in your cluster
-     logs   Commands for tailing logs for specific apps
-     ops    Commands for simplifying cluster operations
+Debugging:
+  watch  watches applications until they become ready
+  wait   waits on applications until they become ready
+  info   generates a console dashboard for the namespace of this repo
+  proxy  proxies into running processes in your cluster
+  logs   Commands for tailing logs for specific apps
+  ops    Commands for simplifying cluster operations
 
-   Miscellaneous:
-     utils  useful plural utilities
+Miscellaneous:
+  utils  useful plural utilities
+  vpn    interacting with the plural vpn
 
-   Publishing:
-     apply          applys the current pluralfile
-     test           validate a values templace
-     push           utilities for pushing tf or helm packages
-     template, tpl  templates a helm chart to be uploaded to plural
-     from-grafana   imports a grafana dashboard to a plural crd
+Publishing:
+  apply          applys the current pluralfile
+  test           validate a values templace
+  push           utilities for pushing tf or helm packages
+  template, tpl  templates a helm chart to be uploaded to plural
+  from-grafana   imports a grafana dashboard to a plural crd
 
    User Profile:
      login         logs into plural and saves credentials to the current config profile
@@ -59,11 +60,11 @@ COMMANDS:
      config, conf  reads/modifies cli configuration
      profile       Commands for managing config profiles for plural
 
-   WKSPACE:
-     create  scaffolds the resources needed to create a new plural repository
+WKSPACE:
+  create  scaffolds the resources needed to create a new plural repository
 
-   WORKSPACE:
-     repair  commits any new encrypted changes in your local workspace automatically
+WORKSPACE:
+  repair  commits any new encrypted changes in your local workspace automatically
 
    Workspace:
      validate, v         validates your workspace
@@ -77,9 +78,9 @@ COMMANDS:
      changed             shows repos with pending changes
 
 GLOBAL OPTIONS:
-   --profile-file FILE         configure your config.yml profile FILE [$PLURAL_PROFILE_FILE]
-   --encryption-key-file FILE  configure your encryption key FILE [$PLURAL_ENCRYPTION_KEY_FILE]
-   --help, -h                  show help
+--profile-file FILE         configure your config.yml profile FILE [$PLURAL_PROFILE_FILE]
+--encryption-key-file FILE  configure your encryption key FILE [$PLURAL_ENCRYPTION_KEY_FILE]
+--help, -h                  show help
 `
 
 func TestPluralApplication(t *testing.T) {
