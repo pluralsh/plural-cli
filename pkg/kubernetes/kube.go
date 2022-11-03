@@ -44,8 +44,8 @@ type Kube interface {
 	WireguardServer(namespace string, name string) (*vpnv1alpha1.WireguardServer, error)
 	WireguardPeerList(namespace string) (*vpnv1alpha1.WireguardPeerList, error)
 	WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error)
-	CreateWireguardPeer(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
-	DeleteWireguardPeer(namespace string, name string) error
+	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
+	WireguardPeerDelete(namespace string, name string) error
 	GetClient() *kubernetes.Clientset
 }
 
@@ -164,12 +164,12 @@ func (k *kube) WireguardPeer(namespace string, name string) (*vpnv1alpha1.Wiregu
 	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-func (k *kube) CreateWireguardPeer(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
+func (k *kube) WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
 	ctx := context.Background()
 	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Create(ctx, wireguardPeer, metav1.CreateOptions{})
 }
 
-func (k *kube) DeleteWireguardPeer(namespace string, name string) error {
+func (k *kube) WireguardPeerDelete(namespace string, name string) error {
 	ctx := context.Background()
 	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }

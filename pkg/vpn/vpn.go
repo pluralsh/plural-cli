@@ -28,9 +28,9 @@ func GetPeerConfigSecret(kube kubernetes.Kube, namespace string, name string) (*
 }
 
 func CreatePeer(kube kubernetes.Kube, namespace string, peer *v1alpha1.WireguardPeer) (*v1alpha1.WireguardPeer, error) {
-	return kube.CreateWireguardPeer(namespace, peer)
+	return kube.WireguardPeerCreate(namespace, peer)
 }
 
 func DeletePeer(kube kubernetes.Kube, namespace string, name string) error {
-	return kube.DeleteWireguardPeer(namespace, name)
+	return kube.WireguardPeerDelete(namespace, name)
 }

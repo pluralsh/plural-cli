@@ -168,7 +168,8 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 	peer, err := vpn.CreatePeer(p.Kube, server.Namespace,
 		&v1alpha1.WireguardPeer{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
+				Name:      name,
+				Namespace: server.Namespace,
 			},
 			Spec: v1alpha1.WireguardPeerSpec{
 				WireguardRef: server.Name,
@@ -179,10 +180,11 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Address", "Config Secret", "Public Key", "Ready"})
+	table.SetHeader([]string{"Name", "Address", "Server", "Config Secret", "Public Key", "Ready"})
 	table.Append([]string{
 		peer.Name,
 		peer.Spec.Address,
+		peer.Spec.WireguardRef,
 		peer.Status.ConfigRef.Name,
 		peer.Spec.PublicKey,
 		strconv.FormatBool(peer.Status.Ready),
@@ -274,7 +276,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 		return utils.HighlightError(err)
 	}
 
-	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully", peer.Name))
+	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully\n", peer.Name))
 
 	return nil
 }

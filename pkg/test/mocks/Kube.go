@@ -301,8 +301,8 @@ func (_m *Kube) WireguardPeer(namespace string, name string) (*vpnv1alpha1.Wireg
 	return r0, r1
 }
 
-// CreateWireguardPeer provides a mock function with given fields: namespace, name
-func (_m *Kube) CreateWireguardPeer(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
+// WireguardPeerCreate provides a mock function with given fields: namespace, name
+func (_m *Kube) WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
 	ret := _m.Called(namespace, wireguardPeer)
 
 	var r0 *vpnv1alpha1.WireguardPeer
@@ -324,8 +324,8 @@ func (_m *Kube) CreateWireguardPeer(namespace string, wireguardPeer *vpnv1alpha1
 	return r0, r1
 }
 
-// DeleteWireguardPeer provides a mock function with given fields: namespace, name
-func (_m *Kube) DeleteWireguardPeer(namespace string, name string) (error) {
+// WireguardPeerDelete provides a mock function with given fields: namespace, name
+func (_m *Kube) WireguardPeerDelete(namespace string, name string) (error) {
 	ret := _m.Called(namespace, name)
 
 	// var r0 *vpnv1alpha1.WireguardPeer
