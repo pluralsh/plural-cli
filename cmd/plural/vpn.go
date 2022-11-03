@@ -15,7 +15,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const wireguardNamespace = "wireguard"
+const (
+	wireguardAppName    = "wireguard"
+	wireguardNamespace  = "wireguard"
+	wireguardServerName = "wireguard"
+)
 
 func (p *Plural) vpnCommands() []cli.Command {
 	return []cli.Command{
@@ -88,8 +92,7 @@ func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 		return utils.HighlightError(fmt.Errorf("wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"))
 	}
 
-	//TODO: use namespace from wireguard installation rather than hardcoding
-	servers, err := vpn.ListServers(p.Kube, conf.Namespace("wireguard"))
+	servers, err := vpn.ListServers(p.Kube, conf.Namespace(wireguardNamespace))
 	if err != nil {
 		return utils.HighlightError(err)
 	}
@@ -105,7 +108,7 @@ func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 
 func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 	var server string
-	server = "wireguard"
+	server = wireguardServerName
 	if c.String("server") != "" {
 		server = c.String("server")
 	}
@@ -143,7 +146,7 @@ func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 
 func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 	var serverName string
-	serverName = "wireguard"
+	serverName = wireguardServerName
 	if c.String("server") != "" {
 		serverName = c.String("server")
 	}
@@ -187,7 +190,7 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 
 func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 	var serverName string
-	serverName = "wireguard"
+	serverName = wireguardServerName
 	if c.String("server") != "" {
 		serverName = c.String("server")
 	}
@@ -239,7 +242,7 @@ func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 
 func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 	var serverName string
-	serverName = "wireguard"
+	serverName = wireguardServerName
 	if c.String("server") != "" {
 		serverName = c.String("server")
 	}
@@ -275,7 +278,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 
 func (p *Plural) checkIfVPNInstalled() error {
 	p.InitPluralClient()
-	_, err := p.GetInstallation("wireguard")
+	_, err := p.GetInstallation(wireguardAppName)
 	if err != nil {
 		return utils.HighlightError(err)
 	}
