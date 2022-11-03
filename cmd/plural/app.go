@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os/exec"
+	"strings"
 
 	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"
@@ -9,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/utils"
 
 	"sigs.k8s.io/application/api/v1beta1"
 )
@@ -46,6 +49,16 @@ func handleWait(c *cli.Context) error {
 func handleInfo(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	conf := config.Read()
+
+	_, err := exec.LookPath("k9s")
+	if err != nil {
+		if strings.Contains(err.Error(), exec.ErrNotFound.Error()) {
+			utils.Error("Application k9s not installed.\n")
+			fmt.Println("Please install it first from here: https://k9scli.io/topics/install/ and try again")
+			return nil
+		}
+	}
+
 	cmd := exec.Command("k9s", "-n", conf.Namespace(repo))
 	return cmd.Run()
 }
