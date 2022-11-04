@@ -152,7 +152,7 @@ func TestValidate(t *testing.T) {
 			os.Args = test.args
 			resp, err := captureStdout(app, os.Args)
 			assert.NoError(t, err)
-			assert.Equal(t, resp, test.expectedResponse)
+			assert.Equal(t, test.expectedResponse, resp)
 		})
 	}
 }

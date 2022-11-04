@@ -40,6 +40,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.1.11
 	github.com/pluralsh/plural-operator v0.5.3
+	github.com/pluralsh/polly v0.0.3
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
@@ -89,8 +90,10 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
+	github.com/samber/lo v1.33.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

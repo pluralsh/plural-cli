@@ -19,6 +19,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	"github.com/urfave/cli"
 )
 
@@ -63,19 +65,8 @@ func getSortedNames(filter bool) ([]string, error) {
 	}
 
 	if filter {
-		result := make([]string, 0)
-		isRepo := map[string]bool{}
-		for _, repo := range diffed {
-			isRepo[repo] = true
-		}
-
-		for _, repo := range sorted {
-			if isRepo[repo] {
-				result = append(result, repo)
-			}
-		}
-
-		return result, nil
+		repos := containers.ToSet(diffed)
+		return algorithms.Filter(sorted, repos.Has), nil
 	}
 
 	return sorted, nil
