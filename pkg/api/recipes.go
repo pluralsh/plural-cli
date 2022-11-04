@@ -314,14 +314,24 @@ func convertStack(st *gqlclient.StackFragment) *Stack {
 
 func (client *client) ListRecipes(repo, provider string) ([]*Recipe, error) {
 	recipes := make([]*Recipe, 0)
-	p := gqlclient.Provider(NormalizeProvider(provider))
-	resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, edge := range resp.Recipes.Edges {
-		recipes = append(recipes, convertRecipe(edge.Node))
+	
+	if provider != "" {
+		p := gqlclient.Provider(NormalizeProvider(provider))
+		resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
+		if err != nil {
+			return nil, err
+		}
+		for _, edge := range resp.Recipes.Edges {
+			recipes = append(recipes, convertRecipe(edge.Node))
+		}
+	} else {
+		resp, err := client.pluralClient.ListAllRecipes(client.ctx, &repo)
+		if err != nil {
+			return nil, err
+		}
+		for _, edge := range resp.Recipes.Edges {
+			recipes = append(recipes, convertRecipe(edge.Node))
+		}
 	}
 
 	return recipes, nil
