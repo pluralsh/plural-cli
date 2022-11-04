@@ -314,7 +314,7 @@ func convertStack(st *gqlclient.StackFragment) *Stack {
 
 func (client *client) ListRecipes(repo, provider string) ([]*Recipe, error) {
 	recipes := make([]*Recipe, 0)
-	
+
 	if provider != "" {
 		p := gqlclient.Provider(NormalizeProvider(provider))
 		resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
