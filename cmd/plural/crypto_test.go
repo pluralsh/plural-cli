@@ -114,6 +114,29 @@ func TestShare(t *testing.T) {
 		{
 			name: `test "crypto share"`,
 			args: []string{plural.ApplicationName, "crypto", "share", "--email", "test@email.com"},
+			keys: []*api.PublicKey{
+				{
+					Id:      "abc",
+					Content: "age1wqc2hk954ukemelys5gxdwlqve8ev0e88hvl3cjhfcvq65gwgvsqkmq9dn",
+					User: &api.User{
+						Email: "test@email.com",
+					},
+				},
+			},
+		},
+		{
+			name: `test "crypto share" where test user has no key setup`,
+			args: []string{plural.ApplicationName, "crypto", "share", "--email", "test@email.com"},
+			keys: []*api.PublicKey{
+				{
+					Id:      "abc",
+					Content: "age1wqc2hk954ukemelys5gxdwlqve8ev0e88hvl3cjhfcvq65gwgvsqkmq9dn",
+					User: &api.User{
+						Email: "example@email.com",
+					},
+				},
+			},
+			expectedError: "Some of the users [test@email.com] have no keys setup",
 		},
 	}
 	for _, test := range tests {
@@ -126,13 +149,15 @@ func TestShare(t *testing.T) {
 			}(dir)
 			err = os.Chdir(dir)
 			assert.NoError(t, err)
+			os.Setenv("HOME", dir)
+			defer os.Unsetenv("HOME")
 			defaultConfig := pluraltest.GenDefaultConfig()
 			err = defaultConfig.Save(config.ConfigName)
 			assert.NoError(t, err)
 
 			client := mocks.NewClient(t)
-			if test.expectedError == "" {
-				client.On("ListKeys", mock.Anything).Return(nil, nil)
+			if test.keys != nil {
+				client.On("ListKeys", mock.Anything).Return(test.keys, nil)
 			}
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
 			app.HelpName = plural.ApplicationName
@@ -182,7 +207,9 @@ func TestRecover(t *testing.T) {
 			// create temp environment
 			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
+			defer func(path string) {
+				_ = os.RemoveAll(path)
+			}(dir)
 
 			os.Setenv("HOME", dir)
 			defer os.Unsetenv("HOME")

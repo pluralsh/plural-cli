@@ -104,6 +104,20 @@ func Identity() (*age.X25519Identity, error) {
 	return generateIdentity(getAgePath())
 }
 
+func findMissingKeyForEmail(emails []string, keys []*api.PublicKey) []string {
+	if len(keys) == 0 {
+		return emails
+	}
+	emailSet := sets.NewString(emails...)
+	emailKeySet := sets.NewString()
+	for _, key := range keys {
+		if key.User != nil && key.User.Email != "" {
+			emailKeySet.Insert(key.User.Email)
+		}
+	}
+	return emailSet.Difference(emailKeySet).List()
+}
+
 func SetupAge(client api.Client, emails []string) error {
 	ageConfig, err := setupAgeConfig()
 	if err != nil {
@@ -115,6 +129,10 @@ func SetupAge(client api.Client, emails []string) error {
 		keys, err := client.ListKeys(emails)
 		if err != nil {
 			return err
+		}
+		missingEmails := findMissingKeyForEmail(emails, keys)
+		if len(missingEmails) > 0 {
+			return fmt.Errorf("Some of the users %v have no keys setup", missingEmails)
 		}
 
 		present := sets.NewString()
