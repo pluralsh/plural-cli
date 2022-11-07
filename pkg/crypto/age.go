@@ -15,6 +15,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -105,17 +107,19 @@ func Identity() (*age.X25519Identity, error) {
 }
 
 func findMissingKeyForEmail(emails []string, keys []*api.PublicKey) []string {
-	if len(keys) == 0 {
-		return emails
+	if len(keys) == 0 || len(emails) == 0 {
+		// in case of empty or nil objects
+		return []string{}
 	}
-	emailSet := sets.NewString(emails...)
-	emailKeySet := sets.NewString()
-	for _, key := range keys {
+	emailSet := containers.ToSet[string](emails)
+	algorithms.Map(keys, func(key *api.PublicKey) string {
 		if key.User != nil && key.User.Email != "" {
-			emailKeySet.Insert(key.User.Email)
+			emailSet.Remove(key.User.Email)
 		}
-	}
-	return emailSet.Difference(emailKeySet).List()
+		return ""
+	})
+
+	return emailSet.List()
 }
 
 func SetupAge(client api.Client, emails []string) error {
