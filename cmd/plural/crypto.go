@@ -52,7 +52,8 @@ const Gitignore = `/**/.terraform
 `
 
 // IMPORTANT
-// Don't wrap Action methods
+// Repo cryptography relies on git smudge and clean filters, which pipe a file into stdin and respond with a new version
+// of the file from stdout. If we write anything besides the crypto text, it will no longer be decryptable naturally.
 func (p *Plural) cryptoCommands() []cli.Command {
 	return []cli.Command{
 		{
