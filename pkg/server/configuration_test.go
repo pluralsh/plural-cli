@@ -51,6 +51,9 @@ func TestGetConfiguration(t *testing.T) {
 			err = context.Write(path.Join(dir, "context.yaml"))
 			assert.NoError(t, err)
 
+			// To don't override ~/.gitconfig
+			os.Setenv("HOME", dir)
+			defer os.Unsetenv("HOME")
 			_, err = git.Init()
 			assert.NoError(t, err)
 			_, err = git.GitRaw("config", "--global", "user.email", "test@plural.com")
