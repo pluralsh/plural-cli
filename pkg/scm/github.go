@@ -13,6 +13,7 @@ import (
 
 type Github struct {
 	Client *github.Client
+	Token  string
 }
 
 func (gh *Github) Init() error {
@@ -32,6 +33,7 @@ func (gh *Github) Init() error {
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	gh.Client = github.NewClient(tc)
+	gh.Token = accessToken.Token
 	return nil
 }
 
@@ -111,5 +113,7 @@ func (gh *Github) Setup() (con Context, err error) {
 	con.username = *user.Login
 	con.url = *repo.SSHURL
 	con.repoName = repoName
+	con.gitProvider = GitHub
+	con.token = gh.Token
 	return
 }

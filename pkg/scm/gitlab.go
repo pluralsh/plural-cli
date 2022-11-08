@@ -14,6 +14,7 @@ var (
 
 type Gitlab struct {
 	Client *gitlab.Client
+	Token  string
 }
 
 func (gl *Gitlab) Init() error {
@@ -36,6 +37,7 @@ func (gl *Gitlab) Init() error {
 
 	git, err := gitlab.NewOAuthClient(accessToken.Token)
 	gl.Client = git
+	gl.Token = accessToken.Token
 	return err
 }
 
@@ -119,5 +121,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	con.username = user.Username
 	con.url = repo.SSHURLToRepo
 	con.repoName = repoName
+	con.gitProvider = GitLab
+	con.token = gl.Token
 	return
 }
