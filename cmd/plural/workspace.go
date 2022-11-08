@@ -18,7 +18,7 @@ func workspaceCommands() []cli.Command {
 		{
 			Name:   "kube-init",
 			Usage:  "generates kubernetes credentials for this subworkspace",
-			Action: kubeInit,
+			Action: latestVersion(kubeInit),
 		},
 		{
 			Name:      "helm",
@@ -34,37 +34,37 @@ func workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: bounceHelm,
+			Action: latestVersion(bounceHelm),
 		},
 		{
 			Name:      "helm-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    diffHelm,
+			Action:    latestVersion(diffHelm),
 		},
 		{
 			Name:      "helm-deps",
 			Usage:     "updates the helm dependencies for this workspace",
 			ArgsUsage: "PATH",
-			Action:    updateDeps,
+			Action:    latestVersion(updateDeps),
 		},
 		{
 			Name:      "terraform-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    diffTerraform,
+			Action:    latestVersion(diffTerraform),
 		},
 		{
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    createCrds,
+			Action:    latestVersion(createCrds),
 		},
 		{
 			Name:      "helm-template",
 			Usage:     "templates the helm values to stdout",
 			ArgsUsage: "NAME",
-			Action:    requireArgs(templateHelm, []string{"NAME"}),
+			Action:    latestVersion(requireArgs(templateHelm, []string{"NAME"})),
 		},
 	}
 }

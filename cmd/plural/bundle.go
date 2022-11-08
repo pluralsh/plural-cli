@@ -17,7 +17,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
 			ArgsUsage: "REPO",
-			Action:    rooted(requireArgs(p.bundleList, []string{"repo"})),
+			Action:    latestVersion(rooted(requireArgs(p.bundleList, []string{"repo"}))),
 		},
 		{
 			Name:      "install",
@@ -29,7 +29,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: tracked(rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"})), "bundle.install"),
+			Action: tracked(latestVersion(rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"}))), "bundle.install"),
 		},
 	}
 }
@@ -46,7 +46,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "re-enter the configuration for all bundles",
 				},
 			},
-			Action: tracked(rooted(requireArgs(p.stackInstall, []string{"stack-name"})), "stack.install"),
+			Action: tracked(latestVersion(rooted(requireArgs(p.stackInstall, []string{"stack-name"}))), "stack.install"),
 		},
 		{
 			Name:  "list",
@@ -57,7 +57,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "only list stacks within your account",
 				},
 			},
-			Action: rooted(p.stackList),
+			Action: latestVersion(rooted(p.stackList)),
 		},
 	}
 }

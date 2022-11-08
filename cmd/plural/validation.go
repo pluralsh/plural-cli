@@ -9,8 +9,10 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 )
 
@@ -140,4 +142,14 @@ func repoRoot() error {
 	}
 
 	return nil
+}
+
+func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
+			utils.CheckLatestVersion(version)
+		}
+
+		return fn(c)
+	}
 }

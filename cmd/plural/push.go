@@ -26,25 +26,25 @@ func (p *Plural) pushCommands() []cli.Command {
 			Name:      "terraform",
 			Usage:     "pushes a terraform module",
 			ArgsUsage: "path/to/module REPO",
-			Action:    p.handleTerraformUpload,
+			Action:    latestVersion(p.handleTerraformUpload),
 		},
 		{
 			Name:      "helm",
 			Usage:     "pushes a helm chart",
 			ArgsUsage: "path/to/chart REPO",
-			Action:    handleHelmUpload,
+			Action:    latestVersion(handleHelmUpload),
 		},
 		{
 			Name:      "recipe",
 			Usage:     "pushes a recipe",
 			ArgsUsage: "path/to/recipe.yaml REPO",
-			Action:    p.handleRecipeUpload,
+			Action:    latestVersion(p.handleRecipeUpload),
 		},
 		{
 			Name:      "artifact",
 			Usage:     "creates an artifact for the repo",
 			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    p.handleArtifact,
+			Action:    latestVersion(p.handleArtifact),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "platform",
@@ -62,7 +62,7 @@ func (p *Plural) pushCommands() []cli.Command {
 			Name:      "crd",
 			Usage:     "registers a new crd for a chart",
 			ArgsUsage: "path/to/def.yaml REPO CHART",
-			Action:    p.createCrd,
+			Action:    latestVersion(p.createCrd),
 		},
 	}
 }

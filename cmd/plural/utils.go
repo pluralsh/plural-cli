@@ -32,7 +32,7 @@ func utilsCommands() []cli.Command {
 					Usage: "the image tag to set to",
 				},
 			},
-			Action: handleImageBump,
+			Action: latestVersion(handleImageBump),
 		},
 	}
 }

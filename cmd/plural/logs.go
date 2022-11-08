@@ -12,13 +12,13 @@ func (p *Plural) logsCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
 			ArgsUsage: "REPO",
-			Action:    requireArgs(p.handleLogsList, []string{"REPO"}),
+			Action:    latestVersion(requireArgs(p.handleLogsList, []string{"REPO"})),
 		},
 		{
 			Name:      "tail",
 			Usage:     "execs the specific logtail",
 			ArgsUsage: "REPO NAME",
-			Action:    requireArgs(p.handleLogTail, []string{"REPO", "NAME"}),
+			Action:    latestVersion(requireArgs(p.handleLogTail, []string{"REPO", "NAME"})),
 		},
 	}
 }

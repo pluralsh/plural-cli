@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"runtime"
 	"strings"
 
@@ -14,7 +11,6 @@ import (
 
 const (
 	versionPlaceholder = "dev"
-	latestURI          = "https://api.github.com/repos/pluralsh/plural-cli/releases/latest"
 )
 
 var (
@@ -23,27 +19,6 @@ var (
 	date    = ""
 )
 
-func getLatestVersion() (res string, err error) {
-	resp, err := http.Get(latestURI)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
-	var ghResp struct {
-		Tag_Name string
-	}
-	err = json.Unmarshal(body, &ghResp)
-
-	res = ghResp.Tag_Name
-	return
-}
-
 func checkRecency() error {
 	if version == versionPlaceholder || strings.Contains(version, "-") {
 		utils.Warn("\nThis is a development version, which can be significantly different from official releases")
@@ -51,14 +26,7 @@ func checkRecency() error {
 		return nil
 	}
 
-	latestVersion, err := getLatestVersion()
-	if err != nil {
-		return err
-	}
-
-	if !strings.HasSuffix(latestVersion, version) {
-		utils.Warn("\nYour version appears out of date, try updating it with your package manager\n")
-	}
+	utils.CheckLatestVersion(version)
 
 	return nil
 }
