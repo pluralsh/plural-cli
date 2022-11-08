@@ -5,10 +5,11 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -56,7 +57,6 @@ func Scaffolds(wk *wkspace.Workspace) (*Build, error) {
 
 func merge(build *Build, base *Build) *Build {
 	byName := make(map[string]*Scaffold)
-
 	for _, scaffold := range build.Scaffolds {
 		byName[scaffold.Name] = scaffold
 	}
@@ -70,12 +70,7 @@ func merge(build *Build, base *Build) *Build {
 	// to handle helm v3 transition
 	delete(byName, "add-repo")
 
-	graph := utils.Graph(len(byName))
-
-	for key := range byName {
-		graph.AddNode(key)
-	}
-
+	graph := containers.NewGraph[string]()
 	for i := 0; i < len(build.Scaffolds)-1; i++ {
 		graph.AddEdge(build.Scaffolds[i].Name, build.Scaffolds[i+1].Name)
 	}
@@ -84,17 +79,8 @@ func merge(build *Build, base *Build) *Build {
 		graph.AddEdge(base.Scaffolds[i].Name, base.Scaffolds[i+1].Name)
 	}
 
-	sorted, ok := graph.Topsort()
-	if !ok {
-		panic("scaffold cycle created")
-	}
-
-	scaffolds := []*Scaffold{}
-	for _, name := range sorted {
-		scaffolds = append(scaffolds, byName[name])
-	}
-	build.Scaffolds = scaffolds
-
+	sorted, _ := algorithms.TopsortGraph(graph)
+	build.Scaffolds = algorithms.Map(sorted, func(n string) *Scaffold { return byName[n] })
 	return build
 }
 

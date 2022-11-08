@@ -11,6 +11,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -93,41 +95,8 @@ func (e *Diff) IgnoreFile(root string) ([]string, error) {
 }
 
 func DefaultDiff(path string, prev *Diff) (e *Diff) {
-	byName := make(map[string]*executor.Step)
-	steps := []*executor.Step{
-		{
-			Name:    "terraform-init",
-			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-			Command: "terraform",
-			Args:    []string{"init"},
-			Sha:     "",
-		},
-		{
-			Name:    "terraform",
-			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-			Command: "plural",
-			Args:    []string{"wkspace", "terraform-diff", path},
-			Sha:     "",
-		},
-		{
-			Name:    "kube-init",
-			Wkdir:   path,
-			Target:  pluralfile(path, "NONCE"),
-			Command: "plural",
-			Args:    []string{"wkspace", "kube-init", path},
-			Sha:     "",
-		},
-		{
-			Name:    "helm",
-			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "helm")),
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
-			Command: "plural",
-			Args:    []string{"wkspace", "helm-diff", path},
-			Sha:     "",
-		},
-	}
+	byName := map[string]*executor.Step{}
+	steps := defaultDiff(path)
 
 	for _, step := range prev.Steps {
 		byName[step.Name] = step
@@ -142,11 +111,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 	}
 
 	// set up a topsort between the two orders of operations
-	graph := utils.Graph(len(byName))
-	for k := range byName {
-		graph.AddNode(k)
-	}
-
+	graph := containers.NewGraph[string]()
 	for i := 0; i < len(steps)-1; i++ {
 		graph.AddEdge(steps[i].Name, steps[i+1].Name)
 	}
@@ -155,17 +120,8 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 		graph.AddEdge(steps[i].Name, steps[i+1].Name)
 	}
 
-	finalizedSteps := []*executor.Step{}
-	sorted, ok := graph.Topsort()
-	if !ok {
-		panic("deployfile cycle detected")
-	}
-
-	// dump the topsort to a list and use that from now on
-	for _, name := range sorted {
-		finalizedSteps = append(finalizedSteps, byName[name])
-	}
-
+	sorted, _ := algorithms.TopsortGraph(graph)
+	finalizedSteps := algorithms.Map(sorted, func(s string) *executor.Step { return byName[s] })
 	return &Diff{
 		Metadata: Metadata{Path: path, Name: "diff"},
 		Steps:    finalizedSteps,

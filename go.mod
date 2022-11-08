@@ -38,14 +38,15 @@ require (
 	github.com/packethost/packngo v0.25.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.1.7
+	github.com/pluralsh/gqlclient v1.1.11
 	github.com/pluralsh/plural-operator v0.5.3
+	github.com/pluralsh/polly v0.0.3
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
 	github.com/xanzy/go-gitlab v0.70.0
-	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
+	golang.org/x/crypto v0.1.0
+	golang.org/x/mod v0.6.0
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	google.golang.org/genproto v0.0.0-20220902135211-223410557253
 	gopkg.in/yaml.v2 v2.4.0
@@ -89,8 +90,10 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
+	github.com/samber/lo v1.33.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -235,11 +238,11 @@ require (
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
-	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
-	golang.org/x/text v0.3.7
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/term v0.1.0
+	golang.org/x/text v0.4.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	google.golang.org/api v0.84.0

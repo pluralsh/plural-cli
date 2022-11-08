@@ -24,13 +24,14 @@ func TestTopSort(t *testing.T) {
 		{
 			name: `test "topsort"`,
 			args: []string{plural.ApplicationName, "topsort"},
-			installations: []*api.Installation{{
-				Id: "abc",
-				Repository: &api.Repository{
-					Id:   "abc",
-					Name: "abc",
+			installations: []*api.Installation{
+				{
+					Id: "abc",
+					Repository: &api.Repository{
+						Id:   "abc",
+						Name: "abc",
+					},
 				},
-			},
 				{
 					Id: "cde",
 					Repository: &api.Repository{
@@ -54,7 +55,6 @@ func TestTopSort(t *testing.T) {
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
 			assert.NoError(t, err)
-
 			assert.Equal(t, test.expectedResponse, res)
 		})
 	}

@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl"
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	"github.com/rodaine/hclencoder"
 )
 
@@ -118,11 +119,7 @@ func DefaultExecution(path string, prev *Execution) (e *Execution) {
 	}
 
 	// set up a topsort between the two orders of operations
-	graph := utils.Graph(len(byName))
-	for k := range byName {
-		graph.AddNode(k)
-	}
-
+	graph := containers.NewGraph[string]()
 	for i := 0; i < len(steps)-1; i++ {
 		graph.AddEdge(steps[i].Name, steps[i+1].Name)
 	}
@@ -131,17 +128,8 @@ func DefaultExecution(path string, prev *Execution) (e *Execution) {
 		graph.AddEdge(prev.Steps[i].Name, prev.Steps[i+1].Name)
 	}
 
-	finalizedSteps := []*Step{}
-	sorted, ok := graph.Topsort()
-	if !ok {
-		panic("deployfile cycle detected")
-	}
-
-	// dump the topsort to a list and use that from now on
-	for _, name := range sorted {
-		finalizedSteps = append(finalizedSteps, byName[name])
-	}
-
+	sorted, _ := algorithms.TopsortGraph(graph)
+	finalizedSteps := algorithms.Map(sorted, func(s string) *Step { return byName[s] })
 	return &Execution{
 		Metadata: Metadata{Path: path, Name: "deploy"},
 		Steps:    finalizedSteps,

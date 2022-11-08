@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/containers"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 )
 
@@ -81,7 +81,7 @@ func (p *Plural) handleInstallations(c *cli.Context) error {
 		return err
 	}
 
-	installations = containers.Filter(installations, func(v *api.Installation) bool {
+	installations = algorithms.Filter(installations, func(v *api.Installation) bool {
 		return v.Repository != nil
 	})
 
@@ -143,7 +143,7 @@ func (p *Plural) handleChartInstallations(c *cli.Context) error {
 		return err
 	}
 
-	cis := containers.Filter(chartInstallations, func(ci *api.ChartInstallation) bool {
+	cis := algorithms.Filter(chartInstallations, func(ci *api.ChartInstallation) bool {
 		return ci.Chart != nil && ci.Version != nil
 	})
 
@@ -161,7 +161,7 @@ func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
 		return err
 	}
 
-	tis := containers.Filter(terraformInstallations, func(ti *api.TerraformInstallation) bool {
+	tis := algorithms.Filter(terraformInstallations, func(ti *api.TerraformInstallation) bool {
 		return ti != nil
 	})
 
