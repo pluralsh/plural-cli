@@ -26,8 +26,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
       - uses: github/codeql-action/init@v2
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v2
+      - run: make build-cli
       - uses: github/codeql-action/analyze@v2
