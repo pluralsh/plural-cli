@@ -916,8 +916,6 @@ github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZO
 github.com/peterbourgon/diskv v2.0.1+incompatible h1:UBdAOUP5p4RWqPBg048CAvpKN+vxiaj6gdUUzhl4XmI=
 github.com/peterbourgon/diskv v2.0.1+incompatible/go.mod h1:uqqh8zWWbv1HBMNONnaR/tNboyR3/BZd58JJSHlUSCU=
 github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5 h1:Ii+DKncOVM8Cu1Hc+ETb5K+23HdAMvESYE3ZJ5b5cMI=
-github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f h1:WyCn68lTiytVSkk7W1K9nBiSGTSRlUOdyTnSjwrIlok=
-github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f/go.mod h1:/iRjX3DdSK956SzsUdV55J+wIsQ+2IBWmBrB4RvZfk4=
 github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4/go.mod h1:N6UoU20jOqggOuDwUaBQpluzLNDqif3kq9z2wpdYEfQ=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
 github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
@@ -937,8 +935,6 @@ github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+e
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
 github.com/pluralsh/plural-operator v0.5.3/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
-github.com/pluralsh/polly v0.0.2 h1:KBfpxlo6ssI2Ha1Iu6hWVY8Pt3v1Po/ixwwE788QUnY=
-github.com/pluralsh/polly v0.0.2/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
 github.com/pluralsh/polly v0.0.3 h1:0wN7MXGyDKCoZepO2+ryIb5T4a01IQd0r9IGDf6bo90=
 github.com/pluralsh/polly v0.0.3/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
 github.com/pluralsh/polly v0.0.4 h1:oh89Oh5xCCfV7hZvE019KBFdbZAwwsLZtCbqYQWDppM=
