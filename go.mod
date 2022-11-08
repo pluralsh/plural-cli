@@ -40,7 +40,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.1.15
 	github.com/pluralsh/plural-operator v0.5.3
-	github.com/pluralsh/polly v0.0.3
+	github.com/pluralsh/polly v0.0.4
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.33.0
 	github.com/thoas/go-funk v0.9.2
