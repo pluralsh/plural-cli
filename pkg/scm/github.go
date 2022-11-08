@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/google/go-github/v45/github"
@@ -13,7 +14,6 @@ import (
 
 type Github struct {
 	Client *github.Client
-	Token  string
 }
 
 func (gh *Github) Init() error {
@@ -33,7 +33,6 @@ func (gh *Github) Init() error {
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	gh.Client = github.NewClient(tc)
-	gh.Token = accessToken.Token
 	return nil
 }
 
@@ -113,7 +112,31 @@ func (gh *Github) Setup() (con Context, err error) {
 	con.username = *user.Login
 	con.url = *repo.SSHURL
 	con.repoName = repoName
-	con.gitProvider = GitHub
-	con.token = gh.Token
 	return
+}
+
+func (gh *Github) StarPluralGitHubRep() error {
+	ctx := context.Background()
+	starred, _, err := gh.Client.Activity.IsStarred(ctx, "pluralsh", "plural")
+	if err != nil {
+		return err
+	}
+	if !starred {
+		proceed := false
+		prompt := &survey.Confirm{
+			Message: "Would you like to Star us on the GitHub",
+		}
+		err := survey.AskOne(prompt, &proceed)
+		if err != nil {
+			return err
+		}
+		if proceed {
+			_, err := gh.Client.Activity.Star(ctx, "pluralsh", "plural")
+			if err != nil {
+				return err
+			}
+			fmt.Println("")
+		}
+	}
+	return nil
 }

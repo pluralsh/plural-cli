@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/google/go-github/v45/github"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/diff"
@@ -16,7 +14,6 @@ import (
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/scaffold"
-	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -25,7 +22,6 @@ import (
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/pluralsh/polly/containers"
 	"github.com/urfave/cli"
-	"golang.org/x/oauth2"
 )
 
 func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {
@@ -273,8 +269,6 @@ func (p *Plural) deploy(c *cli.Context) error {
 		return git.Sync(repoRoot, commit, c.Bool("force"))
 	}
 
-	_ = githubStar()
-
 	return nil
 }
 
@@ -470,48 +464,4 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 	}
 
 	return manifest.Read(p)
-}
-
-func githubStar() error {
-	path := manifest.ContextPath()
-	ctx, err := manifest.ReadContext(path)
-	if err != nil {
-		return err
-	}
-	res, ok := ctx.Repo("console")
-	if ok {
-		gitProvider := fmt.Sprintf("%s", res["git_provider"])
-		if scm.GitProvider(gitProvider) == scm.GitHub {
-			accessToken := fmt.Sprintf("%s", res["token"])
-			ctx := context.Background()
-			ts := oauth2.StaticTokenSource(
-				&oauth2.Token{AccessToken: accessToken},
-			)
-			tc := oauth2.NewClient(ctx, ts)
-			client := github.NewClient(tc)
-			starred, _, err := client.Activity.IsStarred(ctx, "pluralsh", "plural")
-			if err != nil {
-				return err
-			}
-			if !starred {
-				proceed := false
-				prompt := &survey.Confirm{
-					Message: "Would you like to Star us on the GitHub",
-				}
-				err := survey.AskOne(prompt, &proceed)
-				if err != nil {
-					return err
-				}
-				if proceed {
-					_, err := client.Activity.Star(ctx, "pluralsh", "plural")
-					if err != nil {
-						return err
-					}
-					fmt.Println("Thank you")
-				}
-			}
-		}
-	}
-
-	return nil
 }
