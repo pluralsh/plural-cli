@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 )
 
@@ -145,7 +146,10 @@ func repoRoot() error {
 
 func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		utils.CheckLatestVersion(version)
+		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
+			utils.CheckLatestVersion(version)
+		}
+
 		return fn(c)
 	}
 }
