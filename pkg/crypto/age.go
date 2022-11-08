@@ -17,8 +17,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/pluralsh/polly/containers"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -134,27 +134,14 @@ func SetupAge(client api.Client, emails []string) error {
 		if err != nil {
 			return err
 		}
+
 		missingEmails := findMissingKeyForEmail(emails, keys)
 		if len(missingEmails) > 0 {
 			return fmt.Errorf("Some of the users %v have no keys setup", missingEmails)
 		}
 
-		present := sets.NewString()
-		dedupeKey := func(id *AgeIdentity) string { return fmt.Sprintf("%s::%s", id.Email, id.Key) }
-
-		idents := ageConfig.Identities
-		for _, id := range idents {
-			present.Insert(dedupeKey(id))
-		}
-
-		for _, key := range keys {
-			id := &AgeIdentity{Key: key.Content, Email: key.User.Email}
-			if !present.Has(dedupeKey(id)) {
-				idents = append(idents, id)
-			}
-		}
-
-		ageConfig.Identities = idents
+		idents := algorithms.Map(keys, func(key *api.PublicKey) *AgeIdentity { return &AgeIdentity{Key: key.Content, Email: key.User.Email} })
+		ageConfig.Identities = lo.UniqBy(append(idents, ageConfig.Identities...), func(id *AgeIdentity) string { return fmt.Sprintf("%s::%s", id.Email, id.Key) })
 	}
 
 	keyPath := pathing.SanitizeFilepath(filepath.Join(cryptPath(), "key"))
