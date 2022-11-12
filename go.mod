@@ -37,7 +37,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.25.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.1.15
+	github.com/pluralsh/gqlclient v1.1.20
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.0.4
 	github.com/rodaine/hclencoder v0.0.1

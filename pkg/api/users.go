@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/samber/lo"
 )
 
 type UpgradeAttributes struct {
@@ -15,6 +16,12 @@ type UserEventAttributes struct {
 	Event  string
 	Data   string
 	Status string
+}
+
+type KeyBackupAttributes struct {
+	Name         string
+	Repositories []string
+	Key          string
 }
 
 type DeviceLogin struct {
@@ -162,7 +169,7 @@ func (client *client) CreateKey(name, content string) error {
 }
 
 func (client *client) GetEabCredential(cluster, provider string) (*EabCredential, error) {
-	resp, err := client.pluralClient.GetEabCredential(client.ctx, cluster, gqlclient.Provider(toProvider(provider)))
+	resp, err := client.pluralClient.GetEabCredential(client.ctx, cluster, gqlclient.Provider(NormalizeProvider(provider)))
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +184,7 @@ func (client *client) GetEabCredential(cluster, provider string) (*EabCredential
 }
 
 func (client *client) DeleteEabCredential(cluster, provider string) error {
-	_, err := client.pluralClient.DeleteEabCredential(client.ctx, cluster, gqlclient.Provider(toProvider(provider)))
+	_, err := client.pluralClient.DeleteEabCredential(client.ctx, cluster, gqlclient.Provider(NormalizeProvider(provider)))
 	if err != nil {
 		return err
 	}
@@ -198,10 +205,57 @@ func (client *client) CreateEvent(event *UserEventAttributes) error {
 	return nil
 }
 
-func toProvider(prov string) string {
-	if prov == "google" {
-		return "GCP"
+func (client *client) GetHelp(prompt string) (string, error) {
+	res, err := client.pluralClient.GetHelp(client.ctx, prompt)
+	if err != nil {
+		return "", err
 	}
 
-	return strings.ToUpper(prov)
+	return lo.FromPtr(res.HelpQuestion), nil
+}
+
+func (client *client) CreateKeyBackup(attrs KeyBackupAttributes) error {
+	converted := gqlclient.KeyBackupAttributes{
+		Name:         attrs.Name,
+		Key:          attrs.Key,
+		Repositories: lo.ToSlicePtr(attrs.Repositories),
+	}
+	_, err := client.pluralClient.CreateBackup(client.ctx, converted)
+	return err
+}
+
+func (client *client) ListKeyBackups() ([]*KeyBackup, error) {
+	resp, err := client.pluralClient.Backups(client.ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	backups := algorithms.Map(resp.KeyBackups.Edges, func(edge *struct {
+		Node *gqlclient.KeyBackupFragment "json:\"node\" graphql:\"node\""
+	}) *KeyBackup {
+		return convertKeyBackup(edge.Node)
+	})
+
+	return backups, nil
+}
+
+func (client *client) GetKeyBackup(name string) (*KeyBackup, error) {
+	resp, err := client.pluralClient.Backup(client.ctx, name)
+	if err != nil || resp.KeyBackup == nil {
+		return nil, err
+	}
+
+	frag := resp.KeyBackup
+	return &KeyBackup{
+		Name:         frag.Name,
+		Repositories: FromSlicePtr(frag.Repositories),
+		Value:        frag.Value,
+	}, nil
+}
+
+func convertKeyBackup(fragment *gqlclient.KeyBackupFragment) *KeyBackup {
+	return &KeyBackup{
+		Name:         fragment.Name,
+		Repositories: FromSlicePtr(fragment.Repositories),
+	}
 }

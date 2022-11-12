@@ -61,6 +61,12 @@ func handleInit(c *cli.Context) error {
 		return err
 	}
 
+	if affirm(backupMsg) {
+		if err := crypto.BackupKey(api.NewClient()); err != nil {
+			return err
+		}
+	}
+
 	utils.Success("Workspace is properly configured!\n")
 	if gitCreated {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)

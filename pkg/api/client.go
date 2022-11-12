@@ -69,6 +69,10 @@ type Client interface {
 	ListStacks(featured bool) ([]*Stack, error)
 	UninstallChart(id string) error
 	UninstallTerraform(id string) error
+	CreateKeyBackup(attrs KeyBackupAttributes) error
+	GetKeyBackup(name string) (*KeyBackup, error)
+	ListKeyBackups() ([]*KeyBackup, error)
+	GetHelp(prompt string) (string, error)
 }
 
 type client struct {

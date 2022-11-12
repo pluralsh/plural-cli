@@ -53,7 +53,7 @@ func owned(fn func(*cli.Context) error) func(*cli.Context) error {
 
 func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		if ok := affirm(msg); !ok {
+		if !affirm(msg) {
 			return nil
 		}
 

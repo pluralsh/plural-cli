@@ -931,6 +931,8 @@ github.com/pluralsh/gqlclient v1.1.11 h1:kmimpUtIday56v4mzbXrANd0QHk0CizJB0S/3MH
 github.com/pluralsh/gqlclient v1.1.11/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/gqlclient v1.1.15 h1:iRe1GT5QGEHBxiw2XgsJjNVghue6dckh4KaXDCYiDgI=
 github.com/pluralsh/gqlclient v1.1.15/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
+github.com/pluralsh/gqlclient v1.1.20 h1:714Ra7DPzfIpBZ4YB2tj43rmqqSF6eAFJPcNxle1o2I=
+github.com/pluralsh/gqlclient v1.1.20/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
