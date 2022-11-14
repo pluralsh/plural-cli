@@ -380,13 +380,15 @@ func (p *Plural) destroy(c *cli.Context) error {
 		return nil
 	}
 
+	delete := affirm("Do you want to uninstall your applications from the plural api as well?")
+
 	if repoName != "" {
 		installation, err := p.GetInstallation(repoName)
 		if err != nil {
 			return err
 		}
 
-		return p.doDestroy(repoRoot, installation)
+		return p.doDestroy(repoRoot, installation, delete)
 	}
 
 	installations, err := p.getSortedInstallations(repoName)
@@ -406,7 +408,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doDestroy(repoRoot, installation); err != nil {
+		if err := p.doDestroy(repoRoot, installation, delete); err != nil {
 			return err
 		}
 	}
@@ -432,7 +434,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) doDestroy(repoRoot string, installation *api.Installation) error {
+func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete bool) error {
 	p.InitPluralClient()
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
@@ -443,7 +445,16 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation) erro
 		return err
 	}
 
-	return workspace.Destroy()
+	if err := workspace.Destroy(); err != nil {
+		return err
+	}
+
+	if delete {
+		utils.Highlight("Uninstalling %s from the plural api as well...", installation.Repository.Name)
+		return p.Client.DeleteInstallation(installation.Id)
+	}
+
+	return nil
 }
 
 func (p *Plural) buildContext(_ *cli.Context) error {

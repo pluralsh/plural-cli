@@ -53,6 +53,7 @@ type Client interface {
 	GetInstallation(name string) (*Installation, error)
 	GetInstallationById(id string) (*Installation, error)
 	GetInstallations() ([]*Installation, error)
+	DeleteInstallation(id string) error
 	OIDCProvider(id string, attributes *OidcProviderAttributes) error
 	ResetInstallations() (int, error)
 	CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error)
