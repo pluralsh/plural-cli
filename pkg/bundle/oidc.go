@@ -33,12 +33,12 @@ func configureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[s
 
 	inst, err := client.GetInstallation(repo)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetInstallation")
 	}
 
 	me, err := client.Me()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "Me")
 	}
 
 	oidcSettings := &api.OidcProviderAttributes{
@@ -49,8 +49,8 @@ func configureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[s
 		},
 	}
 	mergeOidcAttributes(inst, oidcSettings)
-
-	return client.OIDCProvider(inst.Id, oidcSettings)
+	err = client.OIDCProvider(inst.Id, oidcSettings)
+	return api.GetErrorResponse(err, "OIDCProvider")
 }
 
 func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAttributes) {

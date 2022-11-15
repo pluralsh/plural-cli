@@ -14,7 +14,7 @@ import (
 func Install(client api.Client, repo, name string, refresh bool) error {
 	recipe, err := client.GetRecipe(repo, name)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetRecipe")
 	}
 
 	return doInstall(client, recipe, repo, name, refresh)
@@ -79,7 +79,7 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 	}
 
 	if err := client.InstallRecipe(recipe.Id); err != nil {
-		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %w", err)
+		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %w", api.GetErrorResponse(err, "InstallRecipe"))
 	}
 
 	if recipe.OidcSettings == nil {

@@ -132,7 +132,7 @@ func SetupAge(client api.Client, emails []string) error {
 	if len(emails) > 0 {
 		keys, err := client.ListKeys(emails)
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "ListKeys")
 		}
 
 		missingEmails := findMissingKeyForEmail(emails, keys)
@@ -228,7 +228,10 @@ func SetupIdentity(client api.Client, name string) error {
 		return err
 	}
 
-	return client.CreateKey(name, userIdentity.Recipient().String())
+	if err := client.CreateKey(name, userIdentity.Recipient().String()); err != nil {
+		return api.GetErrorResponse(err, "CreateKey")
+	}
+	return nil
 }
 
 func setupAgeConfig() (*Age, error) {

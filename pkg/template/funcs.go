@@ -165,5 +165,9 @@ func toYaml(val interface{}) (string, error) {
 
 func eabCredential(cluster, provider string) (*api.EabCredential, error) {
 	client := api.NewClient()
-	return client.GetEabCredential(cluster, provider)
+	eabCredential, err := client.GetEabCredential(cluster, provider)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetEabCredential")
+	}
+	return eabCredential, nil
 }

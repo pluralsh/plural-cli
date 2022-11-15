@@ -71,7 +71,7 @@ func (t *Tags) Push(repo string, sha string) (string, error) {
 		}
 		if err := client.UpdateVersion(vspec, tagSpec.Tags); err != nil {
 			fmt.Println("")
-			return sha, err
+			return sha, api.GetErrorResponse(err, "UpdateVersion")
 		}
 
 		utils.Highlight(".")
