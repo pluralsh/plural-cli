@@ -908,8 +908,6 @@ github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3I
 github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 h1:rc3tiVYb5z54aKaDfakKn0dDjIyPpTtszkjuMzyt7ec=
 github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
-github.com/packethost/packngo v0.25.0 h1:ujGXL3lVqTiaQoX2/Go74lQAlYfTeop7jBNy5w99w2A=
-github.com/packethost/packngo v0.25.0/go.mod h1:/UHguFdPs6Lf6FOkkSEPnRY5tgS0fsVM+Zv/bvBrmt0=
 github.com/packethost/packngo v0.29.0 h1:gRIhciVZQ/zLNrIdIdbOUyB/Tw5IgoaXyhP4bvE+D2s=
 github.com/packethost/packngo v0.29.0/go.mod h1:/UHguFdPs6Lf6FOkkSEPnRY5tgS0fsVM+Zv/bvBrmt0=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
@@ -932,16 +930,12 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
-github.com/pluralsh/gqlclient v1.1.11 h1:kmimpUtIday56v4mzbXrANd0QHk0CizJB0S/3MHOMqo=
-github.com/pluralsh/gqlclient v1.1.11/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/gqlclient v1.1.15 h1:iRe1GT5QGEHBxiw2XgsJjNVghue6dckh4KaXDCYiDgI=
 github.com/pluralsh/gqlclient v1.1.15/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
 github.com/pluralsh/plural-operator v0.5.3/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
-github.com/pluralsh/polly v0.0.3 h1:0wN7MXGyDKCoZepO2+ryIb5T4a01IQd0r9IGDf6bo90=
-github.com/pluralsh/polly v0.0.3/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
 github.com/pluralsh/polly v0.0.4 h1:oh89Oh5xCCfV7hZvE019KBFdbZAwwsLZtCbqYQWDppM=
 github.com/pluralsh/polly v0.0.4/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
