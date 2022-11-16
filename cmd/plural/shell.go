@@ -8,21 +8,21 @@ import (
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func shellCommands() []cli.Command {
-	return []cli.Command{
+func shellCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:   "sync",
 			Usage:  "syncs the setup in your cloud shell locally",
 			Action: latestVersion(handleShellSync),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "endpoint",
 					Usage: "the endpoint for the plural installation you're working with",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "service-account",
 					Usage: "email for the service account you'd like to use for this workspace",
 				},

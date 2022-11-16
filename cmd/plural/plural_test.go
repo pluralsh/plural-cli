@@ -29,11 +29,9 @@ COMMANDS:
    link             links a local package into an installation repo
    unlink           unlinks a linked package
    help, h          Shows a list of commands or help for one command
-
    API:
      repos  view and manage plural repositories
      api    inspect the plural api
-
    Debugging:
      watch  watches applications until they become ready
      wait   waits on applications until they become ready
@@ -41,31 +39,25 @@ COMMANDS:
      proxy  proxies into running processes in your cluster
      logs   Commands for tailing logs for specific apps
      ops    Commands for simplifying cluster operations
-
    Miscellaneous:
      utils  useful plural utilities
      vpn    interacting with the plural vpn
-
    Publishing:
      apply          applys the current pluralfile
      test           validate a values templace
      push           utilities for pushing tf or helm packages
      template, tpl  templates a helm chart to be uploaded to plural
      from-grafana   imports a grafana dashboard to a plural crd
-
    User Profile:
      login         logs into plural and saves credentials to the current config profile
      import        imports plural config from another file
      crypto        plural encryption utilities
      config, conf  reads/modifies cli configuration
      profile       Commands for managing config profiles for plural
-
    WKSPACE:
      create  scaffolds the resources needed to create a new plural repository
-
    WORKSPACE:
      repair  commits any new encrypted changes in your local workspace automatically
-
    Workspace:
      validate, v         validates your workspace
      topsort, d          renders a dependency-inferred topological sort of the installations in a workspace
@@ -80,7 +72,7 @@ COMMANDS:
 GLOBAL OPTIONS:
    --profile-file FILE         configure your config.yml profile FILE [$PLURAL_PROFILE_FILE]
    --encryption-key-file FILE  configure your encryption key FILE [$PLURAL_ENCRYPTION_KEY_FILE]
-   --help, -h                  show help
+   --help, -h                  show help (default: false)
 `
 
 func TestPluralApplication(t *testing.T) {

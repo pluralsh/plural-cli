@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/format"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func (p *Plural) reposCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) reposCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
@@ -29,11 +29,11 @@ func (p *Plural) reposCommands() []cli.Command {
 			Usage:     "list available repositories to install",
 			ArgsUsage: "",
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "query",
 					Usage: "string to search by",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "format",
 					Usage: "format to print the repositories out, eg csv or default is table",
 				},

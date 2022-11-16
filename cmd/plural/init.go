@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"

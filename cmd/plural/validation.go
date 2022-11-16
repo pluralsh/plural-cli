@@ -13,7 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {

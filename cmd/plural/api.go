@@ -4,15 +4,15 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func (p *Plural) apiCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) apiCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:  "list",
 			Usage: "lists plural resources",
-			Subcommands: []cli.Command{
+			Subcommands: []*cli.Command{
 				{
 					Name:      "installations",
 					Usage:     "lists your installations",
@@ -62,7 +62,7 @@ func (p *Plural) apiCommands() []cli.Command {
 		{
 			Name:  "create",
 			Usage: "creates plural resources",
-			Subcommands: []cli.Command{
+			Subcommands: []*cli.Command{
 				{
 					Name:      "domain",
 					Usage:     "creates a new domain for your account",

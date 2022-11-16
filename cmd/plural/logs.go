@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/logs"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func (p *Plural) logsCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) logsCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
