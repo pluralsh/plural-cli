@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	plural "github.com/pluralsh/plural/cmd/plural"
 	"github.com/pluralsh/plural/pkg/api"

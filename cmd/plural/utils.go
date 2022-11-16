@@ -12,22 +12,22 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/thoas/go-funk"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
 
-func utilsCommands() []cli.Command {
-	return []cli.Command{
+func utilsCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "image-bump",
 			ArgsUsage: "CHART",
 			Usage:     "Bumps a chart's image tag",
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "path",
 					Usage: "path to tag in helm values file",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "tag",
 					Usage: "the image tag to set to",
 				},

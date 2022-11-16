@@ -21,7 +21,7 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/pluralsh/polly/containers"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {

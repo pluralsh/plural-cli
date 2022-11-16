@@ -17,11 +17,11 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func (p *Plural) pushCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) pushCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "terraform",
 			Usage:     "pushes a terraform module",
@@ -46,12 +46,12 @@ func (p *Plural) pushCommands() []cli.Command {
 			ArgsUsage: "path/to/def.yaml REPO",
 			Action:    latestVersion(p.handleArtifact),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "platform",
 					Value: "mac",
 					Usage: "name of the OS this binary is built for",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "arch",
 					Value: "amd64",
 					Usage: "machine architecture the binary is compatible with",

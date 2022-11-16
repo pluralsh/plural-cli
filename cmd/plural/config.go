@@ -6,11 +6,11 @@ import (
 
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func configCommands() []cli.Command {
-	return []cli.Command{
+func configCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "amend",
 			Usage:     "modify config",
@@ -31,8 +31,8 @@ func configCommands() []cli.Command {
 	}
 }
 
-func profileCommands() []cli.Command {
-	return []cli.Command{
+func profileCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "use",
 			Usage:     "moves the config in PROFILE to the current config",

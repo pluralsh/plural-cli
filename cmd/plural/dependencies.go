@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func (p *Plural) topsort(c *cli.Context) error {

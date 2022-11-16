@@ -10,7 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/template"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes/scheme"
 )

@@ -12,7 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/vpn"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,8 +24,8 @@ const (
 	wireguardNotInstalledError = "wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"
 )
 
-func (p *Plural) vpnCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) vpnCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:   "list-servers",
 			Usage:  "lists vpn servers",
@@ -36,7 +36,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Usage:  "lists vpn clients for a server",
 			Action: latestVersion(p.handleWireguardPeerList),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "server",
 					Usage: "the vpn server to list clients for",
 				},
@@ -48,7 +48,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Usage:     "create a new vpn client for a server",
 			Action:    latestVersion(requireArgs(p.handleWireguardPeerCreate, []string{"NAME"})),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "server",
 					Usage: "the vpn server to create the client for",
 				},
@@ -60,7 +60,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Usage:     "create a new vpn client for a server",
 			Action:    latestVersion(requireArgs(p.handleWireguardPeerDelete, []string{"NAME"})),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "server",
 					Usage: "the vpn server to delete the clients from",
 				},
@@ -72,11 +72,11 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Usage:     "get the config for a vpn client for a server",
 			Action:    latestVersion(requireArgs(p.handleWireguardPeerConfig, []string{"NAME"})),
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "server",
 					Usage: "the vpn server to get the client config from",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "path",
 					Usage: "output path for the config wireguard client config. the filename will be NAME.conf",
 				},

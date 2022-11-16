@@ -5,12 +5,12 @@ import (
 
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	v1 "k8s.io/api/core/v1"
 )
 
-func (p *Plural) opsCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) opsCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",

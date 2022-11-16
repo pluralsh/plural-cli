@@ -10,7 +10,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mitchellh/go-homedir"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/scm"
@@ -54,8 +54,8 @@ const Gitignore = `/**/.terraform
 // IMPORTANT
 // Repo cryptography relies on git smudge and clean filters, which pipe a file into stdin and respond with a new version
 // of the file from stdout. If we write anything besides the crypto text, it will no longer be decryptable naturally.
-func (p *Plural) cryptoCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) cryptoCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:   "encrypt",
 			Usage:  "encrypts stdin and writes to stdout",
@@ -91,7 +91,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Usage:  "generates a random string",
 			Action: randString,
 			Flags: []cli.Flag{
-				cli.IntFlag{
+				&cli.IntFlag{
 					Name:  "len",
 					Usage: "the length of the string to generate",
 					Value: 32,
@@ -113,7 +113,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Usage:     "allows a list of plural users to decrypt this repository",
 			ArgsUsage: "",
 			Flags: []cli.Flag{
-				cli.StringSliceFlag{
+				&cli.StringSliceFlag{
 					Name:     "email",
 					Usage:    "a email to share with (multiple allowed)",
 					Required: true,
@@ -125,7 +125,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Name:  "setup-keys",
 			Usage: "creates an age keypair, and uploads the public key to plural for use in plural crypto share",
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:     "name",
 					Usage:    "a name for the key",
 					Required: true,

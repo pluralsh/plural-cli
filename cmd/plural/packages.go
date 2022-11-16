@@ -8,11 +8,11 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func (p *Plural) packagesCommands() []cli.Command {
-	return []cli.Command{
+func (p *Plural) packagesCommands() []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:      "uninstall",
 			Usage:     "uninstall a helm or terraform package",
