@@ -14,7 +14,7 @@ func defaultDiff(path string) []*executor.Step {
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
-			Args:    []string{"init"},
+			Args:    []string{"init", "-upgrade"},
 			Sha:     "",
 		},
 		{
