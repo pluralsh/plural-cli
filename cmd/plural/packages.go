@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/pluralsh/plural/pkg/api"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
@@ -61,7 +63,7 @@ func (p *Plural) uninstallPackage(c *cli.Context) error {
 	if t == "terraform" {
 		for _, inst := range space.Terraform {
 			if inst.Terraform.Name == name {
-				return p.Client.UninstallTerraform(inst.Id)
+				return api.GetErrorResponse(p.Client.UninstallTerraform(inst.Id), "UninstallTerraform")
 			}
 		}
 	}
@@ -69,7 +71,7 @@ func (p *Plural) uninstallPackage(c *cli.Context) error {
 	if t == "helm" {
 		for _, inst := range space.Charts {
 			if inst.Chart.Name == name {
-				return p.Client.UninstallChart(inst.Id)
+				return api.GetErrorResponse(p.Client.UninstallChart(inst.Id), "UninstallChart")
 			}
 		}
 	}
@@ -82,7 +84,7 @@ func (p *Plural) getWorkspace(repo string) (*wkspace.Workspace, error) {
 	p.InitPluralClient()
 	inst, err := p.Client.GetInstallation(repo)
 	if err != nil {
-		return nil, err
+		return nil, api.GetErrorResponse(err, "GetInstallation")
 	}
 
 	return wkspace.New(p.Client, inst)

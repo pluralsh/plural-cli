@@ -67,7 +67,7 @@ func (plrl *Pluralfile) Flush(lock *Lockfile) error {
 	}
 
 	_, err = client.ReleaseLock(plrl.Repo, string(io))
-	return err
+	return api.GetErrorResponse(err, "ReleaseLock")
 }
 
 func Lock(path string) (*Lockfile, error) {

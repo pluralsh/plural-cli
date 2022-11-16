@@ -32,7 +32,7 @@ type Workspace struct {
 func New(client api.Client, inst *api.Installation) (*Workspace, error) {
 	ci, ti, err := client.GetPackageInstallations(inst.Repository.Id)
 	if err != nil {
-		return nil, err
+		return nil, api.GetErrorResponse(err, "GetPackageInstallations")
 	}
 
 	projPath, _ := filepath.Abs("workspace.yaml")

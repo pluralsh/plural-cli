@@ -46,7 +46,8 @@ func (a *RepoAttrs) Push(repo string, sha string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return newsha, client.CreateRepository(repo, a.Publisher, repositoryAttributes)
+	err = client.CreateRepository(repo, a.Publisher, repositoryAttributes)
+	return newsha, api.GetErrorResponse(err, "CreateRepository")
 }
 
 func (a *RepoAttrs) mkSha(fullPath string, input *api.RepositoryInput) (sha string, err error) {

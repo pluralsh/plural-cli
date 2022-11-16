@@ -73,7 +73,7 @@ func (p *Plural) bundleList(c *cli.Context) error {
 	p.InitPluralClient()
 	recipes, err := p.ListRecipes(repo, prov)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "ListRecipes")
 	}
 
 	headers := []string{"Name", "Description", "Provider", "Install Command"}
@@ -107,7 +107,7 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 	p.InitPluralClient()
 	stacks, err := p.ListStacks(c.Bool("account"))
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "ListStacks")
 	}
 
 	headers := []string{"Name", "Description", "Featured"}

@@ -59,7 +59,7 @@ func ApplicationScaffold(client api.Client) error {
 
 	scaffolds, err := client.Scaffolds(&input)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "Scaffolds")
 	}
 
 	app := input.Application

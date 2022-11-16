@@ -26,7 +26,7 @@ func TopSort(client api.Client, installations []*api.Installation) ([]*api.Insta
 
 		ci, tf, err := client.GetPackageInstallations(installation.Repository.Id)
 		if err != nil {
-			return nil, err
+			return nil, api.GetErrorResponse(err, "GetPackageInstallations")
 		}
 		deps := algorithms.Map(buildDependencies(repo, ci, tf), func(d *manifest.Dependency) string { return d.Repo })
 		for _, d := range deps {
