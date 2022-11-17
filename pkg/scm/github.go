@@ -124,7 +124,7 @@ func (gh *Github) StarPluralGitHubRep() error {
 	if !starred {
 		proceed := false
 		prompt := &survey.Confirm{
-			Message: "Would you like to Star us on the GitHub",
+			Message: "Would you like to show your support for the project with a github star?",
 		}
 		err := survey.AskOne(prompt, &proceed)
 		if err != nil {
