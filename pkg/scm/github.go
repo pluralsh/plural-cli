@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/google/go-github/v45/github"
@@ -112,4 +113,30 @@ func (gh *Github) Setup() (con Context, err error) {
 	con.url = *repo.SSHURL
 	con.repoName = repoName
 	return
+}
+
+func (gh *Github) StarPluralGitHubRep() error {
+	ctx := context.Background()
+	starred, _, err := gh.Client.Activity.IsStarred(ctx, "pluralsh", "plural")
+	if err != nil {
+		return err
+	}
+	if !starred {
+		proceed := false
+		prompt := &survey.Confirm{
+			Message: "Would you like to show your support for the project with a github star?",
+		}
+		err := survey.AskOne(prompt, &proceed)
+		if err != nil {
+			return err
+		}
+		if proceed {
+			_, err := gh.Client.Activity.Star(ctx, "pluralsh", "plural")
+			if err != nil {
+				return err
+			}
+			fmt.Println("")
+		}
+	}
+	return nil
 }

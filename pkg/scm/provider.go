@@ -15,6 +15,7 @@ var providers = []string{"github", "gitlab"}
 type Provider interface {
 	Init() error
 	Setup() (Context, error)
+	StarPluralGitHubRep() error
 }
 
 func Setup() (string, error) {
@@ -61,5 +62,5 @@ func Setup() (string, error) {
 	}
 
 	fmt.Println("")
-	return ctx.repoName, nil
+	return ctx.repoName, prov.StarPluralGitHubRep()
 }
