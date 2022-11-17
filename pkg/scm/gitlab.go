@@ -16,6 +16,10 @@ type Gitlab struct {
 	Client *gitlab.Client
 }
 
+func (gl *Gitlab) StarPluralGitHubRep() error {
+	return nil
+}
+
 func (gl *Gitlab) Init() error {
 	flow := &oauth.Flow{
 		Host: &oauth.Host{
