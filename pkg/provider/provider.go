@@ -59,7 +59,7 @@ func GetProviderScaffold(provider, version string) (string, error) {
 		scaffold, err := client.GetTfProviderScaffold(provider, version)
 		providers.Scaffolds[provider] = scaffold
 		if err != nil {
-			return "", err
+			return "", api.GetErrorResponse(err, "GetTfProviderScaffold")
 		}
 	}
 	return providers.Scaffolds[provider], nil
@@ -132,7 +132,7 @@ func getAvailableProviders() error {
 			available[i] = strings.ToLower(available[i])
 		}
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetTfProviders")
 		}
 		providers.AvailableProviders = available
 	}

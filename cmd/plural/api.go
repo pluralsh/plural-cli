@@ -78,7 +78,7 @@ func (p *Plural) handleInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	installations, err := p.GetInstallations()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetInstallations")
 	}
 
 	installations = algorithms.Filter(installations, func(v *api.Installation) bool {
@@ -100,7 +100,7 @@ func (p *Plural) handleCharts(c *cli.Context) error {
 	p.InitPluralClient()
 	charts, err := p.GetCharts(c.Args().First())
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetCharts")
 	}
 
 	headers := []string{"Id", "Name", "Description", "Latest Version"}
@@ -113,7 +113,7 @@ func (p *Plural) handleTerraforma(c *cli.Context) error {
 	p.InitPluralClient()
 	tfs, err := p.GetTerraforma(c.Args().First())
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetTerraforma")
 	}
 
 	headers := []string{"Id", "Name", "Description"}
@@ -125,9 +125,8 @@ func (p *Plural) handleTerraforma(c *cli.Context) error {
 func (p *Plural) handleVersions(c *cli.Context) error {
 	p.InitPluralClient()
 	versions, err := p.GetVersions(c.Args().First())
-
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetVersions")
 	}
 
 	headers := []string{"Id", "Version"}
@@ -140,7 +139,7 @@ func (p *Plural) handleChartInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	chartInstallations, err := p.GetChartInstallations(c.Args().First())
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetChartInstallations")
 	}
 
 	cis := algorithms.Filter(chartInstallations, func(ci *api.ChartInstallation) bool {
@@ -158,7 +157,7 @@ func (p *Plural) handleTerraformInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	terraformInstallations, err := p.GetTerraformInstallations(c.Args().First())
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetTerraformInstallations")
 	}
 
 	tis := algorithms.Filter(terraformInstallations, func(ti *api.TerraformInstallation) bool {
@@ -176,7 +175,7 @@ func (p *Plural) handleArtifacts(c *cli.Context) error {
 	p.InitPluralClient()
 	artifacts, err := p.ListArtifacts(c.Args().First())
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "ListArtifacts")
 	}
 
 	headers := []string{"Id", "Name", "Platform", "Blob", "Sha"}
@@ -187,5 +186,6 @@ func (p *Plural) handleArtifacts(c *cli.Context) error {
 
 func (p *Plural) handleCreateDomain(c *cli.Context) error {
 	p.InitPluralClient()
-	return p.CreateDomain(c.Args().First())
+	err := p.CreateDomain(c.Args().First())
+	return api.GetErrorResponse(err, "CreateDomain")
 }

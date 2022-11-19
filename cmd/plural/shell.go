@@ -46,7 +46,7 @@ func handleShellSync(c *cli.Context) error {
 
 	shell, err := client.GetShell()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetShell")
 	}
 
 	if err := crypto.Setup(shell.AesKey); err != nil {
@@ -77,5 +77,6 @@ func handleShellPurge(c *cli.Context) error {
 	}
 
 	client := api.NewClient()
-	return client.DeleteShell()
+	err := client.DeleteShell()
+	return api.GetErrorResponse(err, "DeleteShell")
 }

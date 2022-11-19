@@ -11,7 +11,7 @@ import (
 func Stack(client api.Client, name, provider string, refresh bool) error {
 	s, err := client.GetStack(name, provider)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetStack")
 	}
 
 	utils.Highlight("You're attempting to install stack: %s\n>> ", s.Name)

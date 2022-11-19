@@ -93,7 +93,7 @@ func apply(c *cli.Context) error {
 func (p *Plural) handleTerraformUpload(c *cli.Context) error {
 	p.InitPluralClient()
 	_, err := p.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
-	return err
+	return api.GetErrorResponse(err, "UploadTerraform")
 }
 
 func handleHelmTemplate(c *cli.Context) error {
@@ -190,7 +190,7 @@ func (p *Plural) handleRecipeUpload(c *cli.Context) error {
 	}
 
 	_, err = p.CreateRecipe(c.Args().Get(1), recipeInput)
-	return err
+	return api.GetErrorResponse(err, "CreateRecipe")
 }
 
 func (p *Plural) handleArtifact(c *cli.Context) error {
@@ -208,7 +208,7 @@ func (p *Plural) handleArtifact(c *cli.Context) error {
 	input.Platform = c.String("platform")
 	input.Arch = c.String("arch")
 	_, err = p.CreateArtifact(c.Args().Get(1), input)
-	return err
+	return api.GetErrorResponse(err, "CreateArtifact")
 }
 
 func (p *Plural) createCrd(c *cli.Context) error {
@@ -216,5 +216,6 @@ func (p *Plural) createCrd(c *cli.Context) error {
 	fullPath, _ := filepath.Abs(c.Args().Get(0))
 	repo := c.Args().Get(1)
 	chart := c.Args().Get(2)
-	return p.CreateCrd(repo, chart, fullPath)
+	err := p.CreateCrd(repo, chart, fullPath)
+	return api.GetErrorResponse(err, "CreateCrd")
 }

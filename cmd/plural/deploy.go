@@ -28,7 +28,7 @@ func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error
 	p.InitPluralClient()
 	installations, err := p.GetInstallations()
 	if err != nil {
-		return installations, err
+		return installations, api.GetErrorResponse(err, "GetInstallations")
 	}
 
 	if len(installations) == 0 {
@@ -47,7 +47,7 @@ func (p *Plural) allSortedRepos() ([]string, error) {
 	p.InitPluralClient()
 	insts, err := p.GetInstallations()
 	if err != nil {
-		return nil, err
+		return nil, api.GetErrorResponse(err, "GetInstallations")
 	}
 
 	return wkspace.SortAndFilter(insts)
@@ -103,7 +103,7 @@ func (p *Plural) build(c *cli.Context) error {
 	if c.IsSet("only") {
 		installation, err := p.GetInstallation(c.String("only"))
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetInstallation")
 		} else if installation == nil {
 			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
 		}
@@ -162,7 +162,7 @@ func (p *Plural) validate(c *cli.Context) error {
 	if c.IsSet("only") {
 		installation, err := p.GetInstallation(c.String("only"))
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetInstallation")
 		}
 		return p.doValidate(installation)
 	}
@@ -237,7 +237,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 
 		installation, err := p.GetInstallation(repo)
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetInstallation")
 		}
 		if installation == nil {
 			return fmt.Errorf("The %s was unistalled, run `plural bundle install %s <bundle-name>` ", repo, repo)
@@ -327,7 +327,7 @@ func (p *Plural) bounce(c *cli.Context) error {
 	if repoName != "" {
 		installation, err := p.GetInstallation(repoName)
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetInstallation")
 		}
 		return p.doBounce(repoRoot, installation)
 	}
@@ -385,7 +385,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	if repoName != "" {
 		installation, err := p.GetInstallation(repoName)
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "GetInstallation")
 		}
 
 		return p.doDestroy(repoRoot, installation, delete)
@@ -461,7 +461,7 @@ func (p *Plural) buildContext(_ *cli.Context) error {
 	p.InitPluralClient()
 	insts, err := p.GetInstallations()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetInstallation")
 	}
 
 	path := manifest.ContextPath()

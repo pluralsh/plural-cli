@@ -110,7 +110,7 @@ func handleLogin(c *cli.Context) error {
 
 	device, err := client.DeviceLogin()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "DeviceLogin")
 	}
 
 	fmt.Printf("logging into Plural at %s\n", device.LoginUrl)
@@ -138,7 +138,7 @@ func handleLogin(c *cli.Context) error {
 func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 	me, err := client.Me()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "Me")
 	}
 
 	conf.Email = me.Email
@@ -148,7 +148,7 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 	if saEmail != "" {
 		jwt, email, err := client.ImpersonateServiceAccount(saEmail)
 		if err != nil {
-			return err
+			return api.GetErrorResponse(err, "ImpersonateServiceAccount")
 		}
 
 		conf.Email = email
@@ -159,7 +159,7 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 
 	accessToken, err := client.GrabAccessToken()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GrabAccessToken")
 	}
 
 	conf.Token = accessToken

@@ -46,5 +46,5 @@ func (a *Stack) Push(repo string, sha string) (string, error) {
 		utils.Success("\u2713\n")
 	}
 
-	return newsha, err
+	return newsha, api.GetErrorResponse(err, "CreateStack")
 }
