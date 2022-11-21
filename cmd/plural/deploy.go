@@ -421,6 +421,13 @@ func (p *Plural) destroy(c *cli.Context) error {
 	if repoName == "" {
 		utils.Success("Finished destroying workspace\n")
 		utils.Note("if you want to recreate this workspace, be sure to rename the cluster to ensure a clean redeploy")
+		man, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+		if err := p.DestroyCluster(man.Network.Subdomain, man.Cluster, man.Provider); err != nil {
+			return api.GetErrorResponse(err, "DestroyCluster")
+		}
 	}
 
 	utils.Highlight("\n==> Commit and push your changes to record your workspace changes\n\n")

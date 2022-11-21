@@ -41,6 +41,7 @@ COMMANDS:
      proxy  proxies into running processes in your cluster
      logs   Commands for tailing logs for specific apps
      ops    Commands for simplifying cluster operations
+     ai     utilize openai to get help with your setup
 
    Miscellaneous:
      utils  useful plural utilities
