@@ -13,32 +13,74 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func evaluateCondition(ctx map[string]interface{}, cond *api.Condition) bool {
+type OperationType struct {
+	Operation string
+	Type      string
+}
+
+func evaluateCondition(ctx map[string]interface{}, cond *api.Condition, valueType string) bool {
 	if cond == nil {
 		return true
 	}
 
-	switch cond.Operation {
-	case "NOT":
-		val, ok := ctx[cond.Field]
-		if !ok {
-			return true
-		}
+	val, ok := ctx[cond.Field]
+	if !ok {
+		return true
+	}
+	condValue := cond.Value
+	operationType := OperationType{
+		Operation: cond.Operation,
+		Type:      valueType,
+	}
+
+	switch operationType {
+	case OperationType{Operation: "NOT", Type: Bool}:
 		booled, ok := val.(bool)
 		return ok && !booled
-	case "PREFIX":
+	case OperationType{Operation: "PREFIX", Type: String}:
+		return strings.HasPrefix(val.(string), condValue)
+	case OperationType{Operation: "SUFFIX", Type: String}:
 		val := ctx[cond.Field]
-		return strings.HasPrefix(val.(string), cond.Value)
-	case "SUFFIX":
-		val := ctx[cond.Field]
-		return strings.HasSuffix(val.(string), cond.Value)
+		return strings.HasSuffix(val.(string), condValue)
+	case OperationType{Operation: "EQ", Type: String}:
+		return val == condValue
+	case OperationType{Operation: "EQ", Type: Int}:
+		intCondValue, err := strconv.Atoi(condValue)
+		if err != nil {
+			return false
+		}
+		return val.(int) == intCondValue
+	case OperationType{Operation: "GT", Type: Int}:
+		intCondValue, err := strconv.Atoi(condValue)
+		if err != nil {
+			return false
+		}
+		return val.(int) > intCondValue
+	case OperationType{Operation: "GTE", Type: Int}:
+		intCondValue, err := strconv.Atoi(condValue)
+		if err != nil {
+			return false
+		}
+		return val.(int) >= intCondValue
+	case OperationType{Operation: "LT", Type: Int}:
+		intCondValue, err := strconv.Atoi(condValue)
+		if err != nil {
+			return false
+		}
+		return val.(int) < intCondValue
+	case OperationType{Operation: "LTE", Type: Int}:
+		intCondValue, err := strconv.Atoi(condValue)
+		if err != nil {
+			return false
+		}
+		return val.(int) <= intCondValue
 	}
 
 	return true
 }
 
 func Configure(ctx map[string]interface{}, item *api.ConfigurationItem, context *manifest.Context, repo string) (err error) {
-	if !evaluateCondition(ctx, item.Condition) {
+	if !evaluateCondition(ctx, item.Condition, item.Type) {
 		return
 	}
 
