@@ -930,8 +930,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
-github.com/pluralsh/gqlclient v1.1.15 h1:iRe1GT5QGEHBxiw2XgsJjNVghue6dckh4KaXDCYiDgI=
-github.com/pluralsh/gqlclient v1.1.15/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
+github.com/pluralsh/gqlclient v1.1.20 h1:714Ra7DPzfIpBZ4YB2tj43rmqqSF6eAFJPcNxle1o2I=
+github.com/pluralsh/gqlclient v1.1.20/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=

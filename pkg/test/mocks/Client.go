@@ -135,6 +135,20 @@ func (_m *Client) CreateKey(name string, content string) error {
 	return r0
 }
 
+// CreateKeyBackup provides a mock function with given fields: attrs
+func (_m *Client) CreateKeyBackup(attrs api.KeyBackupAttributes) error {
+	ret := _m.Called(attrs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(api.KeyBackupAttributes) error); ok {
+		r0 = rf(attrs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // CreateRecipe provides a mock function with given fields: repoName, attrs
 func (_m *Client) CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error) {
 	ret := _m.Called(repoName, attrs)
@@ -198,6 +212,20 @@ func (_m *Client) DeleteEabCredential(cluster string, provider string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string) error); ok {
 		r0 = rf(cluster, provider)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteInstallation provides a mock function with given fields: id
+func (_m *Client) DeleteInstallation(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -311,6 +339,27 @@ func (_m *Client) GetEabCredential(cluster string, provider string) (*api.EabCre
 	return r0, r1
 }
 
+// GetHelp provides a mock function with given fields: prompt
+func (_m *Client) GetHelp(prompt string) (string, error) {
+	ret := _m.Called(prompt)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(prompt)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prompt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetInstallation provides a mock function with given fields: name
 func (_m *Client) GetInstallation(name string) (*api.Installation, error) {
 	ret := _m.Called(name)
@@ -373,6 +422,29 @@ func (_m *Client) GetInstallations() ([]*api.Installation, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetKeyBackup provides a mock function with given fields: name
+func (_m *Client) GetKeyBackup(name string) (*api.KeyBackup, error) {
+	ret := _m.Called(name)
+
+	var r0 *api.KeyBackup
+	if rf, ok := ret.Get(0).(func(string) *api.KeyBackup); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*api.KeyBackup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -694,6 +766,29 @@ func (_m *Client) ListArtifacts(repo string) ([]api.Artifact, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(repo)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListKeyBackups provides a mock function with given fields:
+func (_m *Client) ListKeyBackups() ([]*api.KeyBackup, error) {
+	ret := _m.Called()
+
+	var r0 []*api.KeyBackup
+	if rf, ok := ret.Get(0).(func() []*api.KeyBackup); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*api.KeyBackup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

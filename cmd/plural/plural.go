@@ -367,6 +367,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Miscellaneous",
 		},
 		{
+			Name:     "ai",
+			Usage:    "utilize openai to get help with your setup",
+			Action:   p.aiHelp,
+			Category: "Debugging",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",
