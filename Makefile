@@ -92,4 +92,4 @@ genmock: .PHONY # generates mocks before running tests
 	hack/gen-client-mocks.sh	
 
 lint: .PHONY
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.46.2 golangci-lint run
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint run
