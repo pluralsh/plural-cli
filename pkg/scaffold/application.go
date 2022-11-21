@@ -7,7 +7,7 @@ import (
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 type Applications struct {
