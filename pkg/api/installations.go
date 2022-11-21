@@ -34,6 +34,11 @@ func (client *client) GetInstallationById(id string) (*Installation, error) {
 	return convertInstallation(resp.Installation), nil
 }
 
+func (client *client) DeleteInstallation(id string) error {
+	_, err := client.pluralClient.DeleteInstallation(client.ctx, id)
+	return err
+}
+
 func convertInstallation(installation *gqlclient.InstallationFragment) *Installation {
 	if installation == nil {
 		return nil

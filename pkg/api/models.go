@@ -321,6 +321,12 @@ type ScaffoldFile struct {
 	Content string
 }
 
+type KeyBackup struct {
+	Name         string
+	Repositories []string
+	Value        string
+}
+
 const CrdFragment = `
 	fragment CrdFragment on Crd {
 		id

@@ -5,9 +5,46 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
+
+func BackupKey(client api.Client) error {
+	p := getKeyPath()
+	aes, err := Read(p)
+	if err != nil {
+		return err
+	}
+
+	host, _ := os.Hostname()
+	name, err := utils.ReadLineDefault("Give your key backup a name", host)
+	if err != nil {
+		return err
+	}
+
+	repos := []string{}
+	if repo, err := git.GetURL(); err == nil {
+		repos = append(repos, repo)
+	}
+
+	utils.Highlight("===> backing up aes key to plural\n")
+	return client.CreateKeyBackup(api.KeyBackupAttributes{
+		Name:         name,
+		Repositories: repos,
+		Key:          aes.Key,
+	})
+}
+
+func DownloadBackup(client api.Client, name string) error {
+	backup, err := client.GetKeyBackup(name)
+	if err != nil {
+		return err
+	}
+
+	return Setup(backup.Value)
+}
 
 func backupKey(key string) error {
 	p := getKeyPath()
