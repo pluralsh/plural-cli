@@ -13,7 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/thoas/go-funk"
 	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 func utilsCommands() []cli.Command {
