@@ -1,8 +1,7 @@
 FROM golang:1.18-stretch
 
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list && \
-    apt-get update -y && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs vim locales-all && \
-    apt-get install -t stretch-backports -y tmux
+    apt-get update -y && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs vim locales-all screen
 
 ARG HELM_VERSION=3.7.0
 ARG TERRAFORM_VERSION=1.2.8
@@ -67,10 +66,9 @@ USER plural
 
 COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
+COPY .screenrc /home/plural/.screenrc
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \ 
-      cp tmux/.tmux.conf /home/plural/.tmux.conf && \ 
-      cp tmux/.tmux.conf.local /home/plural/.tmux.conf.local && \
       cat tmux/.zshrc.local >> /home/plural/.zshrc && \
       helm plugin install https://github.com/pluralsh/helm-push && \
       helm plugin install https://github.com/databus23/helm-diff

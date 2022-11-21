@@ -2,7 +2,7 @@ name: plural-ci
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   publish:
     runs-on: ubuntu-latest
