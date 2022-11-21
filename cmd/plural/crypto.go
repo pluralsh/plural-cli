@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -132,6 +134,32 @@ func (p *Plural) cryptoCommands() []cli.Command {
 				},
 			},
 			Action: p.handleSetupKeys,
+		},
+		{
+			Name:        "backups",
+			Usage:       "manages backups of your encryption keys",
+			Subcommands: p.backupCommands(),
+		},
+	}
+}
+
+func (p *Plural) backupCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:   "list",
+			Usage:  "lists your current key backups",
+			Action: p.listBackups,
+		},
+		{
+			Name:   "create",
+			Usage:  "creates a backup for your current key",
+			Action: affirmed(p.createBackup, backupMsg),
+		},
+		{
+			Name:      "restore",
+			Usage:     "restores a key backup as your current encryption key",
+			ArgsUsage: "NAME",
+			Action:    p.restoreBackup,
 		},
 	}
 }
@@ -414,4 +442,29 @@ func (p *Plural) handleRecover(c *cli.Context) error {
 	utils.Success("Key successfully synced locally!\n")
 	fmt.Println("you might need to run `plural crypto init` and `plural crypto setup-keys` to decrypt any repos with your new key")
 	return nil
+}
+
+func (p *Plural) listBackups(c *cli.Context) error {
+	p.InitPluralClient()
+
+	backups, err := p.Client.ListKeyBackups()
+	if err != nil {
+		return err
+	}
+
+	headers := []string{"Name", "Repositories"}
+	return utils.PrintTable(backups, headers, func(back *api.KeyBackup) ([]string, error) {
+		return []string{back.Name, strings.Join(back.Repositories, ", ")}, nil
+	})
+}
+
+func (p *Plural) createBackup(c *cli.Context) error {
+	p.InitPluralClient()
+	return crypto.BackupKey(p.Client)
+}
+
+func (p *Plural) restoreBackup(c *cli.Context) error {
+	p.InitPluralClient()
+	name := c.Args().First()
+	return crypto.DownloadBackup(p.Client, name)
 }
