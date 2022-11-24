@@ -938,6 +938,8 @@ github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noH
 github.com/pluralsh/plural-operator v0.5.3/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
 github.com/pluralsh/polly v0.0.4 h1:oh89Oh5xCCfV7hZvE019KBFdbZAwwsLZtCbqYQWDppM=
 github.com/pluralsh/polly v0.0.4/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
+github.com/pluralsh/polly v0.0.6 h1:fGkjiT1M3i8y1y15FjrB+GMq6/gRz1c/EKXkDnZWlt8=
+github.com/pluralsh/polly v0.0.6/go.mod h1:GX6PeRDTRBLXNq3AgXfgJUEtfDssB7bm/JUjxDnjQ1U=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
