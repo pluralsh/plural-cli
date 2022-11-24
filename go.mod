@@ -35,6 +35,7 @@ require (
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -46,6 +47,7 @@ require (
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
 	github.com/xanzy/go-gitlab v0.70.0
+	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	golang.org/x/crypto v0.1.0
 	golang.org/x/mod v0.6.0
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
@@ -55,6 +57,7 @@ require (
 	k8s.io/api v0.24.7
 	k8s.io/apimachinery v0.24.7
 	k8s.io/client-go v0.24.7
+	layeh.com/gopher-luar v1.0.10
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/yaml v1.3.0
 )

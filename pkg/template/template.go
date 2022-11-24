@@ -9,7 +9,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-func MakeTemplate(tmplate string) (*template.Template, error) {
+func GetFuncMap() template.FuncMap {
 	funcs := sprig.TxtFuncMap()
 	funcs["genAESKey"] = utils.GenAESKey
 	funcs["repoRoot"] = repoRoot
@@ -34,7 +34,11 @@ func MakeTemplate(tmplate string) (*template.Template, error) {
 	funcs["fileExists"] = fileExists
 	funcs["pathJoin"] = pathJoin
 	funcs["eabCredential"] = eabCredential
-	return template.New("gotpl").Funcs(funcs).Parse(tmplate)
+	return funcs
+}
+
+func MakeTemplate(tmplate string) (*template.Template, error) {
+	return template.New("gotpl").Funcs(GetFuncMap()).Parse(tmplate)
 }
 
 func RenderTemplate(wr io.Writer, tmplate string, ctx map[string]interface{}) error {
