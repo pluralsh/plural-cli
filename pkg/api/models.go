@@ -323,8 +323,10 @@ type ScaffoldFile struct {
 
 type KeyBackup struct {
 	Name         string
+	Digest       string
 	Repositories []string
 	Value        string
+	InsertedAt   string
 }
 
 const CrdFragment = `

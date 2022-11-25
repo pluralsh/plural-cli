@@ -38,7 +38,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.2.0
+	github.com/pluralsh/gqlclient v1.3.4
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.0.6
 	github.com/rodaine/hclencoder v0.0.1
@@ -91,7 +91,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.5.0 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.1 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
