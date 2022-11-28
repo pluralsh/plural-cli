@@ -452,9 +452,9 @@ func (p *Plural) listBackups(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"Name", "Repositories"}
+	headers := []string{"Name", "Repositories", "Digest", "Created On"}
 	return utils.PrintTable(backups, headers, func(back *api.KeyBackup) ([]string, error) {
-		return []string{back.Name, strings.Join(back.Repositories, ", ")}, nil
+		return []string{back.Name, strings.Join(back.Repositories, ", "), back.Digest, back.InsertedAt}, nil
 	})
 }
 
