@@ -248,7 +248,9 @@ func (client *client) GetKeyBackup(name string) (*KeyBackup, error) {
 	frag := resp.KeyBackup
 	return &KeyBackup{
 		Name:         frag.Name,
-		Repositories: FromSlicePtr(frag.Repositories),
+		Digest:       frag.Digest,
+		InsertedAt:   lo.FromPtr(frag.InsertedAt),
+		Repositories: frag.Repositories,
 		Value:        frag.Value,
 	}, nil
 }
@@ -256,6 +258,8 @@ func (client *client) GetKeyBackup(name string) (*KeyBackup, error) {
 func convertKeyBackup(fragment *gqlclient.KeyBackupFragment) *KeyBackup {
 	return &KeyBackup{
 		Name:         fragment.Name,
-		Repositories: FromSlicePtr(fragment.Repositories),
+		Digest:       fragment.Digest,
+		InsertedAt:   lo.FromPtr(fragment.InsertedAt),
+		Repositories: fragment.Repositories,
 	}
 }

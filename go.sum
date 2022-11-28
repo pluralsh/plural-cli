@@ -930,8 +930,12 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
+github.com/pluralsh/gqlclient v1.1.4 h1:NmB778OSPIxOa17P05i4QsHk6bK1xVX1qATJiD8dgCQ=
+github.com/pluralsh/gqlclient v1.1.4/go.mod h1:1kRMeQmkf7b4RpBs+Qi+bnhsQzEpEpuGRdDNisnxo3E=
 github.com/pluralsh/gqlclient v1.2.0 h1:LMOLcUB0JHGYg8iDsniRJvI2yA+XCMx1nEE9al2mMEQ=
 github.com/pluralsh/gqlclient v1.2.0/go.mod h1:qcE4KD7hBGl/JFCoXXy8zgUP0mWHJsAM6bhDAf592AE=
+github.com/pluralsh/gqlclient v1.3.4 h1:P0AXfwmFx/MaJDfW9Njsawmeat2kk/0Q1b1nVJEP3Ks=
+github.com/pluralsh/gqlclient v1.3.4/go.mod h1:VHjVCSOaD9lzOI3u7tOuaQY7vrLdiAKPSbeihaWYX28=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9 h1:bMkXXUksi9ym+enaNlvds/BUg7SkZ/3ir8D3OsznA+E=
 github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
@@ -1084,6 +1088,8 @@ github.com/urfave/cli v1.22.10/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60Nt
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
 github.com/vektah/gqlparser/v2 v2.5.0 h1:GwEwy7AJsqPWrey0bHnn+3JLaHLZVT66wY/+O+Tf9SU=
 github.com/vektah/gqlparser/v2 v2.5.0/go.mod h1:mPgqFBu/woKTVYWyNk8cO3kh4S/f4aRFZrvOnp3hmCs=
+github.com/vektah/gqlparser/v2 v2.5.1 h1:ZGu+bquAY23jsxDRcYpWjttRZrUz07LbiY77gUOHcr4=
+github.com/vektah/gqlparser/v2 v2.5.1/go.mod h1:mPgqFBu/woKTVYWyNk8cO3kh4S/f4aRFZrvOnp3hmCs=
 github.com/xanzy/go-gitlab v0.70.0 h1:zJ8WukB5psMcfmQctHsiG/PyqLqLIdD05wCLwdPNEBg=
 github.com/xanzy/go-gitlab v0.70.0/go.mod h1:o4yExCtdaqlM8YGdDJWuZoBmfxBsmA9TPEjs9mx1UO4=
 github.com/xanzy/ssh-agent v0.3.0 h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=
