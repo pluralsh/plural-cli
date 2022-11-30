@@ -17,11 +17,12 @@ func configureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[s
 		return nil
 	}
 
-	if err := confirmOidc(confirm); err != nil {
+	ok, err := confirmOidc(confirm)
+	if err != nil {
 		return err
 	}
 
-	if !*confirm {
+	if !ok {
 		return nil
 	}
 
@@ -113,17 +114,17 @@ func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) 
 	return res, nil
 }
 
-func confirmOidc(confirm *bool) error {
+func confirmOidc(confirm *bool) (bool, error) {
 	if oidcConfirmed {
-		return nil
+		return true, nil
 	}
 
 	if err := survey.AskOne(&survey.Confirm{
 		Message: "Enable plural OIDC",
 		Default: true,
 	}, confirm, survey.WithValidator(survey.Required)); err != nil {
-		return err
+		return false, err
 	}
 	oidcConfirmed = true
-	return nil
+	return *confirm, nil
 }
