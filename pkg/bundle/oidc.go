@@ -125,6 +125,9 @@ func confirmOidc(confirm *bool) (bool, error) {
 	}, confirm, survey.WithValidator(survey.Required)); err != nil {
 		return false, err
 	}
-	oidcConfirmed = true
+
+	if *confirm {
+		oidcConfirmed = true
+	}
 	return *confirm, nil
 }
