@@ -21,7 +21,7 @@ defbce "on"
 term xterm-256color
 
 # Cache 30000 lines for scroll back
-defscrollback 30000
+defscrollback 100000
 termcapinfo xterm* ti@:te@
 
 hardstatus alwayslastline 
