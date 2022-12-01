@@ -107,9 +107,9 @@ if Var.Values.console_dns then
         valuesYaml.secrets.git_url=gitUrl
     end
 
-    valuesYaml.secrets.repo_root=repoName()
+    --valuesYaml.secrets.repo_root=repoName()
     valuesYaml.secrets.branch_name=branchName()
-    valuesYaml.secrets.config=readFile(pathJoin(homeDir(),"plural","config.yml"))
+    valuesYaml.secrets.config=readFile(pathJoin(homeDir(),".plural","config.yml"))
 
     if fileExists(identity) then
         valuesYaml.secrets.identity=readFile(identity)

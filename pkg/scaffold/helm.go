@@ -8,11 +8,11 @@ import (
 	"strings"
 	ttpl "text/template"
 
-	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
+	scftmpl "github.com/pluralsh/plural/pkg/scaffold/template"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
@@ -134,7 +134,6 @@ func Notes(installation *api.Installation) error {
 
 func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
-	values := make(map[string]map[string]interface{})
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "values.yaml"))
 	prevVals, _ := prevValues(valuesFile)
 	conf := config.Read()
@@ -179,7 +178,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		vals[k] = v
 	}
 
-	values, err = buildValuesFromTemplate(vals, prevVals, w)
+	values, err := scftmpl.BuildValuesFromTemplate(vals, prevVals, w)
 	if err != nil {
 		return err
 	}
@@ -192,72 +191,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	}
 
 	return utils.WriteFile(valuesFile, io)
-}
-
-func buildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
-	globals := map[string]interface{}{}
-	values := make(map[string]map[string]interface{})
-	for _, chartInst := range w.Charts {
-		if err := fromGoTemplate(vals, globals, values, w, chartInst); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := mergo.Merge(&values, prevVals); err != nil {
-		return nil, err
-	}
-
-	if len(globals) > 0 {
-		values["global"] = globals
-	}
-
-	values["plrl"] = map[string]interface{}{
-		"license": w.Installation.LicenseKey,
-	}
-	return values, nil
-}
-
-func fromGoTemplate(vals map[string]interface{}, globals map[string]interface{}, values map[string]map[string]interface{}, w *wkspace.Workspace, chartInst *api.ChartInstallation) error {
-	var buf bytes.Buffer
-	buf.Grow(5 * 1024)
-	tplate := chartInst.Version.ValuesTemplate
-	if w.Links != nil {
-		if path, ok := w.Links.Helm[chartInst.Chart.Name]; ok {
-			var err error
-			tplate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.tpl")))
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	tmpl, err := template.MakeTemplate(tplate)
-	if err != nil {
-		return err
-	}
-
-	if err := tmpl.Execute(&buf, vals); err != nil {
-		return err
-	}
-
-	var subVals map[string]interface{}
-	if err := yaml.Unmarshal(buf.Bytes(), &subVals); err != nil {
-		return err
-	}
-	subVals["enabled"] = true
-
-	// need to handle globals in a dedicated way
-	if glob, ok := subVals["global"]; ok {
-		globMap := utils.CleanUpInterfaceMap(glob.(map[interface{}]interface{}))
-		if err := mergo.Merge(&globals, globMap); err != nil {
-			return err
-		}
-		delete(subVals, "global")
-	}
-
-	values[chartInst.Chart.Name] = subVals
-	buf.Reset()
-	return nil
 }
 
 func prevValues(filename string) (map[string]map[string]interface{}, error) {

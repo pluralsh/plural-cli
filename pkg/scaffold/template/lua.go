@@ -1,30 +1,15 @@
-package scaffold
+package template
 
 import (
-	"path/filepath"
-
 	"github.com/Masterminds/sprig/v3"
 	"github.com/imdario/mergo"
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/plural/pkg/wkspace"
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 )
 
-func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, values map[string]map[string]interface{}, w *wkspace.Workspace, chartInst *api.ChartInstallation) error {
-	tplate := chartInst.Version.ValuesTemplate
-	if w.Links != nil {
-		if path, ok := w.Links.Helm[chartInst.Chart.Name]; ok {
-			var err error
-			tplate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.lua")))
-			if err != nil {
-				return err
-			}
-		}
-	}
+func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
 	subVals := map[string]interface{}{}
 	subVals["enabled"] = true
 
@@ -55,7 +40,7 @@ func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}
 		delete(subVals, "global")
 	}
 
-	values[chartInst.Chart.Name] = subVals
+	output[chartName] = subVals
 
 	return nil
 }
