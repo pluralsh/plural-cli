@@ -1,4 +1,4 @@
-valuesYaml = {
+output = {
     global={
         application={
             links={
@@ -53,24 +53,24 @@ valuesYaml = {
 }
 
 if Var.Provider == "kind" then
-    valuesYaml.ingress.annotations = {
+    output.ingress.annotations = {
         "external-dns.alpha.kubernetes.io/target: '127.0.0.1'"
     }
-    valuesYaml.replicaCount=1
+    output.replicaCount=1
 end
 
 if Var.Provider == "google" then
-    valuesYaml.serviceAccount.create = false
+    output.serviceAccount.create = false
 end
 
 if Var.Provider == "azure" then
-    valuesYaml.podLabels={
+    output.podLabels={
         "aadpodidbinding: console"
     }
-    valuesYaml.consoleIdentityId=importValue("Terraform", "console_msi_id")
-    valuesYaml.consoleIdentityClientId=importValue("Terraform", "console_msi_client_id")
+    output.consoleIdentityId=importValue("Terraform", "console_msi_id")
+    output.consoleIdentityClientId=importValue("Terraform", "console_msi_client_id")
 
-    valuesYaml.extraEnv={
+    output.extraEnv={
         {
             name="ARM_USE_MSI",
             value = true
@@ -89,32 +89,32 @@ if Var.Provider == "azure" then
 end
 
 if Var.OIDC ~= nil then
-    valuesYaml.secrets.plural_client_id=Var.OIDC.ClientId
-    valuesYaml.secrets.plural_client_secret=Var.OIDC.ClientSecret
+    output.secrets.plural_client_id=Var.OIDC.ClientId
+    output.secrets.plural_client_secret=Var.OIDC.ClientSecret
 end
 
 if Var.Values.is_demo then
-    valuesYaml.secrets.is_demo=Var.Values.is_demo
+    output.secrets.is_demo=Var.Values.is_demo
 end
 
 if Var.Values.console_dns then
     local gitUrl=dig("console", "secrets", "git_url", "default", Var)
     local identity=pathJoin(repoRoot(), ".plural-crypt", "identity")
     if gitUrl == "default" or gitUrl == "" then
-        valuesYaml.secrets.git_url=repoUrl()
+        output.secrets.git_url=repoUrl()
     else
-        valuesYaml.secrets.git_url=gitUrl
+        output.secrets.git_url=gitUrl
     end
 
-    --valuesYaml.secrets.repo_root=repoName()
-    valuesYaml.secrets.branch_name=branchName()
-    valuesYaml.secrets.config=readFile(pathJoin(homeDir(),".plural","config.yml"))
+    --output.secrets.repo_root=repoName()
+    output.secrets.branch_name=branchName()
+    output.secrets.config=readFile(pathJoin(homeDir(),".plural","config.yml"))
 
     if fileExists(identity) then
-        valuesYaml.secrets.identity=readFile(identity)
+        output.secrets.identity=readFile(identity)
     elseif dig("console", "secrets", "identity", "default", Var) ~= "default" then
-        valuesYaml.secrets.identity= Var.console.secrets.identity
+        output.secrets.identity= Var.console.secrets.identity
     else
-        valuesYaml.secrets.key=readFile(pathJoin(homeDir(), ".plural", "key"))
+        output.secrets.key=readFile(pathJoin(homeDir(), ".plural", "key"))
     end
 end

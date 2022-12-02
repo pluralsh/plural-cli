@@ -26,7 +26,7 @@ func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interfac
 	if err := L.DoString(tplate); err != nil {
 		return nil, err
 	}
-	if err := utils.MapLua(L.GetGlobal("valuesYaml").(*lua.LTable), &output); err != nil {
+	if err := utils.MapLua(L.GetGlobal("output").(*lua.LTable), &output); err != nil {
 		return nil, err
 	}
 

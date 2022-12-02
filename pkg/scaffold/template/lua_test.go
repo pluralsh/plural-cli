@@ -26,7 +26,7 @@ func TestFromLuaTemplate(t *testing.T) {
 			vals: map[string]interface{}{
 				"Values": map[string]interface{}{"console_dns": "https://onplural.sh"},
 			},
-			script: `valuesYaml = {
+			script: `output = {
     global={
         application={
             links={
@@ -51,7 +51,7 @@ test:
 			vals: map[string]interface{}{
 				"Context": map[string]interface{}{"SubscriptionId": "abc", "TenantId": "cda"},
 			},
-			script: `valuesYaml = {
+			script: `output = {
 		extraEnv={
 			{
 				name="ARM_USE_MSI",
@@ -85,7 +85,7 @@ test:
 			vals: map[string]interface{}{
 				"Context": map[string]interface{}{"SubscriptionId": "abc", "TenantId": "cda"},
 			},
-			script: `valuesYaml = {
+			script: `output = {
 					ingress={
 						annotations={
 							"kubernetes.io/tls-acme: 'true'",
