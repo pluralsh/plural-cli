@@ -148,6 +148,10 @@ func convertVersion(version *gqlclient.VersionFragment) *Version {
 	if version.ValuesTemplate != nil {
 		v.ValuesTemplate = *version.ValuesTemplate
 	}
+	v.TemplateType = gqlclient.TemplateTypeGotemplate
+	if version.TemplateType != nil {
+		v.TemplateType = *version.TemplateType
+	}
 
 	v.Crds = make([]Crd, 0)
 	for _, crd := range version.Crds {

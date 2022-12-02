@@ -9,10 +9,8 @@ import (
 	luar "layeh.com/gopher-luar"
 )
 
-func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
-	subVals := map[string]interface{}{}
-	subVals["enabled"] = true
-
+func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interface{}, error) {
+	output := map[string]interface{}{}
 	L := lua.NewState()
 	defer L.Close()
 
@@ -26,11 +24,23 @@ func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}
 	}
 
 	if err := L.DoString(tplate); err != nil {
+		return nil, err
+	}
+	if err := utils.MapLua(L.GetGlobal("valuesYaml").(*lua.LTable), &output); err != nil {
+		return nil, err
+	}
+
+	return output, nil
+
+}
+
+func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
+	subVals, err := ExecuteLua(vals, tplate)
+	if err != nil {
 		return err
 	}
-	if err := utils.MapLua(L.GetGlobal("valuesYaml").(*lua.LTable), &subVals); err != nil {
-		return err
-	}
+	subVals["enabled"] = true
+
 	// need to handle globals in a dedicated way
 	if glob, ok := subVals["global"]; ok {
 		globMap := utils.CleanUpInterfaceMap(glob.(map[interface{}]interface{}))

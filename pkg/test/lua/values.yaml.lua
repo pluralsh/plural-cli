@@ -28,9 +28,8 @@ valuesYaml = {
     },
     serviceAccount= {
             create=true,
-            annotations={
-                "eks.amazonaws.com/role-arn: arn:aws:iam::" .. Var.Project .. ":role/" ..Var.Cluster .. "-console"
-            }
+            annotations="eks.amazonaws.com/role-arn: arn:aws:iam::" .. Var.Project .. ":role/" ..Var.Cluster .. "-console"
+
     },
     secrets={
             jwt=dedupe(Var, "console.secrets.jwt", randAlphaNum(20)),

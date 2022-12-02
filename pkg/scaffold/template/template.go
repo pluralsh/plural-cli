@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/gqlclient"
+
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -11,12 +13,12 @@ import (
 )
 
 func BuildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
-	isLuaTemplate := false
 	globals := map[string]interface{}{}
 	output := make(map[string]map[string]interface{})
 	for _, chartInst := range w.Charts {
 		chartName := chartInst.Chart.Name
 		tplate := chartInst.Version.ValuesTemplate
+		isLuaTemplate := chartInst.Version.TemplateType == gqlclient.TemplateTypeLua
 		if w.Links != nil {
 			if path, ok := w.Links.Helm[chartName]; ok {
 				var err error

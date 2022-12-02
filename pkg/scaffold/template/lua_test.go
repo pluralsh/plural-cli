@@ -226,7 +226,7 @@ test:
     ssh_passphrase: ""
   serviceAccount:
     annotations:
-    - eks.amazonaws.com/role-arn: arn:aws:iam::test:role/test-console
+      eks.amazonaws.com/role-arn: arn:aws:iam::test:role/test-console
     create: true
 `,
 		},
