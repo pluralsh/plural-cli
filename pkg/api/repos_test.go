@@ -34,6 +34,7 @@ func TestConstructGqlClientRepositoryInput(t *testing.T) {
 				Icon:        &icon,
 				Name:        &name,
 				Notes:       &notes,
+				Docs:        &emptyString,
 				OauthSettings: &gqlclient.OauthSettingsAttributes{
 					AuthMethod: "POST",
 					URIFormat:  "https://{domain}/oauth2/callback",
@@ -66,7 +67,7 @@ tags:
 		t.Run(test.name, func(t *testing.T) {
 			repositoryAttributes, err := api.ConstructGqlClientRepositoryInput([]byte(test.input))
 			assert.NoError(t, err)
-			assert.Equal(t, repositoryAttributes, test.expected)
+			assert.Equal(t, test.expected, repositoryAttributes)
 		})
 	}
 }
