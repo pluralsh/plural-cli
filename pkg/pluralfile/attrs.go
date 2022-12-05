@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -63,8 +64,16 @@ func (a *RepoAttrs) mkSha(fullPath string, input *api.RepositoryInput) (sha stri
 	if err != nil {
 		return
 	}
+	docssha := ""
+	if input.Docs != "" {
+		fpath, _ := filepath.Abs(input.Docs)
+		docssha, err = executor.MkHash(fpath, []string{})
+		if err != nil {
+			return
+		}
+	}
 
-	sha = utils.Sha([]byte(fmt.Sprintf("%s:%s:%s:%s", base, iconSha, darkIconSha, notesSha)))
+	sha = utils.Sha([]byte(fmt.Sprintf("%s:%s:%s:%s%s", base, iconSha, darkIconSha, notesSha, docssha)))
 	return
 }
 

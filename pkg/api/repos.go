@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 	fileutils "github.com/pluralsh/plural/pkg/utils"
+	"github.com/samber/lo"
 )
 
 type ResourceDefinitionInput struct {
@@ -49,6 +50,7 @@ type RepositoryInput struct {
 	Tags          []Tag  `json:"tags,omitempty" yaml:"tags"`
 	Icon          string `json:"icon,omitempty" yaml:"icon"`
 	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
+	Docs          string `json:"docs,omitempty" yaml:"docs"`
 	Category      string
 	Notes         string         `json:"notes,omitempty" yaml:"notes"`
 	GitUrl        string         `json:"gitUrl" yaml:"gitUrl"`
@@ -97,8 +99,7 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 	}
 
 	if iconUpload != nil {
-		icon := "icon"
-		input.Icon = &icon
+		input.Icon = lo.ToPtr("icon")
 		uploads = append(uploads, *iconUpload)
 	}
 
@@ -108,9 +109,21 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 	}
 
 	if darkIconUpload != nil {
-		darkIcon := "darkicon"
-		input.DarkIcon = &darkIcon
+		input.DarkIcon = lo.ToPtr("darkicon")
 		uploads = append(uploads, *darkIconUpload)
+	}
+
+	if input.Docs != nil && *input.Docs != "" {
+		tarFile, err := tarDir(name, *input.Docs, "")
+		if err != nil {
+			return err
+		}
+		docsUpload, err := getIconReader(lo.ToPtr(tarFile), "docs")
+		if err != nil {
+			return err
+		}
+		input.Docs = lo.ToPtr("docs")
+		uploads = append(uploads, *docsUpload)
 	}
 
 	if input.Notes != nil && *input.Notes != "" {
@@ -256,6 +269,7 @@ func ConstructGqlClientRepositoryInput(marshalled []byte) (*gqlclient.Repository
 		GitURL:      &repoInput.GitUrl,
 		Homepage:    &repoInput.Homepage,
 		Icon:        &repoInput.Icon,
+		Docs:        &repoInput.Docs,
 		Name:        &repoInput.Name,
 		Notes:       &repoInput.Notes,
 		Private:     &repoInput.Private,
