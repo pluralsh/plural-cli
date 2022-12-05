@@ -1,6 +1,8 @@
 package template
 
 import (
+	"fmt"
+
 	"github.com/Masterminds/sprig/v3"
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/template"
@@ -26,7 +28,11 @@ func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interfac
 	if err := L.DoString(tplate); err != nil {
 		return nil, err
 	}
-	if err := utils.MapLua(L.GetGlobal("output").(*lua.LTable), &output); err != nil {
+	outTable, ok := L.GetGlobal("output").(*lua.LTable)
+	if !ok {
+		return nil, fmt.Errorf("the output variable is missing in the lua script")
+	}
+	if err := utils.MapLua(outTable, &output); err != nil {
 		return nil, err
 	}
 

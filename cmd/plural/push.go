@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -99,11 +100,19 @@ func (p *Plural) handleTerraformUpload(c *cli.Context) error {
 }
 
 func handleHelmTemplate(c *cli.Context) error {
+	path := c.String("values")
 	conf := config.Read()
-	f, err := tmpValuesFile(c.String("values"), &conf)
+	var f *os.File
+	var err error
+	if strings.HasSuffix(path, "lua") {
+		f, err = luaTmpValuesFile(path, &conf)
+	} else {
+		f, err = goTmpValuesFile(path, &conf)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to template vals: %w", err)
 	}
+
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(f.Name())
@@ -141,10 +150,10 @@ func handleHelmUpload(c *cli.Context) error {
 func buildValuesFromTemplate(pth string, conf *config.Config) (f *os.File, err error) {
 	isLuaTemplate := false
 	templatePath := pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.tpl"))
-	valuesTmpl, err := utils.ReadFile(templatePath)
+	_, err = utils.ReadFile(templatePath)
 	if os.IsNotExist(err) {
 		templatePath = pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.lua"))
-		valuesTmpl, err = utils.ReadFile(templatePath)
+		_, err := utils.ReadFile(templatePath)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +161,15 @@ func buildValuesFromTemplate(pth string, conf *config.Config) (f *os.File, err e
 	}
 
 	if !isLuaTemplate {
-		return tmpValuesFile(templatePath, conf)
+		return goTmpValuesFile(templatePath, conf)
+	}
+	return luaTmpValuesFile(templatePath, conf)
+}
+
+func luaTmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
+	valuesTmpl, err := utils.ReadFile(path)
+	if err != nil {
+		return
 	}
 	f, err = os.CreateTemp("", "values.yaml")
 	if err != nil {
@@ -182,7 +199,7 @@ func buildValuesFromTemplate(pth string, conf *config.Config) (f *os.File, err e
 	return
 }
 
-func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
+func goTmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	valuesTmpl, err := utils.ReadFile(path)
 	if err != nil {
 		return
