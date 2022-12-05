@@ -10,6 +10,7 @@ import (
 	"github.com/pluralsh/gqlclient/pkg/utils"
 	tarutils "github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/samber/lo"
 )
 
 func (client *client) GetTerraforma(repoId string) ([]*Terraform, error) {
@@ -48,24 +49,32 @@ func (client *client) UninstallTerraform(id string) (err error) {
 	return
 }
 
-func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
-	name := path.Base(dir)
+func tarDir(name, dir, regex string) (res string, err error) {
 	fullPath, err := filepath.Abs(dir)
-	tf := Terraform{}
 	if err != nil {
-		return tf, err
+		return
 	}
+
 	cwd, _ := os.Getwd()
-	tarFile := pathing.SanitizeFilepath(filepath.Join(cwd, name+".tgz"))
-	f, err := os.Create(tarFile)
+	res = pathing.SanitizeFilepath(filepath.Join(cwd, name+".tgz"))
+	f, err := os.Create(res)
 	if err != nil {
-		return tf, err
+		return
 	}
 	defer f.Close()
 
-	if err := tarutils.Tar(fullPath, f, "\\.terraform"); err != nil {
+	err = tarutils.Tar(fullPath, f, regex)
+	return
+}
+
+func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
+	tf := Terraform{}
+	name := path.Base(dir)
+	tarFile, err := tarDir(name, dir, "\\.terraform")
+	if err != nil {
 		return tf, err
 	}
+
 	rf, err := os.Open(tarFile)
 	if err != nil {
 		return tf, err
@@ -84,23 +93,14 @@ func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
 		return tf, err
 	}
 
-	if resp.UploadTerraform.Name != nil {
-		tf.Name = *resp.UploadTerraform.Name
-	}
-	if resp.UploadTerraform.ID != nil {
-		tf.Id = *resp.UploadTerraform.ID
-	}
-	if resp.UploadTerraform.Description != nil {
-		tf.Description = *resp.UploadTerraform.Description
-	}
-	if resp.UploadTerraform.ValuesTemplate != nil {
-		tf.ValuesTemplate = *resp.UploadTerraform.ValuesTemplate
-	}
-	if resp.UploadTerraform.Package != nil {
-		tf.Package = *resp.UploadTerraform.Package
-	}
-	if resp.UploadTerraform.Dependencies != nil {
-		tf.Dependencies = convertDependencies(resp.UploadTerraform.Dependencies)
+	upload := resp.UploadTerraform
+	tf.Name = lo.FromPtr(upload.Name)
+	tf.Id = lo.FromPtr(upload.ID)
+	tf.Description = lo.FromPtr(upload.Description)
+	tf.ValuesTemplate = lo.FromPtr(upload.ValuesTemplate)
+	tf.Package = lo.FromPtr(upload.Package)
+	if upload.Dependencies != nil {
+		tf.Dependencies = convertDependencies(upload.Dependencies)
 	}
 
 	return tf, err
