@@ -13,11 +13,13 @@ import (
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/pluralfile"
+	scftmpl "github.com/pluralsh/plural/pkg/scaffold/template"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 func (p *Plural) pushCommands() []cli.Command {
@@ -117,7 +119,7 @@ func handleHelmUpload(c *cli.Context) error {
 	conf := config.Read()
 	pth, repo := c.Args().Get(0), c.Args().Get(1)
 
-	f, err := tmpValuesFile(pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.tpl")), &conf)
+	f, err := buildValuesFromTemplate(pth, &conf)
 	if err != nil {
 		return err
 	}
@@ -136,6 +138,50 @@ func handleHelmUpload(c *cli.Context) error {
 	return helm.Push(pth, cmUrl)
 }
 
+func buildValuesFromTemplate(pth string, conf *config.Config) (f *os.File, err error) {
+	isLuaTemplate := false
+	templatePath := pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.tpl"))
+	valuesTmpl, err := utils.ReadFile(templatePath)
+	if os.IsNotExist(err) {
+		templatePath = pathing.SanitizeFilepath(filepath.Join(pth, "values.yaml.lua"))
+		valuesTmpl, err = utils.ReadFile(templatePath)
+		if err != nil {
+			return nil, err
+		}
+		isLuaTemplate = true
+	}
+
+	if !isLuaTemplate {
+		return tmpValuesFile(templatePath, conf)
+	}
+	f, err = os.CreateTemp("", "values.yaml")
+	if err != nil {
+		return
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	vals := genDefaultValues(conf)
+
+	output, err := scftmpl.ExecuteLua(vals, valuesTmpl)
+	if err != nil {
+		return nil, err
+	}
+
+	io, err := yaml.Marshal(output)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(io))
+	_, err = f.Write(io)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
 func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 	valuesTmpl, err := utils.ReadFile(path)
 	if err != nil {
@@ -146,17 +192,7 @@ func tmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 		return
 	}
 
-	vals := map[string]interface{}{
-		"Values":   map[string]interface{}{},
-		"License":  "example-license",
-		"Region":   "region",
-		"Project":  "example",
-		"Cluster":  "cluster",
-		"Provider": "provider",
-		"Config":   conf,
-		"Context":  map[string]interface{}{},
-	}
-
+	vals := genDefaultValues(conf)
 	var buf bytes.Buffer
 
 	if err = tmpl.Execute(&buf, vals); err != nil {
@@ -218,4 +254,17 @@ func (p *Plural) createCrd(c *cli.Context) error {
 	chart := c.Args().Get(2)
 	err := p.CreateCrd(repo, chart, fullPath)
 	return api.GetErrorResponse(err, "CreateCrd")
+}
+
+func genDefaultValues(conf *config.Config) map[string]interface{} {
+	return map[string]interface{}{
+		"Values":   map[string]interface{}{},
+		"License":  "example-license",
+		"Region":   "region",
+		"Project":  "example",
+		"Cluster":  "cluster",
+		"Provider": "provider",
+		"Config":   conf,
+		"Context":  map[string]interface{}{},
+	}
 }

@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+
+	"github.com/pluralsh/gqlclient"
 )
 
 type PageInfo struct {
@@ -50,6 +52,7 @@ type Version struct {
 	Readme         string
 	Package        string
 	ValuesTemplate string
+	TemplateType   gqlclient.TemplateType
 	Crds           []Crd
 	Dependencies   *Dependencies
 }
