@@ -63,7 +63,7 @@ func handleInit(c *cli.Context) error {
 
 	if affirm(backupMsg) {
 		if err := crypto.BackupKey(api.NewClient()); err != nil {
-			return err
+			return api.GetErrorResponse(err, "BackupKey")
 		}
 	}
 
