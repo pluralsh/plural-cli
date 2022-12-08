@@ -10,25 +10,21 @@ output = {
     },
 
     enabled=true,
-    ingressClass="nginx",
     replicaCount=2,
     provider=Var.Provider,
     license=Var.License,
     ingress={
             annotations={
-                "kubernetes.io/tls-acme: 'true'",
-                "cert-manager.io/cluster-issuer: letsencrypt-prod",
-                "nginx.ingress.kubernetes.io/affinity: cookie",
-                "nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'",
-                "nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'",
-                "nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'",
-                "nginx.ingress.kubernetes.io/session-cookie-path: /socket",
+                ['kubernetes.io/tls-acme']='true',
             },
-            console_dns=Var.Values.console_dns
+            console_dns=Var.Values.console_dns,
+            ingressClass="nginx",
     },
     serviceAccount= {
             create=true,
-            annotations="eks.amazonaws.com/role-arn: arn:aws:iam::" .. Var.Project .. ":role/" ..Var.Cluster .. "-console"
+            annotations={
+                ['eks.amazonaws.com/role-arn']="arn:aws:iam::" .. Var.Project .. ":role/" ..Var.Cluster .. "-console"
+            },
 
     },
     secrets={
@@ -54,7 +50,7 @@ output = {
 
 if Var.Provider == "kind" then
     output.ingress.annotations = {
-        "external-dns.alpha.kubernetes.io/target: '127.0.0.1'"
+        ['external-dns.alpha.kubernetes.io/target']='127.0.0.1'
     }
     output.replicaCount=1
 end
@@ -65,7 +61,7 @@ end
 
 if Var.Provider == "azure" then
     output.podLabels={
-        "aadpodidbinding: console"
+        ["aadpodidbinding"]="console"
     }
     output.consoleIdentityId=importValue("Terraform", "console_msi_id")
     output.consoleIdentityClientId=importValue("Terraform", "console_msi_client_id")
@@ -106,7 +102,6 @@ if Var.Values.console_dns then
         output.secrets.git_url=gitUrl
     end
 
-    --output.secrets.repo_root=repoName()
     output.secrets.branch_name=branchName()
     output.secrets.config=readFile(pathJoin(homeDir(),".plural","config.yml"))
 
@@ -114,7 +109,6 @@ if Var.Values.console_dns then
         output.secrets.identity=readFile(identity)
     elseif dig("console", "secrets", "identity", "default", Var) ~= "default" then
         output.secrets.identity= Var.console.secrets.identity
-    else
-        output.secrets.key=readFile(pathJoin(homeDir(), ".plural", "key"))
     end
+    output.secrets.key=dedupe(Var, "console.secrets.key", readFile(pathJoin(homeDir(), ".plural", "key")))..'\n'
 end
