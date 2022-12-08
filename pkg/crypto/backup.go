@@ -40,7 +40,7 @@ func BackupKey(client api.Client) error {
 func DownloadBackup(client api.Client, name string) error {
 	backup, err := client.GetKeyBackup(name)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetKeyBackup")
 	}
 
 	return Setup(backup.Value)

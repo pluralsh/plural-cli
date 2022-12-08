@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -13,5 +14,5 @@ func (p *Plural) aiHelp(c *cli.Context) error {
 	res, err := p.Client.GetHelp(prompt)
 	fmt.Println("")
 	fmt.Println(res)
-	return err
+	return api.GetErrorResponse(err, "GetHelp")
 }
