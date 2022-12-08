@@ -1,15 +1,21 @@
 package template
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/pluralsh/gqlclient"
+	"strings"
 
 	"github.com/imdario/mergo"
+	"github.com/pluralsh/gqlclient"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/output"
+	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
+	"gopkg.in/yaml.v2"
 )
 
 func BuildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
@@ -55,4 +61,90 @@ func BuildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]ma
 		"license": w.Installation.LicenseKey,
 	}
 	return output, nil
+}
+
+func TmpValuesFile(path string) (f *os.File, err error) {
+	conf := config.Read()
+	if strings.HasSuffix(path, "lua") {
+		return luaTmpValuesFile(path, &conf)
+	}
+
+	return goTmpValuesFile(path, &conf)
+
+}
+
+func luaTmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
+	valuesTmpl, err := utils.ReadFile(path)
+	if err != nil {
+		return
+	}
+	f, err = os.CreateTemp("", "values.yaml")
+	if err != nil {
+		return
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	vals := genDefaultValues(conf)
+
+	output, err := ExecuteLua(vals, valuesTmpl)
+	if err != nil {
+		return nil, err
+	}
+
+	io, err := yaml.Marshal(output)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(io))
+	_, err = f.Write(io)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+func goTmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
+	valuesTmpl, err := utils.ReadFile(path)
+	if err != nil {
+		return
+	}
+	tmpl, err := template.MakeTemplate(valuesTmpl)
+	if err != nil {
+		return
+	}
+
+	vals := genDefaultValues(conf)
+	var buf bytes.Buffer
+
+	if err = tmpl.Execute(&buf, vals); err != nil {
+		return
+	}
+
+	f, err = os.CreateTemp("", "values.yaml")
+	if err != nil {
+		return
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	fmt.Println(buf.String())
+	err = wkspace.FormatValues(f, buf.String(), output.New())
+	return
+}
+
+func genDefaultValues(conf *config.Config) map[string]interface{} {
+	return map[string]interface{}{
+		"Values":   map[string]interface{}{},
+		"License":  "example-license",
+		"Region":   "region",
+		"Project":  "example",
+		"Cluster":  "cluster",
+		"Provider": "provider",
+		"Config":   conf,
+		"Context":  map[string]interface{}{},
+	}
 }
