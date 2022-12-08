@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	lua "github.com/yuin/gopher-lua"
@@ -75,12 +74,5 @@ func ToGoValue(lv lua.LValue) interface{} {
 }
 
 func trimQuotes(s string) interface{} {
-	parts := strings.Split(s, ": ")
-	if len(parts) == 2 {
-		quoted := strings.TrimSpace(parts[1])
-		quoted = regexp.MustCompile(`^'(.*)'$`).ReplaceAllString(quoted, `$1`)
-		quoted = regexp.MustCompile(`^"(.*)"$`).ReplaceAllString(quoted, `$1`)
-		return map[string]interface{}{strings.TrimSpace(parts[0]): quoted}
-	}
-	return s
+	return regexp.MustCompile(`^"(.*)"$`).ReplaceAllString(s, "$1")
 }
