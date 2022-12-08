@@ -449,7 +449,7 @@ func (p *Plural) listBackups(c *cli.Context) error {
 
 	backups, err := p.Client.ListKeyBackups()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "ListKeyBackups")
 	}
 
 	headers := []string{"Name", "Repositories", "Digest", "Created On"}
