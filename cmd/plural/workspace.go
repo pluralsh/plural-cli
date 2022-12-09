@@ -127,8 +127,9 @@ func diffTerraform(c *cli.Context) error {
 
 func createCrds(c *cli.Context) error {
 	if empty, err := utils.IsEmpty("crds"); err != nil || empty {
-		return err
+		return nil
 	}
+
 	return filepath.Walk("crds", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
