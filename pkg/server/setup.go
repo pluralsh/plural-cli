@@ -115,8 +115,10 @@ func setupCli(c *gin.Context) error {
 
 	man := toManifest(&setup)
 	path := manifest.ProjectManifestPath()
-	if err := man.Write(path); err != nil {
-		return fmt.Errorf("error writing manifest: %w", err)
+	if !utils.Exists(path) {
+		if err := man.Write(path); err != nil {
+			return fmt.Errorf("error writing manifest: %w", err)
+		}
 	}
 
 	ctx := toContext(&setup)
