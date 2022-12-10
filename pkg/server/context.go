@@ -1,22 +1,22 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/gin-gonic/gin"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/samber/lo"
 )
 
-func contextConfiguration(c *gin.Context) error {
-	var configuration map[string]map[string]interface{}
-	if err := c.BindJSON(&configuration); err != nil {
-		return err
-	}
+type ConfigurationUpdate struct {
+	Configuration map[string]map[string]interface{} `json:"configuration,omitempty"`
+	Buckets       []string                          `json:"buckets"`
+	Domains       []string                          `json:"domains"`
+}
 
-	configurationBytes, err := json.Marshal(configuration)
-	if err != nil {
+func contextConfiguration(c *gin.Context) error {
+	var update ConfigurationUpdate
+	if err := c.BindJSON(&update); err != nil {
 		return err
 	}
 
@@ -25,25 +25,17 @@ func contextConfiguration(c *gin.Context) error {
 		return err
 	}
 
-	contextBytes, err := json.Marshal(context)
-	if err != nil {
+	for k, v := range update.Configuration {
+		context.Configuration[k] = v
+	}
+
+	context.Buckets = lo.Uniq(append(context.Buckets, update.Buckets...))
+	context.Domains = lo.Uniq(append(context.Domains, update.Domains...))
+
+	if err := context.Write(manifest.ContextPath()); err != nil {
 		return err
 	}
 
-	patchedJSON, err := jsonpatch.MergePatch(contextBytes, configurationBytes)
-	if err != nil {
-		return err
-	}
-	var patchContext manifest.Context
-	err = json.Unmarshal(patchedJSON, &patchContext)
-	if err != nil {
-		return err
-	}
-
-	if err := patchContext.Write(manifest.ContextPath()); err != nil {
-		return err
-	}
-
-	c.JSON(http.StatusOK, patchContext)
+	c.JSON(http.StatusOK, context)
 	return nil
 }

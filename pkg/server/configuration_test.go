@@ -26,7 +26,7 @@ func TestGetConfiguration(t *testing.T) {
 		{
 			name:               `update configuration console email address`,
 			expectedHTTPStatus: http.StatusOK,
-			expectedResponse:   `{"workspace":{},"git":{"url":"git@git.test.com:portfolio/space.space_name.git","root":"%s","name":"%s","branch":"master"},"context_configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"}}}`,
+			expectedResponse:   `{"workspace":{},"git":{"url":"git@git.test.com:portfolio/space.space_name.git","root":"%s","name":"%s","branch":"master"},"context_configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"}},"buckets":["example-bucket"],"domains":["domain.example.com"]}`,
 		},
 	}
 	for _, test := range tests {
@@ -48,6 +48,8 @@ func TestGetConfiguration(t *testing.T) {
 
 			context := manifest.NewContext()
 			context.Configuration = genDefaultContextConfiguration()
+			context.Buckets = []string{"example-bucket"}
+			context.Domains = []string{"domain.example.com"}
 			err = context.Write(path.Join(dir, "context.yaml"))
 			assert.NoError(t, err)
 

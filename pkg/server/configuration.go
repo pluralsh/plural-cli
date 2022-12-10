@@ -13,6 +13,8 @@ type Configuration struct {
 	Workspace            WorkspaceConfiguration            `json:"workspace"`
 	Git                  GitConfiguration                  `json:"git"`
 	ContextConfiguration map[string]map[string]interface{} `json:"context_configuration,omitempty"`
+	Buckets              []string                          `json:"buckets"`
+	Domains              []string                          `json:"domains"`
 }
 
 type WorkspaceConfiguration struct {
@@ -51,6 +53,8 @@ func configuration(c *gin.Context) error {
 			Cluster:      project.Cluster,
 		},
 		ContextConfiguration: context.Configuration,
+		Buckets:              context.Buckets,
+		Domains:              context.Domains,
 	}
 	if project.Network != nil {
 		configuration.Workspace.Network = &NetworkConfiguration{
