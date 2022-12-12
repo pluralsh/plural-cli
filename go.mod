@@ -33,6 +33,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.20.0
 	github.com/imdario/mergo v0.3.13
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
+	github.com/ktrysmt/go-bitbucket v0.9.55
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -214,7 +215,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/pluralsh/oauth v0.9.1-0.20220520000222-d76c0e7a0db9
+	github.com/pluralsh/oauth v0.9.2
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
