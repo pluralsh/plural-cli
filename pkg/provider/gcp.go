@@ -59,9 +59,17 @@ var (
 		"europe-central2",
 		"europe-west2",
 		"europe-west3",
+		"europe-north1",
+		"europe-southwest1",
 		"us-east1",
+		"us-east4",
 		"us-west1",
 		"us-west2",
+		"us-central1",
+		"northamerica-northeast1",
+		"northamerica-northeast2",
+		"southamerica-east1",
+		"southamerica-west1",
 	}
 )
 
