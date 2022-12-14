@@ -10,6 +10,7 @@ import (
 	"github.com/ktrysmt/go-bitbucket"
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
 )
 
 var (
@@ -77,13 +78,12 @@ func (b *Bitbucket) Setup() (Context, error) {
 		return Context{}, err
 	}
 
-	workspaces := make([]string, 0)
-	for _, w := range wl.Workspaces {
-		workspaces = append(workspaces, w.Slug)
-	}
+	workspaces := algorithms.Map(wl.Workspaces, func(w bitbucket.Workspace) string {
+		return w.Slug
+	})
 
 	if len(workspaces) == 0 {
-		return Context{}, fmt.Errorf("You don't have any Bitbucket workspace created. Please create one first \n")
+		return Context{}, fmt.Errorf("You don't have a BitBucket project created, please create one and try again \n")
 	}
 
 	workspace := workspaces[0]
