@@ -72,6 +72,21 @@ func findDependencies(repo string) ([]string, error) {
 	return lo.FilterMap(man.Dependencies, func(d *manifest.Dependency, ind int) (string, bool) { return d.Repo, isRepo(d.Repo) }), nil
 }
 
+func AllDependencies(repos []string) ([]string, error) {
+	deps := []string{}
+	visit := func(r string) error {
+		deps = append(deps, r)
+		return nil
+	}
+	for _, repo := range repos {
+		if err := algorithms.DFS(repo, findDependencies, visit); err != nil {
+			return deps, err
+		}
+	}
+
+	return TopSortNames(lo.Uniq(deps))
+}
+
 func Dependencies(repo string) ([]string, error) {
 	// dfs from the repo to find all dependencies
 	deps := []string{}

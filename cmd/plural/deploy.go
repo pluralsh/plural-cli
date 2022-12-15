@@ -204,8 +204,8 @@ func (p *Plural) deploy(c *cli.Context) error {
 
 	var sorted []string
 	switch {
-	case c.String("from") != "":
-		sorted, err = wkspace.Dependencies(c.String("from"))
+	case len(c.StringSlice("from")) > 0:
+		sorted, err = wkspace.AllDependencies(c.StringSlice("from"))
 	case c.Bool("all"):
 		sorted, err = p.allSortedRepos()
 	default:

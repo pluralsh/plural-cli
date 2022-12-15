@@ -53,7 +53,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:    "build",
-			Aliases: []string{"b"},
+			Aliases: []string{"bld"},
 			Usage:   "builds your workspace",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -93,7 +93,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "commit",
 					Usage: "commits your changes with this message",
 				},
-				cli.StringFlag{
+				cli.StringSliceFlag{
 					Name:  "from",
 					Usage: "deploys only this application and its dependencies",
 				},
@@ -165,7 +165,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:     "topsort",
-			Aliases:  []string{"d"},
+			Aliases:  []string{"top"},
 			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
 			Action:   latestVersion(p.topsort),
 			Category: "Workspace",
@@ -186,7 +186,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:      "destroy",
-			Aliases:   []string{"b"},
+			Aliases:   []string{"d"},
 			Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
 			ArgsUsage: "WKSPACE",
 			Flags: []cli.Flag{
