@@ -68,6 +68,12 @@ func (a *fakeAccountsClient) GetProperties(_ context.Context, _ string, name str
 	}
 }
 
+func (a *fakeAccountsClient) List(_ context.Context) (result storage.AccountListResultPage, err error) {
+	return storage.NewAccountListResultPage(storage.AccountListResult{
+		Value: &[]storage.Account{},
+	}, nil), nil
+}
+
 func (a *fakeAccountsClient) Create(_ context.Context, _ string, _ string, _ storage.AccountCreateParameters) (result storage.AccountsCreateFuture, err error) {
 	a.CreateCalledCount++
 	return storage.AccountsCreateFuture{

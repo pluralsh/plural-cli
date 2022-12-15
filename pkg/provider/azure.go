@@ -25,6 +25,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/azure/azure-sdk-for-go/services/compute/mgmt/2021-07-01/compute"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -70,7 +71,6 @@ func GetClientSet(subscriptionId string) (*ClientSet, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &ClientSet{
 		Groups:         resourceGroupClient,
 		Accounts:       storageAccountsClient,
