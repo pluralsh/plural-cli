@@ -20,7 +20,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/azure/azure-sdk-for-go/services/compute/mgmt/2021-07-01/compute"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -66,6 +65,7 @@ func GetClientSet(subscriptionId string) (*ClientSet, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &ClientSet{
 		Groups:         resourceGroupClient,
 		Accounts:       storageAccountsClient,
@@ -303,15 +303,11 @@ func (azure *AzureProvider) Flush() error {
 }
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {
-	ctx := context.Background()
-	vms := compute.NewVirtualMachinesClient(utils.ToString(az.ctx["SubscriptionId"]))
-	fut, err := vms.Delete(ctx, az.Project(), node.Name, to.BoolPtr(true))
+	kube, err := kubernetes.Kubernetes()
 	if err != nil {
-		return pluralerr.ErrorWrap(err, "failed to call deletion api")
+		return err
 	}
-
-	err = fut.WaitForCompletionRef(ctx, vms.Client)
-	return pluralerr.ErrorWrap(err, "vm deletion failed with")
+	return kube.DeleteNode(node)
 }
 
 func (az *AzureProvider) getStorageAccount(account string) (storage.Account, error) {

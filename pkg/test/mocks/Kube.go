@@ -19,6 +19,20 @@ type Kube struct {
 	mock.Mock
 }
 
+// DeleteNode provides a mock function with given fields: node
+func (_m *Kube) DeleteNode(node *v1.Node) error {
+	ret := _m.Called(node)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*v1.Node) error); ok {
+		r0 = rf(node)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // FinalizeNamespace provides a mock function with given fields: namespace
 func (_m *Kube) FinalizeNamespace(namespace string) error {
 	ret := _m.Called(namespace)
