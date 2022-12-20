@@ -9,10 +9,15 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
+	"time"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
@@ -303,11 +308,61 @@ func (azure *AzureProvider) Flush() error {
 }
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {
-	kube, err := kubernetes.Kubernetes()
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return err
 	}
-	return kube.DeleteNode(node)
+	ctx := context.Background()
+	client, err := armcompute.NewVirtualMachineScaleSetsClient(utils.ToString(az.ctx["SubscriptionId"]), cred, nil)
+	if err != nil {
+		return err
+	}
+
+	// azure:///subscriptions/xxx/resourceGroups/yyy/providers/Microsoft.Compute/virtualMachineScaleSets/zzz/virtualMachines/0
+	err, resourceGroup := getPathElement(node.Spec.ProviderID, "resourceGroups")
+	if err != nil {
+		return err
+	}
+	err, virtualMachineScaleSet := getPathElement(node.Spec.ProviderID, "virtualMachineScaleSets")
+	if err != nil {
+		return err
+	}
+	err, InstanceID := getPathElement(node.Spec.ProviderID, "virtualMachines")
+	if err != nil {
+		return err
+	}
+
+	// This method scale down the virtualMachineScaleSet otherwise the VM will be recreated
+	pollerDeallocate, err := client.BeginDeallocate(ctx, resourceGroup, virtualMachineScaleSet, &armcompute.VirtualMachineScaleSetsClientBeginDeallocateOptions{
+		VMInstanceIDs: &armcompute.VirtualMachineScaleSetVMInstanceIDs{
+			InstanceIDs: []*string{to.StringPtr(InstanceID)},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = pollerDeallocate.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
+		Frequency: 1 * time.Second,
+	})
+	if err != nil {
+		return err
+	}
+
+	pollerDelete, err := client.BeginDeleteInstances(ctx, resourceGroup, virtualMachineScaleSet, armcompute.VirtualMachineScaleSetVMInstanceRequiredIDs{
+		InstanceIDs: []*string{
+			to.StringPtr(InstanceID)},
+	}, &armcompute.VirtualMachineScaleSetsClientBeginDeleteInstancesOptions{ForceDeletion: to.BoolPtr(true)})
+	if err != nil {
+		return err
+	}
+	_, err = pollerDelete.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
+		Frequency: 1 * time.Second,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (az *AzureProvider) getStorageAccount(account string) (storage.Account, error) {
@@ -442,4 +497,18 @@ func getResourceGroupClient(subscriptionId string) (*armresources.ResourceGroups
 	}
 
 	return groupClient, nil
+}
+
+func getPathElement(path, indexName string) (error, string) {
+	pattern := fmt.Sprintf(`.*\/%s\/(?P<element>([\w'-]+))`, indexName)
+	captureGroupRegex := regexp.MustCompile(pattern)
+	match := captureGroupRegex.FindStringSubmatch(path)
+	if match != nil {
+		index := captureGroupRegex.SubexpIndex("element")
+		if index >= 0 {
+			return nil, match[index]
+		}
+	}
+
+	return fmt.Errorf("%s not found", indexName), ""
 }

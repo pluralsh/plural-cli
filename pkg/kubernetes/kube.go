@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
@@ -18,7 +19,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/kubectl/pkg/drain"
 )
 
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -47,7 +47,6 @@ type Kube interface {
 	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerDelete(namespace string, name string) error
 	GetClient() *kubernetes.Clientset
-	DeleteNode(node *v1.Node) error
 }
 
 type kube struct {
@@ -177,30 +176,4 @@ func (k *kube) WireguardPeerDelete(namespace string, name string) error {
 
 func (k *kube) GetClient() *kubernetes.Clientset {
 	return k.Kube
-}
-
-func (k *kube) DeleteNode(node *v1.Node) error {
-	drainer := &drain.Helper{
-		Ctx:                 context.Background(),
-		Client:              k.Kube,
-		Force:               true,
-		GracePeriodSeconds:  -1,
-		IgnoreAllDaemonSets: true,
-		Timeout:             0,
-		DeleteEmptyDirData:  true,
-		ChunkSize:           500,
-		DisableEviction:     true,
-		Out:                 os.Stdout,
-		ErrOut:              os.Stdout,
-	}
-
-	if err := drain.RunCordonOrUncordon(drainer, node, true); err != nil {
-		return err
-	}
-
-	if err := drain.RunNodeDrain(drainer, node.Name); err != nil {
-		return err
-	}
-
-	return k.Kube.CoreV1().Nodes().Delete(context.Background(), node.Name, metav1.DeleteOptions{})
 }
