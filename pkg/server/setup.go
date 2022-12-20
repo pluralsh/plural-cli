@@ -129,6 +129,8 @@ func setupCli(c *gin.Context) error {
 		}
 	}
 
+	// try to initialize kubeconfig if we can, but don't stress if it fails
+	_ = execCmd("plural", "wkspace", "kube-init")
 	c.JSON(http.StatusOK, gin.H{"success": true})
 	return nil
 }
