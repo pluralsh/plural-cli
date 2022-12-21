@@ -367,6 +367,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	p.InitPluralClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
+	force := c.Bool("force")
 	if err != nil {
 		return err
 	}
@@ -376,11 +377,11 @@ func (p *Plural) destroy(c *cli.Context) error {
 		infix = repoName
 	}
 
-	if !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix)) {
+	if !force && !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix)) {
 		return nil
 	}
 
-	delete := affirm("Do you want to uninstall your applications from the plural api as well?")
+	delete := force || affirm("Do you want to uninstall your applications from the plural api as well?")
 
 	if repoName != "" {
 		installation, err := p.GetInstallation(repoName)
@@ -434,10 +435,9 @@ func (p *Plural) destroy(c *cli.Context) error {
 
 	if commit := commitMsg(c); commit != "" {
 		utils.Highlight("Pushing upstream...\n")
-		return git.Sync(repoRoot, commit, c.Bool("force"))
+		return git.Sync(repoRoot, commit, force)
 	}
 
-	utils.Note("To remove your installations in app.plural.sh as well, you can run `plural repos reset`")
 	return nil
 }
 
