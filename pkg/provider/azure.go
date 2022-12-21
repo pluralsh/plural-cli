@@ -45,6 +45,7 @@ type AccountsClient interface {
 	GetProperties(ctx context.Context, resourceGroupName string, accountName string, expand storage.AccountExpand) (result storage.Account, err error)
 	Create(ctx context.Context, resourceGroupName string, accountName string, parameters storage.AccountCreateParameters) (result storage.AccountsCreateFuture, err error)
 	ListKeys(ctx context.Context, resourceGroupName string, accountName string, expand storage.ListKeyExpand) (result storage.AccountListKeysResult, err error)
+	List(ctx context.Context) (result storage.AccountListResultPage, err error)
 }
 
 type ContainerClient interface {
@@ -364,7 +365,26 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 }
 
 func (az *AzureProvider) getStorageAccount(account string) (storage.Account, error) {
-	return az.clients.Accounts.GetProperties(context.Background(), az.resourceGroup, account, storage.AccountExpandBlobRestoreStatus)
+	ctx := context.Background()
+	saList, err := az.clients.Accounts.List(ctx)
+	if err != nil {
+		return storage.Account{}, err
+	}
+	// check if storage account belongs to the same resource group
+	for _, sa := range saList.Values() {
+		if *sa.Name == account {
+			err, resourceGroup := getPathElement(*sa.ID, "resourceGroups")
+			if err != nil {
+				return storage.Account{}, err
+			}
+			if resourceGroup != az.resourceGroup {
+				return storage.Account{}, fmt.Errorf("The '%s' Storage Account already exists and belongs to the '%s' Resource Group.", account, resourceGroup)
+			}
+			break
+		}
+	}
+
+	return az.clients.Accounts.GetProperties(ctx, az.resourceGroup, account, storage.AccountExpandBlobRestoreStatus)
 }
 
 func (az *AzureProvider) upsertStorageAccount(account string) (storage.Account, error) {
