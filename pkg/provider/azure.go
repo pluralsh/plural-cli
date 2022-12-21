@@ -341,10 +341,9 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 	if err != nil {
 		return err
 	}
-	_, err = pollerDeallocate.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
+	if _, err = pollerDeallocate.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
 		Frequency: 1 * time.Second,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -355,10 +354,9 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 	if err != nil {
 		return err
 	}
-	_, err = pollerDelete.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
+	if _, err := pollerDelete.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
 		Frequency: 1 * time.Second,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
