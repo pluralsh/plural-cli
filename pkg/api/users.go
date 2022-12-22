@@ -135,10 +135,7 @@ func (client *client) GrabAccessToken() (string, error) {
 }
 
 func (client *client) ListKeys(emails []string) ([]*PublicKey, error) {
-	emailsInput := make([]*string, 0)
-	for _, email := range emails {
-		emailsInput = append(emailsInput, &email)
-	}
+	emailsInput := lo.ToSlicePtr(emails)
 
 	resp, err := client.pluralClient.ListKeys(client.ctx, emailsInput)
 	if err != nil {
