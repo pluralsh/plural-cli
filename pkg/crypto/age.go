@@ -107,9 +107,12 @@ func Identity() (*age.X25519Identity, error) {
 }
 
 func findMissingKeyForEmail(emails []string, keys []*api.PublicKey) []string {
-	if len(keys) == 0 || len(emails) == 0 {
-		// in case of empty or nil objects
+	if len(emails) == 0 {
 		return []string{}
+	}
+	if len(keys) == 0 {
+		// in case of empty or nil objects
+		return emails
 	}
 	emailSet := containers.ToSet[string](emails)
 	algorithms.Map(keys, func(key *api.PublicKey) string {
