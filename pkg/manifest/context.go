@@ -23,11 +23,17 @@ type SMTP struct {
 	Password string
 }
 
+type Globals struct {
+	CertIssuer   string
+	IngressClass string
+}
+
 type Context struct {
 	Bundles       []*Bundle
 	Buckets       []string
 	Domains       []string
-	SMTP          *SMTP `yaml:"smtp,omitempty"`
+	SMTP          *SMTP    `yaml:"smtp,omitempty"`
+	Globals       *Globals `yaml:"globals,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
 
@@ -69,6 +75,7 @@ func ReadContext(path string) (c *Context, err error) {
 func NewContext() *Context {
 	return &Context{
 		Bundles:       make([]*Bundle, 0),
+		Globals:       &Globals{CertIssuer: "plural"},
 		Configuration: make(map[string]map[string]interface{}),
 	}
 }
