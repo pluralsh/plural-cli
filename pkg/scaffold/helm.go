@@ -106,6 +106,10 @@ func Notes(installation *api.Installation) error {
 		"Applications":  BuildApplications(repoRoot),
 	}
 
+	if context.Globals != nil {
+		vals["Globals"] = context.Globals
+	}
+
 	if context.SMTP != nil {
 		vals["SMTP"] = context.SMTP.Configuration()
 	}
@@ -169,6 +173,10 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 
 	if w.Context.SMTP != nil {
 		vals["SMTP"] = w.Context.SMTP.Configuration()
+	}
+
+	if w.Context.Globals != nil {
+		vals["Globals"] = w.Context.Globals
 	}
 
 	if w.Installation.AcmeKeyId != "" {

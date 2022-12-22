@@ -25,19 +25,19 @@ func TestContextConfiguration(t *testing.T) {
 			name:               `update configuration console email address`,
 			body:               `{"configuration": {"console":{"email":"newEmail@plural.sh"}}}`,
 			expectedHTTPStatus: http.StatusOK,
-			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Configuration":{"console":{"email":"newEmail@plural.sh"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"}}}`,
+			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Globals":{"CertIssuer":"plural","IngressClass":""},"Configuration":{"console":{"email":"newEmail@plural.sh"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"}}}`,
 		},
 		{
 			name:               `add new entry to configuration`,
 			body:               `{"configuration": {"newEntry":{"test":"test"}}}`,
 			expectedHTTPStatus: http.StatusOK,
-			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"},"newEntry":{"test":"test"}}}`,
+			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Globals":{"CertIssuer":"plural","IngressClass":""},"Configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh","url":"https://test.plural.sh"},"newEntry":{"test":"test"}}}`,
 		},
 		{
 			name:               `remove minio url from configuration`,
 			body:               `{"configuration": {"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh"}}}`,
 			expectedHTTPStatus: http.StatusOK,
-			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh"}}}`,
+			expectedResponse:   `{"Bundles":[],"Buckets":[],"Domains":[],"SMTP":null,"Globals":{"CertIssuer":"plural","IngressClass":""},"Configuration":{"console":{"email":"test@plural.sh","git_user":"test"},"minio":{"host":"minio.plural.sh"}}}`,
 		},
 	}
 	for _, test := range tests {
