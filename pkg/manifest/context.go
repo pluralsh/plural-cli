@@ -24,8 +24,8 @@ type SMTP struct {
 }
 
 type Globals struct {
-	CertIssuer   string
-	IngressClass string
+	CertIssuer   string `yaml:"certIssuer"`
+	IngressClass string `yaml:"ingressClass"`
 }
 
 type Context struct {
