@@ -10,6 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/polly/algorithms"
@@ -58,6 +59,12 @@ func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error 
 		}
 
 		return fn(c)
+	}
+}
+
+func highlighted(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		return utils.HighlightError(fn(c))
 	}
 }
 
@@ -148,6 +155,22 @@ func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
 			utils.CheckLatestVersion(version)
+		}
+
+		return fn(c)
+	}
+}
+
+func upstreamSynced(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		changed, sha, err := git.HasUpstreamChanges()
+		if err != nil {
+			return errors.ErrorWrap(errNoGit, "Failed to get git information")
+		}
+
+		force := c.Bool("force")
+		if !changed && !force {
+			return errors.ErrorWrap(errRemoteDiff, fmt.Sprintf("Expecting HEAD at commit=%s", sha))
 		}
 
 		return fn(c)

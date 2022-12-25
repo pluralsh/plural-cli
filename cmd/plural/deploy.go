@@ -90,15 +90,6 @@ func (p *Plural) build(c *cli.Context) error {
 	if err := CheckGitCrypt(c); err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
-	changed, sha, err := git.HasUpstreamChanges()
-	if err != nil {
-		return errors.ErrorWrap(errNoGit, "Failed to get git information")
-	}
-
-	force := c.Bool("force")
-	if !changed && !force {
-		return errors.ErrorWrap(errRemoteDiff, fmt.Sprintf("Expecting HEAD at commit=%s", sha))
-	}
 
 	if c.IsSet("only") {
 		installation, err := p.GetInstallation(c.String("only"))
@@ -457,7 +448,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	}
 
 	if delete {
-		utils.Highlight("Uninstalling %s from the plural api as well...", installation.Repository.Name)
+		utils.Highlight("Uninstalling %s from the plural api as well...\n", installation.Repository.Name)
 		return p.Client.DeleteInstallation(installation.Id)
 	}
 
