@@ -87,6 +87,7 @@ func diffed(_ *cli.Context) error {
 
 func (p *Plural) build(c *cli.Context) error {
 	p.InitPluralClient()
+	force := c.Bool("force")
 	if err := CheckGitCrypt(c); err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
