@@ -23,8 +23,8 @@ func TestServerList(t *testing.T) {
 		installation     *api.Installation
 	}{
 		{
-			name: `test "vpn list-servers"`,
-			args: []string{plural.ApplicationName, "vpn", "list-servers"},
+			name: `test "vpn list servers"`,
+			args: []string{plural.ApplicationName, "vpn", "list", "servers"},
 			servers: &vpnv1alpha1.WireguardServerList{
 				Items: []vpnv1alpha1.WireguardServer{
 					{
@@ -80,8 +80,8 @@ func TestClientList(t *testing.T) {
 		installation     *api.Installation
 	}{
 		{
-			name: `test "vpn list-clients" without server flag`,
-			args: []string{plural.ApplicationName, "vpn", "list-clients"},
+			name: `test "vpn list clients" without server flag`,
+			args: []string{plural.ApplicationName, "vpn", "list", "clients"},
 			peers: &vpnv1alpha1.WireguardPeerList{
 				Items: []vpnv1alpha1.WireguardPeer{
 					{
@@ -137,8 +137,8 @@ func TestClientList(t *testing.T) {
 `,
 		},
 		{
-			name: `test "vpn list-clients" with server flag`,
-			args: []string{plural.ApplicationName, "vpn", "list-clients", "--server", "wireguard2"},
+			name: `test "vpn list clients" with server flag`,
+			args: []string{plural.ApplicationName, "vpn", "list", "clients", "--server", "wireguard2"},
 			peers: &vpnv1alpha1.WireguardPeerList{
 				Items: []vpnv1alpha1.WireguardPeer{
 					{
@@ -222,8 +222,8 @@ func TestClientCreate(t *testing.T) {
 		expectedError    string
 	}{
 		{
-			name: `test "vpn create-client" without specifying server`,
-			args: []string{plural.ApplicationName, "vpn", "create-client", "test-client"},
+			name: `test "vpn create client" without specifying server`,
+			args: []string{plural.ApplicationName, "vpn", "create", "client", "test-client"},
 			peer: &vpnv1alpha1.WireguardPeer{
 
 				ObjectMeta: metav1.ObjectMeta{
@@ -270,8 +270,8 @@ func TestClientCreate(t *testing.T) {
 `,
 		},
 		{
-			name: `test "vpn create-client" with specifying server flag`,
-			args: []string{plural.ApplicationName, "vpn", "create-client", "test-client", "--server", "wireguard2"},
+			name: `test "vpn create client" with specifying server flag`,
+			args: []string{plural.ApplicationName, "vpn", "create", "client", "test-client", "--server", "wireguard2"},
 			peer: &vpnv1alpha1.WireguardPeer{
 
 				ObjectMeta: metav1.ObjectMeta{
