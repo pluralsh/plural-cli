@@ -65,7 +65,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: tracked(latestVersion(owned(p.build)), "cli.build"),
+			Action: tracked(latestVersion(owned(upstreamSynced(p.build))), "cli.build"),
 		},
 		{
 			Name:      "deploy",
@@ -203,7 +203,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: tracked(latestVersion(owned(p.destroy)), "cli.destroy"),
+			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
 			Name:  "init",

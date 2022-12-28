@@ -15,6 +15,14 @@ import (
 
 func (s *Scaffold) buildCrds(wk *wkspace.Workspace) error {
 	utils.Highlight("syncing crds")
+	if err := os.RemoveAll(s.Root); err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(s.Root, os.ModePerm); err != nil {
+		return err
+	}
+
 	for _, chartInst := range wk.Charts {
 		for _, crd := range chartInst.Version.Crds {
 			utils.Highlight(".")

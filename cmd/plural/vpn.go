@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/vpn"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,50 +28,25 @@ const (
 func (p *Plural) vpnCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:   "list-servers",
-			Usage:  "lists vpn servers",
-			Action: latestVersion(p.handleWireguardServerList),
+			Name:        "list",
+			Usage:       "list vpn resources",
+			Subcommands: p.vpnListCommands(),
 		},
 		{
-			Name:   "list-clients",
-			Usage:  "lists vpn clients for a server",
-			Action: latestVersion(p.handleWireguardPeerList),
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "server",
-					Usage: "the vpn server to list clients for",
-				},
-			},
+			Name:        "create",
+			Usage:       "commands for creating vpn resources",
+			Subcommands: p.vpnCreateCommands(),
 		},
 		{
-			Name:      "create-client",
-			ArgsUsage: "NAME",
-			Usage:     "create a new vpn client for a server",
-			Action:    latestVersion(requireArgs(p.handleWireguardPeerCreate, []string{"NAME"})),
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "server",
-					Usage: "the vpn server to create the client for",
-				},
-			},
-		},
-		{
-			Name:      "delete-client",
-			ArgsUsage: "NAME",
-			Usage:     "create a new vpn client for a server",
-			Action:    latestVersion(requireArgs(p.handleWireguardPeerDelete, []string{"NAME"})),
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "server",
-					Usage: "the vpn server to delete the clients from",
-				},
-			},
+			Name:        "delete",
+			Usage:       "commands for deleting vpn resources",
+			Subcommands: p.vpnDeleteCommands(),
 		},
 		{
 			Name:      "client-config",
 			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			Action:    latestVersion(requireArgs(p.handleWireguardPeerConfig, []string{"NAME"})),
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerConfig)), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -85,28 +61,72 @@ func (p *Plural) vpnCommands() []cli.Command {
 	}
 }
 
+func (p *Plural) vpnListCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:   "servers",
+			Usage:  "lists vpn servers",
+			Action: latestVersion(highlighted(p.vpnInstalled(p.handleWireguardServerList))),
+		},
+		{
+			Name:   "clients",
+			Usage:  "lists vpn clients for a server",
+			Action: latestVersion(highlighted(p.vpnInstalled(p.handleWireguardPeerList))),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to list clients for",
+				},
+			},
+		},
+	}
+}
+
+func (p *Plural) vpnCreateCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "client",
+			ArgsUsage: "NAME",
+			Usage:     "create a new vpn client for a server",
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerCreate)), []string{"NAME"})),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to create the client for",
+				},
+			},
+		},
+	}
+}
+
+func (p *Plural) vpnDeleteCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "client",
+			ArgsUsage: "NAME",
+			Usage:     "delete a vpn client for a server",
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerDelete)), []string{"NAME"})),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "server",
+					Usage: "the vpn server to delete the clients from",
+				},
+			},
+		},
+	}
+}
+
 func (p *Plural) handleWireguardServerList(c *cli.Context) error {
 	conf := config.Read()
-	if err := p.InitKube(); err != nil {
-		return utils.HighlightError(err)
-	}
-
-	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
-	}
-
 	servers, err := vpn.ListServers(p.Kube, conf.Namespace(wireguardNamespace))
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Hostname", "Port", "Ready"})
-	for _, s := range servers.Items {
-		table.Append([]string{s.Name, s.Status.Hostname, s.Status.Port, strconv.FormatBool(s.Status.Ready)})
-	}
-	table.Render()
-	return nil
+	headers := []string{"Name", "Hostname", "Port", "Ready"}
+	return utils.PrintTable(servers.Items, headers, func(s v1alpha1.WireguardServer) ([]string, error) {
+		return []string{s.Name, s.Status.Hostname, s.Status.Port, strconv.FormatBool(s.Status.Ready)}, nil
+	})
 }
 
 func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
@@ -117,34 +137,17 @@ func (p *Plural) handleWireguardPeerList(c *cli.Context) error {
 	}
 
 	conf := config.Read()
-	if err := p.InitKube(); err != nil {
-		return utils.HighlightError(err)
-	}
-
-	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
-	}
-
-	peers, err := vpn.ListPeers(p.Kube, conf.Namespace(wireguardNamespace))
+	peerlist, err := vpn.ListPeers(p.Kube, conf.Namespace(wireguardNamespace))
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Address", "Config Secret", "Public Key", "Ready"})
-	for _, p := range peers.Items {
-		if p.Spec.WireguardRef == server {
-			table.Append([]string{
-				p.Name,
-				p.Spec.Address,
-				p.Status.ConfigRef.Name,
-				p.Spec.PublicKey,
-				strconv.FormatBool(p.Status.Ready),
-			})
-		}
-	}
-	table.Render()
-	return nil
+	peers := algorithms.Filter(peerlist.Items, func(p v1alpha1.WireguardPeer) bool { return p.Spec.WireguardRef == server })
+	headers := []string{"Name", "Address", "Config Secret", "Public Key", "Ready"}
+	return utils.PrintTable(peers, headers, func(p v1alpha1.WireguardPeer) (res []string, err error) {
+		res = []string{p.Name, p.Spec.Address, p.Status.ConfigRef.Name, p.Spec.PublicKey, strconv.FormatBool(p.Status.Ready)}
+		return
+	})
 }
 
 func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
@@ -156,17 +159,9 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 
 	name := c.Args().Get(0)
 	conf := config.Read()
-	if err := p.InitKube(); err != nil {
-		return utils.HighlightError(err)
-	}
-
-	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
-	}
-
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 	peer, err := vpn.CreatePeer(p.Kube, server.Namespace,
 		&v1alpha1.WireguardPeer{
@@ -178,7 +173,7 @@ func (p *Plural) handleWireguardPeerCreate(c *cli.Context) error {
 			},
 		})
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
@@ -204,45 +199,34 @@ func (p *Plural) handleWireguardPeerConfig(c *cli.Context) error {
 
 	name := c.Args().Get(0)
 	conf := config.Read()
-	if err := p.InitKube(); err != nil {
-		return utils.HighlightError(err)
-	}
-
-	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
-	}
 
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	peer, err := vpn.GetPeer(p.Kube, server.Namespace, name)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	if !peer.Status.Ready || peer.Status.ConfigRef.Name == "" || peer.Status.ConfigRef.Key == "" {
-		return utils.HighlightError(fmt.Errorf("peer config not ready yet"))
+		return fmt.Errorf("peer config not ready yet")
 	}
 
 	secret, err := vpn.GetPeerConfigSecret(p.Kube, peer.Namespace, peer.Status.ConfigRef.Name)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	peerConfig, ok := secret.Data[peer.Status.ConfigRef.Key]
 	if !ok {
-		return utils.HighlightError(fmt.Errorf("peer config not ready yet"))
+		return fmt.Errorf("peer config not ready yet")
 	}
 
 	if c.String("path") != "" {
 		path := pathing.SanitizeFilepath(filepath.Join(c.String("path"), peer.Name+".conf"))
-		err := utils.WriteFile(path, peerConfig)
-		if err != nil {
-			return utils.HighlightError(err)
-		}
-		return nil
+		return utils.WriteFile(path, peerConfig)
 	}
 	fmt.Println(string(peerConfig))
 	return nil
@@ -257,38 +241,35 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 
 	name := c.Args().Get(0)
 	conf := config.Read()
-	if err := p.InitKube(); err != nil {
-		return utils.HighlightError(err)
-	}
-
-	if err := p.checkIfVPNInstalled(); err != nil {
-		return utils.HighlightError(fmt.Errorf(wireguardNotInstalledError))
-	}
-
 	server, err := vpn.GetServer(p.Kube, conf.Namespace(wireguardNamespace), serverName)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	peer, err := vpn.GetPeer(p.Kube, server.Namespace, name)
 	if err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	if err := vpn.DeletePeer(p.Kube, peer.Namespace, peer.Name); err != nil {
-		return utils.HighlightError(err)
+		return err
 	}
 
 	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully\n", peer.Name))
-
 	return nil
 }
 
-func (p *Plural) checkIfVPNInstalled() error {
-	p.InitPluralClient()
-	_, err := p.GetInstallation(wireguardAppName)
-	if err != nil {
-		return utils.HighlightError(err)
+func (p *Plural) vpnInstalled(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		p.InitPluralClient()
+		if err := p.InitKube(); err != nil {
+			return err
+		}
+
+		if _, err := p.GetInstallation(wireguardAppName); err != nil {
+			return err
+		}
+
+		return fn(c)
 	}
-	return nil
 }
