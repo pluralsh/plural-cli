@@ -33,7 +33,7 @@ type Context struct {
 	Buckets       []string
 	Domains       []string
 	SMTP          *SMTP    `yaml:"smtp,omitempty"`
-	Globals       *Globals `yaml:"globals,omitempty"`
+	Globals       *Globals `yaml:"globals,omitempty" json:"globals,omitempty"`
 	Configuration map[string]map[string]interface{}
 }
 
@@ -74,8 +74,8 @@ func ReadContext(path string) (c *Context, err error) {
 
 func NewContext() *Context {
 	return &Context{
-		Bundles:       make([]*Bundle, 0),
-		Globals:       &Globals{CertIssuer: "plural"},
+		Bundles: make([]*Bundle, 0),
+		// Globals:       &Globals{CertIssuer: "plural"},
 		Configuration: make(map[string]map[string]interface{}),
 	}
 }
