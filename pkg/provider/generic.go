@@ -11,9 +11,11 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -183,11 +185,37 @@ func (gen *GENERICProvider) CreateBackend(prefix string, version string, ctx map
 	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(gen.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
 		return "", err
 	}
+	if err := gen.exportKubeConfig(); err != nil {
+		return "", err
+	}
+
 	scaffold, err := GetProviderScaffold("GENERIC", version)
 	if err != nil {
 		return "", err
 	}
 	return template.RenderString(scaffold, ctx)
+}
+
+func (gen *GENERICProvider) exportKubeConfig() error {
+
+	config, err := gen.configAccess.GetStartingConfig()
+	if err != nil {
+		return err
+	}
+
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	config.CurrentContext = gen.Cluster()
+	clientcmdapi.MinifyConfig(config)
+
+	if err := clientcmd.WriteToFile(*config, pathing.SanitizeFilepath(filepath.Join(repoRoot, "kubeconfig"))); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (gen *GENERICProvider) KubeConfig() error {
@@ -196,11 +224,68 @@ func (gen *GENERICProvider) KubeConfig() error {
 		return nil
 	}
 
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	localConfig, err := clientcmd.LoadFromFile(pathing.SanitizeFilepath(filepath.Join(repoRoot, "kubeconfig")))
+	if err != nil {
+		return err
+	}
+
+	localContext := localConfig.Contexts[localConfig.CurrentContext]
+	localCluster := localConfig.Clusters[localContext.Cluster]
+	localAuth := localConfig.AuthInfos[localContext.AuthInfo]
+
 	config, err := gen.configAccess.GetStartingConfig()
 	if err != nil {
 		return err
 	}
-	config.CurrentContext = gen.Cluster()
+
+	// TODO: for some reason the DeepCopy() methods are not working
+	if _, ok := config.Contexts[localConfig.CurrentContext]; !ok {
+		config.Contexts[localConfig.CurrentContext] = &clientcmdapi.Context{
+			Cluster:    localContext.Cluster,
+			AuthInfo:   localContext.AuthInfo,
+			Namespace:  localContext.Namespace,
+			Extensions: localContext.Extensions,
+		}
+	}
+
+	if _, ok := config.Clusters[localContext.Cluster]; !ok {
+		config.Clusters[localContext.Cluster] = &clientcmdapi.Cluster{
+			Server:                   localCluster.Server,
+			TLSServerName:            localCluster.TLSServerName,
+			InsecureSkipTLSVerify:    localCluster.InsecureSkipTLSVerify,
+			CertificateAuthority:     localCluster.CertificateAuthority,
+			CertificateAuthorityData: localCluster.CertificateAuthorityData,
+			ProxyURL:                 localCluster.ProxyURL,
+			Extensions:               localCluster.Extensions,
+		}
+	}
+
+	if _, ok := config.AuthInfos[localContext.AuthInfo]; !ok {
+		config.AuthInfos[localContext.AuthInfo] = &clientcmdapi.AuthInfo{
+			ClientCertificate:     localAuth.ClientCertificate,
+			ClientCertificateData: localAuth.ClientCertificateData,
+			ClientKey:             localAuth.ClientKey,
+			ClientKeyData:         localAuth.ClientKeyData,
+			Token:                 localAuth.Token,
+			TokenFile:             localAuth.TokenFile,
+			Impersonate:           localAuth.Impersonate,
+			ImpersonateUID:        localAuth.ImpersonateUID,
+			ImpersonateGroups:     localAuth.ImpersonateGroups,
+			ImpersonateUserExtra:  localAuth.ImpersonateUserExtra,
+			Username:              localAuth.Username,
+			Password:              localAuth.Password,
+			AuthProvider:          localAuth.AuthProvider,
+			Exec:                  localAuth.Exec,
+			Extensions:            localAuth.Extensions,
+		}
+	}
+
+	config.CurrentContext = localConfig.CurrentContext
 	return clientcmd.ModifyConfig(gen.configAccess, *config, true)
 }
 
