@@ -10,7 +10,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 )
 
-var providers = []string{"github", "gitlab"}
+var providers = []string{"github", "gitlab", "bitbucket"}
 
 type Provider interface {
 	Init() error
@@ -34,6 +34,8 @@ func Setup() (string, error) {
 		prov = &Github{}
 	case "gitlab":
 		prov = &Gitlab{}
+	case "bitbucket":
+		prov = &Bitbucket{}
 	default:
 		return "", nil
 	}
