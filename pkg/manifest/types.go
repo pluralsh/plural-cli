@@ -48,6 +48,16 @@ type NetworkConfig struct {
 	PluralDns bool
 }
 
+type ObjectStoreConfig struct {
+	Provider string `survey:"osProvider"`
+	Endpoint string `survey:"osEndpoint"`
+	Username string `survey:"osUsername"`
+	Password string `survey:"osPassword"`
+	Region   string
+	Ssl      bool `survey:"osSsl"`
+	Insecure bool `survey:"osInsecure"`
+}
+
 type ProjectManifest struct {
 	Cluster      string
 	Bucket       string
@@ -56,6 +66,7 @@ type ProjectManifest struct {
 	Region       string
 	Owner        *Owner
 	Network      *NetworkConfig
+	ObjectStore  *ObjectStoreConfig
 	BucketPrefix string `yaml:"bucketPrefix"`
 	Context      map[string]interface{}
 }

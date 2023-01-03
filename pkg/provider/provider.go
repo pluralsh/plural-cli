@@ -98,6 +98,8 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 		return equinixFromManifest(man)
 	case KIND:
 		return kindFromManifest(man)
+	case GENERIC:
+		return genericFromManifest(man)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", man.Provider)
 	}
@@ -116,6 +118,8 @@ func New(provider string) (Provider, error) {
 		return mkEquinix(conf)
 	case KIND:
 		return mkKind(conf)
+	case GENERIC:
+		return mkGeneric(conf)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}
@@ -131,6 +135,7 @@ func getAvailableProviders() error {
 			}
 			available[i] = strings.ToLower(available[i])
 		}
+		// available = append(available, "generic")
 		if err != nil {
 			return api.GetErrorResponse(err, "GetTfProviders")
 		}

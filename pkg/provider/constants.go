@@ -6,4 +6,5 @@ const (
 	AZURE   = "azure"
 	EQUINIX = "equinix"
 	KIND    = "kind"
+	GENERIC = "generic"
 )
