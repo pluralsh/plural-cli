@@ -19,6 +19,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+const valuesYaml = "values.yaml"
+
 type MinimalWorkspace struct {
 	Name     string
 	Provider provider.Provider
@@ -53,7 +55,7 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 
 func templateVals(app, path string) (backup string, err error) {
 	root, _ := utils.ProjectRoot()
-	valsFile := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml"))
+	valsFile := pathing.SanitizeFilepath(filepath.Join(path, valuesYaml))
 	vals, err := utils.ReadFile(valsFile)
 	if err != nil {
 		return
@@ -91,13 +93,16 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	if err == nil {
 		defer func(oldpath, newpath string) {
 			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, valuesYaml)))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
 	utils.Warn("helm upgrade --install --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
 	var args []string
 	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--timeout", "10m", "--namespace", namespace, m.Name, path}
+	if utils.Exists(pathing.SanitizeFilepath(filepath.Join(path, "default-values.yaml"))) {
+		defaultArgs = append(defaultArgs, []string{"-f", filepath.Join(path, "default-values.yaml"), "-f", filepath.Join(path, valuesYaml)}...)
+	}
 	args = append(args, defaultArgs...)
 	args = append(args, extraArgs...)
 	return utils.Cmd(m.Config,
@@ -113,7 +118,7 @@ func (m *MinimalWorkspace) TemplateHelm() error {
 	if err == nil {
 		defer func(oldpath, newpath string) {
 			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, valuesYaml)))
 	}
 
 	namespace := m.Config.Namespace(m.Name)
@@ -134,7 +139,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	if err == nil {
 		defer func(oldpath, newpath string) {
 			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, "values.yaml")))
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, valuesYaml)))
 	}
 
 	namespace := m.Config.Namespace(m.Name)

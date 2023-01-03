@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/imdario/mergo"
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/output"
@@ -18,7 +17,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func BuildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
+func BuildValuesFromTemplate(vals map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
 	globals := map[string]interface{}{}
 	output := make(map[string]map[string]interface{})
 	for _, chartInst := range w.Charts {
@@ -47,10 +46,6 @@ func BuildValuesFromTemplate(vals map[string]interface{}, prevVals map[string]ma
 				return nil, err
 			}
 		}
-	}
-
-	if err := mergo.Merge(&output, prevVals); err != nil {
-		return nil, err
 	}
 
 	if len(globals) > 0 {
