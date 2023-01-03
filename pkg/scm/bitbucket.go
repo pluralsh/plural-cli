@@ -162,22 +162,22 @@ func (b *Bitbucket) Setup() (Context, error) {
 		return Context{}, err
 	}
 	// The bitbucket creates empty repository.
-	// Initialize bitbucket repo with .gitignore file.
+	// Initialize bitbucket repo with README.md file.
 	dir, err := os.MkdirTemp("", "bitbucket")
 	if err != nil {
 		return Context{}, err
 	}
 	defer os.RemoveAll(dir)
-	gitIgnore := path.Join(dir, ".gitignore")
-	if err := os.WriteFile(gitIgnore, []byte(""), 0644); err != nil {
+	gitReadme := path.Join(dir, "README.md")
+	if err := os.WriteFile(gitReadme, []byte(""), 0644); err != nil {
 		return Context{}, err
 	}
 
 	if err := b.Client.Repositories.Repository.WriteFileBlob(&bitbucket.RepositoryBlobWriteOptions{
 		Owner:    user.Username,
 		RepoSlug: repoName,
-		FilePath: gitIgnore,
-		FileName: ".gitignore",
+		FilePath: gitReadme,
+		FileName: "README.md",
 		Author:   fmt.Sprintf("%s <%s>", user.DisplayName, emailAddress),
 		Message:  "init",
 		Branch:   "master",
