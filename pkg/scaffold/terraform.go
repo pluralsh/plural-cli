@@ -13,6 +13,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -76,6 +77,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 		return err
 	}
 
+	proj, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
 	if err := scaffold.untarModules(wk); err != nil {
 		return err
 	}
@@ -124,6 +130,11 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Context":       wk.Provider.Context(),
 			"Applications":  apps,
 		}
+
+		if proj.ObjectStore != nil {
+			values["ObjectStore"] = proj.ObjectStore
+		}
+
 		if err := tmpl.Execute(&buf, values); err != nil {
 			return err
 		}

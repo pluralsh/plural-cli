@@ -167,6 +167,10 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		"Applications":  apps,
 	}
 
+	if proj.ObjectStore != nil {
+		vals["ObjectStore"] = proj.ObjectStore
+	}
+
 	if w.Context.SMTP != nil {
 		vals["SMTP"] = w.Context.SMTP.Configuration()
 	}
