@@ -19,7 +19,7 @@ git-push: .PHONY
 	git push
 
 install: .PHONY
-	GOBIN=~/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
+	go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
 build-cli: .PHONY
 	GOBIN=~/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
