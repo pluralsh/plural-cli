@@ -204,19 +204,49 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		vals[k] = v
 	}
 
-	values, err := scftmpl.BuildValuesFromTemplate(vals, w)
+	defaultValues, err := scftmpl.BuildValuesFromTemplate(vals, w)
 	if err != nil {
 		return err
 	}
 
-	io, err := yaml.Marshal(values)
+	io, err := yaml.Marshal(defaultValues)
 	if err != nil {
-		fmt.Println("Invalid yaml:")
-		fmt.Println(values)
+		return err
+	}
+
+	mapValues, err := getValues(valuesFile)
+	if err != nil {
+		return err
+	}
+	patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
+	if err != nil {
+		return err
+	}
+
+	values, err := yaml.Marshal(patchValues)
+	if err != nil {
+		return err
+	}
+	if len(patchValues) == 0 {
+		values = []byte{}
+	}
+	if err := utils.WriteFile(valuesFile, values); err != nil {
 		return err
 	}
 
 	return utils.WriteFile(defaultValuesFile, io)
+}
+
+func getValues(path string) (map[string]map[string]interface{}, error) {
+	values := map[string]map[string]interface{}{}
+	valuesFromFile, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(valuesFromFile, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
 }
 
 func prevValues(filename string) (map[string]map[string]interface{}, error) {
