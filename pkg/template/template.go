@@ -34,6 +34,7 @@ func GetFuncMap() template.FuncMap {
 	funcs["fileExists"] = fileExists
 	funcs["pathJoin"] = pathJoin
 	funcs["eabCredential"] = eabCredential
+	funcs["encrypt"] = encrypt
 	return funcs
 }
 

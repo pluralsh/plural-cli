@@ -1,6 +1,7 @@
 package template
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"os/exec"
@@ -138,6 +139,23 @@ func dedupeObj(obj interface{}, path string, val interface{}) interface{} {
 func namespace(name string) string {
 	conf := config.Read()
 	return conf.Namespace(name)
+}
+
+func encrypt(val string) string {
+	prov, err := crypto.Build()
+	if err != nil {
+		return err.Error()
+	}
+
+	result, err := crypto.Encrypt(prov, []byte(val))
+	if err != nil {
+		return err.Error()
+	}
+
+	output := []byte("CHARTMART-ENCRYPTED")
+	output = append(output, result...)
+
+	return base64.StdEncoding.EncodeToString(output)
 }
 
 func secret(namespace, name string) map[string]interface{} {
