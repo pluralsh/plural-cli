@@ -32,6 +32,11 @@ func RemoveNulls(m map[string]interface{}) {
 		if ok {
 			RemoveNulls(t)
 		}
+		// if the map is empty, remove it
+		// TODO: add a unit test for this
+		if ok && len(t) == 0 {
+			delete(m, e.String())
+		}
 	}
 }
 
@@ -55,12 +60,15 @@ func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) 
 		return nil, err
 	}
 	for key := range patch {
+		// if the map is empty, remove it
 		if len(patch[key]) == 0 {
 			delete(patch, key)
 		} else {
+			// remove nulls from the map
 			RemoveNulls(patch[key])
 		}
 	}
+	// if the patch is empty, return an empty map
 	if len(patch) == 0 {
 		return map[string]map[string]interface{}{}, nil
 	}
