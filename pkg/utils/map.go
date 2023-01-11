@@ -2,9 +2,14 @@ package utils
 
 import (
 	"fmt"
+	"reflect"
 
+	jsonpatch "github.com/evanphx/json-patch"
+	jsoniter "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func CleanUpInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
@@ -12,6 +17,54 @@ func CleanUpInterfaceMap(in map[interface{}]interface{}) map[string]interface{} 
 		result[fmt.Sprintf("%v", k)] = cleanUpMapValue(v)
 	}
 	return result
+}
+
+func RemoveNulls(m map[string]interface{}) {
+	val := reflect.ValueOf(m)
+	for _, e := range val.MapKeys() {
+		v := val.MapIndex(e)
+		if v.IsNil() {
+			delete(m, e.String())
+			continue
+		}
+
+		t, ok := v.Interface().(map[string]interface{})
+		if ok {
+			RemoveNulls(t)
+		}
+	}
+}
+
+func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) (map[string]map[string]interface{}, error) {
+	defaultJson, err := json.Marshal(defaultValues)
+	if err != nil {
+		return nil, err
+	}
+	valuesJson, err := json.Marshal(values)
+	if err != nil {
+		return nil, err
+	}
+
+	patchJson, err := jsonpatch.CreateMergePatch(defaultJson, valuesJson)
+	if err != nil {
+		return nil, err
+	}
+
+	patch := map[string]map[string]interface{}{}
+	if err := json.Unmarshal(patchJson, &patch); err != nil {
+		return nil, err
+	}
+	for key := range patch {
+		if len(patch[key]) == 0 {
+			delete(patch, key)
+		} else {
+			RemoveNulls(patch[key])
+		}
+	}
+	if len(patch) == 0 {
+		return map[string]map[string]interface{}{}, nil
+	}
+	return patch, nil
 }
 
 func cleanUpInterfaceArray(in []interface{}) []interface{} {

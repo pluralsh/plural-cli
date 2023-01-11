@@ -92,6 +92,9 @@ func Notes(installation *api.Installation) error {
 	ctx, _ := context.Repo(installation.Repository.Name)
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "values.yaml"))
 	prevVals, _ := prevValues(valuesFile)
+	defaultValuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "default-values.yaml"))
+	defaultPrevVals, _ := prevValues(defaultValuesFile)
+
 	vals := map[string]interface{}{
 		"Values":        ctx,
 		"Configuration": context.Configuration,
@@ -121,6 +124,9 @@ func Notes(installation *api.Installation) error {
 		}
 	}
 
+	for k, v := range defaultPrevVals {
+		vals[k] = v
+	}
 	for k, v := range prevVals {
 		vals[k] = v
 	}
@@ -143,7 +149,16 @@ func Notes(installation *api.Installation) error {
 func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	ctx, _ := w.Context.Repo(w.Installation.Repository.Name)
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "values.yaml"))
+	defaultValuesFile := pathing.SanitizeFilepath(filepath.Join(s.Root, "default-values.yaml"))
+	defaultPrevVals, _ := prevValues(defaultValuesFile)
 	prevVals, _ := prevValues(valuesFile)
+
+	if !utils.Exists(valuesFile) {
+		if err := os.WriteFile(valuesFile, []byte(""), 0644); err != nil {
+			return err
+		}
+	}
+
 	conf := config.Read()
 
 	apps, err := NewApplications()
@@ -186,23 +201,56 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		}
 	}
 
+	for k, v := range defaultPrevVals {
+		vals[k] = v
+	}
 	for k, v := range prevVals {
 		vals[k] = v
 	}
 
-	values, err := scftmpl.BuildValuesFromTemplate(vals, prevVals, w)
+	defaultValues, err := scftmpl.BuildValuesFromTemplate(vals, w)
 	if err != nil {
 		return err
 	}
 
-	io, err := yaml.Marshal(values)
+	io, err := yaml.Marshal(defaultValues)
 	if err != nil {
-		fmt.Println("Invalid yaml:")
-		fmt.Println(values)
 		return err
 	}
 
-	return utils.WriteFile(valuesFile, io)
+	mapValues, err := getValues(valuesFile)
+	if err != nil {
+		return err
+	}
+	patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
+	if err != nil {
+		return err
+	}
+
+	values, err := yaml.Marshal(patchValues)
+	if err != nil {
+		return err
+	}
+	if len(patchValues) == 0 {
+		values = []byte{}
+	}
+	if err := utils.WriteFile(valuesFile, values); err != nil {
+		return err
+	}
+
+	return utils.WriteFile(defaultValuesFile, io)
+}
+
+func getValues(path string) (map[string]map[string]interface{}, error) {
+	values := map[string]map[string]interface{}{}
+	valuesFromFile, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(valuesFromFile, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
 }
 
 func prevValues(filename string) (map[string]map[string]interface{}, error) {
