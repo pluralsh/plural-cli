@@ -9,8 +9,11 @@ import (
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
+	lua "github.com/pluralsh/plural/pkg/scaffold/template"
 	"github.com/pluralsh/plural/pkg/template"
+	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -30,33 +33,65 @@ func testTemplate(c *cli.Context) error {
 			continue
 		}
 
-		ctx := installation.Context
-		tmpl, err := template.MakeTemplate(string(testTemplate))
+		var errList []error
+		vals := genDefaultValues(conf, installation)
+
+		output, err := luaTmpValues(string(testTemplate), vals)
 		if err != nil {
-			return err
-		}
-		var buf bytes.Buffer
-		buf.Grow(5 * 1024)
-		vals := map[string]interface{}{
-			"Values":   ctx,
-			"License":  installation.LicenseKey,
-			"Region":   "region",
-			"Project":  "example",
-			"Cluster":  "cluster",
-			"Provider": "provider",
-			"Config":   conf,
-			"Context":  map[string]interface{}{},
-		}
-		if err := tmpl.Execute(&buf, vals); err != nil {
-			return err
+			errList = append(errList, err)
+			output, err = goTmpValues(string(testTemplate), vals)
+			if err != nil {
+				return err
+			}
+			// check if the output is yaml format
+			if err := yaml.Unmarshal(output, map[string]interface{}{}); err != nil {
+				errList = append(errList, err)
+				return plrlErrors.ErrorWrap(plrlErrors.NewAggregate(errList), "Can not apply a parsed template")
+			}
 		}
 
-		if _, err := os.Stdout.Write(buf.Bytes()); err != nil {
+		if _, err := os.Stdout.Write(output); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func genDefaultValues(conf config.Config, installation *api.Installation) map[string]interface{} {
+	return map[string]interface{}{
+		"Values":   installation.Context,
+		"License":  installation.LicenseKey,
+		"Region":   "region",
+		"Project":  "example",
+		"Cluster":  "cluster",
+		"Provider": "provider",
+		"Config":   conf,
+		"Context":  map[string]interface{}{},
+	}
+}
+
+func goTmpValues(valuesTmpl string, defaultValues map[string]interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	buf.Grow(5 * 1024)
+	tmpl, err := template.MakeTemplate(valuesTmpl)
+	if err != nil {
+		return nil, err
+	}
+	if err = tmpl.Execute(&buf, defaultValues); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func luaTmpValues(valuesTmpl string, defaultValues map[string]interface{}) ([]byte, error) {
+	output, err := lua.ExecuteLua(defaultValues, valuesTmpl)
+	if err != nil {
+		return nil, err
+	}
+
+	return yaml.Marshal(output)
 }
 
 type GrafanaDashboard struct {
