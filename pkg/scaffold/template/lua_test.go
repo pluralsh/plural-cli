@@ -384,6 +384,41 @@ test:
       key: abc
 `,
 		},
+		{
+			name: `test kebab case`,
+			vals: map[string]interface{}{
+				"Values": map[string]interface{}{
+					"console_dns": "console.onplural.sh",
+					"testBase": map[string]interface{}{
+						"cypressEmail":    "test@plural.sh",
+						"cypressPassword": "xyz",
+					},
+				},
+			},
+			script: `
+			output={
+				
+			}
+			output["test-base"]={
+				enabled=true,
+				secret={
+					CYPRESS_EMAIL=Var.Values.testBase.cypressEmail,
+					CYPRESS_PASSWORD=Var.Values.testBase.cypressPassword,
+					CYPRESS_BASE_URL= "https://" .. Var.Values.console_dns .. "/",
+				}
+			}
+`,
+			expectedResponse: `global: {}
+test:
+  enabled: true
+  test-base:
+    enabled: true
+    secret:
+      CYPRESS_BASE_URL: https://console.onplural.sh/
+      CYPRESS_EMAIL: test@plural.sh
+      CYPRESS_PASSWORD: xyz
+`,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
