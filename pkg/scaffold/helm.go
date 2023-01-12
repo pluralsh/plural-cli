@@ -197,11 +197,15 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		}
 	}
 
-	for k, v := range defaultPrevVals {
-		vals[k] = v
-	}
-	for k, v := range prevVals {
-		vals[k] = v
+	// get previous values from default-values.yaml if exists otherwise from values.yaml
+	if utils.Exists(defaultValuesFile) {
+		for k, v := range defaultPrevVals {
+			vals[k] = v
+		}
+	} else {
+		for k, v := range prevVals {
+			vals[k] = v
+		}
 	}
 
 	defaultValues, err := scftmpl.BuildValuesFromTemplate(vals, w)
