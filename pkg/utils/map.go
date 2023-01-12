@@ -32,7 +32,35 @@ func RemoveNulls(m map[string]interface{}) {
 		if ok {
 			RemoveNulls(t)
 		}
+		// if the map is empty, remove it
+		// TODO: add a unit test for this
+		if ok && len(t) == 0 {
+			delete(m, e.String())
+		}
 	}
+}
+
+func MergeMap(defaultValues, values map[string]interface{}) (map[string]interface{}, error) {
+	defaultJson, err := json.Marshal(defaultValues)
+	if err != nil {
+		return nil, err
+	}
+	valuesJson, err := json.Marshal(values)
+	if err != nil {
+		return nil, err
+	}
+
+	patchJson, err := jsonpatch.MergePatch(defaultJson, valuesJson)
+	if err != nil {
+		return nil, err
+	}
+
+	patch := map[string]interface{}{}
+	if err := json.Unmarshal(patchJson, &patch); err != nil {
+		return nil, err
+	}
+
+	return patch, nil
 }
 
 func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) (map[string]map[string]interface{}, error) {
@@ -55,12 +83,19 @@ func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) 
 		return nil, err
 	}
 	for key := range patch {
+		// if the map is empty, remove it
 		if len(patch[key]) == 0 {
 			delete(patch, key)
 		} else {
+			// remove nulls from the map
 			RemoveNulls(patch[key])
+			// if the map is empty after removing nulls, remove it
+			if len(patch[key]) == 0 {
+				delete(patch, key)
+			}
 		}
 	}
+	// if the patch is empty, return an empty map
 	if len(patch) == 0 {
 		return map[string]map[string]interface{}{}, nil
 	}
