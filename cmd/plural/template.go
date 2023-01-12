@@ -11,7 +11,6 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	lua "github.com/pluralsh/plural/pkg/scaffold/template"
 	"github.com/pluralsh/plural/pkg/template"
-	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
@@ -23,6 +22,7 @@ func testTemplate(c *cli.Context) error {
 	client := api.NewClient()
 	installations, _ := client.GetInstallations()
 	repoName := c.Args().Get(0)
+	isLuaTemplate := c.Bool("luaTemplate")
 	testTemplate, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -33,23 +33,20 @@ func testTemplate(c *cli.Context) error {
 			continue
 		}
 
-		var errList []error
+		var output []byte
 		vals := genDefaultValues(conf, installation)
 
-		output, err := luaTmpValues(string(testTemplate), vals)
-		if err != nil {
-			errList = append(errList, err)
+		if isLuaTemplate {
+			output, err = luaTmpValues(string(testTemplate), vals)
+			if err != nil {
+				return err
+			}
+		} else {
 			output, err = goTmpValues(string(testTemplate), vals)
 			if err != nil {
 				return err
 			}
-			// check if the output is yaml format
-			if err := yaml.Unmarshal(output, map[string]interface{}{}); err != nil {
-				errList = append(errList, err)
-				return plrlErrors.ErrorWrap(plrlErrors.NewAggregate(errList), "Can not apply a parsed template")
-			}
 		}
-
 		if _, err := os.Stdout.Write(output); err != nil {
 			return err
 		}

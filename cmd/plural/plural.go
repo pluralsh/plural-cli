@@ -276,6 +276,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:    "validate a values templace",
 			Action:   latestVersion(testTemplate),
 			Category: "Publishing",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "luaTemplate",
+					Usage: "Determines if used Lua template. Otherwise, go template.",
+				},
+			},
 		},
 		{
 			Name:        "proxy",
