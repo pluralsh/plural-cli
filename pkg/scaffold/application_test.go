@@ -10,6 +10,11 @@ import (
 )
 
 const values_file = `console:
+  ingress:
+    console_dns: console.onplural.sh
+`
+
+const defaultValues_file = `console:
   enabled: true
   ingress:
     annotations:
@@ -51,6 +56,8 @@ func TestListRepositories(t *testing.T) {
 
 			dirPath := filepath.Join(dir, test.appName, "helm", test.appName)
 			err = os.MkdirAll(dirPath, os.ModePerm)
+			assert.NoError(t, err)
+			err = os.WriteFile(filepath.Join(dirPath, "default-values.yaml"), []byte(defaultValues_file), 0644)
 			assert.NoError(t, err)
 			err = os.WriteFile(filepath.Join(dirPath, "values.yaml"), []byte(values_file), 0644)
 			assert.NoError(t, err)
