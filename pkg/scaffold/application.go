@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -51,12 +52,12 @@ func (apps *Applications) HelmValues(app string) (map[string]interface{}, error)
 		}
 	}
 
-	res, err := utils.MergeMap(defaultVals, vals)
+	err = mergo.Merge(&defaultVals, vals, mergo.WithOverride)
 	if err != nil {
 		return nil, err
 	}
 
-	return res, err
+	return defaultVals, err
 }
 
 func (apps *Applications) TerraformValues(app string) (map[string]interface{}, error) {
