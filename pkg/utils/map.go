@@ -40,6 +40,29 @@ func RemoveNulls(m map[string]interface{}) {
 	}
 }
 
+func MergeMap(defaultValues, values map[string]interface{}) (map[string]interface{}, error) {
+	defaultJson, err := json.Marshal(defaultValues)
+	if err != nil {
+		return nil, err
+	}
+	valuesJson, err := json.Marshal(values)
+	if err != nil {
+		return nil, err
+	}
+
+	patchJson, err := jsonpatch.MergePatch(defaultJson, valuesJson)
+	if err != nil {
+		return nil, err
+	}
+
+	patch := map[string]interface{}{}
+	if err := json.Unmarshal(patchJson, &patch); err != nil {
+		return nil, err
+	}
+
+	return patch, nil
+}
+
 func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) (map[string]map[string]interface{}, error) {
 	defaultJson, err := json.Marshal(defaultValues)
 	if err != nil {

@@ -29,15 +29,14 @@ func NewApplications() (*Applications, error) {
 }
 
 func (apps *Applications) HelmValues(app string) (map[string]interface{}, error) {
-	res := make(map[string]interface{})
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(apps.Root, app, "helm", app, "values.yaml"))
 	vals := make(map[string]interface{})
 	valsContent, err := os.ReadFile(valuesFile)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	if err := yaml.Unmarshal(valsContent, &vals); err != nil {
-		return res, err
+		return nil, err
 	}
 
 	defaultValuesFile := pathing.SanitizeFilepath(filepath.Join(apps.Root, app, "helm", app, "default-values.yaml"))
@@ -45,19 +44,18 @@ func (apps *Applications) HelmValues(app string) (map[string]interface{}, error)
 	if utils.Exists(defaultValuesFile) {
 		defaultValsContent, err := os.ReadFile(defaultValuesFile)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
 		if err := yaml.Unmarshal(defaultValsContent, &defaultVals); err != nil {
-			return res, err
+			return nil, err
 		}
 	}
 
-	for k, v := range defaultVals {
-		res[k] = v
+	res, err := utils.MergeMap(defaultVals, vals)
+	if err != nil {
+		return nil, err
 	}
-	for k, v := range vals {
-		res[k] = v
-	}
+
 	return res, err
 }
 
