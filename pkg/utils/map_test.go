@@ -154,7 +154,7 @@ func TestPatchInterfaceMap(t *testing.T) {
 				"test": {"a": "test", "b": 13, "c": map[string]interface{}{"d": "test"}},
 			},
 			values: map[string]map[string]interface{}{
-				"test": map[string]interface{}{},
+				"test": {},
 			},
 			expectedResult: map[string]map[string]interface{}{},
 		},
