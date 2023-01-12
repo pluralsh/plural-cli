@@ -89,6 +89,10 @@ func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) 
 		} else {
 			// remove nulls from the map
 			RemoveNulls(patch[key])
+			// if the map is empty after removing nulls, remove it
+			if len(patch[key]) == 0 {
+				delete(patch, key)
+			}
 		}
 	}
 	// if the patch is empty, return an empty map
