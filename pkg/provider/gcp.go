@@ -221,9 +221,10 @@ func (gcp *GCPProvider) KubeConfig() error {
 		return nil
 	}
 
+	t, name := gcp.clusterLocation()
 	cmd := exec.Command(
 		"gcloud", "container", "clusters", "get-credentials", gcp.Clust,
-		"--region", gcp.Region(), "--project", gcp.Proj)
+		fmt.Sprintf("--%s", t), name, "--project", gcp.Proj)
 	return utils.Execute(cmd)
 }
 
@@ -244,6 +245,8 @@ func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[str
 	ctx["Location"] = gcp.Context()["Location"]
 	ctx["Region"] = gcp.Region()
 	ctx["Bucket"] = gcp.Bucket()
+	_, location := gcp.clusterLocation()
+	ctx["ClusterLocation"] = location
 	ctx["Prefix"] = prefix
 	ctx["ClusterCreated"] = false
 	ctx["__CLUSTER__"] = gcp.Cluster()
@@ -268,6 +271,14 @@ func (gcp *GCPProvider) mkBucket(name string) error {
 		})
 	}
 	return nil
+}
+
+func (gcp *GCPProvider) clusterLocation() (string, string) {
+	if z, ok := gcp.ctx["clusterZone"]; ok {
+		return "zone", z.(string)
+	}
+
+	return "region", gcp.Region()
 }
 
 func (gcp *GCPProvider) Name() string {
