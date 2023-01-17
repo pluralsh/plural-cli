@@ -82,22 +82,6 @@ var defaultAwsSurvey = []*survey.Question{
 	},
 }
 
-func listClusters(region string) ([]string, error) {
-	ctx := context.Background()
-	client, err := getEksClient(region, ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &eks.ListClustersInput{}
-	clusters, err := client.ListClusters(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return clusters.Clusters, nil
-}
-
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider = &AWSProvider{}
 	if err = survey.Ask(initAwsSurvey, provider); err != nil {
