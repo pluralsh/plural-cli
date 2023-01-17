@@ -287,6 +287,14 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
+func (aws *AWSProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	output["enabled"] = aws.ByokConf.Enabled
+	output["type"] = aws.ByokConf.Type
+
+	return output
+}
+
 func (aws *AWSProvider) Preflights() []*Preflight {
 	return nil
 }

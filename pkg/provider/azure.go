@@ -297,6 +297,11 @@ func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
 }
 
+func (az *AzureProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
+}
+
 func (az *AzureProvider) Preflights() []*Preflight {
 	return nil
 }

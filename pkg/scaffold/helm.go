@@ -84,11 +84,6 @@ func Notes(installation *api.Installation) error {
 		return err
 	}
 
-	proj, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
 	repo := installation.Repository.Name
 	ctx, _ := context.Repo(installation.Repository.Name)
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "values.yaml"))
@@ -108,10 +103,7 @@ func Notes(installation *api.Installation) error {
 		"Provider":      prov.Name(),
 		"Context":       prov.Context(),
 		"Applications":  BuildApplications(repoRoot),
-	}
-
-	if proj.Byok != nil {
-		vals["BYOK"] = proj.Byok
+		"BYOK":          prov.Byok(),
 	}
 
 	if context.Globals != nil {

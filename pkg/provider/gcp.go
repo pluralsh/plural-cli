@@ -305,6 +305,11 @@ func (gcp *GCPProvider) Context() map[string]interface{} {
 	return gcp.ctx
 }
 
+func (gcp *GCPProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
+}
+
 func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	ctx := context.Background()
 	c, err := compute.NewInstancesRESTClient(ctx)

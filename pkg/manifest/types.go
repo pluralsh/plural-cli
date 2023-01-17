@@ -49,8 +49,8 @@ type NetworkConfig struct {
 }
 
 type ByokConfig struct {
-	Enabled bool
-	Type    string
+	Enabled bool   `yaml:"enabled"`
+	Type    string `yaml:"type"`
 }
 
 type ProjectManifest struct {
