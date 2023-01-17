@@ -7,7 +7,7 @@ import (
 
 var validCluster = survey.ComposeValidators(
 	utils.ValidateAlphaNumeric,
-	survey.MaxLength(15), //GKE max is 40, EKS max is 100, AKS 53
+	survey.MaxLength(15),
 )
 
 func validClusterName(provider string) survey.Validator {
@@ -23,6 +23,6 @@ func validClusterName(provider string) survey.Validator {
 	}
 	return survey.ComposeValidators(
 		utils.ValidateAlphaNumeric,
-		survey.MaxLength(length), //GKE max is 40, EKS max is 100, AKS 63
+		survey.MaxLength(length),
 	)
 }

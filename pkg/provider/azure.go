@@ -121,7 +121,7 @@ var azureSurvey = []*survey.Question{
 	{
 		Name:     "cluster",
 		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: validCluster,
+		Validate: validClusterName(AZURE),
 	},
 	{
 		Name:     "storage",

@@ -79,7 +79,7 @@ func getGCPSurvey() []*survey.Question {
 		{
 			Name:     "cluster",
 			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
-			Validate: validCluster,
+			Validate: validClusterName(GCP),
 		},
 		{
 			Name:     "project",
