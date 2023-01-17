@@ -289,8 +289,10 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 
 func (aws *AWSProvider) Byok() map[string]interface{} {
 	output := make(map[string]interface{})
-	output["enabled"] = aws.ByokConf.Enabled
-	output["type"] = aws.ByokConf.Type
+	if aws.ByokConf != nil {
+		output["enabled"] = aws.ByokConf.Enabled
+		output["type"] = aws.ByokConf.Type
+	}
 
 	return output
 }
