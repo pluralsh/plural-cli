@@ -11,6 +11,7 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	v1 "k8s.io/api/core/v1"
@@ -23,11 +24,16 @@ import (
 	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
 )
 
+const (
+	EKS = "eks"
+)
+
 type AWSProvider struct {
 	Clus          string `survey:"cluster"`
 	project       string
 	bucket        string
 	Reg           string `survey:"region"`
+	ByokConf      *manifest.ByokConfig
 	storageClient *s3.Client
 	writer        manifest.Writer
 	goContext     *context.Context
@@ -60,12 +66,7 @@ var (
 	}
 )
 
-var awsSurvey = []*survey.Question{
-	{
-		Name:     "cluster",
-		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: validCluster,
-	},
+var initAwsSurvey = []*survey.Question{
 	{
 		Name:     "region",
 		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east-2", Options: awsRegions},
@@ -73,9 +74,38 @@ var awsSurvey = []*survey.Question{
 	},
 }
 
+var defaultAwsSurvey = []*survey.Question{
+	{
+		Name:     "cluster",
+		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
+		Validate: validCluster,
+	},
+}
+
+func listClusters(region string) ([]string, error) {
+	ctx := context.Background()
+	client, err := getEksClient(region, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &eks.ListClustersInput{}
+	clusters, err := client.ListClusters(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return clusters.Clusters, nil
+}
+
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider = &AWSProvider{}
-	if err = survey.Ask(awsSurvey, provider); err != nil {
+	if err = survey.Ask(initAwsSurvey, provider); err != nil {
+		return
+	}
+
+	var createCluster bool
+	if err = survey.AskOne(&survey.Confirm{Message: "Do you want to create a new cluster?", Default: true}, &createCluster); err != nil {
 		return
 	}
 
@@ -83,9 +113,40 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 	provider.goContext = &ctx
 
-	client, err := getClient(provider.Reg, *provider.goContext)
+	s3Client, err := getClient(provider.Reg, *provider.goContext)
 	if err != nil {
 		return
+	}
+
+	if !createCluster {
+
+		provider.ByokConf = &manifest.ByokConfig{Enabled: !createCluster, Type: EKS}
+
+		eksClient, err2 := getEksClient(provider.Reg, *provider.goContext)
+		if err != nil {
+			return nil, err2
+		}
+
+		input := &eks.ListClustersInput{}
+		clusters, err3 := eksClient.ListClusters(ctx, input)
+		if err != nil {
+			return nil, err3
+		}
+
+		if err = survey.Ask(
+			[]*survey.Question{
+				{
+					Name:   "cluster",
+					Prompt: &survey.Select{Message: "Select the cluster you want to use:", Options: clusters.Clusters},
+				},
+			}, provider); err != nil {
+			return
+		}
+	} else {
+		provider.ByokConf = &manifest.ByokConfig{Enabled: !createCluster}
+		if err = survey.Ask(defaultAwsSurvey, provider); err != nil {
+			return
+		}
 	}
 
 	account, err := GetAwsAccount()
@@ -100,7 +161,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	}
 
 	provider.project = account
-	provider.storageClient = client
+	provider.storageClient = s3Client
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
@@ -108,6 +169,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Provider: AWS,
 		Region:   provider.Region(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		Byok:     provider.ByokConf,
 	}
 
 	provider.writer = projectManifest.Configure()
@@ -122,7 +184,19 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 		return nil, err
 	}
 
-	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx}, nil
+	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, ByokConf: man.Byok, storageClient: client, goContext: &ctx}, nil
+}
+
+func getEksClient(region string, context context.Context) (*eks.Client, error) {
+	cfg, err := awsConfig.LoadDefaultConfig(context)
+
+	if err != nil {
+		return nil, plrlErrors.ErrorWrap(err, "Failed to initialize aws client: ")
+	}
+
+	cfg.Region = region
+
+	return eks.NewFromConfig(cfg), nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
