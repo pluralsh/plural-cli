@@ -87,7 +87,6 @@ func (client *client) GetRepository(repo string) (*Repository, error) {
 			Name: resp.Repository.Publisher.Name,
 		},
 	}, nil
-
 }
 
 func (client *client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {
@@ -118,6 +117,8 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 		if err != nil {
 			return err
 		}
+		defer os.Remove(tarFile)
+
 		docsUpload, err := getIconReader(lo.ToPtr(tarFile), "docs")
 		if err != nil {
 			return err
@@ -136,11 +137,8 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 		input.Notes = &notes
 	}
 
-	if _, err := client.pluralClient.CreateRepository(context.Background(), name, publisher, *input, gqlclient.WithFiles(uploads)); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = client.pluralClient.CreateRepository(context.Background(), name, publisher, *input, gqlclient.WithFiles(uploads))
+	return err
 }
 
 func (client *client) AcquireLock(repo string) (*ApplyLock, error) {
