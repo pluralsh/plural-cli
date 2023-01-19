@@ -160,7 +160,7 @@ func (p *Plural) backupCommands() []cli.Command {
 			Name:      "restore",
 			Usage:     "restores a key backup as your current encryption key",
 			ArgsUsage: "NAME",
-			Action:    p.restoreBackup,
+			Action:    requireArgs(p.restoreBackup, []string{"NAME"}),
 		},
 	}
 }
