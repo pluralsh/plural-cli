@@ -43,6 +43,10 @@ func DownloadBackup(client api.Client, name string) error {
 		return api.GetErrorResponse(err, "GetKeyBackup")
 	}
 
+	if backup == nil {
+		return fmt.Errorf("no backup found for %s", name)
+	}
+
 	return Setup(backup.Value)
 }
 
