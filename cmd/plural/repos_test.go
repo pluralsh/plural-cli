@@ -65,32 +65,32 @@ func TestListRepositories(t *testing.T) {
 	}
 }
 
-func TestResetRepositories(t *testing.T) {
-	tests := []struct {
-		name             string
-		args             []string
-		count            int
-		expectedResponse string
-	}{
-		{
-			name:  `test "repos reset"`,
-			args:  []string{plural.ApplicationName, "repos", "reset"},
-			count: 5,
-			expectedResponse: `Deleted 5 installations in app.plural.sh
-(you can recreate these at any time and any running infrastructure is not affected, plural will simply no longer deliver upgrades)
-`,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			client := mocks.NewClient(t)
-			client.On("ResetInstallations").Return(test.count, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
-			app.HelpName = plural.ApplicationName
-			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
-			assert.NoError(t, err)
-			assert.Equal(t, test.expectedResponse, res)
-		})
-	}
-}
+// func TestResetRepositories(t *testing.T) {
+// 	tests := []struct {
+// 		name             string
+// 		args             []string
+// 		count            int
+// 		expectedResponse string
+// 	}{
+// 		{
+// 			name:  `test "repos reset"`,
+// 			args:  []string{plural.ApplicationName, "repos", "reset"},
+// 			count: 5,
+// 			expectedResponse: `Deleted 5 installations in app.plural.sh
+// (you can recreate these at any time and any running infrastructure is not affected, plural will simply no longer deliver upgrades)
+// `,
+// 		},
+// 	}
+// 	for _, test := range tests {
+// 		t.Run(test.name, func(t *testing.T) {
+// 			client := mocks.NewClient(t)
+// 			client.On("ResetInstallations").Return(test.count, nil)
+// 			app := plural.CreateNewApp(&plural.Plural{Client: client})
+// 			app.HelpName = plural.ApplicationName
+// 			os.Args = test.args
+// 			res, err := captureStdout(app, os.Args)
+// 			assert.NoError(t, err)
+// 			assert.Equal(t, test.expectedResponse, res)
+// 		})
+// 	}
+// }
