@@ -7,7 +7,10 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bundle"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/format"
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -18,6 +21,17 @@ func (p *Plural) reposCommands() []cli.Command {
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "REPO",
 			Action:    latestVersion(p.handleUnlockRepo),
+		},
+		{
+			Name:  "reinstall",
+			Usage: "reinstalls all bundles from a previous installation",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "refresh",
+					Usage: "re-enter the configuration for all bundles",
+				},
+			},
+			Action: p.handleReinstall,
 		},
 		{
 			Name:   "reset",
@@ -85,8 +99,31 @@ func (p *Plural) handleListRepositories(c *cli.Context) error {
 	return nil
 }
 
+func (p *Plural) handleReinstall(c *cli.Context) error {
+	p.InitPluralClient()
+	ctx, err := manifest.FetchContext()
+	if err != nil {
+		return err
+	}
+
+	for _, b := range ctx.Bundles {
+		if err := bundle.Install(p.Client, b.Repository, b.Name, c.Bool("refresh")); err != nil {
+			return err
+		}
+
+		fmt.Println("Moving to the next bundle....")
+	}
+
+	return nil
+}
+
 func (p *Plural) handleResetInstallations(c *cli.Context) error {
 	p.InitPluralClient()
+	conf := config.Read()
+	if !confirm(fmt.Sprintf("Are you sure you want to reset installations for %s?  This will also wipe all oidc providers and any other associated state in the plural api", conf.Email)) {
+		return nil
+	}
+
 	count, err := p.ResetInstallations()
 	if err != nil {
 		return api.GetErrorResponse(err, "ResetInstallations")

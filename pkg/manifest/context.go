@@ -60,6 +60,10 @@ func BuildContext(path string, insts []*api.Installation) error {
 	return ctx.Write(path)
 }
 
+func FetchContext() (*Context, error) {
+	return ReadContext(ContextPath())
+}
+
 func ReadContext(path string) (c *Context, err error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
