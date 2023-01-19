@@ -1,7 +1,9 @@
 FROM golang:1.18-stretch
 
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list && \
-    apt-get update -y && apt-get install -y apt-transport-https ca-certificates gnupg unzip git openssl curl zsh emacs vim locales-all screen tree less google-cloud-sdk-gke-gcloud-auth-plugin
+    echo "deb https://packages.cloud.google.com/apt cloud-sdk main" >> /etc/apt/sources.list && \
+    apt-get update -y && apt-get install -y --allow-unauthenticated apt-transport-https ca-certificates gnupg unzip git openssl \ 
+                  curl zsh emacs vim locales-all screen tree less google-cloud-sdk-gke-gcloud-auth-plugin
 
 ARG HELM_VERSION=3.7.0
 ARG TERRAFORM_VERSION=1.2.8
