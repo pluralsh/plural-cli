@@ -2,6 +2,7 @@ package wkspace
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -17,6 +18,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
+	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -25,7 +27,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"sigs.k8s.io/yaml"
 )
@@ -79,26 +80,19 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		return err
 	}
 	namespace := m.Config.Namespace(m.Name)
-	actionConfig := new(action.Configuration)
-	settings := cli.New()
-	settings.SetNamespace(namespace)
-	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, "", log.Printf); err != nil {
-		log.Fatal(err)
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return err
 	}
-
 	utils.Warn("helm upgrade --install --skip-crds --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
 	chart, err := loader.Load(path)
 	if err != nil {
 		return err
 	}
-	client := action.NewUpgrade(actionConfig)
-	client.Namespace = namespace
-	client.SkipCRDs = true
-	client.Timeout = time.Minute * 10
 	// If a release does not exist, install it.
 	histClient := action.NewHistory(actionConfig)
 	histClient.Max = 1
-	if _, err := histClient.Run(m.Name); err == driver.ErrReleaseNotFound {
+	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(actionConfig)
 		instClient.Namespace = namespace
 		instClient.ReleaseName = m.Name
@@ -112,7 +106,10 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		_, err = instClient.Run(chart, defaultVals)
 		return err
 	}
-
+	client := action.NewUpgrade(actionConfig)
+	client.Namespace = namespace
+	client.SkipCRDs = true
+	client.Timeout = time.Minute * 10
 	_, err = client.Run(m.Name, chart, defaultVals)
 	return err
 }
@@ -181,11 +178,9 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	if err != nil {
 		return err
 	}
-	currentSpecs := make(map[string]*diffmanifest.MappingResult)
-	var newSpecs map[string]*diffmanifest.MappingResult
 
-	currentSpecs = diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
-	newSpecs = diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
+	currentSpecs := diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
+	newSpecs := diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	helmdiff.Manifests(currentSpecs, newSpecs, &helmdiff.Options{
 		OutputFormat:    "diff",
 		OutputContext:   -1,
@@ -235,11 +230,8 @@ func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
 }
 
 func getRelease(release, namespace string) ([]byte, error) {
-	actionConfig := new(action.Configuration)
-	settings := cli.New()
-	settings.SetNamespace(namespace)
-	if err := actionConfig.Init(settings.RESTClientGetter(), namespace,
-		"", log.Printf); err != nil {
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
 		return nil, err
 	}
 	client := action.NewGet(actionConfig)
@@ -260,12 +252,9 @@ func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, e
 		return nil, err
 	}
 
-	actionConfig := new(action.Configuration)
 	log.SetOutput(io.Discard)
-	settings := cli.New()
-	settings.SetNamespace(namespace)
-	if err := actionConfig.Init(settings.RESTClientGetter(), namespace,
-		"", log.Printf); err != nil {
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
 		return nil, err
 	}
 
