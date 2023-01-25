@@ -119,7 +119,7 @@ func getGcpProjects() ([]string, error) {
 		return nil, err
 	}
 	for _, project := range resp.Projects {
-		projectList = append(projectList, project.Name)
+		projectList = append(projectList, project.ProjectId)
 	}
 	return projectList, nil
 }
