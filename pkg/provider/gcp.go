@@ -79,7 +79,7 @@ func getGCPSurvey() []*survey.Question {
 		{
 			Name:     "cluster",
 			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
-			Validate: validCluster,
+			Validate: validClusterName(GCP),
 		},
 		{
 			Name:     "project",
@@ -303,6 +303,11 @@ func (gcp *GCPProvider) Region() string {
 
 func (gcp *GCPProvider) Context() map[string]interface{} {
 	return gcp.ctx
+}
+
+func (gcp *GCPProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
 }
 
 func (gcp *GCPProvider) Decommision(node *v1.Node) error {

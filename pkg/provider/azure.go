@@ -121,7 +121,7 @@ var azureSurvey = []*survey.Question{
 	{
 		Name:     "cluster",
 		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: validCluster,
+		Validate: validClusterName(AZURE),
 	},
 	{
 		Name:     "storage",
@@ -295,6 +295,11 @@ func (az *AzureProvider) Region() string {
 
 func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
+}
+
+func (az *AzureProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
 }
 
 func (az *AzureProvider) Preflights() []*Preflight {

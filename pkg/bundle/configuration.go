@@ -225,7 +225,7 @@ func bucketName(value string, proj *manifest.ProjectManifest) string {
 		return value
 	}
 
-	return fmt.Sprintf("%s-%s-%s", proj.BucketPrefix, proj.Cluster, value)
+	return fmt.Sprintf("%s-%s-%s", proj.BucketPrefix, utils.TruncString(proj.Cluster, 15), value)
 }
 
 func getEnvVar(repo, itemName string) string {

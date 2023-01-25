@@ -103,6 +103,7 @@ func Notes(installation *api.Installation) error {
 		"Provider":      prov.Name(),
 		"Context":       prov.Context(),
 		"Applications":  BuildApplications(repoRoot),
+		"BYOK":          prov.Byok(),
 	}
 
 	if context.Globals != nil {

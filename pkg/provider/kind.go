@@ -128,6 +128,11 @@ func (kind *KINDProvider) Context() map[string]interface{} {
 	return kind.ctx
 }
 
+func (kind *KINDProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
+}
+
 func (prov *KINDProvider) Decommision(node *v1.Node) error {
 	return nil
 }

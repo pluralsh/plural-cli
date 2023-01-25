@@ -48,12 +48,18 @@ type NetworkConfig struct {
 	PluralDns bool
 }
 
+type ByokConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	Type    string `yaml:"type"`
+}
+
 type ProjectManifest struct {
 	Cluster      string
 	Bucket       string
 	Project      string
 	Provider     string
 	Region       string
+	Byok         *ByokConfig
 	Owner        *Owner
 	Network      *NetworkConfig
 	BucketPrefix string `yaml:"bucketPrefix"`

@@ -123,7 +123,9 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Region":        wk.Provider.Region(),
 			"Context":       wk.Provider.Context(),
 			"Applications":  apps,
+			"BYOK":          wk.Provider.Byok(),
 		}
+
 		if err := tmpl.Execute(&buf, values); err != nil {
 			return err
 		}

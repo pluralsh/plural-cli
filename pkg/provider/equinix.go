@@ -250,6 +250,11 @@ func (equinix *EQUINIXProvider) Context() map[string]interface{} {
 	return equinix.ctx
 }
 
+func (equinix *EQUINIXProvider) Byok() map[string]interface{} {
+	output := make(map[string]interface{})
+	return output
+}
+
 func (equinix *EQUINIXProvider) Preflights() []*Preflight {
 	return nil
 }
