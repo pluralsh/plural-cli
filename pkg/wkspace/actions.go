@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
-
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/helm"
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 type checker func(s string) bool
@@ -41,16 +41,18 @@ func (w *Workspace) DestroyHelm() error {
 	}
 
 	name := w.Installation.Repository.Name
-
-	ns := w.Config.Namespace(name)
-	if err := alwaysErr.execSuppressed("helm", "get", "values", name, "-n", ns); err != nil {
-		fmt.Println("Helm already uninstalled, continuing...")
-		return nil
+	namespace := w.Config.Namespace(name)
+	var err error
+	for retry := 2; retry >= 0; retry-- {
+		err = uninstallHelm(name, namespace)
+		if err == nil {
+			break
+		}
+		fmt.Printf("retrying command, number of retries remaining: %d\n", retry)
 	}
 
-	r := regexp.MustCompile("release.*not found")
-	var ignoreNotFound checker = func(s string) bool { return r.MatchString(s) }
-	return ignoreNotFound.execSuppressed("helm", "del", name, "-n", ns)
+	return err
+
 }
 
 func (w *Workspace) Bounce() error {
@@ -115,4 +117,42 @@ func (w *Workspace) DestroyTerraform() error {
 	}
 
 	return alwaysErr.execSuppressed("terraform", "destroy", "-auto-approve")
+}
+
+func uninstallHelm(name, namespace string) error {
+	exists, err := isReleaseAvailable(name, namespace)
+	if err != nil {
+		return err
+	}
+	if exists {
+		actionConfig, err := helm.GetActionConfig(namespace)
+		if err != nil {
+			return err
+		}
+		client := action.NewUninstall(actionConfig)
+
+		_, err = client.Run(name)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func isReleaseAvailable(name, namespace string) (bool, error) {
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return false, err
+	}
+	client := action.NewList(actionConfig)
+	resp, err := client.Run()
+	if err != nil {
+		return false, err
+	}
+	for _, rel := range resp {
+		if rel.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
 }
