@@ -1,27 +1,41 @@
 package wkspace
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
+	helmdiff "github.com/databus23/helm-diff/v3/diff"
+	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
+	"github.com/imdario/mergo"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
+	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/output"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/storage/driver"
+	"sigs.k8s.io/yaml"
 )
 
 const (
-	valuesYaml        = "values.yaml"
-	defaultValuesYaml = "default-values.yaml"
+	valuesYaml           = "values.yaml"
+	defaultValuesYaml    = "default-values.yaml"
+	helm2TestSuccessHook = "test-success"
+	helm3TestHook        = "test"
 )
 
 type MinimalWorkspace struct {
@@ -56,60 +70,82 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	return
 }
 
-func templateVals(app, path string) (backup string, err error) {
-	root, _ := utils.ProjectRoot()
-	valsFile := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
-	vals, err := utils.ReadFile(valsFile)
-	if err != nil {
-		return
-	}
-
-	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, app, "output.yaml")))
-	if err != nil {
-		out = output.New()
-	}
-
-	backup = fmt.Sprintf("%s.bak", valsFile)
-	err = os.Rename(valsFile, backup)
-	if err != nil {
-		return
-	}
-
-	f, err := os.Create(valsFile)
-	if err != nil {
-		return
-	}
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
-
-	err = FormatValues(f, vals, out)
-	return
-}
-
 func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
 	}
-	backup, err := templateVals(m.Name, path)
-	if err == nil {
-		defer func(oldpath, newpath string) {
-			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml)))
+	defaultVals, err := getValues(m.Name)
+	if err != nil {
+		return err
+	}
+	namespace := m.Config.Namespace(m.Name)
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return err
+	}
+	utils.Warn("helm upgrade --install --skip-crds --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
+	chart, err := loader.Load(path)
+	if err != nil {
+		return err
+	}
+	// If a release does not exist, install it.
+	histClient := action.NewHistory(actionConfig)
+	histClient.Max = 1
+	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
+		instClient := action.NewInstall(actionConfig)
+		instClient.Namespace = namespace
+		instClient.ReleaseName = m.Name
+		instClient.SkipCRDs = true
+
+		if req := chart.Metadata.Dependencies; req != nil {
+			if err := action.CheckDependencies(chart, req); err != nil {
+				return err
+			}
+		}
+		_, err = instClient.Run(chart, defaultVals)
+		return err
+	}
+	client := action.NewUpgrade(actionConfig)
+	client.Namespace = namespace
+	client.SkipCRDs = true
+	client.Timeout = time.Minute * 10
+	_, err = client.Run(m.Name, chart, defaultVals)
+	return err
+}
+
+func getValues(name string) (map[string]interface{}, error) {
+	values := make(map[string]interface{})
+	defaultVals := make(map[string]interface{})
+
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", name)))
+	if err != nil {
+		return nil, err
+	}
+	defaultValuesPath := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
+	valuesPath := pathing.SanitizeFilepath(filepath.Join(path, valuesYaml))
+	valsContent, err := os.ReadFile(valuesPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(valsContent, &values); err != nil {
+		return nil, err
+	}
+	if utils.Exists(defaultValuesPath) {
+		defaultValsContent, err := os.ReadFile(defaultValuesPath)
+		if err != nil {
+			return nil, err
+		}
+		if err := yaml.Unmarshal(defaultValsContent, &defaultVals); err != nil {
+			return nil, err
+		}
 	}
 
-	namespace := m.Config.Namespace(m.Name)
-	utils.Warn("helm upgrade --install --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
-	var args []string
-	defaultArgs := []string{"upgrade", "--install", "--skip-crds", "--timeout", "10m", "--namespace", namespace, m.Name, path}
-	if utils.Exists(pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))) {
-		defaultArgs = append(defaultArgs, []string{"-f", filepath.Join(path, defaultValuesYaml), "-f", filepath.Join(path, valuesYaml)}...)
+	err = mergo.Merge(&defaultVals, values, mergo.WithOverride)
+	if err != nil {
+		return nil, err
 	}
-	args = append(args, defaultArgs...)
-	args = append(args, extraArgs...)
-	return utils.Cmd(m.Config,
-		"helm", args...)
+	return defaultVals, nil
 }
 
 func (m *MinimalWorkspace) TemplateHelm() error {
@@ -117,23 +153,14 @@ func (m *MinimalWorkspace) TemplateHelm() error {
 	if err != nil {
 		return err
 	}
-	backup, err := templateVals(m.Name, path)
-	if err == nil {
-		defer func(oldpath, newpath string) {
-			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml)))
-	}
-
 	namespace := m.Config.Namespace(m.Name)
-	utils.Warn("helm template --namespace %s %s %s\n", namespace, m.Name, path)
-	var args []string
-	defaultArgs := []string{"template", "--skip-crds", "--namespace", namespace, m.Name, path}
-	if utils.Exists(pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))) {
-		defaultArgs = append(defaultArgs, []string{"-f", filepath.Join(path, defaultValuesYaml), "-f", filepath.Join(path, valuesYaml)}...)
+	manifest, err := getTemplate(m.Name, namespace, false, false)
+	if err != nil {
+		return err
 	}
-	args = append(args, defaultArgs...)
-	return utils.Cmd(m.Config,
-		"helm", args...)
+	utils.Warn("helm template --skip-crds --namespace %s %s %s\n", namespace, m.Name, path)
+	fmt.Printf("%s", manifest)
+	return nil
 }
 
 func (m *MinimalWorkspace) DiffHelm() error {
@@ -141,22 +168,27 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	if err != nil {
 		return err
 	}
-	backup, err := templateVals(m.Name, path)
-	if err == nil {
-		defer func(oldpath, newpath string) {
-			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml)))
+	namespace := m.Config.Namespace(m.Name)
+	utils.Warn("helm diff upgrade --install --show-secrets --reset-values  %s %s\n", m.Name, path)
+	releaseManifest, err := getRelease(m.Name, namespace)
+	if err != nil {
+		return err
+	}
+	installManifest, err := getTemplate(m.Name, namespace, true, true)
+	if err != nil {
+		return err
 	}
 
-	namespace := m.Config.Namespace(m.Name)
-	utils.Warn("helm diff upgrade --install --show-secrets --reset-values --namespace %s %s %s\n", namespace, m.Name, path)
-	defaultArgs := []string{"upgrade", "--show-secrets", "--reset-values", "--install", "--namespace", namespace, m.Name, path}
-	if utils.Exists(pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))) {
-		defaultArgs = append(defaultArgs, []string{"-f", filepath.Join(path, defaultValuesYaml), "-f", filepath.Join(path, valuesYaml)}...)
-	}
-	if err := m.runDiff("helm", defaultArgs...); err != nil {
-		utils.Note("helm diff failed, this command can be flaky, but let us know regardless")
-	}
+	currentSpecs := diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
+	newSpecs := diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
+	helmdiff.Manifests(currentSpecs, newSpecs, &helmdiff.Options{
+		OutputFormat:    "diff",
+		OutputContext:   -1,
+		StripTrailingCR: false,
+		ShowSecrets:     true,
+		SuppressedKinds: []string{},
+		FindRenames:     0,
+	}, os.Stdout)
 	return nil
 }
 
@@ -195,4 +227,56 @@ func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
 	}
 
 	return diffFolder, err
+}
+
+func getRelease(release, namespace string) ([]byte, error) {
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return nil, err
+	}
+	client := action.NewGet(actionConfig)
+	rel, err := client.Run(release)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(rel.Manifest), nil
+}
+
+func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, error) {
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", release)))
+	if err != nil {
+		return nil, err
+	}
+	defaultVals, err := getValues(release)
+	if err != nil {
+		return nil, err
+	}
+
+	log.SetOutput(io.Discard)
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	// load chart from the path
+	chart, err := loader.Load(path)
+	if err != nil {
+		return nil, err
+	}
+
+	client := action.NewInstall(actionConfig)
+	client.DryRun = true
+	client.ReleaseName = release
+	client.Replace = true // Skip the name check
+	client.ClientOnly = !validate
+	client.IsUpgrade = isUpgrade
+	client.Namespace = namespace
+	client.IncludeCRDs = false
+	rel, err := client.Run(chart, defaultVals)
+	if err != nil {
+		return nil, err
+	}
+	var manifests bytes.Buffer
+	fmt.Fprintln(&manifests, strings.TrimSpace(rel.Manifest))
+	return manifests.Bytes(), nil
 }
