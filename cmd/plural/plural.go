@@ -65,7 +65,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: tracked(latestVersion(owned(upstreamSynced(p.build))), "cli.build"),
+			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
 		{
 			Name:      "deploy",

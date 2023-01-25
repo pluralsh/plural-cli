@@ -438,7 +438,12 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
 	}
-	utils.Error("\nDestroying application %s\n", installation.Repository.Name)
+	repo := installation.Repository.Name
+	if ctx, err := manifest.FetchContext(); err == nil && ctx.Protected(repo) {
+		return fmt.Errorf("This app is protected, you cannot plural destroy without updating context.yaml")
+	}
+
+	utils.Error("\nDestroying application %s\n", repo)
 	workspace, err := wkspace.New(p.Client, installation)
 	if err != nil {
 		return err
@@ -449,7 +454,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	}
 
 	if delete {
-		utils.Highlight("Uninstalling %s from the plural api as well...\n", installation.Repository.Name)
+		utils.Highlight("Uninstalling %s from the plural api as well...\n", repo)
 		return p.Client.DeleteInstallation(installation.Id)
 	}
 
