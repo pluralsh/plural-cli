@@ -32,6 +32,7 @@ type Context struct {
 	Bundles       []*Bundle
 	Buckets       []string
 	Domains       []string
+	Protect       []string `yaml:"protect,omitempty" json:"protect,omitempty"`
 	SMTP          *SMTP    `yaml:"smtp,omitempty"`
 	Globals       *Globals `yaml:"globals,omitempty" json:"globals,omitempty"`
 	Configuration map[string]map[string]interface{}
@@ -115,6 +116,16 @@ func (c *Context) HasBucket(bucket string) bool {
 
 func (c *Context) AddDomain(bucket string) {
 	c.Domains = append(c.Domains, bucket)
+}
+
+func (c *Context) Protected(name string) bool {
+	for _, r := range c.Protect {
+		if r == name {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Context) HasDomain(domain string) bool {
