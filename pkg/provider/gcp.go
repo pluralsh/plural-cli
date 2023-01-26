@@ -2,13 +2,17 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
 
 	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
+	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
@@ -16,14 +20,12 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/errors"
+	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	gcompute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	serviceusagepb "google.golang.org/genproto/googleapis/api/serviceusage/v1"
-	computepb "google.golang.org/genproto/googleapis/cloud/compute/v1"
-	resourcemanagerpb "google.golang.org/genproto/googleapis/cloud/resourcemanager/v3"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -43,6 +45,10 @@ const (
 	BucketLocationUS   BucketLocation = "US"
 	BucketLocationEU   BucketLocation = "EU"
 	BucketLocationASIA BucketLocation = "ASIA"
+)
+
+const (
+	ZoneLabel = "topology.gke.io/zone"
 )
 
 var (
@@ -237,7 +243,7 @@ func (gcp *GCPProvider) Flush() error {
 
 func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := gcp.mkBucket(gcp.bucket); err != nil {
-		return "", errors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
+		return "", utilerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
 	}
 
 	ctx["Project"] = gcp.Project()
@@ -307,21 +313,30 @@ func (gcp *GCPProvider) Context() map[string]interface{} {
 
 func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	ctx := context.Background()
-	c, err := compute.NewInstancesRESTClient(ctx)
+
+	c, err := compute.NewInstanceGroupManagersRESTClient(ctx)
 	if err != nil {
-		return errors.ErrorWrap(err, "failed to initialize compute client")
+		return utilerr.ErrorWrap(err, "failed to initialize compute client")
 	}
-	defer func(c *compute.InstancesClient) {
+	defer func(c *compute.InstanceGroupManagersClient) {
 		_ = c.Close()
 	}(c)
 
-	_, err = c.Delete(ctx, &computepb.DeleteInstanceRequest{
-		Instance: node.Name,
-		Project:  gcp.Project(),
-		Zone:     gcp.Region(),
+	instanceGroupManager, instance, err := getInstanceAndGroupManager(ctx, c, gcp.Project(), node.Labels[ZoneLabel], node.Name)
+	if err != nil {
+		return utilerr.ErrorWrap(err, "failed to get instance group manager")
+	}
+
+	_, err = c.DeleteInstances(ctx, &computepb.DeleteInstancesInstanceGroupManagerRequest{
+		InstanceGroupManager: instanceGroupManager,
+		InstanceGroupManagersDeleteInstancesRequestResource: &computepb.InstanceGroupManagersDeleteInstancesRequest{
+			Instances: []string{instance},
+		},
+		Project: gcp.Project(),
+		Zone:    node.Labels[ZoneLabel],
 	})
 
-	return errors.ErrorWrap(err, "failed to delete instance")
+	return utilerr.ErrorWrap(err, "failed to delete instance")
 }
 
 func (gcp *GCPProvider) Preflights() []*Preflight {
@@ -380,4 +395,70 @@ func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
 		_ = c.Close()
 	}(c)
 	return c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
+}
+
+func getInstanceAndGroupManager(ctx context.Context, c *compute.InstanceGroupManagersClient, project, zone, node string) (string, string, error) {
+	groupManagers, err := listInstanceGroupManagers(ctx, c, project, zone)
+	if err != nil {
+		return "", "", err
+	}
+
+	for _, groupManager := range groupManagers {
+		instances, err := listInstances(ctx, c, *groupManager.Name, project, zone)
+		if err != nil {
+			return "", "", err
+		}
+		for _, instance := range instances {
+			err, InstanceID := getPathElement(*instance.Instance, "instances")
+			if err != nil {
+				return "", "", err
+			}
+			if InstanceID == node {
+				return *groupManager.Name, *instance.Instance, nil
+			}
+		}
+	}
+
+	return "", "", fmt.Errorf("couldn't find the Group Manager")
+}
+
+func listInstances(ctx context.Context, c *compute.InstanceGroupManagersClient, groupManager, project, zone string) ([]*computepb.ManagedInstance, error) {
+	instances := make([]*computepb.ManagedInstance, 0)
+	it := c.ListManagedInstances(ctx, &computepb.ListManagedInstancesInstanceGroupManagersRequest{
+		InstanceGroupManager: groupManager,
+		Project:              project,
+		Zone:                 zone,
+	})
+	for {
+		resp, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		instances = append(instances, resp)
+	}
+	return instances, nil
+}
+
+func listInstanceGroupManagers(ctx context.Context, c *compute.InstanceGroupManagersClient, project, zone string) ([]*computepb.InstanceGroupManager, error) {
+	instances := make([]*computepb.InstanceGroupManager, 0)
+	it := c.List(ctx, &computepb.ListInstanceGroupManagersRequest{
+		Project: project,
+		Zone:    zone,
+	})
+	for {
+		resp, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		instances = append(instances, resp)
+	}
+	return instances, nil
 }
