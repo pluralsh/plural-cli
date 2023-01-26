@@ -111,6 +111,7 @@ jobs:
       - name: Run Trivy vulnerability scanner on frontend image
         uses: aquasecurity/trivy-action@master
         with:
+          timeout: 15m0s
           scan-type: 'image'
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           hide-progress: false
