@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/AlecAivazis/survey/v2"
+	goversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/releases"
+	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/mitchellh/go-homedir"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
@@ -155,6 +162,49 @@ func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
 			utils.CheckLatestVersion(version)
+		}
+
+		return fn(c)
+	}
+}
+
+func terraformVersion(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		installer := &releases.ExactVersion{
+			Product: product.Terraform,
+			Version: goversion.Must(goversion.NewVersion("1.3.7")),
+		}
+		homeDir, err := homedir.Expand("~/.plural")
+		if err != nil {
+			return err
+		}
+		installer.InstallDir = homeDir
+		ctx := context.Background()
+		terraformBinPath := filepath.Join(homeDir, "terraform")
+		if !utils.Exists(terraformBinPath) {
+			_, err := installer.Install(ctx)
+			if err != nil {
+				return fmt.Errorf("error installing Terraform: %w", err)
+			}
+		}
+
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		tf, err := tfexec.NewTerraform(currentDir, terraformBinPath)
+		if err != nil {
+			return fmt.Errorf("error running NewTerraform: %w", err)
+		}
+		version, _, err := tf.Version(ctx, true)
+		if err != nil {
+			return err
+		}
+		if version.Compare(installer.Version) != 0 {
+			_, err := installer.Install(ctx)
+			if err != nil {
+				return fmt.Errorf("error upgrading Terraform: %w", err)
+			}
 		}
 
 		return fn(c)
