@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/pluralsh/gqlclient"
+
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
@@ -22,10 +24,14 @@ func testTemplate(c *cli.Context) error {
 	client := api.NewClient()
 	installations, _ := client.GetInstallations()
 	repoName := c.Args().Get(0)
-	isLuaTemplate := c.Bool("luaTemplate")
+	templateTypeFlag := c.String("templateType")
+	templateType := gqlclient.TemplateTypeGotemplate
 	testTemplate, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
+	}
+	if templateTypeFlag != "" {
+		templateType = gqlclient.TemplateType(templateTypeFlag)
 	}
 
 	for _, installation := range installations {
@@ -36,7 +42,7 @@ func testTemplate(c *cli.Context) error {
 		var output []byte
 		vals := genDefaultValues(conf, installation)
 
-		if isLuaTemplate {
+		if templateType == gqlclient.TemplateTypeLua {
 			output, err = luaTmpValues(string(testTemplate), vals)
 			if err != nil {
 				return err

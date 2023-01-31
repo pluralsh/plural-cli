@@ -278,8 +278,8 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Publishing",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "luaTemplate",
-					Usage: "Determines if used Lua template. Otherwise, go template.",
+					Name:  "templateType",
+					Usage: "Determines the template type. Go template by default",
 				},
 			},
 		},
