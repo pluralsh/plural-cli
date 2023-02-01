@@ -3,18 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/pluralfile"
 	scftmpl "github.com/pluralsh/plural/pkg/scaffold/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
+	"sigs.k8s.io/yaml"
 )
 
 func (p *Plural) pushCommands() []cli.Command {
@@ -104,11 +103,21 @@ func handleHelmTemplate(c *cli.Context) error {
 		_ = os.Remove(name)
 	}(f.Name())
 
-	cmd := exec.Command("helm", "template", c.Args().Get(0), "-f", f.Name())
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	namespace := "default"
+	actionConfig, err := helm.GetActionConfig(namespace)
+	if err != nil {
+		return err
+	}
+	values, err := getValues(f.Name())
+	if err != nil {
+		return err
+	}
+	res, err := helm.Template(actionConfig, c.Args().Get(0), namespace, "./", false, false, values)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(res))
+	return nil
 }
 
 func handleHelmUpload(c *cli.Context) error {
@@ -125,8 +134,11 @@ func handleHelmUpload(c *cli.Context) error {
 	}(f.Name())
 
 	utils.Highlight("linting helm: ")
-	cmd, outputWriter := executor.SuppressedCommand("helm", "lint", pth, "-f", f.Name())
-	if err := executor.RunCommand(cmd, outputWriter); err != nil {
+	values, err := getValues(f.Name())
+	if err != nil {
+		return err
+	}
+	if err := helm.Lint(pth, "default", values); err != nil {
 		return err
 	}
 
@@ -191,4 +203,16 @@ func (p *Plural) createCrd(c *cli.Context) error {
 	chart := c.Args().Get(2)
 	err := p.CreateCrd(repo, chart, fullPath)
 	return api.GetErrorResponse(err, "CreateCrd")
+}
+
+func getValues(path string) (map[string]interface{}, error) {
+	values := make(map[string]interface{})
+	valsContent, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(valsContent, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
 }
