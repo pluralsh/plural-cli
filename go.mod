@@ -55,9 +55,9 @@ require (
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.11.0
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
-	k8s.io/client-go v0.26.0
+	k8s.io/api v0.26.1
+	k8s.io/apimachinery v0.26.1
+	k8s.io/client-go v0.26.1
 	layeh.com/gopher-luar v1.0.10
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/yaml v1.3.0
