@@ -29,8 +29,6 @@ jobs:
         uses: azure/setup-kubectl@v3
       - name: Get EKS credentials
         run: aws eks update-kubeconfig --name pluraldev
-      # - name: test kubectl
-      #   run: kubectl get deployments -n buildx
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
