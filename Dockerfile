@@ -3,7 +3,7 @@ FROM ubuntu:22.10 as user
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
 
-FROM golang:1.18.2-alpine3.15 AS builder
+FROM golang:1.18.8-alpine3.15 AS builder
 
 WORKDIR /workspace
 
@@ -28,7 +28,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags "-s -w -X main.version=${APP_VSN} -X main.commit=${APP_COMMIT} -X main.date=${APP_DATE}" \
     -o plural ./cmd/plural/
 
-FROM golang:1.18.2-alpine3.15
+FROM golang:1.18.8-alpine3.15
 
 WORKDIR /
 
