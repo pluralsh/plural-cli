@@ -2,3 +2,17 @@ plural/
 .gitlab-ci.yml
 Pluralfile
 plural.lock
+.gitignore
+.github/
+.goreleaser.yaml
+.golangci.yml
+docker-compose.yml
+*.md
+plural.lock
+Pluralfile
+renovate.json
+packer/
+hack/
+Makefile
+Dockerfile
+dockerfiles/
