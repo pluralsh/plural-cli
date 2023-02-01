@@ -1,11 +1,9 @@
 package wkspace
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -252,31 +250,10 @@ func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, e
 		return nil, err
 	}
 
-	log.SetOutput(io.Discard)
 	actionConfig, err := helm.GetActionConfig(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	// load chart from the path
-	chart, err := loader.Load(path)
-	if err != nil {
-		return nil, err
-	}
-
-	client := action.NewInstall(actionConfig)
-	client.DryRun = true
-	client.ReleaseName = release
-	client.Replace = true // Skip the name check
-	client.ClientOnly = !validate
-	client.IsUpgrade = isUpgrade
-	client.Namespace = namespace
-	client.IncludeCRDs = false
-	rel, err := client.Run(chart, defaultVals)
-	if err != nil {
-		return nil, err
-	}
-	var manifests bytes.Buffer
-	fmt.Fprintln(&manifests, strings.TrimSpace(rel.Manifest))
-	return manifests.Bytes(), nil
+	return helm.Template(actionConfig, release, namespace, path, isUpgrade, validate, defaultVals)
 }
