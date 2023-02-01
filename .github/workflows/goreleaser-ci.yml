@@ -36,9 +36,21 @@ jobs:
       contents: 'read'
       id-token: 'write'
       packages: 'write'
+      security-events: write
+      actions: read
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: us-east-2
+        role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+        role-session-name: PluralCLI
+    - name: setup kubectl
+      uses: azure/setup-kubectl@v3
+    - name: Get EKS credentials
+      run: aws eks update-kubeconfig --name pluraldev
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -51,10 +63,33 @@ jobs:
         # generate Docker tags based on the following events/attributes
         tags: |
           type=semver,pattern={{version}}
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
+      id: builder
       uses: docker/setup-buildx-action@v2
+      with:
+        driver: kubernetes
+        platforms: linux/amd64
+        driver-opts: |
+          namespace=buildx
+          requests.cpu=1.5
+          requests.memory=3.5Gi
+          "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
+          "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
+    - name: Append ARM buildx builder from AWS
+      run: |
+        docker buildx create \
+          --append \
+          --bootstrap \
+          --name ${{ steps.builder.outputs.name }} \
+          --driver=kubernetes \
+          --platform linux/arm64 \
+          --node=${{ steps.builder.outputs.name }}-arm64 \
+          --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
+          --driver-opt namespace=buildx \
+          --driver-opt requests.cpu=1.5 \
+          --driver-opt requests.memory=3.5Gi \
+          '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
+          '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
     - uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: 'projects/${{ secrets.GOOGLE_PROJECT_ID }}/locations/global/workloadIdentityPools/github/providers/github'
@@ -76,6 +111,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get current date
+      id: date
+      run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
@@ -84,6 +122,28 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
+        build-args: |
+            APP_VSN=${GITHUB_REF_NAME}
+            APP_COMMIT=${GITHUB_SHA}
+            APP_DATE=${{ steps.date.outputs.date }}
+    - name: Run Trivy vulnerability scanner on cli image
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'image'
+        image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        hide-progress: false
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        security-checks: 'vuln'
+        ignore-unfixed: true
+          #severity: 'CRITICAL,HIGH'
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
   publish-cloud:
     name: Build and push CLI cloud container
     runs-on: ubuntu-latest
@@ -91,9 +151,21 @@ jobs:
       contents: 'read'
       id-token: 'write'
       packages: 'write'
+      security-events: write
+      actions: read
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: us-east-2
+        role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+        role-session-name: PluralCLI
+    - name: setup kubectl
+      uses: azure/setup-kubectl@v3
+    - name: Get EKS credentials
+      run: aws eks update-kubeconfig --name pluraldev
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -106,10 +178,33 @@ jobs:
         # generate Docker tags based on the following events/attributes
         tags: |
           type=semver,pattern={{version}}
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
+      id: builder
       uses: docker/setup-buildx-action@v2
+      with:
+        driver: kubernetes
+        platforms: linux/amd64
+        driver-opts: |
+          namespace=buildx
+          requests.cpu=1.5
+          requests.memory=3.5Gi
+          "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
+          "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
+    - name: Append ARM buildx builder from AWS
+      run: |
+        docker buildx create \
+          --append \
+          --bootstrap \
+          --name ${{ steps.builder.outputs.name }} \
+          --driver=kubernetes \
+          --platform linux/arm64 \
+          --node=${{ steps.builder.outputs.name }}-arm64 \
+          --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
+          --driver-opt namespace=buildx \
+          --driver-opt requests.cpu=1.5 \
+          --driver-opt requests.memory=3.5Gi \
+          '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
+          '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
     - uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: 'projects/${{ secrets.GOOGLE_PROJECT_ID }}/locations/global/workloadIdentityPools/github/providers/github'
@@ -131,6 +226,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get current date
+      id: date
+      run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
@@ -139,3 +237,25 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
+        build-args: |
+            APP_VSN=${GITHUB_REF_NAME}
+            APP_COMMIT=${GITHUB_SHA}
+            APP_DATE=${{ steps.date.outputs.date }}
+    - name: Run Trivy vulnerability scanner on cli cloud image
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'image'
+        image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        hide-progress: false
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        security-checks: 'vuln'
+        ignore-unfixed: true
+          #severity: 'CRITICAL,HIGH'
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'

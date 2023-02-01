@@ -44,11 +44,14 @@ build: .PHONY ## Build the Docker image
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
 build-cloud: .PHONY ## build the cloud docker image
-	docker build --platform linux/amd64 \
-		-t $(APP_NAME):$(APP_VSN)-cloud \
-		-t $(APP_NAME):latest-cloud \
-		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud \
-		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN)-cloud -f dockerfiles/Dockerfile.cloud  .
+	docker build --build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
+		-t $(APP_NAME)-cloud:$(APP_VSN) \
+		-t $(APP_NAME)-cloud:latest \
+		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
+		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
 push: .PHONY ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)

@@ -1,44 +1,109 @@
-FROM golang:1.18-stretch
+FROM golang:1.18.2-alpine3.15 AS builder
 
-RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list && \
-    echo "deb https://packages.cloud.google.com/apt cloud-sdk main" >> /etc/apt/sources.list && \
-    apt-get update -y && apt-get install -y --allow-unauthenticated apt-transport-https ca-certificates gnupg unzip git openssl \ 
-                  curl zsh emacs vim locales-all screen tree less google-cloud-sdk-gke-gcloud-auth-plugin
+WORKDIR /workspace
 
-ARG HELM_VERSION=3.7.0
-ARG TERRAFORM_VERSION=1.2.8
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
 
-# install kubectl, helm and terraform
-# ENV BASE_URL="https://storage.googleapis.com/kubernetes-helm"
-ENV BASE_URL="https://get.helm.sh"
-ENV TAR_FILE="helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+# Copy the go source
+COPY cmd/ cmd/
+COPY pkg/ pkg/
 
-ARG KUBECTL_VERSION='1.22.1'
-ADD https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl /usr/local/bin/kubectl
+# Build
+ARG APP_VSN
+ARG APP_COMMIT
+ARG APP_DATE
+ARG TARGETARCH
 
-RUN curl -L ${BASE_URL}/${TAR_FILE} | tar xvz && \
-    mv linux-amd64/helm /usr/local/bin/helm && \
-    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
-    unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin && \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
+    go build -ldflags "-s -w -X main.version=${APP_VSN} -X main.commit=${APP_COMMIT} -X main.date=${APP_DATE}" \
+    -o plural ./cmd/plural/
+
+FROM alpine:3.17.1 as tools
+
+ARG TARGETARCH
+
+# renovate: datasource=github-releases depName=helm/helm
+ENV HELM_VERSION=v3.10.3
+
+# renovate: datasource=github-releases depName=hashicorp/terraform
+ENV TERRAFORM_VERSION=v1.2.9
+
+# renovate: datasource=github-tags depName=kubernetes/kubernetes
+ENV KUBECTL_VERSION=v1.25.5
+
+RUN apk add --update --no-cache curl ca-certificates unzip wget openssl build-base && \
+    curl -L https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARGETARCH}.tar.gz | tar xvz && \
+    mv linux-${TARGETARCH}/helm /usr/local/bin/helm && \
+    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION/v/}/terraform_${TERRAFORM_VERSION/v/}_linux_${TARGETARCH}.zip && \
+    unzip terraform_${TERRAFORM_VERSION/v/}_linux_${TARGETARCH}.zip -d /usr/local/bin && \
+    curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
+    mv kubectl /usr/local/bin/kubectl && \
+    chmod +x /usr/local/bin/kubectl && \
     chmod +x /usr/local/bin/helm && \
-    chmod +x /usr/local/bin/terraform && \
-    chmod +x /usr/local/bin/kubectl && \ 
-    kubectl --help && terraform version && helm version
+    chmod +x /usr/local/bin/terraform
+
+FROM ubuntu:22.04
+
+ARG TARGETARCH
+
+RUN apt-get -yq update \
+  && apt-get -yq install --no-install-recommends \
+     apt-transport-https \
+     ca-certificates \
+     gnupg \
+     unzip \
+     git \
+     openssl \
+     curl \
+     zsh \
+     emacs \
+     vim \
+     python3 \
+     locales-all\
+     screen \
+     tree \
+     less \
+     lsb-release \
+     openssh-client \
+  && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /workspace/plural /usr/local/bin/plural
+COPY --from=tools /usr/local/bin/helm /usr/local/bin/helm
+COPY --from=tools /usr/local/bin/terraform /usr/local/bin/terraform
+COPY --from=tools /usr/local/bin/kubectl /usr/local/bin/kubectl
 
 # install azure cli
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash -s -- -y && \
-      az --help
+RUN AZ_REPO=$(lsb_release -cs) \
+  && curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null \
+  && echo "deb [arch=${TARGETARCH}] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | tee /etc/apt/sources.list.d/azure-cli.list \
+  && apt-get -yq update \
+  && apt-get -yq install --no-install-recommends \
+     azure-cli \
+  && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # install awscli
-RUN curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && \
+RUN if [ "${TARGETARCH}" = "amd64" ]; then \
+      curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip; \
+    elif [ "${TARGETARCH}" = "arm64" ]; then \
+      curl https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip -o awscliv2.zip; \
+    fi && \
       unzip awscliv2.zip && \
       ./aws/install -i /usr/local/aws-cli -b /usr/local/bin && \
       aws --version
 
 # install gcloud
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-      curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \ 
-      apt-get update -y && apt-get install -y google-cloud-sdk && \
+      curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+      apt-get update -y && apt-get install -y \
+      google-cloud-sdk \
+      google-cloud-sdk-gke-gcloud-auth-plugin && \
       gcloud --help
 
 WORKDIR /root
@@ -53,14 +118,9 @@ RUN git clone https://github.com/powerline/fonts.git --depth=1 && \
 WORKDIR $GOPATH/src/plural/
 RUN useradd -ms /bin/bash plural
 
-COPY . .
-RUN make build-cli OUTFILE=/go/bin/plural && \
-      cp /go/bin/plural /usr/local/bin/plural && \
-      plural --help && \
-      plural version && \
-      cp start-session.sh /usr/local/bin/start-session.sh && \
-      chmod +x /usr/local/bin/start-session.sh && \
-      cp boot.sh /home/plural/boot.sh && \
+COPY start-session.sh /usr/local/bin/start-session.sh
+COPY boot.sh /home/plural/boot.sh
+RUN chmod +x /usr/local/bin/start-session.sh && \
       chmod +x /home/plural/boot.sh
 
 WORKDIR /home/plural
@@ -70,9 +130,8 @@ COPY tmux /home/plural/tmux
 COPY welcome.txt /home/plural/welcome.txt
 COPY .screenrc /home/plural/.screenrc
 
-RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \ 
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
       cat tmux/.zshrc.local >> /home/plural/.zshrc && \
-      helm plugin install https://github.com/pluralsh/helm-push && \
       helm plugin install https://github.com/databus23/helm-diff
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
