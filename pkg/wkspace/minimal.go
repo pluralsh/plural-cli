@@ -1,6 +1,7 @@
 package wkspace
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -120,18 +121,13 @@ func getValues(name string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	backup, err := templateVals(name, path)
-	if err == nil {
-		defer func(oldpath, newpath string) {
-			_ = os.Rename(oldpath, newpath)
-		}(backup, pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml)))
-	}
-
 	defaultValuesPath := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
 	valuesPath := pathing.SanitizeFilepath(filepath.Join(path, valuesYaml))
-
 	valsContent, err := os.ReadFile(valuesPath)
+	if err != nil {
+		return nil, err
+	}
+	valsContent, err = templateTerraformInputs(name, string(valsContent))
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +136,10 @@ func getValues(name string) (map[string]interface{}, error) {
 	}
 	if utils.Exists(defaultValuesPath) {
 		defaultValsContent, err := os.ReadFile(defaultValuesPath)
+		if err != nil {
+			return nil, err
+		}
+		defaultValsContent, err = templateTerraformInputs(name, string(defaultValsContent))
 		if err != nil {
 			return nil, err
 		}
@@ -267,33 +267,19 @@ func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, e
 	return helm.Template(actionConfig, release, namespace, path, isUpgrade, validate, defaultVals)
 }
 
-func templateVals(app, path string) (backup string, err error) {
+func templateTerraformInputs(name, vals string) ([]byte, error) {
 	root, _ := utils.ProjectRoot()
-	valsFile := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
-	vals, err := utils.ReadFile(valsFile)
-	if err != nil {
-		return
-	}
-
-	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, app, "output.yaml")))
+	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, name, "output.yaml")))
 	if err != nil {
 		out = output.New()
 	}
 
-	backup = fmt.Sprintf("%s.bak", valsFile)
-	err = os.Rename(valsFile, backup)
-	if err != nil {
-		return
-	}
+	var buf bytes.Buffer
+	buf.Grow(5 * 1024)
 
-	f, err := os.Create(valsFile)
+	err = FormatValues(&buf, vals, out)
 	if err != nil {
-		return
+		return nil, err
 	}
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
-
-	err = FormatValues(f, vals, out)
-	return
+	return buf.Bytes(), nil
 }
