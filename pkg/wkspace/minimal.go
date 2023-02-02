@@ -120,8 +120,17 @@ func getValues(name string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	backup, err := templateVals(name, path)
+	if err == nil {
+		defer func(oldpath, newpath string) {
+			_ = os.Rename(oldpath, newpath)
+		}(backup, pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml)))
+	}
+
 	defaultValuesPath := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
 	valuesPath := pathing.SanitizeFilepath(filepath.Join(path, valuesYaml))
+
 	valsContent, err := os.ReadFile(valuesPath)
 	if err != nil {
 		return nil, err
@@ -256,4 +265,35 @@ func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, e
 	}
 
 	return helm.Template(actionConfig, release, namespace, path, isUpgrade, validate, defaultVals)
+}
+
+func templateVals(app, path string) (backup string, err error) {
+	root, _ := utils.ProjectRoot()
+	valsFile := pathing.SanitizeFilepath(filepath.Join(path, defaultValuesYaml))
+	vals, err := utils.ReadFile(valsFile)
+	if err != nil {
+		return
+	}
+
+	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, app, "output.yaml")))
+	if err != nil {
+		out = output.New()
+	}
+
+	backup = fmt.Sprintf("%s.bak", valsFile)
+	err = os.Rename(valsFile, backup)
+	if err != nil {
+		return
+	}
+
+	f, err := os.Create(valsFile)
+	if err != nil {
+		return
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	err = FormatValues(f, vals, out)
+	return
 }
