@@ -36,9 +36,14 @@ func TestPluralConfigCommand(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// create temp environment
+			currentDir, err := os.Getwd()
+			assert.NoError(t, err)
 			dir, err := os.MkdirTemp("", "config")
 			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
+			defer func(path, currentDir string) {
+				_ = os.RemoveAll(path)
+				_ = os.Chdir(currentDir)
+			}(dir, currentDir)
 
 			os.Setenv("HOME", dir)
 			defer os.Unsetenv("HOME")

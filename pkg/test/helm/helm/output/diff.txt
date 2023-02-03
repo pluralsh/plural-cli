@@ -1,0 +1,91 @@
+[0;33msubchart, subchart, Service (v1) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/templates/service.yaml[0m
+[0;32m+ apiVersion: v1[0m
+[0;32m+ kind: Service[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subchart[0m
+[0;32m+   labels:[0m
+[0;32m+     helm.sh/chart: "subchart-0.1.0"[0m
+[0;32m+     app.kubernetes.io/instance: "subchart"[0m
+[0;32m+     kube-version/major: "1"[0m
+[0;32m+     kube-version/minor: "20"[0m
+[0;32m+     kube-version/version: "v1.20.0"[0m
+[0;32m+ spec:[0m
+[0;32m+   type: ClusterIP[0m
+[0;32m+   ports:[0m
+[0;32m+   - port: 80[0m
+[0;32m+     targetPort: 80[0m
+[0;32m+     protocol: TCP[0m
+[0;32m+     name: nginx[0m
+[0;32m+   selector:[0m
+[0;32m+     app.kubernetes.io/name: subchart[0m
+[0;33msubchart, subchart-binding, RoleBinding (rbac.authorization.k8s.io) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/templates/subdir/rolebinding.yaml[0m
+[0;32m+ apiVersion: rbac.authorization.k8s.io/v1[0m
+[0;32m+ kind: RoleBinding[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subchart-binding[0m
+[0;32m+ roleRef:[0m
+[0;32m+   apiGroup: rbac.authorization.k8s.io[0m
+[0;32m+   kind: Role[0m
+[0;32m+   name: subchart-role[0m
+[0;32m+ subjects:[0m
+[0;32m+ - kind: ServiceAccount[0m
+[0;32m+   name: subchart-sa[0m
+[0;32m+   namespace: default[0m
+[0;33msubchart, subchart-role, Role (rbac.authorization.k8s.io) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/templates/subdir/role.yaml[0m
+[0;32m+ apiVersion: rbac.authorization.k8s.io/v1[0m
+[0;32m+ kind: Role[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subchart-role[0m
+[0;32m+ rules:[0m
+[0;32m+ - apiGroups: [""][0m
+[0;32m+   resources: ["pods"][0m
+[0;32m+   verbs: ["get","list","watch"][0m
+[0;33msubchart, subchart-sa, ServiceAccount (v1) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/templates/subdir/serviceaccount.yaml[0m
+[0;32m+ apiVersion: v1[0m
+[0;32m+ kind: ServiceAccount[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subchart-sa[0m
+[0;33msubchart, subcharta, Service (v1) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/charts/subcharta/templates/service.yaml[0m
+[0;32m+ apiVersion: v1[0m
+[0;32m+ kind: Service[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subcharta[0m
+[0;32m+   labels:[0m
+[0;32m+     helm.sh/chart: "subcharta-0.1.0"[0m
+[0;32m+ spec:[0m
+[0;32m+   type: ClusterIP[0m
+[0;32m+   ports:[0m
+[0;32m+   - port: 80[0m
+[0;32m+     targetPort: 80[0m
+[0;32m+     protocol: TCP[0m
+[0;32m+     name: apache[0m
+[0;32m+   selector:[0m
+[0;32m+     app.kubernetes.io/name: subcharta[0m
+[0;33msubchart, subchartb, Service (v1) has been added:[0m
+[0;31m- [0m
+[0;32m+ # Source: subchart/charts/subchartb/templates/service.yaml[0m
+[0;32m+ apiVersion: v1[0m
+[0;32m+ kind: Service[0m
+[0;32m+ metadata:[0m
+[0;32m+   name: subchartb[0m
+[0;32m+   labels:[0m
+[0;32m+     helm.sh/chart: "subchartb-0.1.0"[0m
+[0;32m+ spec:[0m
+[0;32m+   type: ClusterIP[0m
+[0;32m+   ports:[0m
+[0;32m+   - port: 80[0m
+[0;32m+     targetPort: 80[0m
+[0;32m+     protocol: TCP[0m
+[0;32m+     name: nginx[0m
+[0;32m+   selector:[0m
+[0;32m+     app.kubernetes.io/name: subchartb[0m
