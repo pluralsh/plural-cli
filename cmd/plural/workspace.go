@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func workspaceCommands() []cli.Command {
+func (p *Plural) workspaceCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "kube-init",
@@ -34,13 +34,13 @@ func workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: latestVersion(bounceHelm),
+			Action: latestVersion(p.bounceHelm),
 		},
 		{
 			Name:      "helm-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(diffHelm),
+			Action:    latestVersion(p.diffHelm),
 		},
 		{
 			Name:      "helm-deps",
@@ -52,7 +52,7 @@ func workspaceCommands() []cli.Command {
 			Name:      "terraform-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(diffTerraform),
+			Action:    latestVersion(p.diffTerraform),
 		},
 		{
 			Name:      "crds",
@@ -64,7 +64,7 @@ func workspaceCommands() []cli.Command {
 			Name:      "helm-template",
 			Usage:     "templates the helm values to stdout",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(requireArgs(templateHelm, []string{"NAME"})),
+			Action:    latestVersion(requireArgs(p.templateHelm, []string{"NAME"})),
 		},
 	}
 }
@@ -83,9 +83,9 @@ func kubeInit(c *cli.Context) error {
 	return prov.KubeConfig()
 }
 
-func bounceHelm(c *cli.Context) error {
+func (p *Plural) bounceHelm(c *cli.Context) error {
 	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
+	minimal, err := wkspace.Minimal(name, p.HelmConfiguration)
 	if err != nil {
 		return err
 	}
@@ -105,9 +105,9 @@ func bounceHelm(c *cli.Context) error {
 	return minimal.BounceHelm(args...)
 }
 
-func diffHelm(c *cli.Context) error {
+func (p *Plural) diffHelm(c *cli.Context) error {
 	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
+	minimal, err := wkspace.Minimal(name, p.HelmConfiguration)
 	if err != nil {
 		return err
 	}
@@ -115,9 +115,9 @@ func diffHelm(c *cli.Context) error {
 	return minimal.DiffHelm()
 }
 
-func diffTerraform(c *cli.Context) error {
+func (p *Plural) diffTerraform(c *cli.Context) error {
 	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
+	minimal, err := wkspace.Minimal(name, p.HelmConfiguration)
 	if err != nil {
 		return err
 	}
@@ -164,9 +164,9 @@ func updateDeps(c *cli.Context) error {
 	return helm.UpdateDependencies(path)
 }
 
-func templateHelm(c *cli.Context) error {
+func (p *Plural) templateHelm(c *cli.Context) error {
 	name := c.Args().Get(0)
-	minimal, err := wkspace.Minimal(name)
+	minimal, err := wkspace.Minimal(name, p.HelmConfiguration)
 	if err != nil {
 		return err
 	}

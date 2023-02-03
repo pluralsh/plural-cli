@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -24,6 +26,7 @@ const ApplicationName = "plural"
 type Plural struct {
 	api.Client
 	kubernetes.Kube
+	HelmConfiguration *action.Configuration
 }
 
 func (p *Plural) InitKube() error {
@@ -318,7 +321,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:        "workspace",
 			Aliases:     []string{"wkspace"},
 			Usage:       "Commands for managing installations in your workspace",
-			Subcommands: workspaceCommands(),
+			Subcommands: p.workspaceCommands(),
 			Category:    "Workspace",
 		},
 		{
