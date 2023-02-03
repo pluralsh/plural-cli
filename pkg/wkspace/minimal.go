@@ -37,13 +37,14 @@ const (
 )
 
 type MinimalWorkspace struct {
-	Name     string
-	Provider provider.Provider
-	Config   *config.Config
-	Manifest *manifest.ProjectManifest
+	Name       string
+	Provider   provider.Provider
+	Config     *config.Config
+	Manifest   *manifest.ProjectManifest
+	HelmConfig *action.Configuration
 }
 
-func Minimal(name string) (*MinimalWorkspace, error) {
+func Minimal(name string, helmConfig *action.Configuration) (*MinimalWorkspace, error) {
 	root, err := git.Root()
 	if err != nil {
 		return nil, err
@@ -56,7 +57,7 @@ func Minimal(name string) (*MinimalWorkspace, error) {
 
 	project, _ := manifest.ReadProject(pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml")))
 	conf := config.Read()
-	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf, Manifest: project}, nil
+	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf, Manifest: project, HelmConfig: helmConfig}, nil
 }
 
 func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
@@ -78,20 +79,23 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		return err
 	}
 	namespace := m.Config.Namespace(m.Name)
-	actionConfig, err := helm.GetActionConfig(namespace)
-	if err != nil {
-		return err
+	if m.HelmConfig == nil {
+		m.HelmConfig, err = helm.GetActionConfig(namespace)
+		if err != nil {
+			return err
+		}
 	}
+
 	utils.Warn("helm upgrade --install --skip-crds --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
 	chart, err := loader.Load(path)
 	if err != nil {
 		return err
 	}
 	// If a release does not exist, install it.
-	histClient := action.NewHistory(actionConfig)
+	histClient := action.NewHistory(m.HelmConfig)
 	histClient.Max = 1
 	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
-		instClient := action.NewInstall(actionConfig)
+		instClient := action.NewInstall(m.HelmConfig)
 		instClient.Namespace = namespace
 		instClient.ReleaseName = m.Name
 		instClient.SkipCRDs = true
@@ -101,10 +105,10 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 				return err
 			}
 		}
-		_, err = instClient.Run(chart, defaultVals)
+		_, err := instClient.Run(chart, defaultVals)
 		return err
 	}
-	client := action.NewUpgrade(actionConfig)
+	client := action.NewUpgrade(m.HelmConfig)
 	client.Namespace = namespace
 	client.SkipCRDs = true
 	client.Timeout = time.Minute * 10
@@ -152,7 +156,7 @@ func (m *MinimalWorkspace) TemplateHelm() error {
 		return err
 	}
 	namespace := m.Config.Namespace(m.Name)
-	manifest, err := getTemplate(m.Name, namespace, false, false)
+	manifest, err := m.getTemplate(false, false)
 	if err != nil {
 		return err
 	}
@@ -168,11 +172,11 @@ func (m *MinimalWorkspace) DiffHelm() error {
 	}
 	namespace := m.Config.Namespace(m.Name)
 	utils.Warn("helm diff upgrade --install --show-secrets --reset-values  %s %s\n", m.Name, path)
-	releaseManifest, err := getRelease(m.Name, namespace)
+	releaseManifest, err := m.getRelease()
 	if err != nil {
 		return err
 	}
-	installManifest, err := getTemplate(m.Name, namespace, true, true)
+	installManifest, err := m.getTemplate(true, true)
 	if err != nil {
 		return err
 	}
@@ -227,33 +231,41 @@ func (m *MinimalWorkspace) constructDiffFolder() (string, error) {
 	return diffFolder, err
 }
 
-func getRelease(release, namespace string) ([]byte, error) {
-	actionConfig, err := helm.GetActionConfig(namespace)
-	if err != nil {
-		return nil, err
+func (m *MinimalWorkspace) getRelease() ([]byte, error) {
+	namespace := m.Config.Namespace(m.Name)
+	var err error
+	if m.HelmConfig == nil {
+		m.HelmConfig, err = helm.GetActionConfig(namespace)
+		if err != nil {
+			return nil, err
+		}
 	}
-	client := action.NewGet(actionConfig)
-	rel, err := client.Run(release)
+	client := action.NewGet(m.HelmConfig)
+	rel, err := client.Run(m.Name)
 	if err != nil {
 		return nil, err
 	}
 	return []byte(rel.Manifest), nil
 }
 
-func getTemplate(release, namespace string, isUpgrade, validate bool) ([]byte, error) {
-	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", release)))
+func (m *MinimalWorkspace) getTemplate(isUpgrade, validate bool) ([]byte, error) {
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return nil, err
 	}
-	defaultVals, err := getValues(release)
-	if err != nil {
-		return nil, err
-	}
-
-	actionConfig, err := helm.GetActionConfig(namespace)
+	defaultVals, err := getValues(m.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	return helm.Template(actionConfig, release, namespace, path, isUpgrade, validate, defaultVals)
+	namespace := m.Config.Namespace(m.Name)
+
+	if m.HelmConfig == nil {
+		m.HelmConfig, err = helm.GetActionConfig(namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return helm.Template(m.HelmConfig, m.Name, namespace, path, isUpgrade, validate, defaultVals)
 }
