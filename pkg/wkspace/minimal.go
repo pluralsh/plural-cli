@@ -1,6 +1,7 @@
 package wkspace
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -130,11 +131,19 @@ func getValues(name string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	valsContent, err = templateTerraformInputs(name, string(valsContent))
+	if err != nil {
+		return nil, err
+	}
 	if err := yaml.Unmarshal(valsContent, &values); err != nil {
 		return nil, err
 	}
 	if utils.Exists(defaultValuesPath) {
 		defaultValsContent, err := os.ReadFile(defaultValuesPath)
+		if err != nil {
+			return nil, err
+		}
+		defaultValsContent, err = templateTerraformInputs(name, string(defaultValsContent))
 		if err != nil {
 			return nil, err
 		}
@@ -268,4 +277,21 @@ func (m *MinimalWorkspace) getTemplate(isUpgrade, validate bool) ([]byte, error)
 	}
 
 	return helm.Template(m.HelmConfig, m.Name, namespace, path, isUpgrade, validate, defaultVals)
+}
+
+func templateTerraformInputs(name, vals string) ([]byte, error) {
+	root, _ := utils.ProjectRoot()
+	out, err := output.Read(pathing.SanitizeFilepath(filepath.Join(root, name, "output.yaml")))
+	if err != nil {
+		out = output.New()
+	}
+
+	var buf bytes.Buffer
+	buf.Grow(5 * 1024)
+
+	err = FormatValues(&buf, vals, out)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
