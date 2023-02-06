@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ type ConfigurationUpdate struct {
 	Configuration map[string]map[string]interface{} `json:"configuration,omitempty"`
 	Buckets       []string                          `json:"buckets"`
 	Domains       []string                          `json:"domains"`
+	Bundles       []*manifest.Bundle                `json:"bundles"`
 }
 
 func contextConfiguration(c *gin.Context) error {
@@ -31,6 +33,9 @@ func contextConfiguration(c *gin.Context) error {
 
 	context.Buckets = lo.Uniq(append(context.Buckets, update.Buckets...))
 	context.Domains = lo.Uniq(append(context.Domains, update.Domains...))
+	context.Bundles = lo.UniqBy(append(context.Bundles, update.Bundles...), func(b *manifest.Bundle) string {
+		return fmt.Sprintf("%s:%s", b.Repository, b.Name)
+	})
 
 	if err := context.Write(manifest.ContextPath()); err != nil {
 		return err
