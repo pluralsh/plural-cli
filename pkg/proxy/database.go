@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
+	"github.com/pluralsh/plural/pkg/kubernetes/portforward"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -29,13 +30,10 @@ func buildConnection(secret string, proxy *v1alpha1.Proxy) (dbConnection, error)
 }
 
 func (pg *postgres) Connect(namespace string) error {
-	fwd, err := portForward(namespace, pg.Proxy, pg.Proxy.Spec.DbConfig.Port)
+	err := portForward(namespace, pg.Proxy, pg.Proxy.Spec.DbConfig.Port)
 	if err != nil {
 		return err
 	}
-	defer func(Process *os.Process) {
-		_ = Process.Kill()
-	}(fwd.Process)
 
 	utils.Highlight("Wait a bit while the port-forward boots up\n")
 	time.Sleep(5 * time.Second)
@@ -48,8 +46,22 @@ func (pg *postgres) Connect(namespace string) error {
 	return cmd.Run()
 }
 
-func portForward(namespace string, proxy *v1alpha1.Proxy, port int32) (cmd *exec.Cmd, err error) {
-	cmd = exec.Command("kubectl", "port-forward", proxy.Spec.Target, fmt.Sprint(port), "-n", namespace)
-	err = cmd.Start()
-	return
+func portForward(namespace string, proxy *v1alpha1.Proxy, port int32) error {
+	errorChan := make(chan error, 1)
+	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{})
+	var err error
+	go func() {
+		err = portforward.PortForward(namespace, proxy.Spec.Target, []string{fmt.Sprint(port)}, stopChan, readyChan)
+		errorChan <- err
+	}()
+
+	select {
+	case <-readyChan:
+		break
+	case <-errorChan:
+		close(stopChan)
+		close(errorChan)
+		break
+	}
+	return err
 }
