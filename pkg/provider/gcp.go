@@ -21,6 +21,7 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/polly/algorithms"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	gcompute "google.golang.org/api/compute/v1"
@@ -119,15 +120,12 @@ func getGcpProjects() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	projectList := []string{}
+
 	resp, err := svc.Projects.List().Do()
 	if err != nil {
 		return nil, err
 	}
-	for _, project := range resp.Projects {
-		projectList = append(projectList, project.ProjectId)
-	}
-	return projectList, nil
+	return algorithms.Map(resp.Projects, func(p *cloudresourcemanager.Project) string { return p.ProjectId }), nil
 }
 
 func mkGCP(conf config.Config) (provider *GCPProvider, err error) {

@@ -119,6 +119,16 @@ func setupCli(c *gin.Context) error {
 		if err := man.Write(path); err != nil {
 			return fmt.Errorf("error writing manifest: %w", err)
 		}
+	} else if setup.Provider == "azure" {
+		current, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+
+		current.Project = man.Project
+		if err := current.Write(path); err != nil {
+			return fmt.Errorf("error writing manifest: %w", err)
+		}
 	}
 
 	ctx := toContext(&setup)
