@@ -412,6 +412,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
+		{
+			Name:        "terraform",
+			Aliases:     []string{"tf"},
+			Usage:       "Commands for managing terraform commands",
+			Subcommands: terraformCommands(),
+			Category:    "Workspace",
+		},
 	}
 }
 
