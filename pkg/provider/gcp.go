@@ -356,7 +356,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	errEnabled := fmt.Errorf("You don't have necessary services enabled. Please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console.")
 	proj, err := gcp.getProject()
 	if err != nil {
-		return errEnabled
+		return err
 	}
 
 	wrapped := func(name string) string {
@@ -372,7 +372,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	}
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
-		return errEnabled
+		return err
 	}
 
 	for _, svc := range resp.Services {
