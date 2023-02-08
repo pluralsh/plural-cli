@@ -36,6 +36,7 @@ jobs:
           # list of Docker images to use as base name for tags
           images: |
             ghcr.io/pluralsh/plural-cli
+            gcr.io/pluralsh/plural-cli
           # generate Docker tags based on the following events/attributes
           tags: |
             type=sha
@@ -74,6 +75,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GOOGLE_PROJECT_ID }}/locations/global/workloadIdentityPools/github/providers/github'
+          service_account: 'terraform@pluralsh.iam.gserviceaccount.com'
+          token_format: 'access_token'
+          create_credentials_file: true
+      - uses: google-github-actions/setup-gcloud@v1.0.1
+      - name: Login to gcr
+        run: gcloud auth configure-docker -q
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
