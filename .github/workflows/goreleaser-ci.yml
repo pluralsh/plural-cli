@@ -57,9 +57,9 @@ jobs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          dkr.plural.sh/plural/plural-cli
-          gcr.io/pluralsh/plural-cli
           ghcr.io/pluralsh/plural-cli
+          gcr.io/pluralsh/plural-cli
+        # dkr.plural.sh/plural/plural-cli
         # generate Docker tags based on the following events/attributes
         tags: |
           type=semver,pattern={{version}}
@@ -126,8 +126,8 @@ jobs:
         # cache-from: type=gha
         # cache-to: type=gha,mode=max
         build-args: |
-            APP_VSN=${GITHUB_REF_NAME}
-            APP_COMMIT=${GITHUB_SHA}
+            APP_VSN=${{ github.ref_name }}
+            APP_COMMIT=${{ github.sha }}
             APP_DATE=${{ steps.date.outputs.date }}
     - name: Run Trivy vulnerability scanner on cli image
       uses: aquasecurity/trivy-action@master
@@ -172,9 +172,9 @@ jobs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          dkr.plural.sh/plural/plural-cli-cloud
-          gcr.io/pluralsh/plural-cli-cloud
           ghcr.io/pluralsh/plural-cli-cloud
+          gcr.io/pluralsh/plural-cli-cloud
+        # dkr.plural.sh/plural/plural-cli-cloud
         # generate Docker tags based on the following events/attributes
         tags: |
           type=semver,pattern={{version}}
@@ -241,8 +241,8 @@ jobs:
         # cache-from: type=gha
         # cache-to: type=gha,mode=max
         build-args: |
-            APP_VSN=${GITHUB_REF_NAME}
-            APP_COMMIT=${GITHUB_SHA}
+            APP_VSN=${{ github.ref_name }}
+            APP_COMMIT=${{ github.sha }}
             APP_DATE=${{ steps.date.outputs.date }}
     - name: Run Trivy vulnerability scanner on cli cloud image
       uses: aquasecurity/trivy-action@master

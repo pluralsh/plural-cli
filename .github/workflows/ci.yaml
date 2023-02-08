@@ -37,7 +37,7 @@ jobs:
           images: |
             ghcr.io/pluralsh/plural-cli
             gcr.io/pluralsh/plural-cli
-            dkr.plural.sh/plural/plural-cli
+          # dkr.plural.sh/plural/plural-cli
           # generate Docker tags based on the following events/attributes
           tags: |
             type=sha
@@ -106,7 +106,7 @@ jobs:
           # cache-to: type=gha,mode=max
           build-args: |
             APP_VSN=dev
-            APP_COMMIT=${GITHUB_SHA}
+            APP_COMMIT=${{ github.sha }}
             APP_DATE=${{ steps.date.outputs.date }}
       - name: Run Trivy vulnerability scanner on cli image
         uses: aquasecurity/trivy-action@master
@@ -205,7 +205,7 @@ jobs:
           # cache-to: type=gha,mode=max
           build-args: |
             APP_VSN=dev
-            APP_COMMIT=${GITHUB_SHA}
+            APP_COMMIT=${{ github.sha }}
             APP_DATE=${{ steps.date.outputs.date }}
       - name: Run Trivy vulnerability scanner on cli cloud image
         uses: aquasecurity/trivy-action@master
