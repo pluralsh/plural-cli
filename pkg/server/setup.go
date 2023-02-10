@@ -98,6 +98,7 @@ func setupCli(c *gin.Context) error {
 	if err := setupProvider(&setup); err != nil {
 		return fmt.Errorf("error setting up provider: %w", err)
 	}
+	marker("cloud")
 
 	exists, err := gitExists()
 	if err != nil {

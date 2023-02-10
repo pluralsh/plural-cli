@@ -23,6 +23,10 @@ export ARM_SUBSCRIPTION_ID={{ .SubscriptionId }}
 `
 
 func setupProvider(setup *SetupRequest) error {
+	if marked("cloud") {
+		return nil
+	}
+
 	if setup.Provider == "aws" {
 		return setupAws(setup)
 	}
@@ -48,8 +52,8 @@ func setupGcp(setup *SetupRequest) error {
 		return fmt.Errorf("error writing gcp credentials: %w", err)
 	}
 
-	if err := execCmd("gcloud", "auth", "activate-service-account", "--key-file", f, "--project", setup.Workspace.Project); err != nil {
-		return fmt.Errorf("error authenticating to gcloud: %w", err)
+	if out, err := execCmdWithOutput("gcloud", "auth", "activate-service-account", "--key-file", f, "--project", setup.Workspace.Project); err != nil {
+		return fmt.Errorf("error authenticating to gcloud: %s", out)
 	}
 
 	return nil
@@ -83,8 +87,8 @@ func setupAzure(setup *SetupRequest) error {
 		return fmt.Errorf("error writing azure env file: %w", err)
 	}
 
-	if err := execCmd("az", "login", "--service-principal", "-u", az.ClientId, "-p", az.ClientSecret, "--tenant", az.TenantId); err != nil {
-		return fmt.Errorf("error logging into az cli: %w", err)
+	if out, err := execCmdWithOutput("az", "login", "--service-principal", "-u", az.ClientId, "-p", az.ClientSecret, "--tenant", az.TenantId); err != nil {
+		return fmt.Errorf("error logging into az cli: %s", out)
 	}
 
 	return nil
