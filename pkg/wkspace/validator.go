@@ -9,7 +9,7 @@ import (
 )
 
 func Preflight() (bool, error) {
-	requirements := []string{"helm", "kubectl", "terraform", "git"}
+	requirements := []string{"terraform", "git"}
 	for _, req := range requirements {
 		if ok, _ := utils.Which(req); !ok {
 			return true, utils.HighlightError(fmt.Errorf("%s not installed", req))
