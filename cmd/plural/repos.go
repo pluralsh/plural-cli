@@ -39,6 +39,12 @@ func (p *Plural) reposCommands() []cli.Command {
 			Action: latestVersion(p.handleResetInstallations),
 		},
 		{
+			Name:      "uninstall",
+			Usage:     "uninstall an app from the plural api",
+			ArgsUsage: "APP",
+			Action:    latestVersion(requireArgs(p.handleUninstall, []string{"APP"})),
+		},
+		{
 			Name:      "list",
 			Usage:     "list available repositories to install",
 			ArgsUsage: "",
@@ -61,6 +67,17 @@ func (p *Plural) handleUnlockRepo(c *cli.Context) error {
 	p.InitPluralClient()
 	err := p.UnlockRepository(c.Args().First())
 	return api.GetErrorResponse(err, "UnlockRepository")
+}
+
+func (p *Plural) handleUninstall(c *cli.Context) error {
+	p.InitPluralClient()
+	inst, err := p.GetInstallation(c.Args().First())
+	if err != nil {
+		return api.GetErrorResponse(err, "GetInstallation")
+	}
+
+	err = p.DeleteInstallation(inst.Id)
+	return api.GetErrorResponse(err, "DeleteInstallation")
 }
 
 func (p *Plural) handleListRepositories(c *cli.Context) error {
