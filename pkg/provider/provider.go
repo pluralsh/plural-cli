@@ -9,6 +9,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -125,6 +126,7 @@ func getAvailableProviders() error {
 	if providers.AvailableProviders == nil {
 		client := api.NewClient()
 		available, err := client.GetTfProviders()
+		available = algorithms.Filter(available, func(prov string) bool { return prov != "GENERIC" })
 		for i := range available {
 			if available[i] == "GCP" {
 				available[i] = "google"
