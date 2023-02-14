@@ -1,9 +1,14 @@
 package kubernetes
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	platformv1alpha1 "github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	vpnv1alpha1 "github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
@@ -11,14 +16,24 @@ import (
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 const tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -46,14 +61,25 @@ type Kube interface {
 	WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerDelete(namespace string, name string) error
+	Apply(path string, force bool) error
 	GetClient() *kubernetes.Clientset
+	GetRestClient() *restclient.RESTClient
 }
+
+var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 type kube struct {
 	Kube        *kubernetes.Clientset
 	Plural      *pluralv1alpha1.Clientset
 	Application *application.ApplicationV1Beta1Client
 	Dynamic     dynamic.Interface
+	Discovery   discovery.DiscoveryInterface
+	Mapper      *restmapper.DeferredDiscoveryRESTMapper
+	RestClient  *restclient.RESTClient
+}
+
+func (k *kube) GetRestClient() *restclient.RESTClient {
+	return k.RestClient
 }
 
 func KubeConfig() (*rest.Config, error) {
@@ -95,8 +121,22 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 	if err != nil {
 		return nil, err
 	}
+	dc, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return nil, err
+	}
 
-	return &kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn}, nil
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))
+
+	config.APIPath = "/api"
+	config.GroupVersion = &schema.GroupVersion{Group: "", Version: "v1"}
+	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
+	restClient, err := restclient.RESTClientFor(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn, Discovery: dc, Mapper: mapper, RestClient: restClient}, nil
 }
 
 func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {
@@ -176,4 +216,49 @@ func (k *kube) WireguardPeerDelete(namespace string, name string) error {
 
 func (k *kube) GetClient() *kubernetes.Clientset {
 	return k.Kube
+}
+
+func (k *kube) Apply(path string, force bool) error {
+	ctx := context.Background()
+	yamlFile, err := utils.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	multidocReader := utilyaml.NewYAMLReader(bufio.NewReader(bytes.NewReader([]byte(yamlFile))))
+	for {
+		buf, err := multidocReader.Read()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+		// yaml starts with `---`
+		if strings.TrimSpace(string(buf)) == "" {
+			continue
+		}
+		obj := &unstructured.Unstructured{}
+		_, gvk, err := decUnstructured.Decode(buf, nil, obj)
+		if err != nil {
+			return err
+		}
+		mapping, err := k.Mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return err
+		}
+		var dr dynamic.ResourceInterface
+		if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
+			// namespaced resources should specify the namespace
+			dr = k.Dynamic.Resource(mapping.Resource).Namespace(obj.GetNamespace())
+		} else {
+			// for cluster-wide resources
+			dr = k.Dynamic.Resource(mapping.Resource)
+		}
+
+		if _, err := dr.Apply(ctx, obj.GetName(), obj, metav1.ApplyOptions{Force: force, FieldManager: "application/apply-patch"}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

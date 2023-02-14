@@ -58,7 +58,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(createCrds),
+			Action:    latestVersion(p.createCrds),
 		},
 		{
 			Name:      "helm-template",
@@ -125,7 +125,11 @@ func (p *Plural) diffTerraform(c *cli.Context) error {
 	return minimal.DiffTerraform()
 }
 
-func createCrds(c *cli.Context) error {
+func (p *Plural) createCrds(c *cli.Context) error {
+	err := p.InitKube()
+	if err != nil {
+		return err
+	}
 	if empty, err := utils.IsEmpty("crds"); err != nil || empty {
 		return nil
 	}
@@ -139,14 +143,11 @@ func createCrds(c *cli.Context) error {
 			return nil
 		}
 
-		if err = utils.Exec("kubectl", "create", "-f", path); err != nil {
-			err = utils.Exec("kubectl", "replace", "-f", path)
-		}
-
+		err = p.Kube.Apply(path, true)
 		if err != nil {
 			errStr := fmt.Sprint(err)
 			if strings.Contains(errStr, "invalid apiVersion \"client.authentication.k8s.io/v1alpha1\"") {
-				return fmt.Errorf("kubectl failed with %s, this is usually due to your aws cli version being out of date", errStr)
+				return fmt.Errorf("failed with %s, this is usually due to your aws cli version being out of date", errStr)
 			}
 			return err
 		}
