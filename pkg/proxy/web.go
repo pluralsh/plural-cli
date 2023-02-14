@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
@@ -12,14 +11,10 @@ import (
 
 func execWeb(namespace string, proxy *v1alpha1.Proxy, kube kubernetes.Kube) error {
 	config := proxy.Spec.WebConfig
-	fwd, err := portForward(namespace, proxy, config.Port)
+	err := portForward(namespace, proxy, config.Port)
 	if err != nil {
 		return err
 	}
-	defer func(Process *os.Process) {
-		_ = Process.Kill()
-
-	}(fwd.Process)
 
 	utils.Highlight("Wait a bit while the port-forward boots up\n\n")
 	time.Sleep(5 * time.Second)

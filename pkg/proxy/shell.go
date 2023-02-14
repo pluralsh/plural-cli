@@ -1,10 +1,8 @@
 package proxy
 
 import (
-	"os"
-	"os/exec"
-
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
+	"github.com/pluralsh/plural/pkg/kubernetes/exec"
 )
 
 func execShell(namespace string, proxy *v1alpha1.Proxy) error {
@@ -15,12 +13,6 @@ func execShell(namespace string, proxy *v1alpha1.Proxy) error {
 	} else {
 		rest = []string{"/bin/sh"}
 	}
-	args := []string{"exec", "-it", "-n", namespace, proxy.Spec.Target, "--"}
-	args = append(args, rest...)
-	cmd := exec.Command("kubectl", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
 
-	return cmd.Run()
+	return exec.Exec(namespace, proxy.Spec.Target, rest)
 }
