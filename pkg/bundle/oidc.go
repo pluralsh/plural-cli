@@ -119,11 +119,16 @@ func confirmOidc(confirm *bool) (bool, error) {
 		return true, nil
 	}
 
-	if err := survey.AskOne(&survey.Confirm{
-		Message: "Enable plural OIDC",
-		Default: true,
-	}, confirm, survey.WithValidator(survey.Required)); err != nil {
-		return false, err
+	value, ok := utils.GetEnvBoolValue("PLURAL_CONFIRM_OIDC")
+	if ok {
+		confirm = &value
+	} else {
+		if err := survey.AskOne(&survey.Confirm{
+			Message: "Enable plural OIDC",
+			Default: true,
+		}, confirm, survey.WithValidator(survey.Required)); err != nil {
+			return false, err
+		}
 	}
 
 	if *confirm {
