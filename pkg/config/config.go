@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/oleiade/reflections"
@@ -50,7 +51,7 @@ func configFile() string {
 		return ProfileFile
 	}
 
-	return path.Join(folder, pluralDir, ConfigName)
+	return filepath.Join(folder, pluralDir, ConfigName)
 }
 
 func Exists() bool {
@@ -63,14 +64,13 @@ func Read() Config {
 }
 
 func Profile(name string) error {
-	folder, _ := os.UserHomeDir()
-	conf := Import(path.Join(folder, pluralDir, name+".yml"))
+	f, _ := PluralDir(name + ".yaml")
+	conf := Import(f)
 	return conf.Flush()
 }
 
 func Profiles() ([]*VersionedConfig, error) {
-	folder, _ := os.UserHomeDir()
-	confDir := path.Join(folder, pluralDir)
+	confDir, _ := PluralDir()
 	files, err := os.ReadDir(confDir)
 	confs := []*VersionedConfig{}
 	if err != nil {
@@ -162,18 +162,29 @@ func (c *Config) SaveProfile(name string) error {
 	return c.Save(fmt.Sprintf("%s.yml", name))
 }
 
+func PluralDir(p ...string) (string, error) {
+	folder, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	parts := []string{folder, pluralDir}
+	parts = append(parts, p...)
+	return filepath.Join(parts...), nil
+}
+
 func (c *Config) Save(filename string) error {
 	io, err := c.Marshal()
 	if err != nil {
 		return err
 	}
 
-	folder, _ := os.UserHomeDir()
-	if err := os.MkdirAll(path.Join(folder, pluralDir), os.ModePerm); err != nil {
+	f, _ := PluralDir(filename)
+	if err := os.MkdirAll(filepath.Dir(f), os.ModePerm); err != nil {
 		return err
 	}
 
-	return os.WriteFile(path.Join(folder, pluralDir, filename), io, 0644)
+	return os.WriteFile(f, io, 0644)
 }
 
 func (c *Config) Flush() error {
