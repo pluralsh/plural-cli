@@ -14,6 +14,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -325,12 +326,22 @@ func handleUnlock(c *cli.Context) error {
 	}
 
 	gitIndex, _ := filepath.Abs(filepath.Join(repoRoot, ".git", "index"))
-	err = os.Remove(gitIndex)
+	dump, err := config.PluralDir("index.bak")
 	if err != nil {
 		return err
 	}
 
-	return gitCommand("checkout", "HEAD", "--", repoRoot).Run()
+	if err := os.Rename(gitIndex, dump); err != nil {
+		return err
+	}
+
+	if err := gitCommand("checkout", "HEAD", "--", repoRoot).Run(); err != nil {
+		_ = os.Rename(dump, gitIndex)
+		return errUnlock
+	}
+
+	os.Remove(dump)
+	return nil
 }
 
 func exportKey(c *cli.Context) error {
