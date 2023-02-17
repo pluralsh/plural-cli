@@ -58,8 +58,7 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 			seen[configItem.Name] = true
 			if err := Configure(ctx, configItem, context, repo); err != nil {
 				context.Configuration[section.Repository.Name] = ctx
-				err := context.Write(path)
-				if err != nil {
+				if err := context.Write(path); err != nil {
 					return err
 				}
 				return err
