@@ -25,18 +25,21 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition, valueTyp
 
 	val, ok := ctx[cond.Field]
 	if !ok {
-		return true
+		return cond.Operation == "NOT"
 	}
+
 	condValue := cond.Value
 	operationType := OperationType{
 		Operation: cond.Operation,
 		Type:      valueType,
 	}
 
-	switch operationType {
-	case OperationType{Operation: "NOT", Type: Bool}:
+	if operationType.Operation == "NOT" {
 		booled, ok := val.(bool)
-		return ok && !booled
+		return ok && !booled // it must be a false boolean value
+	}
+
+	switch operationType {
 	case OperationType{Operation: "PREFIX", Type: String}:
 		return strings.HasPrefix(val.(string), condValue)
 	case OperationType{Operation: "SUFFIX", Type: String}:

@@ -442,7 +442,7 @@ func TestEvaluateCondition(t *testing.T) {
 			},
 			context: &manifest.Context{},
 			ctx: map[string]interface{}{
-				"test_prefix": "suffix-test",
+				"test_suffix": "suffix-test",
 			},
 			repo:          "test",
 			envVars:       map[string]string{"PLURAL_TEST_TEST_ITEM": "123"},
@@ -457,6 +457,23 @@ func TestEvaluateCondition(t *testing.T) {
 					Field:     "test_suffix",
 					Operation: "SUFFIX",
 					Value:     "test",
+				},
+			},
+			context: &manifest.Context{},
+			ctx: map[string]interface{}{
+				"test_suffix": "suffix-ttt",
+			},
+			repo:          "test",
+			expectedValue: "<nil>",
+		},
+		{
+			name: "test NOT",
+			item: &api.ConfigurationItem{
+				Name: "test_item",
+				Type: bundle.String,
+				Condition: &api.Condition{
+					Field:     "test_suffix",
+					Operation: "NOT",
 				},
 			},
 			context: &manifest.Context{},
