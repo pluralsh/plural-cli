@@ -9,6 +9,7 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
@@ -18,6 +19,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
+	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
@@ -28,6 +30,8 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/polly/containers"
 )
 
 type GCPProvider struct {
@@ -340,6 +344,7 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 func (gcp *GCPProvider) Preflights() []*Preflight {
 	return []*Preflight{
 		{Name: "Enabled Services", Callback: gcp.validateEnabled},
+		{Name: "Test IAM Permissions", Callback: gcp.ValidatePermissions},
 	}
 }
 
@@ -381,6 +386,48 @@ func (gcp *GCPProvider) validateEnabled() error {
 		}
 	}
 	return nil
+}
+
+func (gcp *GCPProvider) ValidatePermissions() error {
+	ctx := context.Background()
+	svc, err := resourcemanager.NewProjectsClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	proj, err := gcp.getProject()
+	if err != nil {
+		return err
+	}
+
+	expected := []string{
+		"storage.buckets.create",
+		"storage.buckets.setIamPolicy",
+		"iam.serviceAccounts.create",
+		"iam.serviceAccounts.setIamPolicy",
+		"container.clusters.create",
+		"compute.networks.create",
+		"compute.subnetworks.create",
+	}
+	res, err := svc.TestIamPermissions(ctx, &iampb.TestIamPermissionsRequest{
+		Resource:    fmt.Sprintf("projects/%s", proj.ProjectId),
+		Permissions: expected,
+	})
+	if err != nil {
+		return err
+	}
+
+	has := containers.ToSet(res.Permissions)
+	diff := containers.ToSet(expected).Difference(has)
+	if diff.Len() == 0 {
+		return nil
+	}
+
+	for _, perm := range diff.List() {
+		provUtils.FailedPermission(perm)
+	}
+
+	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(diff.List(), ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {

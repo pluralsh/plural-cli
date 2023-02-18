@@ -2,17 +2,20 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/pluralsh/plural/pkg/config"
@@ -21,6 +24,8 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
+
+	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
 )
 
 type AWSProvider struct {
@@ -88,7 +93,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		return
 	}
 
-	account, err := GetAwsAccount()
+	account, err := GetAwsAccount(ctx)
 	if err != nil {
 		err = plrlErrors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
 		return
@@ -126,15 +131,18 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
-	cfg, err := awsConfig.LoadDefaultConfig(context)
-
+	cfg, err := getAwsConfig(context)
 	if err != nil {
-		return nil, plrlErrors.ErrorWrap(err, "Failed to initialize aws client: ")
+		return nil, err
 	}
 
 	cfg.Region = region
-
 	return s3.NewFromConfig(cfg), nil
+}
+
+func getAwsConfig(ctx context.Context) (aws.Config, error) {
+	cfg, err := awsConfig.LoadDefaultConfig(ctx)
+	return cfg, plrlErrors.ErrorWrap(err, "Failed to initialize aws client: ")
 }
 
 func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
@@ -214,7 +222,9 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 }
 
 func (aws *AWSProvider) Preflights() []*Preflight {
-	return nil
+	return []*Preflight{
+		{Name: "Test IAM Permissions", Callback: func() error { return TestIamPermissions(*aws.goContext) }},
+	}
 }
 
 func (aws *AWSProvider) Flush() error {
@@ -255,24 +265,62 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	return plrlErrors.ErrorWrap(err, "failed to terminate instance")
 }
 
-func GetAwsAccount() (string, error) {
-	cmd := exec.Command("aws", "sts", "get-caller-identity")
-	out, err := cmd.Output()
-	var exitError *exec.ExitError
+func GetAwsAccount(ctx context.Context) (string, error) {
+	cfg, err := getAwsConfig(ctx)
 	if err != nil {
-		if errors.As(err, &exitError) {
-			return "", fmt.Errorf("error during 'aws sts get-caller-identity': %s", string(exitError.Stderr))
+		return "", err
+	}
+	svc := sts.NewFromConfig(cfg)
+	result, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "", plrlErrors.ErrorWrap(err, "Error finding iam identity: ")
+	}
+
+	return *result.Account, nil
+}
+
+func TestIamPermissions(ctx context.Context) error {
+	cfg, err := getAwsConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	svc := sts.NewFromConfig(cfg)
+	result, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return plrlErrors.ErrorWrap(err, "Error finding iam identity: ")
+	}
+
+	iamSvc := iam.NewFromConfig(cfg)
+	resp, err := iamSvc.SimulatePrincipalPolicy(ctx, &iam.SimulatePrincipalPolicyInput{
+		PolicySourceArn: result.Arn,
+		ActionNames: []string{
+			"eks:CreateCluster",
+			"eks:CreateNodeGroup",
+			"eks:CreateAddOn",
+			"s3:CreateBucket",
+			"vpc:CreateVpc",
+			"iam:CreateRole",
+			"iam:CreateOpenIDConnectProvider",
+		},
+	})
+	if err != nil {
+		return plrlErrors.ErrorWrap(err, "Could not evaluate aws policies: ")
+	}
+
+	passed := true
+	failedActions := make([]string, 0)
+	for _, res := range resp.EvaluationResults {
+		if res.EvalDecision != types.PolicyEvaluationDecisionTypeAllowed {
+			passed = false
+			provUtils.FailedPermission(*res.EvalActionName)
+			failedActions = append(failedActions, *res.EvalActionName)
 		}
-
-		return "", err
 	}
 
-	var res struct {
-		Account string
+	if !passed {
+		return fmt.Errorf("You do not meet all required iam permissions to deploy an eks cluster: %s\nThis is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(failedActions, ","))
 	}
 
-	if err := json.Unmarshal(out, &res); err != nil {
-		return "", err
-	}
-	return res.Account, nil
+	return nil
 }
