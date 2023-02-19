@@ -9,7 +9,6 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
@@ -19,6 +18,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
+	permissions "github.com/pluralsh/plural/pkg/provider/permissions"
 	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -30,8 +30,6 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
-
-	"github.com/pluralsh/polly/containers"
 )
 
 type GCPProvider struct {
@@ -42,6 +40,7 @@ type GCPProvider struct {
 	storageClient *storage.Client
 	ctx           map[string]interface{}
 	writer        manifest.Writer
+	projectPb     *resourcemanagerpb.Project
 }
 
 type BucketLocation string
@@ -221,7 +220,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		}
 	}
 
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil}, nil
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil, nil}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -344,7 +343,7 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 func (gcp *GCPProvider) Preflights() []*Preflight {
 	return []*Preflight{
 		{Name: "Enabled Services", Callback: gcp.validateEnabled},
-		{Name: "Test IAM Permissions", Callback: gcp.ValidatePermissions},
+		{Name: "Test IAM Permissions", Callback: gcp.validatePermissions},
 	}
 }
 
@@ -388,49 +387,44 @@ func (gcp *GCPProvider) validateEnabled() error {
 	return nil
 }
 
-func (gcp *GCPProvider) ValidatePermissions() error {
-	ctx := context.Background()
-	svc, err := resourcemanager.NewProjectsClient(ctx)
+func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
+	proj, err := gcp.getProject()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return permissions.NewGcpChecker(context.Background(), proj.ProjectId)
+}
+
+func (gcp *GCPProvider) validatePermissions() error {
+	ctx := context.Background()
 	proj, err := gcp.getProject()
 	if err != nil {
 		return err
 	}
 
-	expected := []string{
-		"storage.buckets.create",
-		"storage.buckets.setIamPolicy",
-		"iam.serviceAccounts.create",
-		"iam.serviceAccounts.setIamPolicy",
-		"container.clusters.create",
-		"compute.networks.create",
-		"compute.subnetworks.create",
-	}
-	res, err := svc.TestIamPermissions(ctx, &iampb.TestIamPermissionsRequest{
-		Resource:    fmt.Sprintf("projects/%s", proj.ProjectId),
-		Permissions: expected,
-	})
+	checker, _ := permissions.NewGcpChecker(ctx, proj.ProjectId)
+	missing, err := checker.MissingPermissions()
 	if err != nil {
 		return err
 	}
 
-	has := containers.ToSet(res.Permissions)
-	diff := containers.ToSet(expected).Difference(has)
-	if diff.Len() == 0 {
+	if len(missing) == 0 {
 		return nil
 	}
 
-	for _, perm := range diff.List() {
+	for _, perm := range missing {
 		provUtils.FailedPermission(perm)
 	}
 
-	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(diff.List(), ", "))
+	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(missing, ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
+	if gcp.projectPb != nil {
+		return gcp.projectPb, nil
+	}
+
 	ctx := context.Background()
 	c, err := resourcemanager.NewProjectsClient(ctx)
 	if err != nil {
@@ -439,7 +433,11 @@ func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
 	defer func(c *resourcemanager.ProjectsClient) {
 		_ = c.Close()
 	}(c)
-	return c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
+	proj, err := c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
+	if err == nil {
+		gcp.projectPb = proj
+	}
+	return proj, err
 }
 
 func getInstanceAndGroupManager(ctx context.Context, c *compute.InstanceGroupManagersClient, project, zone, node string) (string, string, error) {

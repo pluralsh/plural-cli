@@ -11,8 +11,6 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/iam"
-	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -25,6 +23,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
 
+	"github.com/pluralsh/plural/pkg/provider/permissions"
 	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
 )
 
@@ -223,7 +222,7 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 
 func (aws *AWSProvider) Preflights() []*Preflight {
 	return []*Preflight{
-		{Name: "Test IAM Permissions", Callback: func() error { return TestIamPermissions(*aws.goContext) }},
+		{Name: "Test IAM Permissions", Callback: aws.testIamPermissions},
 	}
 }
 
@@ -232,6 +231,10 @@ func (aws *AWSProvider) Flush() error {
 		return nil
 	}
 	return aws.writer()
+}
+
+func (prov *AWSProvider) Permissions() (permissions.Checker, error) {
+	return permissions.NewAwsChecker(*prov.goContext)
 }
 
 func (prov *AWSProvider) Decommision(node *v1.Node) error {
@@ -279,48 +282,24 @@ func GetAwsAccount(ctx context.Context) (string, error) {
 	return *result.Account, nil
 }
 
-func TestIamPermissions(ctx context.Context) error {
-	cfg, err := getAwsConfig(ctx)
+func (aws *AWSProvider) testIamPermissions() error {
+	checker, err := aws.Permissions()
 	if err != nil {
 		return err
 	}
 
-	svc := sts.NewFromConfig(cfg)
-	result, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	missing, err := checker.MissingPermissions()
 	if err != nil {
-		return plrlErrors.ErrorWrap(err, "Error finding iam identity: ")
+		return err
 	}
 
-	iamSvc := iam.NewFromConfig(cfg)
-	resp, err := iamSvc.SimulatePrincipalPolicy(ctx, &iam.SimulatePrincipalPolicyInput{
-		PolicySourceArn: result.Arn,
-		ActionNames: []string{
-			"eks:CreateCluster",
-			"eks:CreateNodeGroup",
-			"eks:CreateAddOn",
-			"s3:CreateBucket",
-			"vpc:CreateVpc",
-			"iam:CreateRole",
-			"iam:CreateOpenIDConnectProvider",
-		},
-	})
-	if err != nil {
-		return plrlErrors.ErrorWrap(err, "Could not evaluate aws policies: ")
+	if len(missing) == 0 {
+		return nil
 	}
 
-	passed := true
-	failedActions := make([]string, 0)
-	for _, res := range resp.EvaluationResults {
-		if res.EvalDecision != types.PolicyEvaluationDecisionTypeAllowed {
-			passed = false
-			provUtils.FailedPermission(*res.EvalActionName)
-			failedActions = append(failedActions, *res.EvalActionName)
-		}
+	for _, missed := range missing {
+		provUtils.FailedPermission(missed)
 	}
 
-	if !passed {
-		return fmt.Errorf("You do not meet all required iam permissions to deploy an eks cluster: %s\nThis is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(failedActions, ","))
-	}
-
-	return nil
+	return fmt.Errorf("You do not meet all required iam permissions to deploy an eks cluster: %s\nThis is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
 }
