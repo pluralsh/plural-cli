@@ -369,7 +369,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 		infix = repoName
 	}
 
-	if !force && !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix)) {
+	if !force && !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix), "PLURAL_DESTROY_CONFIRM") {
 		return nil
 	}
 
