@@ -180,13 +180,20 @@ func handleEncrypt(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	prov, err := crypto.Build()
+	cryptoProv, err := crypto.Build()
+	if err != nil {
+		return err
+	}
+	keyID, err := crypto.GetKeyID()
 	if err != nil {
 		return err
 	}
 
-	result, err := crypto.Encrypt(prov, data)
+	if keyID != "" && cryptoProv.ID() != keyID {
+		return fmt.Errorf("the key fingerprint doesn't match")
+	}
+
+	result, err := crypto.Encrypt(cryptoProv, data)
 	if err != nil {
 		return err
 	}
@@ -321,6 +328,19 @@ func (p *Plural) handleSetupKeys(c *cli.Context) error {
 }
 
 func handleUnlock(c *cli.Context) error {
+	cryptoProv, err := crypto.Build()
+	if err != nil {
+		return err
+	}
+	keyID, err := crypto.GetKeyID()
+	if err != nil {
+		return err
+	}
+
+	if keyID != "" && cryptoProv.ID() != keyID {
+		return fmt.Errorf("the key fingerprint doesn't match")
+	}
+
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err

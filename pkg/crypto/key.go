@@ -138,3 +138,56 @@ func (k *AESKey) Flush() error {
 
 	return os.WriteFile(getKeyPath(), io, 0644)
 }
+
+func (k *AESKey) ID() string {
+	sha := sha256.Sum256([]byte(k.Key))
+	return "SHA256:" + base64.StdEncoding.EncodeToString(sha[:])
+}
+
+type KeyValidator struct {
+	KeyID string
+}
+
+func GenerateKeyValidator() (*KeyValidator, error) {
+	aesKey, err := Materialize()
+	if err != nil {
+		return nil, err
+	}
+	return &KeyValidator{KeyID: aesKey.ID()}, nil
+}
+
+func (k *KeyValidator) Marshal() ([]byte, error) {
+	return yaml.Marshal(k)
+}
+
+func (k *KeyValidator) Flush() error {
+	io, err := k.Marshal()
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(getKeyValidatorPath(), io, 0644)
+}
+
+func GetKeyID() (string, error) {
+	path := getKeyValidatorPath()
+	if !utils.Exists(path) {
+		return "", nil
+	}
+	contents, err := utils.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	var k KeyValidator
+	err = yaml.Unmarshal([]byte(contents), &k)
+	if err != nil {
+		return "", err
+	}
+	return k.KeyID, nil
+
+}
+
+func getKeyValidatorPath() string {
+	root, _ := utils.ProjectRoot()
+	return pathing.SanitizeFilepath(filepath.Join(root, ".keyid"))
+}

@@ -43,9 +43,14 @@ func handleInit(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(prov provider.Provider) {
+	kv, err := crypto.GenerateKeyValidator()
+	if err != nil {
+		return err
+	}
+	defer func(prov provider.Provider, kv *crypto.KeyValidator) {
 		_ = prov.Flush()
-	}(prov)
+		_ = kv.Flush()
+	}(prov, kv)
 
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
 		repo, err = scm.Setup()
