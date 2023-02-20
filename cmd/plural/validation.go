@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
@@ -52,10 +53,21 @@ func owned(fn func(*cli.Context) error) func(*cli.Context) error {
 	}
 }
 
-func affirmed(fn func(*cli.Context) error, msg string) func(*cli.Context) error {
+func affirmed(fn func(*cli.Context) error, msg string, envKey string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		if !affirm(msg) {
-			return nil
+		confirm := true
+		if envKey != "" && os.Getenv(envKey) != "" {
+			env := os.Getenv(envKey)
+			b, _ := strconv.ParseBool(env)
+			if !b {
+				return nil
+			}
+			confirm = false
+		}
+		if confirm {
+			if !affirm(msg) {
+				return nil
+			}
 		}
 
 		return fn(c)
@@ -113,8 +125,12 @@ func validateOwner() error {
 	return nil
 }
 
-func confirm(msg string) bool {
+func confirm(msg string, envKey string) bool {
 	res := true
+	conf, ok := utils.GetEnvBoolValue(envKey)
+	if ok {
+		return conf
+	}
 	prompt := &survey.Confirm{Message: msg}
 	if err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required)); err != nil {
 		return false

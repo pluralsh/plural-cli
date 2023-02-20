@@ -137,7 +137,7 @@ func (p *Plural) handleReinstall(c *cli.Context) error {
 func (p *Plural) handleResetInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	if !confirm(fmt.Sprintf("Are you sure you want to reset installations for %s?  This will also wipe all oidc providers and any other associated state in the plural api", conf.Email)) {
+	if !confirm(fmt.Sprintf("Are you sure you want to reset installations for %s?  This will also wipe all oidc providers and any other associated state in the plural api", conf.Email), "PLURAL_REPOS_RESET_CONFIRM") {
 		return nil
 	}
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 
@@ -105,7 +106,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "ssh-keygen",
 			Usage:  "generate an ed5519 keypair for use in git ssh",
-			Action: affirmed(handleKeygen, "This command will autogenerate an ed5519 keypair, without passphrase. Sound good?"),
+			Action: affirmed(handleKeygen, "This command will autogenerate an ed5519 keypair, without passphrase. Sound good?", "PLURAL_CRYPTO_SSH_KEYGEN"),
 		},
 		{
 			Name:   "export",
@@ -155,7 +156,7 @@ func (p *Plural) backupCommands() []cli.Command {
 		{
 			Name:   "create",
 			Usage:  "creates a backup for your current key",
-			Action: affirmed(p.createBackup, backupMsg),
+			Action: affirmed(p.createBackup, backupMsg, "PLURAL_BACKUPS_CREATE"),
 		},
 		{
 			Name:      "restore",
@@ -402,18 +403,20 @@ func handleKeygen(c *cli.Context) error {
 		return err
 	}
 
-	filename := ""
-	input := &survey.Input{Message: "What do you want to name your keypair?", Default: "id_plrl"}
-	err = survey.AskOne(input, &filename, survey.WithValidator(func(val interface{}) error {
-		name, _ := val.(string)
-		if utils.Exists(filepath.Join(path, name)) {
-			return fmt.Errorf("File ~/.ssh/%s already exists", name)
-		}
+	filename, ok := utils.GetEnvStringValue("PLURAL_CRYPTO_KEYPAIR_NAME")
+	if !ok {
+		input := &survey.Input{Message: "What do you want to name your keypair?", Default: "id_plrl"}
+		err = survey.AskOne(input, &filename, survey.WithValidator(func(val interface{}) error {
+			name, _ := val.(string)
+			if utils.Exists(filepath.Join(path, name)) {
+				return fmt.Errorf("File ~/.ssh/%s already exists", name)
+			}
 
-		return nil
-	}))
-	if err != nil {
-		return err
+			return nil
+		}))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := os.WriteFile(filepath.Join(path, filename), []byte(priv), 0600); err != nil {

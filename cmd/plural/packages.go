@@ -17,7 +17,7 @@ func (p *Plural) packagesCommands() []cli.Command {
 			Name:      "uninstall",
 			Usage:     "uninstall a helm or terraform package",
 			ArgsUsage: "TYPE REPO NAME",
-			Action:    latestVersion(affirmed(requireArgs(rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?")),
+			Action:    latestVersion(affirmed(requireArgs(rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
 		},
 		{
 			Name:      "list",
