@@ -13,6 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"go.mercari.io/hcledit"
 	"helm.sh/helm/v3/pkg/action"
 )
 
@@ -83,9 +84,17 @@ func (w *Workspace) Reset() error {
 	}
 
 	deployFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "deploy.hcl"))
-	if err := os.Remove(deployFile); err != nil {
+	editor, err := hcledit.ReadFile(deployFile)
+	if err != nil {
 		return err
 	}
+	if err := editor.Update("step.*.sha", ""); err != nil {
+		return err
+	}
+	if err := editor.OverWriteFile(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
