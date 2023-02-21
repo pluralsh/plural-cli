@@ -23,6 +23,7 @@ import (
 	metal "github.com/packethost/packngo"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	pluralErrors "github.com/pluralsh/plural/pkg/utils/errors"
@@ -259,6 +260,10 @@ func (equinix *EQUINIXProvider) Flush() error {
 		return nil
 	}
 	return equinix.writer()
+}
+
+func (*EQUINIXProvider) Permissions() (permissions.Checker, error) {
+	return permissions.NullChecker(), nil
 }
 
 func (prov *EQUINIXProvider) Decommision(node *v1.Node) error {

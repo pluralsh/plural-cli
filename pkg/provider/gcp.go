@@ -18,6 +18,8 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
+	permissions "github.com/pluralsh/plural/pkg/provider/permissions"
+	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
@@ -38,6 +40,7 @@ type GCPProvider struct {
 	storageClient *storage.Client
 	ctx           map[string]interface{}
 	writer        manifest.Writer
+	projectPb     *resourcemanagerpb.Project
 }
 
 type BucketLocation string
@@ -217,7 +220,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		}
 	}
 
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil}, nil
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil, nil}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -340,6 +343,7 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 func (gcp *GCPProvider) Preflights() []*Preflight {
 	return []*Preflight{
 		{Name: "Enabled Services", Callback: gcp.validateEnabled},
+		{Name: "Test IAM Permissions", Callback: gcp.validatePermissions},
 	}
 }
 
@@ -383,7 +387,44 @@ func (gcp *GCPProvider) validateEnabled() error {
 	return nil
 }
 
+func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
+	proj, err := gcp.getProject()
+	if err != nil {
+		return nil, err
+	}
+
+	return permissions.NewGcpChecker(context.Background(), proj.ProjectId)
+}
+
+func (gcp *GCPProvider) validatePermissions() error {
+	ctx := context.Background()
+	proj, err := gcp.getProject()
+	if err != nil {
+		return err
+	}
+
+	checker, _ := permissions.NewGcpChecker(ctx, proj.ProjectId)
+	missing, err := checker.MissingPermissions()
+	if err != nil {
+		return err
+	}
+
+	if len(missing) == 0 {
+		return nil
+	}
+
+	for _, perm := range missing {
+		provUtils.FailedPermission(perm)
+	}
+
+	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(missing, ", "))
+}
+
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
+	if gcp.projectPb != nil {
+		return gcp.projectPb, nil
+	}
+
 	ctx := context.Background()
 	c, err := resourcemanager.NewProjectsClient(ctx)
 	if err != nil {
@@ -392,7 +433,11 @@ func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
 	defer func(c *resourcemanager.ProjectsClient) {
 		_ = c.Close()
 	}(c)
-	return c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
+	proj, err := c.GetProject(ctx, &resourcemanagerpb.GetProjectRequest{Name: fmt.Sprintf("projects/%s", gcp.Project())})
+	if err == nil {
+		gcp.projectPb = proj
+	}
+	return proj, err
 }
 
 func getInstanceAndGroupManager(ctx context.Context, c *compute.InstanceGroupManagersClient, project, zone, node string) (string, string, error) {

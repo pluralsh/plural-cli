@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -140,8 +141,17 @@ func setupCli(c *gin.Context) error {
 		}
 	}
 
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
+	missing, err := prov.Permissions()
+	if err != nil {
+		return err
+	}
+
 	// try to initialize kubeconfig if we can, but don't stress if it fails
 	_ = execCmd("plural", "wkspace", "kube-init")
-	c.JSON(http.StatusOK, gin.H{"success": true})
+	c.JSON(http.StatusOK, gin.H{"success": true, "missing": missing})
 	return nil
 }
