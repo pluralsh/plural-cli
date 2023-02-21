@@ -96,3 +96,8 @@ genmock: .PHONY # generates mocks before running tests
 
 lint: .PHONY
 	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint run
+
+delete-tag: .PHONY
+	@read -p "Version: " tag: \
+	git tag -d $$tag
+	git push origin :$$tag
