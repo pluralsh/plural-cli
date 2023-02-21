@@ -28,6 +28,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	pluralerr "github.com/pluralsh/plural/pkg/utils/errors"
@@ -299,6 +300,10 @@ func (az *AzureProvider) Context() map[string]interface{} {
 
 func (az *AzureProvider) Preflights() []*Preflight {
 	return nil
+}
+
+func (*AzureProvider) Permissions() (permissions.Checker, error) {
+	return permissions.NullChecker(), nil
 }
 
 func (azure *AzureProvider) Flush() error {
