@@ -64,7 +64,7 @@ func Read() Config {
 }
 
 func Profile(name string) error {
-	f, _ := PluralDir(name + ".yaml")
+	f, _ := PluralDir(name + ".yml")
 	conf := Import(f)
 	return conf.Flush()
 }
