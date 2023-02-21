@@ -10,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -122,6 +123,10 @@ func (kind *KINDProvider) Bucket() string {
 
 func (kind *KINDProvider) Region() string {
 	return kind.Reg
+}
+
+func (*KINDProvider) Permissions() (permissions.Checker, error) {
+	return permissions.NullChecker(), nil
 }
 
 func (kind *KINDProvider) Context() map[string]interface{} {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"text/template"
@@ -109,7 +110,7 @@ func setupAws(setup *SetupRequest) error {
 		return fmt.Errorf("error configuring aws secret key: %w", err)
 	}
 
-	accountId, err := prov.GetAwsAccount()
+	accountId, err := prov.GetAwsAccount(context.Background())
 	if err != nil {
 		return fmt.Errorf("error getting aws account: %w", err)
 	}
