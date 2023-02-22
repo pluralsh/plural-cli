@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base32"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -44,12 +45,7 @@ func (prov *KeyProvider) Marshall() ([]byte, error) {
 	return yaml.Marshal(conf)
 }
 
-func buildKeyProvider(conf *Config) (prov *KeyProvider, err error) {
-	key, err := Materialize()
-	if err != nil {
-		return
-	}
-
+func buildKeyProvider(conf *Config, key *AESKey) (prov *KeyProvider, err error) {
 	prov = &KeyProvider{key: key.Key}
 	if prov.ID() != conf.Id {
 		err = fmt.Errorf("the key fingerprints failed to match")
@@ -137,4 +133,61 @@ func (k *AESKey) Flush() error {
 	}
 
 	return os.WriteFile(getKeyPath(), io, 0644)
+}
+
+func (k *AESKey) ID() string {
+	sha := sha256.Sum256([]byte(k.Key))
+	return "SHA256:" + base32.StdEncoding.EncodeToString(sha[:])
+}
+
+type KeyValidator struct {
+	KeyID string
+}
+
+func (k *KeyValidator) Marshal() ([]byte, error) {
+	return yaml.Marshal(k)
+}
+
+func (k *KeyValidator) Flush() error {
+	io, err := k.Marshal()
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(getKeyValidatorPath(), io, 0644)
+}
+
+func GetKeyID() (string, error) {
+	path := getKeyValidatorPath()
+	if !utils.Exists(path) {
+		return "", nil
+	}
+	contents, err := utils.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	var k KeyValidator
+	err = yaml.Unmarshal([]byte(contents), &k)
+	if err != nil {
+		return "", err
+	}
+	return k.KeyID, nil
+
+}
+
+func CreateKeyFingerprintFile() error {
+	aesKey, err := Materialize()
+	if err != nil {
+		return err
+	}
+	kv := KeyValidator{KeyID: aesKey.ID()}
+	if err := kv.Flush(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getKeyValidatorPath() string {
+	root, _ := utils.ProjectRoot()
+	return pathing.SanitizeFilepath(filepath.Join(root, ".keyid"))
 }
