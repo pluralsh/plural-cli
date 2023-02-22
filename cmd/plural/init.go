@@ -52,7 +52,7 @@ func handleInit(c *cli.Context) error {
 		gitCreated = true
 	}
 	if !git && !gitCreated {
-		return fmt.Errorf("you're not in the git repository")
+		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you by rerunning `plural init`")
 	}
 
 	// crate workspace.yaml when git repository is ready

@@ -144,7 +144,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Subcommands: p.backupCommands(),
 		},
 		{
-			Name:   "key-fingerprint",
+			Name:   "fingerprint",
 			Usage:  "generates a file with the key fingerprint",
 			Action: keyFingerprint,
 		},
