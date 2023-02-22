@@ -44,12 +44,7 @@ func (prov *KeyProvider) Marshall() ([]byte, error) {
 	return yaml.Marshal(conf)
 }
 
-func buildKeyProvider(conf *Config) (prov *KeyProvider, err error) {
-	key, err := Materialize()
-	if err != nil {
-		return
-	}
-
+func buildKeyProvider(conf *Config, key *AESKey) (prov *KeyProvider, err error) {
 	prov = &KeyProvider{key: key.Key}
 	if prov.ID() != conf.Id {
 		err = fmt.Errorf("the key fingerprints failed to match")
@@ -148,14 +143,6 @@ type KeyValidator struct {
 	KeyID string
 }
 
-func GenerateKeyValidator() (*KeyValidator, error) {
-	aesKey, err := Materialize()
-	if err != nil {
-		return nil, err
-	}
-	return &KeyValidator{KeyID: aesKey.ID()}, nil
-}
-
 func (k *KeyValidator) Marshal() ([]byte, error) {
 	return yaml.Marshal(k)
 }
@@ -185,6 +172,18 @@ func GetKeyID() (string, error) {
 	}
 	return k.KeyID, nil
 
+}
+
+func CreateKeyFingerprintFile() error {
+	aesKey, err := Materialize()
+	if err != nil {
+		return err
+	}
+	kv := KeyValidator{KeyID: aesKey.ID()}
+	if err := kv.Flush(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func getKeyValidatorPath() string {

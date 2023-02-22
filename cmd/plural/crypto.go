@@ -143,6 +143,11 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Usage:       "manages backups of your encryption keys",
 			Subcommands: p.backupCommands(),
 		},
+		{
+			Name:   "key-fingerprint",
+			Usage:  "generates a file with the key fingerprint",
+			Action: keyFingerprint,
+		},
 	}
 }
 
@@ -183,14 +188,6 @@ func handleEncrypt(c *cli.Context) error {
 	cryptoProv, err := crypto.Build()
 	if err != nil {
 		return err
-	}
-	keyID, err := crypto.GetKeyID()
-	if err != nil {
-		return err
-	}
-
-	if keyID != "" && cryptoProv.ID() != keyID {
-		return fmt.Errorf("the key fingerprint doesn't match")
 	}
 
 	result, err := crypto.Encrypt(cryptoProv, data)
@@ -328,17 +325,9 @@ func (p *Plural) handleSetupKeys(c *cli.Context) error {
 }
 
 func handleUnlock(c *cli.Context) error {
-	cryptoProv, err := crypto.Build()
+	_, err := crypto.Build()
 	if err != nil {
 		return err
-	}
-	keyID, err := crypto.GetKeyID()
-	if err != nil {
-		return err
-	}
-
-	if keyID != "" && cryptoProv.ID() != keyID {
-		return fmt.Errorf("the key fingerprint doesn't match")
 	}
 
 	repoRoot, err := git.Root()
@@ -502,4 +491,8 @@ func (p *Plural) restoreBackup(c *cli.Context) error {
 	p.InitPluralClient()
 	name := c.Args().First()
 	return crypto.DownloadBackup(p.Client, name)
+}
+
+func keyFingerprint(_ *cli.Context) error {
+	return crypto.CreateKeyFingerprintFile()
 }

@@ -43,14 +43,6 @@ func handleInit(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	kv, err := crypto.GenerateKeyValidator()
-	if err != nil {
-		return err
-	}
-	defer func(prov provider.Provider, kv *crypto.KeyValidator) {
-		_ = prov.Flush()
-		_ = kv.Flush()
-	}(prov, kv)
 
 	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
 		repo, err = scm.Setup()
@@ -58,10 +50,15 @@ func handleInit(c *cli.Context) error {
 			return err
 		}
 		gitCreated = true
-	} else if !git && err != nil {
-		return err
+	}
+	if !git && !gitCreated {
+		return fmt.Errorf("you're not in the git repository")
 	}
 
+	// crate workspace.yaml when git repository is ready
+	if err := prov.Flush(); err != nil {
+		return err
+	}
 	if err := cryptoInit(c); err != nil {
 		return err
 	}
@@ -70,6 +67,10 @@ func handleInit(c *cli.Context) error {
 		if err := crypto.BackupKey(api.NewClient()); err != nil {
 			return api.GetErrorResponse(err, "BackupKey")
 		}
+	}
+
+	if err := crypto.CreateKeyFingerprintFile(); err != nil {
+		return err
 	}
 
 	utils.Success("Workspace is properly configured!\n")
