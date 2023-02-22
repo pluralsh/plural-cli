@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base32"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -136,7 +137,7 @@ func (k *AESKey) Flush() error {
 
 func (k *AESKey) ID() string {
 	sha := sha256.Sum256([]byte(k.Key))
-	return "SHA256:" + base64.StdEncoding.EncodeToString(sha[:])
+	return "SHA256:" + base32.StdEncoding.EncodeToString(sha[:])
 }
 
 type KeyValidator struct {
