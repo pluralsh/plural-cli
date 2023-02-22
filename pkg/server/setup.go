@@ -115,6 +115,10 @@ func setupCli(c *gin.Context) error {
 		return fmt.Errorf("error setting up git: %w", err)
 	}
 
+	if err := crypto.CreateKeyFingerprintFile(); err != nil {
+		return err
+	}
+
 	man := toManifest(&setup)
 	path := manifest.ProjectManifestPath()
 	if !utils.Exists(path) {
