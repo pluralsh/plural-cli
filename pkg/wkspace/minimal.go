@@ -121,7 +121,7 @@ func getValues(name string) (map[string]interface{}, error) {
 	values := make(map[string]interface{})
 	defaultVals := make(map[string]interface{})
 
-	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", name)))
+	path, err := getHelmPath(name)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func (m *MinimalWorkspace) getRelease() ([]byte, error) {
 }
 
 func (m *MinimalWorkspace) getTemplate(isUpgrade, validate bool) ([]byte, error) {
-	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
+	path, err := getHelmPath(m.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -294,4 +294,12 @@ func templateTerraformInputs(name, vals string) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+func getHelmPath(name string) (string, error) {
+	root, found := utils.ProjectRoot()
+	if !found {
+		return "", fmt.Errorf("couldn't find the root project path")
+	}
+	return filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, name, "helm", name)))
 }
