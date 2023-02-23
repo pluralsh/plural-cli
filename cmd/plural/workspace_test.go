@@ -21,6 +21,8 @@ import (
 	"helm.sh/helm/v3/pkg/storage/driver"
 )
 
+const subchart = "subchart"
+
 func TestHelmCommands(t *testing.T) {
 	// create temp environment
 	currentDir, err := os.Getwd()
@@ -33,7 +35,7 @@ func TestHelmCommands(t *testing.T) {
 	}(dir, currentDir)
 	tFiles, err := filepath.Abs("../../pkg/test/helm")
 	assert.NoError(t, err)
-	err = utils.CopyDir(tFiles, dir)
+	err = utils.CopyDir(tFiles, filepath.Join(dir, subchart))
 	assert.NoError(t, err)
 	err = os.Chdir(dir)
 	assert.NoError(t, err)
@@ -55,28 +57,33 @@ func TestHelmCommands(t *testing.T) {
 		args           []string
 		expectedOutput string
 		store          *storage.Storage
+		directory      string
 	}{
 		{
 			name:           `test helm-template`,
-			args:           []string{plural.ApplicationName, "workspace", "helm-template", "subchart"},
-			expectedOutput: "helm/output/template.txt",
+			args:           []string{plural.ApplicationName, "workspace", "helm-template", subchart},
+			expectedOutput: "subchart/helm/output/template.txt",
 			store:          storageFixture(),
+			directory:      dir,
 		},
 		{
-			name:  `test helm install`,
-			args:  []string{plural.ApplicationName, "workspace", "helm", "subchart"},
-			store: storageFixture(),
+			name:      `test helm install`,
+			args:      []string{plural.ApplicationName, "workspace", "helm", subchart},
+			store:     storageFixture(),
+			directory: filepath.Join(dir, subchart),
 		},
 		{
-			name:  `test helm upgrade`,
-			args:  []string{plural.ApplicationName, "workspace", "helm", "subchart"},
-			store: storageReleaseDeployed(t),
+			name:      `test helm upgrade`,
+			args:      []string{plural.ApplicationName, "workspace", "helm", subchart},
+			store:     storageReleaseDeployed(t),
+			directory: filepath.Join(dir, subchart),
 		},
 		{
 			name:           `test helm-diff`,
-			args:           []string{plural.ApplicationName, "workspace", "helm-diff", "subchart"},
-			expectedOutput: "helm/output/diff.txt",
+			args:           []string{plural.ApplicationName, "workspace", "helm-diff", subchart},
+			expectedOutput: "subchart/helm/output/diff.txt",
 			store:          storageReleaseDeployed(t),
+			directory:      dir,
 		},
 	}
 	for _, test := range tests {
@@ -87,6 +94,12 @@ func TestHelmCommands(t *testing.T) {
 				Capabilities: chartutil.DefaultCapabilities,
 				Log:          func(format string, v ...interface{}) {},
 			}
+			err = os.Chdir(test.directory)
+			assert.NoError(t, err)
+			defer func() {
+				err := os.Chdir(dir)
+				assert.NoError(t, err)
+			}()
 
 			app := plural.CreateNewApp(&plural.Plural{Client: nil, HelmConfiguration: actionConfig})
 			app.HelpName = plural.ApplicationName
