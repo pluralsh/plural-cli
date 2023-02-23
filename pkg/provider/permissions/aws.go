@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,6 +29,7 @@ var (
 		"iam:CreateOpenIDConnectProvider",
 	}
 	roleRegex = regexp.MustCompile(`assumed-role/([\w+=,.@-]+)/`)
+	rootRegex = regexp.MustCompile(`arn:aws:iam::[0-9A-Z]+:root`)
 )
 
 func NewAwsChecker(ctx context.Context) (*AwsChecker, error) {
@@ -63,6 +65,11 @@ func (c *AwsChecker) MissingPermissions() (result []string, err error) {
 	iamSvc := iam.NewFromConfig(c.cfg)
 	arn, err := c.getOriginalIdentity(*id.Arn)
 	if err != nil {
+		return
+	}
+
+	if rootRegex.MatchString(arn) {
+		err = fmt.Errorf("It looks like your aws identity %s is the root user of your account. Using the root user is highly insecure, we recommend creating an iam user and using that instead", arn)
 		return
 	}
 
