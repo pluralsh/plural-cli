@@ -6,17 +6,17 @@ import (
 	"path"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
-
 	plural "github.com/pluralsh/plural/cmd/plural"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	pluraltest "github.com/pluralsh/plural/pkg/test"
+	utiltest "github.com/pluralsh/plural/pkg/test"
 	"github.com/pluralsh/plural/pkg/test/mocks"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/urfave/cli"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -311,6 +311,60 @@ func TestCheckGitCrypt(t *testing.T) {
 			ignore, err := utils.ReadFile(gitIgnore)
 			assert.NoError(t, err)
 			assert.Equal(t, ignore, plural.Gitignore)
+		})
+	}
+}
+
+func TestCheckKeyFingerprint(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		key  string
+	}{
+		{
+			name: "test generated key fingerprint file",
+			args: []string{plural.ApplicationName, "crypto", "fingerprint"},
+			key:  "key: abc",
+		},
+		{
+			name: "test generated key fingerprint file when key doesn't exist",
+			args: []string{plural.ApplicationName, "crypto", "fingerprint"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// create temp environment
+			currentDir, err := os.Getwd()
+			assert.NoError(t, err)
+			dir, err := os.MkdirTemp("", "config")
+			assert.NoError(t, err)
+			defer func(path, currentDir string) {
+				_ = os.RemoveAll(path)
+				_ = os.Chdir(currentDir)
+			}(dir, currentDir)
+			os.Setenv("HOME", dir)
+			defer os.Unsetenv("HOME")
+			defaultConfig := pluraltest.GenDefaultConfig()
+			err = defaultConfig.Save(config.ConfigName)
+			assert.NoError(t, err)
+			if test.key != "" {
+				err = os.WriteFile(path.Join(dir, ".plural", "key"), []byte(test.key), 0644)
+				assert.NoError(t, err)
+			}
+
+			err = os.Chdir(dir)
+			assert.NoError(t, err)
+			_, err = git.Init()
+			assert.NoError(t, err)
+
+			keyFingerprint := path.Join(dir, ".keyid")
+			app := plural.CreateNewApp(&plural.Plural{})
+			app.HelpName = plural.ApplicationName
+			os.Args = test.args
+			_, err = captureStdout(app, os.Args)
+			assert.NoError(t, err)
+
+			utiltest.CheckFingerprint(t, keyFingerprint)
 		})
 	}
 }
