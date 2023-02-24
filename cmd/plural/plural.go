@@ -188,6 +188,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:    latestVersion(owned(p.bounce)),
 		},
 		{
+			Name:      "readme",
+			Aliases:   []string{"b"},
+			Usage:     "generates the readme for your installation repo",
+			ArgsUsage: "WKSPACE",
+			Action:    latestVersion(downloadReadme),
+		},
+		{
 			Name:      "destroy",
 			Aliases:   []string{"d"},
 			Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
