@@ -55,13 +55,14 @@ func handleInit(c *cli.Context) error {
 		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you by rerunning `plural init`")
 	}
 
-	// crate workspace.yaml when git repository is ready
+	// create workspace.yaml when git repository is ready
 	if err := prov.Flush(); err != nil {
 		return err
 	}
 	if err := cryptoInit(c); err != nil {
 		return err
 	}
+	_ = wkspace.DownloadReadme()
 
 	if affirm(backupMsg) {
 		if err := crypto.BackupKey(api.NewClient()); err != nil {
@@ -139,6 +140,10 @@ func handleLogin(c *cli.Context) error {
 	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?")
 	client = api.FromConfig(conf)
 	return postLogin(conf, client, c)
+}
+
+func downloadReadme(c *cli.Context) error {
+	return wkspace.DownloadReadme()
 }
 
 func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
