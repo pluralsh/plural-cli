@@ -13,6 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
 func toConfig(setup *SetupRequest) *config.Config {
@@ -118,6 +119,7 @@ func setupCli(c *gin.Context) error {
 	if err := crypto.CreateKeyFingerprintFile(); err != nil {
 		return err
 	}
+	_ = wkspace.DownloadReadme()
 
 	man := toManifest(&setup)
 	path := manifest.ProjectManifestPath()
