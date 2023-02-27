@@ -6,15 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/fatih/color"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/utils"
+
+	"github.com/fatih/color"
 	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -249,7 +249,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "email for the service account you'd like to use for this workspace",
 				},
 			},
-			Action: tracked(latestVersion(handleInit), "cli.init"),
+			Action: tracked(latestVersion(p.handleInit), "cli.init"),
 		},
 		{
 			Name:   "preflights",

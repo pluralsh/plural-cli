@@ -21,9 +21,20 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
-func handleInit(c *cli.Context) error {
+const DemoingErrorMsg = "You're currently running a gcp demo cluster. Spin that down at https://app.plural.sh/shell before beginning a local installation"
+
+func (p *Plural) handleInit(c *cli.Context) error {
+	p.InitPluralClient()
 	gitCreated := false
 	repo := ""
+
+	me, err := p.Me()
+	if err != nil {
+		return err
+	}
+	if me.Demoing {
+		return fmt.Errorf(DemoingErrorMsg)
+	}
 
 	git, err := wkspace.Preflight()
 	if err != nil && git {
@@ -65,7 +76,7 @@ func handleInit(c *cli.Context) error {
 	_ = wkspace.DownloadReadme()
 
 	if affirm(backupMsg) {
-		if err := crypto.BackupKey(api.NewClient()); err != nil {
+		if err := crypto.BackupKey(p.Client); err != nil {
 			return api.GetErrorResponse(err, "BackupKey")
 		}
 	}

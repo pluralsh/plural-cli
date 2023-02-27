@@ -35,8 +35,9 @@ type LoginMethod struct {
 }
 
 type Me struct {
-	Id    string
-	Email string
+	Id      string
+	Email   string
+	Demoing bool
 }
 
 func (client *client) Me() (*Me, error) {
@@ -45,8 +46,9 @@ func (client *client) Me() (*Me, error) {
 		return nil, err
 	}
 	return &Me{
-		Id:    resp.Me.ID,
-		Email: resp.Me.Email,
+		Id:      resp.Me.ID,
+		Email:   resp.Me.Email,
+		Demoing: lo.FromPtr(resp.Me.Demoing),
 	}, nil
 }
 
