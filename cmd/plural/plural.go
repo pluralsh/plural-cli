@@ -6,19 +6,40 @@ import (
 	"os"
 	"time"
 
-	"helm.sh/helm/v3/pkg/action"
-
+	"github.com/fatih/color"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
-
-	"github.com/fatih/color"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
 	cli.BashCompletionFlag = cli.BoolFlag{Name: "compgen", Hidden: true}
+
+	// Auto-assume service account
+	if config.Exists() {
+		path := manifest.ProjectManifestPath()
+		project, err := manifest.ReadProject(path)
+		if err == nil {
+			if owner := project.Owner; owner != nil {
+				conf := config.Read()
+				if owner.Email != conf.Email {
+					jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
+					if err != nil {
+						utils.Error("You (%s) are not the owner of this repo, %v \n", owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+						os.Exit(1)
+					}
+					conf.Email = email
+					conf.Token = jwt
+					config.SetConfig(&conf)
+				}
+			}
+		}
+	}
 }
 
 const ApplicationName = "plural"

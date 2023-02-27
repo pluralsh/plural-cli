@@ -107,13 +107,13 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 func validateOwner() error {
 	path := manifest.ProjectManifestPath()
 	project, err := manifest.ReadProject(path)
-	conf := config.Read()
 	if err != nil {
 		return fmt.Errorf("Your workspace hasn't been configured. Try running `plural init`.")
 	}
 
 	if owner := project.Owner; owner != nil {
-		if owner.Email != conf.Email || owner.Endpoint != conf.Endpoint {
+		conf := config.Read()
+		if owner.Endpoint != conf.Endpoint {
 			return fmt.Errorf(
 				"The owner of this project is actually %s; plural environment = %s",
 				owner.Email,
