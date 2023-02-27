@@ -24,7 +24,6 @@ import (
 const DemoingErrorMsg = "You're currently running a gcp demo cluster. Spin that down at https://app.plural.sh/shell before beginning a local installation"
 
 func (p *Plural) handleInit(c *cli.Context) error {
-	p.InitPluralClient()
 	gitCreated := false
 	repo := ""
 
@@ -36,6 +35,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	if err := handleLogin(c); err != nil {
 		return err
 	}
+	p.InitPluralClient()
 
 	me, err := p.Me()
 	if err != nil {
