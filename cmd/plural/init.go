@@ -28,14 +28,6 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	gitCreated := false
 	repo := ""
 
-	me, err := p.Me()
-	if err != nil {
-		return err
-	}
-	if me.Demoing {
-		return fmt.Errorf(DemoingErrorMsg)
-	}
-
 	git, err := wkspace.Preflight()
 	if err != nil && git {
 		return err
@@ -43,6 +35,14 @@ func (p *Plural) handleInit(c *cli.Context) error {
 
 	if err := handleLogin(c); err != nil {
 		return err
+	}
+
+	me, err := p.Me()
+	if err != nil {
+		return err
+	}
+	if me.Demoing {
+		return fmt.Errorf(DemoingErrorMsg)
 	}
 
 	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !affirm("This repository's workspace.yaml already exists. Would you like to use it?") {

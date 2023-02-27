@@ -6,15 +6,15 @@ import (
 	"os"
 	"time"
 
-	"helm.sh/helm/v3/pkg/action"
-
+	"github.com/fatih/color"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
-
-	"github.com/fatih/color"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
