@@ -19,27 +19,6 @@ import (
 
 func init() {
 	cli.BashCompletionFlag = cli.BoolFlag{Name: "compgen", Hidden: true}
-
-	// Auto-assume service account
-	if config.Exists() {
-		path := manifest.ProjectManifestPath()
-		project, err := manifest.ReadProject(path)
-		if err == nil {
-			if owner := project.Owner; owner != nil {
-				conf := config.Read()
-				if owner.Email != conf.Email {
-					jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
-					if err != nil {
-						utils.Error("You (%s) are not the owner of this repo, %v \n", owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
-						os.Exit(1)
-					}
-					conf.Email = email
-					conf.Token = jwt
-					config.SetConfig(&conf)
-				}
-			}
-		}
-	}
 }
 
 const ApplicationName = "plural"
@@ -63,6 +42,22 @@ func (p *Plural) InitKube() error {
 
 func (p *Plural) InitPluralClient() {
 	if p.Client == nil {
+		if project, err := manifest.FetchProject(); err == nil && config.Exists() {
+			conf := config.Read()
+			if owner := project.Owner; owner != nil && conf.Email != owner.Email {
+				jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
+				if err != nil {
+					utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+					os.Exit(1)
+				}
+				conf.Email = email
+				conf.Token = jwt
+				config.SetConfig(&conf)
+				p.Client = api.FromConfig(&conf)
+				return
+			}
+		}
+
 		p.Client = api.NewClient()
 	}
 }
