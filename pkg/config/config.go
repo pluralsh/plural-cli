@@ -22,6 +22,8 @@ func init() {
 	ProfileFile = ""
 }
 
+var config *Config
+
 var ProfileFile string
 
 type Metadata struct {
@@ -45,6 +47,10 @@ type VersionedConfig struct {
 	Spec       *Config   `yaml:"spec"`
 }
 
+func SetConfig(conf *Config) {
+	config = conf
+}
+
 func configFile() string {
 	folder, _ := os.UserHomeDir()
 	if ProfileFile != "" {
@@ -60,6 +66,9 @@ func Exists() bool {
 }
 
 func Read() Config {
+	if config != nil {
+		return *config
+	}
 	return Import(configFile())
 }
 
