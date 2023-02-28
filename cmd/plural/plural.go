@@ -244,7 +244,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "email for the service account you'd like to use for this workspace",
 				},
 			},
-			Action: tracked(latestVersion(handleInit), "cli.init"),
+			Action: tracked(latestVersion(p.handleInit), "cli.init"),
 		},
 		{
 			Name:   "preflights",
