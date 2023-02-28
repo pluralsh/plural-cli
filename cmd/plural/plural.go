@@ -45,6 +45,7 @@ func (p *Plural) InitPluralClient() {
 		if project, err := manifest.FetchProject(); err == nil && config.Exists() {
 			conf := config.Read()
 			if owner := project.Owner; owner != nil && conf.Email != owner.Email {
+				utils.LogInfo().Printf("Trying to impersonate service account: %s \n", owner.Email)
 				jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
 				if err != nil {
 					utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
@@ -466,6 +467,12 @@ func globalFlags() []cli.Flag {
 			Usage:       "configure your encryption key `FILE`",
 			EnvVar:      "PLURAL_ENCRYPTION_KEY_FILE",
 			Destination: &crypto.EncryptionKeyFile,
+		},
+		cli.BoolFlag{
+			Name:        "debug",
+			Usage:       "enable debug mode",
+			EnvVar:      "PLURAL_DEBUG_ENABLE",
+			Destination: &utils.EnableDebug,
 		},
 	}
 }
