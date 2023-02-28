@@ -175,8 +175,9 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 
 		conf.Email = email
 		conf.Token = jwt
-		client = api.FromConfig(conf)
 		fmt.Printf("Assumed service account %s\n", saEmail)
+		config.SetConfig(conf)
+		return nil
 	}
 
 	accessToken, err := client.GrabAccessToken()
