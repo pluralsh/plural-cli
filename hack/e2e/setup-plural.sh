@@ -78,6 +78,11 @@ export PLURAL_CONSOLE_WAL_BUCKET=test-testcli-postgres-wal
 export PLURAL_CONFIRM_OIDC=true
 export PLURAL_REPOS_RESET_CONFIRM=true
 
+export PLURAL_LOGIN_AFFIRM_CURRENT_USER=true
+export PLURAL_INIT_AFFIRM_CURRENT_REPO=true
+export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
+
+plural init
 plural repos reset
 plural bundle install console console-kind
 plural build --force
