@@ -373,7 +373,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 		return nil
 	}
 
-	delete := force || affirm("Do you want to uninstall your applications from the plural api as well?")
+	delete := force || affirm("Do you want to uninstall your applications from the plural api as well?", "PLURAL_DESTROY_AFFIRM_UNINSTALL_APPS")
 
 	if repoName != "" {
 		installation, err := p.GetInstallation(repoName)
