@@ -38,6 +38,10 @@ func SuppressedCommand(command string, args ...string) (cmd *exec.Cmd, output *O
 	output = &OutputWriter{delegate: os.Stdout}
 	cmd.Stdout = output
 	cmd.Stderr = output
+	if utils.EnableDebug {
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PLURAL_DEBUG_ENABLE=%t", true))
+	}
 	return
 }
 
