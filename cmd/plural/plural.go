@@ -52,8 +52,14 @@ func (p *Plural) InitPluralClient() {
 				}
 				conf.Email = email
 				conf.Token = jwt
-				config.SetConfig(&conf)
 				p.Client = api.FromConfig(&conf)
+				accessToken, err := p.Client.GrabAccessToken()
+				if err != nil {
+					utils.Error("failed to create access token, bailing")
+					os.Exit(1)
+				}
+				conf.Token = accessToken
+				config.SetConfig(&conf)
 				return
 			}
 		}
