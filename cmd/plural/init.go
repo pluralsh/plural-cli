@@ -45,7 +45,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 		return fmt.Errorf(DemoingErrorMsg)
 	}
 
-	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !affirm("This repository's workspace.yaml already exists. Would you like to use it?") {
+	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !affirm("This repository's workspace.yaml already exists. Would you like to use it?", "PLURAL_INIT_AFFIRM_CURRENT_REPO") {
 		fmt.Println("Run `plural init` from empty repository or outside any in order to start from scratch.")
 		return nil
 	}
@@ -55,7 +55,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 		return err
 	}
 
-	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?") {
+	if !git && affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
 		repo, err = scm.Setup()
 		if err != nil {
 			return err
@@ -75,7 +75,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	}
 	_ = wkspace.DownloadReadme()
 
-	if affirm(backupMsg) {
+	if affirm(backupMsg, "PLURAL_INIT_AFFIRM_BACKUP_KEY") {
 		if err := crypto.BackupKey(p.Client); err != nil {
 			return api.GetErrorResponse(err, "BackupKey")
 		}
@@ -120,7 +120,7 @@ func handleLogin(c *cli.Context) error {
 
 	if config.Exists() {
 		conf := config.Read()
-		if affirm(fmt.Sprintf("It looks like your current Plural user is %s, use this profile?", conf.Email)) {
+		if affirm(fmt.Sprintf("It looks like your current Plural user is %s, use this profile?", conf.Email), "PLURAL_LOGIN_AFFIRM_CURRENT_USER") {
 			client = api.FromConfig(&conf)
 			return postLogin(&conf, client, c)
 		}
@@ -148,7 +148,7 @@ func handleLogin(c *cli.Context) error {
 	}
 
 	conf.Token = jwt
-	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?")
+	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?", "PLURAL_LOGIN_AFFIRM_REPORT_ERRORS")
 	client = api.FromConfig(conf)
 	return postLogin(conf, client, c)
 }

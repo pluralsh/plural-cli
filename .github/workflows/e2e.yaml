@@ -31,3 +31,6 @@ jobs:
       - run: |
           cd $HOME/test
           plural destroy --force --commit=""
+        env:
+          PLURAL_DESTROY_CONFIRM: true
+          PLURAL_DESTROY_AFFIRM_UNINSTALL_APPS: true
