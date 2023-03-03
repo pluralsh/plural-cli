@@ -39,7 +39,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 
 	me, err := p.Me()
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "Me")
 	}
 	if me.Demoing {
 		return fmt.Errorf(DemoingErrorMsg)
