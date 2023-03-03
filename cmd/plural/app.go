@@ -52,6 +52,7 @@ func handleInfo(c *cli.Context) error {
 
 	_, err := exec.LookPath("k9s")
 	if err != nil {
+		utils.LogError().Println(err)
 		if strings.Contains(err.Error(), exec.ErrNotFound.Error()) {
 			utils.Error("Application k9s not installed.\n")
 			fmt.Println("Please install it first from here: https://k9scli.io/topics/install/ and try again")

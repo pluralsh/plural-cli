@@ -3,6 +3,8 @@ package executor
 import (
 	"io"
 	"strings"
+
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type OutputWriter struct {
@@ -17,10 +19,14 @@ func (out *OutputWriter) Write(line []byte) (int, error) {
 	}
 
 	out.lines = append(out.lines, string(line))
-	_, err := out.delegate.Write([]byte("."))
-	if err != nil {
-		return 0, err
+	utils.LogInfo().Println(string(line))
+	if !utils.EnableDebug {
+		_, err := out.delegate.Write([]byte("."))
+		if err != nil {
+			return 0, err
+		}
 	}
+
 	return len(line), nil
 }
 

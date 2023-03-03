@@ -173,6 +173,7 @@ func upstreamSynced(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		changed, sha, err := git.HasUpstreamChanges()
 		if err != nil {
+			utils.LogError().Println(err)
 			return errors.ErrorWrap(errNoGit, "Failed to get git information")
 		}
 
