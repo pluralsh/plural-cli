@@ -360,6 +360,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	errEnabled := fmt.Errorf("You don't have necessary services enabled. Please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console.")
 	proj, err := gcp.getProject()
 	if err != nil {
+		utils.LogError().Println(err)
 		return errEnabled
 	}
 
@@ -376,11 +377,13 @@ func (gcp *GCPProvider) validateEnabled() error {
 	}
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
+		utils.LogError().Println(err)
 		return errEnabled
 	}
 
 	for _, svc := range resp.Services {
 		if svc.State != serviceusagepb.State_ENABLED {
+			utils.LogError().Printf("the service state %v != %v", svc.State, serviceusagepb.State_ENABLED)
 			return errEnabled
 		}
 	}
@@ -397,6 +400,7 @@ func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
 }
 
 func (gcp *GCPProvider) validatePermissions() error {
+	utils.LogInfo().Println("Validate GCP permissions")
 	ctx := context.Background()
 	proj, err := gcp.getProject()
 	if err != nil {
@@ -414,6 +418,7 @@ func (gcp *GCPProvider) validatePermissions() error {
 	}
 
 	for _, perm := range missing {
+		utils.LogError().Printf("Required GCP permission %s \n", perm)
 		provUtils.FailedPermission(perm)
 	}
 

@@ -251,6 +251,7 @@ func (az *AzureProvider) CreateResourceGroup(resourceGroup string) error {
 	}
 
 	if isNotFoundResourceGroup(err) {
+		utils.LogInfo().Printf("The resource group %s is not found, creating ...", resourceGroup)
 		param := armresources.ResourceGroup{
 			Location: to.StringPtr(az.region),
 		}
@@ -259,6 +260,7 @@ func (az *AzureProvider) CreateResourceGroup(resourceGroup string) error {
 		if err != nil {
 			return err
 		}
+		utils.LogInfo().Printf("The resource group %s created successfully", resourceGroup)
 	}
 
 	return nil
@@ -399,6 +401,7 @@ func (az *AzureProvider) upsertStorageAccount(account string) (storage.Account, 
 	}
 
 	if inNotFoundStorageAccount(err) {
+		utils.LogInfo().Printf("The storage account %s is not found, creating ...", account)
 		ctx := context.Background()
 		future, err := az.clients.Accounts.Create(
 			ctx,

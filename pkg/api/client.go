@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type authedTransport struct {
@@ -111,6 +112,7 @@ func GetErrorResponse(err error, methodName string) error {
 	if err == nil {
 		return nil
 	}
+	utils.LogError().Println(err)
 	errResponse := &rawclient.ErrorResponse{}
 	newErr := json.Unmarshal([]byte(err.Error()), errResponse)
 	if newErr != nil {
