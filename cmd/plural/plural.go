@@ -235,6 +235,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "force",
 					Usage: "use force push when pushing to git",
 				},
+				cli.BoolFlag{
+					Name:  "all",
+					Usage: "tear down the entire cluster gracefully in one go",
+				},
 			},
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
