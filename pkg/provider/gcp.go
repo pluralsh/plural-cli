@@ -364,16 +364,15 @@ func (gcp *GCPProvider) validateEnabled() error {
 		return errEnabled
 	}
 
-	wrapped := func(name string) string {
-		return fmt.Sprintf("projects/%s/services/%s", proj.ProjectId, name)
-	}
+	services := algorithms.Map([]string{
+		"serviceusage.googleapis.com",
+		"cloudresourcemanager.googleapis.com",
+		"container.googleapis.com",
+	}, func(name string) string { return fmt.Sprintf("projects/%s/services/%s", proj.ProjectId, name) })
+	parent := fmt.Sprintf("projects/%s", proj.ProjectId)
 	req := &serviceusagepb.BatchGetServicesRequest{
-		Parent: fmt.Sprintf("projects/%s", proj.ProjectId),
-		Names: []string{
-			wrapped("serviceusage.googleapis.com"),
-			wrapped("cloudresourcemanager.googleapis.com"),
-			wrapped("container.googleapis.com"),
-		},
+		Parent: parent,
+		Names:  services,
 	}
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
@@ -381,13 +380,33 @@ func (gcp *GCPProvider) validateEnabled() error {
 		return errEnabled
 	}
 
-	for _, svc := range resp.Services {
-		if svc.State != serviceusagepb.State_ENABLED {
-			utils.LogError().Printf("the service state %v != %v", svc.State, serviceusagepb.State_ENABLED)
+	missing := algorithms.Filter(resp.Services, func(svc *serviceusagepb.Service) bool {
+		return svc.State != serviceusagepb.State_ENABLED
+	})
+
+	if len(missing) > 0 {
+		services := algorithms.Map(missing, func(svc *serviceusagepb.Service) string { return svc.Name })
+		enableReq := &serviceusagepb.BatchEnableServicesRequest{
+			Parent:     parent,
+			ServiceIds: services,
+		}
+		utils.LogError().Printf("Attempting to enable services %v", services)
+		if err := tryToEnableServices(ctx, c, enableReq); err != nil {
 			return errEnabled
 		}
 	}
+
 	return nil
+}
+
+func tryToEnableServices(ctx context.Context, client *serviceusage.Client, req *serviceusagepb.BatchEnableServicesRequest) (err error) {
+	op, err := client.BatchEnableServices(ctx, req)
+	if err != nil {
+		return
+	}
+
+	_, err = op.Wait(ctx)
+	return
 }
 
 func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
