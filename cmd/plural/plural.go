@@ -254,6 +254,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "service-account",
 					Usage: "email for the service account you'd like to use for this workspace",
 				},
+				cli.BoolFlag{
+					Name:  "ignore-preflights",
+					Usage: "whether to ignore preflight check failures prior to init",
+				},
 			},
 			Action: tracked(latestVersion(p.handleInit), "cli.init"),
 		},
