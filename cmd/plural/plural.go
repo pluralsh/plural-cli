@@ -235,6 +235,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "force",
 					Usage: "use force push when pushing to git",
 				},
+				cli.BoolFlag{
+					Name:  "all",
+					Usage: "tear down the entire cluster gracefully in one go",
+				},
 			},
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
@@ -249,6 +253,10 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "service-account",
 					Usage: "email for the service account you'd like to use for this workspace",
+				},
+				cli.BoolFlag{
+					Name:  "ignore-preflights",
+					Usage: "whether to ignore preflight check failures prior to init",
 				},
 			},
 			Action: tracked(latestVersion(p.handleInit), "cli.init"),
