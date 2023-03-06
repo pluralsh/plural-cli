@@ -117,7 +117,6 @@ func (p *Plural) build(c *cli.Context) error {
 }
 
 func (p *Plural) doBuild(installation *api.Installation, force bool) error {
-	p.InitPluralClient()
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 
@@ -360,6 +359,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
 	force := c.Bool("force")
+	all := c.Bool("all")
 	if err != nil {
 		return err
 	}
@@ -367,6 +367,8 @@ func (p *Plural) destroy(c *cli.Context) error {
 	infix := "this workspace"
 	if repoName != "" {
 		infix = repoName
+	} else if !all {
+		return fmt.Errorf("you must either specify an individual application or `--all` to destroy the entire workspace")
 	}
 
 	if !force && !confirm(fmt.Sprintf("Are you sure you want to destroy %s?", infix), "PLURAL_DESTROY_CONFIRM") {

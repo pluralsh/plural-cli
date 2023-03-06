@@ -30,7 +30,7 @@ jobs:
       - run: go test -v -race ./pkg/test/e2e/... -tags="e2e"
       - run: |
           cd $HOME/test
-          plural destroy --force --commit=""
+          plural destroy --force --all --commit=""
         env:
           PLURAL_DESTROY_CONFIRM: true
           PLURAL_DESTROY_AFFIRM_UNINSTALL_APPS: true
