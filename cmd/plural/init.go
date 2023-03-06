@@ -51,7 +51,7 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	}
 
 	prov, err := runPreflights()
-	if err != nil {
+	if err != nil && !c.Bool("ignore-preflights") {
 		return err
 	}
 

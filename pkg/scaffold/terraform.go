@@ -13,6 +13,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -122,6 +123,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Namespace":     wk.Config.Namespace(repo.Name),
 			"Region":        wk.Provider.Region(),
 			"Context":       wk.Provider.Context(),
+			"Config":        config.Read(),
 			"Applications":  apps,
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {

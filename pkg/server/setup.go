@@ -14,6 +14,8 @@ import (
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
+
+	"github.com/pluralsh/polly/algorithms"
 )
 
 func toConfig(setup *SetupRequest) *config.Config {
@@ -151,6 +153,11 @@ func setupCli(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
+
+	if err := runPreflights(prov); err != nil {
+		return err
+	}
+
 	missing, err := prov.Permissions()
 	if err != nil {
 		return err
@@ -159,5 +166,22 @@ func setupCli(c *gin.Context) error {
 	// try to initialize kubeconfig if we can, but don't stress if it fails
 	_ = execCmd("plural", "wkspace", "kube-init")
 	c.JSON(http.StatusOK, gin.H{"success": true, "missing": missing})
+	return nil
+}
+
+func runPreflights(prov provider.Provider) error {
+	// run only relevant preflights
+	preflights := []*provider.Preflight{}
+	if prov.Name() == provider.GCP {
+		preflights = algorithms.Filter(prov.Preflights(), func(pre *provider.Preflight) bool {
+			return pre.Name == "Enabled Services"
+		})
+	}
+
+	for _, pre := range preflights {
+		if err := pre.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
