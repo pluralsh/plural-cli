@@ -307,6 +307,11 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Workspace",
 		},
 		{
+			Name:        "clusters",
+			Usage:       "commands related to managing plural clusters",
+			Subcommands: p.clusterCommands(),
+		},
+		{
 			Name:        "repos",
 			Usage:       "view and manage plural repositories",
 			Subcommands: p.reposCommands(),

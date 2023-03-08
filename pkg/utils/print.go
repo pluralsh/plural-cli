@@ -98,3 +98,12 @@ func PrintTable[T any](list []T, headers []string, rowFun func(T) ([]string, err
 	table.Render()
 	return nil
 }
+
+func PrintAttributes(attrs map[string]string) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Attribute", "Value"})
+	for k, v := range attrs {
+		table.Append([]string{k, v})
+	}
+	table.Render()
+}
