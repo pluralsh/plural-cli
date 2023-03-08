@@ -178,11 +178,15 @@ func Configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 		if value := getEnvVar(repo, item.Name); value != "" {
 			res = value
 		} else {
-			prompt, opts := fileSurvey(def)
+			prompt, opts := fileSurvey(def, item)
 			if err := survey.AskOne(prompt, &res, opts...); err != nil {
 				return err
 			}
 		}
+		if res == "" {
+			return
+		}
+
 		path, err := homedir.Expand(res)
 		if err != nil {
 			return err
