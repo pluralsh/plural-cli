@@ -79,6 +79,10 @@ type Client interface {
 	ListKeyBackups() ([]*KeyBackup, error)
 	GetHelp(prompt string) (string, error)
 	DestroyCluster(domain, name, provider string) error
+	CreateDependency(source, dest string) error
+	PromoteCluster() error
+	Clusters() ([]*Cluster, error)
+	Cluster(id string) (*Cluster, error)
 }
 
 type client struct {
