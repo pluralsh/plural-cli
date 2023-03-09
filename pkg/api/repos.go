@@ -76,17 +76,21 @@ func (client *client) GetRepository(repo string) (*Repository, error) {
 		return nil, err
 	}
 
+	return convertRepository(resp.Repository), nil
+}
+
+func convertRepository(repo *gqlclient.RepositoryFragment) *Repository {
 	return &Repository{
-		Id:          resp.Repository.ID,
-		Name:        resp.Repository.Name,
-		Description: utils.ConvertStringPointer(resp.Repository.Description),
-		Icon:        utils.ConvertStringPointer(resp.Repository.Icon),
-		DarkIcon:    utils.ConvertStringPointer(resp.Repository.DarkIcon),
-		Notes:       utils.ConvertStringPointer(resp.Repository.Notes),
+		Id:          repo.ID,
+		Name:        repo.Name,
+		Description: utils.ConvertStringPointer(repo.Description),
+		Icon:        utils.ConvertStringPointer(repo.Icon),
+		DarkIcon:    utils.ConvertStringPointer(repo.DarkIcon),
+		Notes:       utils.ConvertStringPointer(repo.Notes),
 		Publisher: &Publisher{
-			Name: resp.Repository.Publisher.Name,
+			Name: repo.Publisher.Name,
 		},
-	}, nil
+	}
 }
 
 func (client *client) CreateRepository(name, publisher string, input *gqlclient.RepositoryAttributes) error {

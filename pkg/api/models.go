@@ -332,6 +332,21 @@ type KeyBackup struct {
 	InsertedAt   string
 }
 
+type Cluster struct {
+	Id          string
+	Name        string
+	Provider    string
+	UpgradeInfo []*UpgradeInfo
+	Source      string
+	GitUrl      string
+	Owner       *User
+}
+
+type UpgradeInfo struct {
+	Count        int64
+	Installation *Installation
+}
+
 const CrdFragment = `
 	fragment CrdFragment on Crd {
 		id

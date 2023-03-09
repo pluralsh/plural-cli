@@ -44,7 +44,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.3.9
+	github.com/pluralsh/gqlclient v1.3.10
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.0.6
 	github.com/rodaine/hclencoder v0.0.1
@@ -55,7 +55,7 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	go.mercari.io/hcledit v0.0.8
 	golang.org/x/crypto v0.5.0
-	golang.org/x/mod v0.6.0
+	golang.org/x/mod v0.9.0
 	golang.org/x/oauth2 v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.11.0
@@ -250,9 +250,9 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.5.0
-	golang.org/x/text v0.7.0
+	golang.org/x/text v0.8.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.110.0

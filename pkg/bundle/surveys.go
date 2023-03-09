@@ -87,8 +87,13 @@ func domainSurvey(def string, item *api.ConfigurationItem, proj *manifest.Projec
 	return &survey.Input{Message: msg, Default: def}, opts
 }
 
-func fileSurvey(def string) (survey.Prompt, []survey.AskOpt) {
-	return &survey.Input{
+func fileSurvey(def string, item *api.ConfigurationItem) (prompt survey.Prompt, opts []survey.AskOpt) {
+	opts = []survey.AskOpt{}
+	if !item.Optional {
+		opts = append(opts, survey.WithValidator(survey.Required))
+	}
+
+	prompt = &survey.Input{
 		Message: "select a file (use tab to list files in the directory):",
 		Default: def,
 		Suggest: func(toComplete string) []string {
@@ -99,7 +104,8 @@ func fileSurvey(def string) (survey.Prompt, []survey.AskOpt) {
 			files, _ := filepath.Glob(cleanPath(path) + "*")
 			return files
 		},
-	}, []survey.AskOpt{survey.WithValidator(survey.Required)}
+	}
+	return
 }
 
 func cleanPath(path string) string {
