@@ -76,6 +76,9 @@ func (p *Plural) handleUninstall(c *cli.Context) error {
 		return api.GetErrorResponse(err, "GetInstallation")
 	}
 
+	if inst == nil {
+		return fmt.Errorf("%s already uninstalled", c.Args().First())
+	}
 	err = p.DeleteInstallation(inst.Id)
 	return api.GetErrorResponse(err, "DeleteInstallation")
 }
