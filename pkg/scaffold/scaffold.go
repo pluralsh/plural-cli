@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
@@ -118,6 +119,17 @@ func (s *Scaffold) Execute(wk *wkspace.Workspace, force bool) error {
 	for _, preflight := range s.Preflight {
 		if force {
 			preflight.Sha = ""
+		}
+
+		for _, ch := range wk.Charts {
+			utils.PosthogCapture(utils.BuildPosthogEvent, utils.PosthogProperties{
+				ApplicationName: wk.Installation.Repository.Name,
+				ApplicationID:   wk.Installation.Id,
+				PackageType:     s.Type,
+				PackageName:     ch.Chart.Name,
+				PackageId:       ch.Chart.Id,
+				PackageVersion:  ch.Version.Version,
+			})
 		}
 
 		sha, err := preflight.Execute(s.Root, ignore)

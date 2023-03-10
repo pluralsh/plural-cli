@@ -46,21 +46,19 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.3.15
 	github.com/pluralsh/plural-operator v0.5.3
-	github.com/pluralsh/polly v0.1.1
+	github.com/pluralsh/polly v0.0.6
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.33.0
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
-	github.com/wailsapp/wails/v2 v2.4.1
 	github.com/xanzy/go-gitlab v0.70.0
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	go.mercari.io/hcledit v0.0.8
 	golang.org/x/crypto v0.5.0
-	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
 	golang.org/x/mod v0.9.0
 	golang.org/x/oauth2 v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
-	helm.sh/helm/v3 v3.11.1
+	helm.sh/helm/v3 v3.11.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
@@ -91,35 +89,23 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.3 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
-	github.com/bep/debounce v1.2.1 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
-	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/labstack/echo/v4 v4.9.0 // indirect
-	github.com/labstack/gommon v0.3.1 // indirect
-	github.com/leaanthony/go-ansi-parser v1.0.1 // indirect
-	github.com/leaanthony/gosod v1.0.3 // indirect
-	github.com/leaanthony/slicer v1.5.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/tkrajina/go-reflector v0.5.5 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.1 // indirect
-	github.com/wailsapp/mimetype v1.4.1 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -262,10 +248,10 @@ require (
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0
+	golang.org/x/term v0.5.0
 	golang.org/x/text v0.8.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect

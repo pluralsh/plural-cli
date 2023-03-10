@@ -32,6 +32,7 @@ type Metadata struct {
 
 type Config struct {
 	Email           string `json:"email"`
+	ID              string `yaml:"id" json:"id"`
 	Token           string `yaml:"token" json:"token"`
 	NamespacePrefix string `yaml:"namespacePrefix"`
 	Endpoint        string `yaml:"endpoint"`

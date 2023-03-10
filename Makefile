@@ -1,8 +1,4 @@
-ROOT_DIRECTORY := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
-include $(ROOT_DIRECTORY)/hack/include/help.mk
-include $(ROOT_DIRECTORY)/hack/include/tools.mk
-include $(ROOT_DIRECTORY)/hack/include/build.mk
+.PHONY: # ignore
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
@@ -27,60 +23,29 @@ WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
 
-# Targets to run before other targets
-# install-tools - Install binaries required to run targets
-PRE := install-tools
+help:
+	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: git-push
-git-push:
+git-push: .PHONY
 	git pull --rebase
 	git push
 
-.PHONY: install
-install:
-	go install -ldflags '$(LDFLAGS)' .
+install: .PHONY
+	GOBIN=~/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
 
-.PHONY: build-cli
-build-cli: ## Build a CLI binary for the host architecture without embedded UI
-	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+build-cli: .PHONY
+	GOBIN=~/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
 
-.PHONY: build-cli-ui
-build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
-	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+release: .PHONY
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/
 
-.PHONY: build-web
-build-web: ## Build just the embedded UI
-	cd pkg/ui/web && yarn --immutable && yarn build
-
-.PHONY: run-web
-run-web: $(PRE) ## Run the UI for development
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) wails dev -tags ui -browser -skipbindings
-
-# This is somewhat an equivalent of wails `GenerateBindings` method.
-# Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
-.PHONY: generate-bindings
-generate-bindings: build-web ## Generate backend bindings for the embedded UI
-	@echo Building bindings binary
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
-	@echo Generating bindings
-	@./$(WAILS_BINDINGS_BINARY_NAME) > /dev/null 2>&1
-	@echo Cleaning up
-	@rm $(WAILS_BINDINGS_BINARY_NAME)
-
-.PHONY: release
-release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
-
-.PHONY: setup
-setup: ## sets up your local env (for mac only)
+setup: .PHONY ## sets up your local env (for mac only)
 	brew install golangci-lint
 
-.PHONY: plural
-plural: ## uploads to plural
+plural: .PHONY ## uploads to plural
 	plural apply -f plural/Pluralfile
 
-.PHONY: build
-build: ## Build the Docker image
+build: .PHONY ## Build the Docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -90,8 +55,7 @@ build: ## Build the Docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
-.PHONY: build-cloud
-build-cloud: ## build the cloud docker image
+build-cloud: .PHONY ## build the cloud docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -101,39 +65,31 @@ build-cloud: ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
-.PHONY: push
-push: ## push to gcr
+push: .PHONY ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
 	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
 
-.PHONY: push-cloud
-push-cloud: ## push to gcr
+push-cloud: .PHONY ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud
 	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)-cloud
 
-.PHONY: generate
-generate:
+generate: .PHONY
 	go generate ./...
 
-.PHONY: bake-ami
-bake-ami:
+bake-ami: .PHONY
 	cd packer && packer build -var "img_name=plural/ubuntu/$(BUILD)" .
 	@echo "baked ami for all regions"
 
-.PHONY: up
-up: # spin up local server
+up: .PHONY # spin up local server
 	docker-compose up
 
-.PHONY: pull
-pull: # pulls new server image
+pull: .PHONY # pulls new server image
 	docker-compose pull
 
-.PHONY: serve
-serve: build-cloud # build cloud version of plural-cli and start plural serve in docker
+serve: build-cloud .PHONY # build cloud version of plural-cli and start plural serve in docker
 	docker kill plural-cli || true
 	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
 
-.PHONY: release-vsn
 release-vsn: # tags and pushes a new release
 	@read -p "Version: " tag; \
 	git checkout main; \
@@ -141,24 +97,19 @@ release-vsn: # tags and pushes a new release
 	git tag -a $$tag -m "new release"; \
 	git push origin $$tag
 
-.PHONY: test
-test:
+test: .PHONY
 	go test -v -race ./pkg/... ./cmd/...
 
-.PHONY: format
-format: # formats all go code to prep for linting
+format: .PHONY # formats all go code to prep for linting
 	golangci-lint run --fix
 
-.PHONY: genmock
-genmock: # generates mocks before running tests
+genmock: .PHONY # generates mocks before running tests
 	hack/gen-client-mocks.sh	
 
-.PHONY: lint
-lint:
+lint: .PHONY
 	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint run
 
-.PHONY: delete-tag
-delete-tag:
+delete-tag: .PHONY
 	@read -p "Version: " tag: \
 	git tag -d $$tag
 	git push origin :$$tag
