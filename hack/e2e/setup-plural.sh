@@ -82,6 +82,8 @@ export PLURAL_LOGIN_AFFIRM_CURRENT_USER=true
 export PLURAL_INIT_AFFIRM_CURRENT_REPO=true
 export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
 
+export PLURAL_INIT_AFFIRM_SEND_METRICS=true
+
 plural init
 plural repos reset
 plural bundle install console console-kind
