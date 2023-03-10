@@ -99,7 +99,7 @@ jobs:
           hide-progress: false
           format: 'sarif'
           output: 'trivy-results.sarif'
-          security-checks: 'vuln'
+          scanners: 'vuln'
           ignore-unfixed: true
            #severity: 'CRITICAL,HIGH'
       - name: Upload Trivy scan results to GitHub Security tab
@@ -198,7 +198,8 @@ jobs:
           hide-progress: false
           format: 'sarif'
           output: 'trivy-results.sarif'
-          security-checks: 'vuln'
+          scanners: 'vuln'
+          timeout: 10m
           ignore-unfixed: true
            #severity: 'CRITICAL,HIGH'
       - name: Upload Trivy scan results to GitHub Security tab
@@ -222,7 +223,7 @@ jobs:
           hide-progress: false
           format: 'sarif'
           output: 'trivy-results.sarif'
-          security-checks: 'vuln,secret'
+          scanners: 'vuln,secret'
           ignore-unfixed: true
           #severity: 'CRITICAL,HIGH'
       - name: Upload Trivy scan results to GitHub Security tab
