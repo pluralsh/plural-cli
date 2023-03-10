@@ -47,8 +47,10 @@ spec:
   project: ""
   provider: kind
   region: us-east-1
+  sendmetrics: true
   owner:
     email: cli-e2e@pluraldev.sh
+    id: testcli
   network:
     subdomain: clie2e.onplural.sh
     pluraldns: true
