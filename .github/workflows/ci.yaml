@@ -35,7 +35,8 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ghcr.io/pluralsh/plural-cli
+            dkr.plural.sh/test-repo-3/plural-cli
+          # ghcr.io/pluralsh/plural-cli
           # generate Docker tags based on the following events/attributes
           tags: |
             type=sha
@@ -106,148 +107,149 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-  cloud:
-    name: Build cloud image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-      packages: 'write'
-      security-events: write
-      actions: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: setup kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Get EKS credentials
-        run: aws eks update-kubeconfig --name pluraldev
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          # list of Docker images to use as base name for tags
-          images: |
-            ghcr.io/pluralsh/plural-cli-cloud
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=sha
-            type=ref,event=pr
-            type=ref,event=branch
-      - name: Set up Docker Buildx
-        id: builder
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver: kubernetes
-          platforms: linux/amd64
-          driver-opts: |
-            namespace=buildx
-            requests.cpu=1.5
-            requests.memory=3.5Gi
-            "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
-            "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
-      - name: Append ARM buildx builder from AWS
-        run: |
-          docker buildx create \
-            --append \
-            --bootstrap \
-            --name ${{ steps.builder.outputs.name }} \
-            --driver=kubernetes \
-            --platform linux/arm64 \
-            --node=${{ steps.builder.outputs.name }}-arm64 \
-            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-            --driver-opt namespace=buildx \
-            --driver-opt requests.cpu=1.5 \
-            --driver-opt requests.memory=3.5Gi \
-            '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
-            '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
-      - name: Login to GHCR
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./dockerfiles/Dockerfile.cloud
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
-          build-args: |
-            APP_VSN=dev
-            APP_COMMIT=${{ github.sha }}
-            APP_DATE=${{ steps.date.outputs.date }}
-      - name: Run Trivy vulnerability scanner on cli cloud image
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'image'
-          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          hide-progress: false
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          scanners: 'vuln'
-          timeout: 10m
-          ignore-unfixed: true
-           #severity: 'CRITICAL,HIGH'
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-  trivy-scan:
-    name: Trivy fs scan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Run Trivy vulnerability scanner in fs mode
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          hide-progress: false
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          scanners: 'vuln,secret'
-          ignore-unfixed: true
-          #severity: 'CRITICAL,HIGH'
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-  test:
-    name: Unit test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - run: make test
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.50.1
+  # cloud:
+  #   name: Build cloud image
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: 'read'
+  #     id-token: 'write'
+  #     packages: 'write'
+  #     security-events: write
+  #     actions: read
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-region: us-east-2
+  #         role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+  #         role-session-name: PluralCLI
+  #     - name: setup kubectl
+  #       uses: azure/setup-kubectl@v3
+  #     - name: Get EKS credentials
+  #       run: aws eks update-kubeconfig --name pluraldev
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v4
+  #       with:
+  #         # list of Docker images to use as base name for tags
+  #         images: |
+  #           ghcr.io/pluralsh/plural-cli-cloud
+  #           dkr.plural.sh/test-repo-3/plural-cli-cloud
+  #         # generate Docker tags based on the following events/attributes
+  #         tags: |
+  #           type=sha
+  #           type=ref,event=pr
+  #           type=ref,event=branch
+  #     - name: Set up Docker Buildx
+  #       id: builder
+  #       uses: docker/setup-buildx-action@v2
+  #       with:
+  #         driver: kubernetes
+  #         platforms: linux/amd64
+  #         driver-opts: |
+  #           namespace=buildx
+  #           requests.cpu=1.5
+  #           requests.memory=3.5Gi
+  #           "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
+  #           "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
+  #     - name: Append ARM buildx builder from AWS
+  #       run: |
+  #         docker buildx create \
+  #           --append \
+  #           --bootstrap \
+  #           --name ${{ steps.builder.outputs.name }} \
+  #           --driver=kubernetes \
+  #           --platform linux/arm64 \
+  #           --node=${{ steps.builder.outputs.name }}-arm64 \
+  #           --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
+  #           --driver-opt namespace=buildx \
+  #           --driver-opt requests.cpu=1.5 \
+  #           --driver-opt requests.memory=3.5Gi \
+  #           '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
+  #           '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
+  #     - name: Login to GHCR
+  #       uses: docker/login-action@v2
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Get current date
+  #       id: date
+  #       run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
+  #     - uses: docker/build-push-action@v4
+  #       with:
+  #         context: .
+  #         file: ./dockerfiles/Dockerfile.cloud
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         platforms: linux/amd64,linux/arm64
+  #         # cache-from: type=gha
+  #         # cache-to: type=gha,mode=max
+  #         build-args: |
+  #           APP_VSN=dev
+  #           APP_COMMIT=${{ github.sha }}
+  #           APP_DATE=${{ steps.date.outputs.date }}
+  #     - name: Run Trivy vulnerability scanner on cli cloud image
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         scan-type: 'image'
+  #         image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+  #         hide-progress: false
+  #         format: 'sarif'
+  #         output: 'trivy-results.sarif'
+  #         scanners: 'vuln'
+  #         timeout: 10m
+  #         ignore-unfixed: true
+  #          #severity: 'CRITICAL,HIGH'
+  #     - name: Upload Trivy scan results to GitHub Security tab
+  #       uses: github/codeql-action/upload-sarif@v2
+  #       with:
+  #         sarif_file: 'trivy-results.sarif'
+  # trivy-scan:
+  #   name: Trivy fs scan
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read # for actions/checkout to fetch code
+  #     security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+  #     actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #     - name: Run Trivy vulnerability scanner in fs mode
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         scan-type: 'fs'
+  #         hide-progress: false
+  #         format: 'sarif'
+  #         output: 'trivy-results.sarif'
+  #         scanners: 'vuln,secret'
+  #         ignore-unfixed: true
+  #         #severity: 'CRITICAL,HIGH'
+  #     - name: Upload Trivy scan results to GitHub Security tab
+  #       uses: github/codeql-action/upload-sarif@v2
+  #       with:
+  #         sarif_file: 'trivy-results.sarif'
+  # test:
+  #   name: Unit test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.18
+  #     - run: make test
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.18
+  #     - name: golangci-lint
+  #       uses: golangci/golangci-lint-action@v3
+  #       with:
+  #         version: v1.50.1
