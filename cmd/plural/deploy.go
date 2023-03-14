@@ -383,6 +383,10 @@ func (p *Plural) destroy(c *cli.Context) error {
 			return api.GetErrorResponse(err, "GetInstallation")
 		}
 
+		if installation == nil {
+			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
+		}
+
 		return p.doDestroy(repoRoot, installation, delete)
 	}
 
