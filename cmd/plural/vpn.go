@@ -46,7 +46,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "client-config",
 			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerConfig)), []string{"NAME"})),
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerConfig))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -66,12 +66,12 @@ func (p *Plural) vpnListCommands() []cli.Command {
 		{
 			Name:   "servers",
 			Usage:  "lists vpn servers",
-			Action: latestVersion(highlighted(p.vpnInstalled(p.handleWireguardServerList))),
+			Action: latestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardServerList)))),
 		},
 		{
 			Name:   "clients",
 			Usage:  "lists vpn clients for a server",
-			Action: latestVersion(highlighted(p.vpnInstalled(p.handleWireguardPeerList))),
+			Action: latestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerList)))),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -88,7 +88,7 @@ func (p *Plural) vpnCreateCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerCreate)), []string{"NAME"})),
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -105,7 +105,7 @@ func (p *Plural) vpnDeleteCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "delete a vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(p.handleWireguardPeerDelete)), []string{"NAME"})),
+			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",

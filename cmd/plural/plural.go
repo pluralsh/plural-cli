@@ -147,7 +147,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(handleWatch, []string{"REPO"})),
+			Action:    latestVersion(initKubeconfig(requireArgs(handleWatch, []string{"REPO"}))),
 			Category:  "Debugging",
 		},
 		{
@@ -208,7 +208,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
 			ArgsUsage: "WKSPACE",
-			Action:    latestVersion(owned(p.bounce)),
+			Action:    latestVersion(initKubeconfig(owned(p.bounce))),
 		},
 		{
 			Name:      "readme",

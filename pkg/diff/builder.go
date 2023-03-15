@@ -137,7 +137,3 @@ func (d *Diff) Flush(root string) error {
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl")))
 	return os.WriteFile(path, io, 0644)
 }
-
-func pluralfile(base, name string) string {
-	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
-}

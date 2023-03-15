@@ -26,14 +26,6 @@ func defaultDiff(path string) []*executor.Step {
 			Sha:     "",
 		},
 		{
-			Name:    "kube-init",
-			Wkdir:   path,
-			Target:  pluralfile(path, "NONCE"),
-			Command: "plural",
-			Args:    []string{"wkspace", "kube-init", path},
-			Sha:     "",
-		},
-		{
 			Name:    "helm",
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),

@@ -145,7 +145,3 @@ func (e *Execution) Flush(root string) error {
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, e.Metadata.Name+".hcl")))
 	return os.WriteFile(path, io, 0644)
 }
-
-func pluralfile(base, name string) string {
-	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
-}

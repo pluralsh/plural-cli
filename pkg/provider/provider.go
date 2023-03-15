@@ -101,6 +101,8 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 		return equinixFromManifest(man)
 	case KIND:
 		return kindFromManifest(man)
+	case TEST:
+		return testFromManifest(man)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", man.Provider)
 	}
