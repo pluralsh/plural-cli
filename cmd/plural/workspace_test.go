@@ -45,7 +45,7 @@ func TestHelmCommands(t *testing.T) {
 		Cluster:  "test",
 		Bucket:   "test",
 		Project:  "test",
-		Provider: "kind",
+		Provider: "test",
 		Region:   "test",
 	})
 	assert.NoError(t, err)
