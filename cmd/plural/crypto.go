@@ -89,7 +89,7 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "recover",
 			Usage:  "recovers repo encryption keys from a working k8s cluster",
-			Action: p.handleRecover,
+			Action: initKubeconfig(p.handleRecover),
 		},
 		{
 			Name:   "random",

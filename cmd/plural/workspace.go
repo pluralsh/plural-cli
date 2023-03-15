@@ -34,7 +34,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: latestVersion(p.bounceHelm),
+			Action: latestVersion(initKubeconfig(p.bounceHelm)),
 		},
 		{
 			Name:      "helm-diff",
@@ -58,7 +58,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(p.createCrds),
+			Action:    latestVersion(initKubeconfig(p.createCrds)),
 		},
 		{
 			Name:      "helm-template",

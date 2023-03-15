@@ -15,12 +15,12 @@ func (p *Plural) opsCommands() []cli.Command {
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(p.handleTerminateNode),
+			Action:    latestVersion(initKubeconfig(p.handleTerminateNode)),
 		},
 		{
 			Name:   "cluster",
 			Usage:  "list the nodes in your cluster",
-			Action: latestVersion(p.handleListNodes),
+			Action: latestVersion(initKubeconfig(p.handleListNodes)),
 		},
 	}
 }

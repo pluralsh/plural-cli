@@ -12,13 +12,13 @@ func (p *Plural) proxyCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(p.handleProxyList, []string{"REPO"})),
+			Action:    latestVersion(initKubeconfig(requireArgs(p.handleProxyList, []string{"REPO"}))),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
 			ArgsUsage: "REPO NAME",
-			Action:    latestVersion(requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"})),
+			Action:    latestVersion(initKubeconfig(requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
 		},
 	}
 }
