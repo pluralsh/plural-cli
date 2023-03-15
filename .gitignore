@@ -16,4 +16,8 @@ plural*.o
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# IDE dirs
+.idea/
+
 dist/
+build/

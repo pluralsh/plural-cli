@@ -8,7 +8,18 @@ BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= amd64
-BASE_LDFLAGS ?= -X main.version=$(APP_VSN) -X main.commit=$(BUILD) -X main.date=$(APP_DATE) -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET} -X github.com/pluralsh/plural/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}
+PACKAGE ?= github.com/pluralsh/plural
+BASE_LDFLAGS ?= -s -w
+LDFLAGS ?= $(BASE_LDFLAGS) $\
+	-X "$(PACKAGE)/cmd/plural.Version=$(APP_VSN)" $\
+	-X "$(PACKAGE)/cmd/plural.Commit=$(BUILD)" $\
+	-X "$(PACKAGE)/cmd/plural.Date=$(APP_DATE)" $\
+	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
+	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
+WAILS_TAGS ?= desktop,production
+WAILS_BINDINGS_TAGS ?= bindings,generate
+WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
+TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
 
 help:
@@ -19,13 +30,21 @@ git-push: .PHONY
 	git push
 
 install: .PHONY
-	GOBIN=~/bin go install -ldflags '-s -w $(BASE_LDFLAGS)' ./cmd/plural/
+	go install -ldflags '$(LDFLAGS)' .
 
 build-cli: .PHONY
-	GOBIN=~/bin go build -ldflags '-s -w $(BASE_LDFLAGS)' -o $(OUTFILE) ./cmd/plural/
+	go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+
+generate-bindings: .PHONY
+	@echo Building bindings binary
+	@go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
+	@echo Generating bindings
+	@./$(WAILS_BINDINGS_BINARY_NAME) > /dev/null 2>&1
+	@echo Cleaning up
+	@rm $(WAILS_BINDINGS_BINARY_NAME)
 
 release: .PHONY
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '-s -w $(BASE_LDFLAGS)'  -o plural.o ./cmd/plural/
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '$(LDFLAGS)'  -o plural.o .
 
 setup: .PHONY ## sets up your local env (for mac only)
 	brew install golangci-lint

@@ -1,20 +1,17 @@
-package main
+package plural
 
 import (
-	"log"
-	"math/rand"
 	"os"
-	"time"
 
-	"github.com/fatih/color"
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -455,21 +452,11 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
-	}
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	// init Kube when k8s config exists
-	plural := &Plural{}
-	app := CreateNewApp(plural)
-	if os.Getenv("ENABLE_COLOR") != "" {
-		color.NoColor = false
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
+		{
+			Name:   "ui",
+			Usage:  "todo",
+			Action: p.ui,
+		},
 	}
 }
 
