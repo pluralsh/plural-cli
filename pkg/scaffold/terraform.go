@@ -60,6 +60,10 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 	var providerVersions semver.ByVersion
 
+	if len(wk.Terraform) == 0 {
+		return nil
+	}
+
 	for i := range wk.Terraform {
 		providerVersions = append(providerVersions, wk.Terraform[i].Terraform.Dependencies.ProviderVsn)
 	}

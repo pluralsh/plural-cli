@@ -62,6 +62,7 @@ type Kube interface {
 	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerDelete(namespace string, name string) error
 	Apply(path string, force bool) error
+	CreateNamespace(namespace string) error
 	GetClient() *kubernetes.Clientset
 	GetRestClient() *restclient.RESTClient
 }
@@ -261,4 +262,19 @@ func (k *kube) Apply(path string, force bool) error {
 	}
 
 	return nil
+}
+
+func (k *kube) CreateNamespace(namespace string) error {
+	ctx := context.Background()
+	_, err := k.Kube.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+			Labels: map[string]string{
+				"clusterctl.cluster.x-k8s.io/core": "capi-operator",
+				"control-plane":                    "controller-manager",
+			},
+		},
+	}, metav1.CreateOptions{})
+
+	return err
 }

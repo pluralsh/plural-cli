@@ -21,6 +21,11 @@ type Kube struct {
 	mock.Mock
 }
 
+func (_m *Kube) CreateNamespace(namespace string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Apply provides a mock function with given fields: path, force
 func (_m *Kube) Apply(path string, force bool) error {
 	ret := _m.Called(path, force)
