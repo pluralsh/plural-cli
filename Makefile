@@ -7,7 +7,7 @@ APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
-GOARCH ?= amd64
+GOARCH ?= arm64
 PACKAGE ?= github.com/pluralsh/plural
 BASE_LDFLAGS ?= -s -w
 LDFLAGS ?= $(BASE_LDFLAGS) $\
@@ -30,11 +30,13 @@ git-push: .PHONY
 	git push
 
 install: .PHONY
-	go install -ldflags '$(LDFLAGS)' .
+	go install -tags $(WAILS_TAGS) -ldflags '$(LDFLAGS)' .
 
 build-cli: .PHONY
 	go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
+# This is somewhat a equivalent of wails `GenerateBindings` method.
+# Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
 generate-bindings: .PHONY
 	@echo Building bindings binary
 	@go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
@@ -44,7 +46,7 @@ generate-bindings: .PHONY
 	@rm $(WAILS_BINDINGS_BINARY_NAME)
 
 release: .PHONY
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags '$(LDFLAGS)'  -o plural.o .
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags $(WAILS_TAGS),$(GOOS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
 setup: .PHONY ## sets up your local env (for mac only)
 	brew install golangci-lint
