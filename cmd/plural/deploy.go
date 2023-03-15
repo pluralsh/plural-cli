@@ -344,9 +344,6 @@ func (p *Plural) doBounce(repoRoot string, installation *api.Installation) error
 	if err != nil {
 		return err
 	}
-	if err := workspace.Provider.KubeConfig(); err != nil {
-		return err
-	}
 
 	if err := os.Chdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repoName))); err != nil {
 		return err
