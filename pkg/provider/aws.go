@@ -35,6 +35,7 @@ type AWSProvider struct {
 	storageClient *s3.Client
 	writer        manifest.Writer
 	goContext     *context.Context
+	ctx           map[string]interface{}
 }
 
 var (
@@ -121,12 +122,23 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	ctx := context.Background()
+	cfg, err := getAwsConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cred, err := cfg.Credentials.Retrieve(ctx)
+	if err != nil {
+		return nil, err
+	}
 	client, err := getClient(man.Region, ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx}, nil
+	providerCtx := map[string]interface{}{}
+	providerCtx["AccessKey"] = cred.AccessKeyID
+	providerCtx["SecretAccessKey"] = cred.SecretAccessKey
+	providerCtx["SessionToken"] = cred.SessionToken
+	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
@@ -217,7 +229,7 @@ func (aws *AWSProvider) Region() string {
 }
 
 func (aws *AWSProvider) Context() map[string]interface{} {
-	return map[string]interface{}{}
+	return aws.ctx
 }
 
 func (aws *AWSProvider) Preflights() []*Preflight {

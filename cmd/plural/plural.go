@@ -454,6 +454,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
+		{
+			Name:        "bootstrap",
+			Usage:       "Commands for bootstrapping cluster",
+			Subcommands: p.bootstrapCommands(),
+			Category:    "Bootstrap",
+		},
 	}
 }
 
@@ -491,6 +497,11 @@ func globalFlags() []cli.Flag {
 			Usage:       "enable debug mode",
 			EnvVar:      "PLURAL_DEBUG_ENABLE",
 			Destination: &utils.EnableDebug,
+		},
+		cli.BoolFlag{
+			Name:        "bootstrap",
+			Usage:       "enable bootstrap mode",
+			Destination: &bootstrapMode,
 		},
 	}
 }

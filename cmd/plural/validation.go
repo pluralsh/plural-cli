@@ -18,6 +18,12 @@ import (
 	"github.com/urfave/cli"
 )
 
+func init() {
+	bootstrapMode = false
+}
+
+var bootstrapMode bool
+
 func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		nargs := c.NArg()
@@ -101,7 +107,9 @@ func initKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
 			if err != nil {
 				return err
 			}
-
+			if bootstrapMode {
+				prov = &provider.KINDProvider{Clust: "bootstrap"}
+			}
 			if err := prov.KubeConfig(); err != nil {
 				return err
 			}

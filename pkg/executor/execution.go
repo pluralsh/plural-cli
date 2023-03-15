@@ -105,6 +105,9 @@ func (e *Execution) IgnoreFile(root string) ([]string, error) {
 func DefaultExecution(path string, prev *Execution) (e *Execution) {
 	byName := make(map[string]*Step)
 	steps := defaultSteps(path)
+	if strings.Contains(path, "bootstrap") {
+		steps = clusterAPISteps(path)
+	}
 
 	for _, step := range prev.Steps {
 		byName[step.Name] = step
