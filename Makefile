@@ -36,6 +36,9 @@ install: .PHONY
 build-cli: .PHONY
 	go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
+build-web: .PHONY
+	cd pkg/ui/web && yarn --immutable && yarn build
+
 # This is somewhat a equivalent of wails `GenerateBindings` method.
 # Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
 generate-bindings: .PHONY
