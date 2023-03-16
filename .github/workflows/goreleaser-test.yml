@@ -9,6 +9,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            goos: linux
+          - os: macos-latest
+            goos: darwin
+          - os: windows-latest
+            goos: windows
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -30,23 +37,23 @@ jobs:
           echo "sha_short=$(git rev-parse --short HEAD)"
       - name: Setup Cache
         uses: actions/cache@v3.2.3
-        if: matrix.os == 'ubuntu-latest'
         with:
-          path: dist/linux
-          key: linux-${{ env.sha_short }}
-      - name: Setup Cache
-        uses: actions/cache@v3.2.3
-        if: matrix.os == 'macos-latest'
-        with:
-          path: dist/darwin
-          key: darwin-${{ env.sha_short }}
-      - name: Setup Cache
-        uses: actions/cache@v3.2.3
-        if: matrix.os == 'windows-latest'
-        with:
-          path: dist/windows
-          key: windows-${{ env.sha_short }}
+          path: dist/${{ matrix.goos }}
+          key: ${{ matrix.goos }}-${{ env.sha_short }}
           enableCrossOsArchive: true
+#      - name: Setup Cache
+#        uses: actions/cache@v3.2.3
+#        if: matrix.os == 'macos-latest'
+#        with:
+#          path: dist/darwin
+#          key: darwin-${{ env.sha_short }}
+#      - name: Setup Cache
+#        uses: actions/cache@v3.2.3
+#        if: matrix.os == 'windows-latest'
+#        with:
+#          path: dist/windows
+#          key: windows-${{ env.sha_short }}
+#          enableCrossOsArchive: true
       - name: Build web
         shell: bash
         run: |

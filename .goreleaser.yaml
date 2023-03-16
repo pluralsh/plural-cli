@@ -1,12 +1,26 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
+
+# Requires a GoReleaser Pro to run
+partial:
+  by: goos
+
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - targets: [go_first_class]
-    env: [CGO_ENABLED=1]
+  - id: plural-cli
+    targets:
+      - linux_amd64
+      # Enable once fixed
+      #- linux_arm64
+      - windows_amd64
+      - windows_arm64
+      - darwin_amd64
+      - darwin_arm64
+    env:
+      - CGO_ENABLED=1
     ldflags:
       - -s
       - -w
