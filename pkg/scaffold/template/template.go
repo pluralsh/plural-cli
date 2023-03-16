@@ -21,14 +21,14 @@ func templateInfo(path string) (t gqlclient.TemplateType, contents string, err e
 	gopath := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.tpl"))
 	if utils.Exists(gopath) {
 		contents, err = utils.ReadFile(gopath)
-		t = gqlclient.TemplateTypeLua
+		t = gqlclient.TemplateTypeGotemplate
 		return
 	}
 
 	luapath := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.lua"))
 	if utils.Exists(gopath) {
 		contents, err = utils.ReadFile(luapath)
-		t = gqlclient.TemplateTypeGotemplate
+		t = gqlclient.TemplateTypeLua
 		return
 	}
 
