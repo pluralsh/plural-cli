@@ -117,7 +117,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 	}
 
 	for i := 0; i < len(prev.Steps)-1; i++ {
-		graph.AddEdge(steps[i].Name, steps[i+1].Name)
+		graph.AddEdge(prev.Steps[i].Name, prev.Steps[i+1].Name)
 	}
 
 	sorted, _ := algorithms.TopsortGraph(graph)
