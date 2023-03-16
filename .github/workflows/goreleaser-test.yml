@@ -8,8 +8,8 @@ jobs:
   prepare:
     strategy:
       matrix:
-        GOOS: [linux, windows, darwin]
-    runs-on: ubuntu-latest
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -23,13 +23,23 @@ jobs:
       - shell: bash
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)"
-      - name: Setup Cache
-        uses: actions/cache@v3
+      - uses: actions/cache@v3.2.3
+        if: matrix.os == 'ubuntu-latest'
         with:
-          path: dist/${{ matrix.GOOS }}
-          key: ${{ matrix.GOOS }}-${{ env.sha_short }}
+          path: dist/linux
+          key: linux-${{ env.sha_short }}
+      - uses: actions/cache@v3.2.3
+        if: matrix.os == 'macos-latest'
+        with:
+          path: dist/darwin
+          key: darwin-${{ env.sha_short }}
+      - uses: actions/cache@v3.2.3
+        if: matrix.os == 'windows-latest'
+        with:
+          path: dist/windows
+          key: windows-${{ env.sha_short }}
+          enableCrossOsArchive: true
       - name: GoReleaser (Build)
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser-pro
