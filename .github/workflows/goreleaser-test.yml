@@ -1,0 +1,39 @@
+name: goreleaser-test
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  prepare:
+    strategy:
+      matrix:
+        GOOS: [linux, windows, darwin]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setuo-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+      - shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)"
+      - name: Setup Cache
+        uses: actions/cache@v3
+        with:
+          path: dist/${{ matrix.GOOS }}
+          key: ${{ matrix.GOOS }}-${{ env.sha_short }}
+      - name: GoReleaser (Build)
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser-pro
+          version: latest
+          args: release --clean --snapshot
+        env:
+          GOOS: ${{ matrix.GOOS }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

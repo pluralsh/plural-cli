@@ -3,24 +3,28 @@
 before:
   hooks:
     - go mod tidy
+
 builds:
-  - env:
-      - CGO_ENABLED=0
+  - targets: [go_first_class]
+    env: [CGO_ENABLED=1]
     ldflags:
-    - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{ .Env.GITLAB_CLIENT_SECRET }}"
-    goos:
-      - linux
-      - windows
-      - darwin
-    main: ./cmd/plural
+      - -s
+      - -w
+      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
+    tags:
+      - desktop
+      - production
     binary: plural
+
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: amd64
+  - name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -32,6 +36,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
 release:
   name_template: "{{.ProjectName}}-v{{.Version}}"
   header: |
@@ -40,6 +45,7 @@ release:
   footer: |
     ## Thanks!
     We'd like to thank all contributors for helping with improving our CLI!
+
 brews:
   - name: plural
     tap:
