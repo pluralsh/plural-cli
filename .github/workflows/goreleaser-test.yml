@@ -38,3 +38,4 @@ jobs:
         env:
           GOOS: ${{ matrix.GOOS }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          GITLAB_CLIENT_SECRET: x
