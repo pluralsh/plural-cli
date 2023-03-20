@@ -10,13 +10,11 @@ before:
     - go mod tidy
 
 builds:
-  - id: plural-cli
+  # Builds with embedded UI
+  - id: plural-cli-ui
     targets:
       - linux_amd64
-      # Enable once fixed
-      #- linux_arm64
       - windows_amd64
-      - windows_arm64
       - darwin_amd64
       - darwin_arm64
     env:
@@ -31,6 +29,22 @@ builds:
     tags:
       - desktop
       - production
+      - ui
+    binary: plural
+  # Builds without embedded UI
+  - id: plural-cli
+    targets:
+      - linux_arm64
+      - windows_arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     binary: plural
 
 archives:

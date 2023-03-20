@@ -3,7 +3,7 @@ FROM ubuntu:22.10 as user
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
 
-FROM golang:1.18.8-alpine3.15 AS builder
+FROM golang:1.20-alpine3.17 AS builder
 
 WORKDIR /workspace
 
@@ -15,6 +15,7 @@ COPY go.sum go.sum
 RUN go mod download
 
 # Copy the go source
+COPY main.go main.go
 COPY cmd/ cmd/
 COPY pkg/ pkg/
 
@@ -25,20 +26,23 @@ ARG APP_DATE
 ARG TARGETARCH
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
-    go build -ldflags "-s -w -X main.version=${APP_VSN} -X main.commit=${APP_COMMIT} -X main.date=${APP_DATE}" \
-    -o plural ./cmd/plural/
+    go build -ldflags '-s -w \
+    -X "github.com/pluralsh/plural/cmd/plural.Version=${APP_VSN}" \
+    -X "github.com/pluralsh/plural/cmd/plural.Commit=${APP_COMMIT}" \
+    -X "github.com/pluralsh/plural/cmd/plural.Date=${APP_DATE}"' \
+    -o plural .
 
-FROM golang:1.18.8-alpine3.15
+FROM golang:1.20-alpine3.17
 
 WORKDIR /
 
 RUN apk update && apk add --no-cache git build-base
 
-COPY --from=builder /workspace/plural /go/bin/
-
 # Copy nonroot user and switch to it
 COPY --from=user /etc/passwd /etc/passwd
 USER nonroot
 
-RUN /go/bin/plural --help
-RUN /go/bin/plural version
+COPY --chown=nonroot --from=builder /workspace/plural /go/bin/
+RUN chmod a+x /go/bin/plural
+
+ENTRYPOINT ["/go/bin/plural"]

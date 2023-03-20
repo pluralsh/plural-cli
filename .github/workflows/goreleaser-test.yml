@@ -40,19 +40,6 @@ jobs:
           path: dist/${{ matrix.goos }}
           key: ${{ matrix.goos }}-${{ env.sha_short }}
           enableCrossOsArchive: true
-#      - name: Setup Cache
-#        uses: actions/cache@v3.2.3
-#        if: matrix.os == 'macos-latest'
-#        with:
-#          path: dist/darwin
-#          key: darwin-${{ env.sha_short }}
-#      - name: Setup Cache
-#        uses: actions/cache@v3.2.3
-#        if: matrix.os == 'windows-latest'
-#        with:
-#          path: dist/windows
-#          key: windows-${{ env.sha_short }}
-#          enableCrossOsArchive: true
       - name: Install Dependencies
         if: matrix.goos == 'linux'
         shell: bash

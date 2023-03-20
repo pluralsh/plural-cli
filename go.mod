@@ -51,7 +51,7 @@ require (
 	github.com/samber/lo v1.33.0
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
-	github.com/wailsapp/wails/v2 v2.4.0
+	github.com/wailsapp/wails/v2 v2.4.1
 	github.com/xanzy/go-gitlab v0.70.0
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	go.mercari.io/hcledit v0.0.8
