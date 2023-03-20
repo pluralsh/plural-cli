@@ -90,19 +90,15 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 		return err
 	}
 
-	args := []string{}
-	if c.IsSet("wait") {
-		args = append(args, "--wait")
-	}
+	skipArgs := []string{}
 	if c.IsSet("skip") {
 		for _, skipChart := range c.StringSlice("skip") {
 			skipString := fmt.Sprintf("%s.enabled=false", skipChart)
-			skip := []string{"--set", skipString}
-			args = append(args, skip...)
+			skipArgs = append(skipArgs, skipString)
 		}
 	}
 
-	return minimal.BounceHelm(args...)
+	return minimal.BounceHelm(c.IsSet("wait"), skipArgs...)
 }
 
 func (p *Plural) diffHelm(c *cli.Context) error {

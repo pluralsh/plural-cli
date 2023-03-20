@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"text/template"
 	"time"
 
@@ -27,6 +26,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/strvals"
 	"sigs.k8s.io/yaml"
 )
 
@@ -70,7 +70,7 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	return
 }
 
-func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
+func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
@@ -79,6 +79,13 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	if err != nil {
 		return err
 	}
+
+	for _, arg := range skipArgs {
+		if err := strvals.ParseInto(arg, defaultVals); err != nil {
+			return err
+		}
+	}
+
 	namespace := m.Config.Namespace(m.Name)
 	if m.HelmConfig == nil {
 		m.HelmConfig, err = helm.GetActionConfig(namespace)
@@ -87,7 +94,7 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		}
 	}
 
-	utils.Warn("helm upgrade --install --skip-crds --namespace %s %s %s %s\n", namespace, m.Name, path, strings.Join(extraArgs, " "))
+	utils.Warn("helm upgrade --install --skip-crds --namespace %s %s %s\n", namespace, m.Name, path)
 	chart, err := loader.Load(path)
 	if err != nil {
 		return err
@@ -100,6 +107,8 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 		instClient.Namespace = namespace
 		instClient.ReleaseName = m.Name
 		instClient.SkipCRDs = true
+		instClient.Timeout = time.Minute * 10
+		instClient.Wait = wait
 
 		if req := chart.Metadata.Dependencies; req != nil {
 			if err := action.CheckDependencies(chart, req); err != nil {
@@ -113,6 +122,7 @@ func (m *MinimalWorkspace) BounceHelm(extraArgs ...string) error {
 	client.Namespace = namespace
 	client.SkipCRDs = true
 	client.Timeout = time.Minute * 10
+	client.Wait = wait
 	_, err = client.Run(m.Name, chart, defaultVals)
 	return err
 }
