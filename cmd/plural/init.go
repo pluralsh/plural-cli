@@ -21,7 +21,7 @@ import (
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
 
-const DemoingErrorMsg = "You're currently running a gcp demo cluster. Spin that down at https://app.plural.sh/shell before beginning a local installation"
+const DemoingErrorMsg = "You're currently running a gcp demo cluster. Spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation"
 
 func (p *Plural) handleInit(c *cli.Context) error {
 	gitCreated := false
