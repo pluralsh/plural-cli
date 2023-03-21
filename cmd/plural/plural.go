@@ -452,7 +452,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
-		UICLICommand(),
+		p.uiCommands(),
 	}
 }
 

@@ -1,4 +1,4 @@
-//go:build !ui
+//go:build !ui && !generate
 
 package plural
 
@@ -6,6 +6,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-func UICLICommand() cli.Command {
+func (p *Plural) uiCommands() cli.Command {
 	return cli.Command{}
 }

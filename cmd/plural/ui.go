@@ -1,4 +1,4 @@
-//go:build ui
+//go:build ui || generate
 
 package plural
 
@@ -8,14 +8,15 @@ import (
 	"github.com/pluralsh/plural/pkg/ui"
 )
 
-func UICLICommand() cli.Command {
+func (p *Plural) uiCommands() cli.Command {
 	return cli.Command{
 		Name:   "ui",
 		Usage:  "todo",
-		Action: run,
+		Action: p.run,
 	}
 }
 
-func run(_ *cli.Context) error {
-	return ui.Run()
+func (p *Plural) run(c *cli.Context) error {
+	p.InitPluralClient()
+	return ui.Run(p.Client, c)
 }
