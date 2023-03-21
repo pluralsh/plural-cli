@@ -1,8 +1,6 @@
 name: CD / CLI
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   # Build binaries with GoReleaser
