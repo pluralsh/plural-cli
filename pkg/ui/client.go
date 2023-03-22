@@ -3,8 +3,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -16,17 +14,12 @@ type Client struct {
 	client api.Client
 }
 
-func (this *Client) ListRepositories() {
-	repos, err := this.client.ListRepositories(this.ctx.String("query"))
-	if err != nil {
-		return
-	}
+func (this *Client) ListRepositories(query string) ([]*api.Repository, error) {
+	return this.client.ListRepositories(query)
+}
 
-	for _, repo := range repos {
-		fmt.Println(repo.Id)
-		fmt.Println(repo.Name)
-		fmt.Println()
-	}
+func (this *Client) ListRecipes(repo string, provider string) ([]*api.Recipe, error) {
+	return this.client.ListRecipes(repo, provider)
 }
 
 // NewClient creates a new proxy client struct

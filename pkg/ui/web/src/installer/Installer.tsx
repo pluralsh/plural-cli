@@ -21,6 +21,15 @@ import React, {
   useState,
 } from 'react'
 
+import { useClientQuery } from '../hooks/useClient'
+import { Endpoint } from '../services/client'
+import {
+  ListRecipesVariables,
+  ListRepositoriesVariables,
+  Recipe,
+  Repository,
+} from '../types/client'
+
 interface FormData {
   domain: string
 }
@@ -128,6 +137,17 @@ const DEFAULT_STEPS: Array<WizardStepConfig> = [
 ]
 
 function Installer(): React.ReactElement {
+  const { data, loading, error } = useClientQuery<Array<Recipe>, ListRecipesVariables>(Endpoint.ListRecipes, {
+    variables: {
+      repo: 'airbyte',
+      provider: 'AWS',
+    },
+  })
+
+  console.log(data)
+  console.log(loading)
+  console.log(error)
+
   return (
     <Wizard defaultSteps={DEFAULT_STEPS}>
       {{
