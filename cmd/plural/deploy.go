@@ -121,7 +121,7 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	fmt.Printf("Building workspace for %s\n", repoName)
 
 	if !wkspace.Configured(repoName) {
-		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it with `plural repos uninstall %s` or install it locally via a bundle in `plural bundle list %s`", repoName, repoName, repoName)
+		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`", repoName, repoName, repoName)
 	}
 
 	workspace, err := wkspace.New(p.Client, installation)
@@ -182,6 +182,20 @@ func (p *Plural) doValidate(installation *api.Installation) error {
 	}
 
 	return workspace.Validate()
+}
+
+func (p *Plural) info(c *cli.Context) error {
+	p.InitPluralClient()
+	repo := c.Args().Get(0)
+	installation, err := p.GetInstallation(repo)
+	if err != nil {
+		return api.GetErrorResponse(err, "GetInstallation")
+	}
+	if installation == nil {
+		return fmt.Errorf("You have not installed %s", repo)
+	}
+
+	return scaffold.Notes(installation)
 }
 
 func (p *Plural) deploy(c *cli.Context) error {

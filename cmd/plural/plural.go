@@ -94,6 +94,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
 		{
+			Name:      "info",
+			Usage:     "Get information for your installation of APP",
+			ArgsUsage: "APP",
+			Action:    latestVersion(owned(rooted(p.info))),
+		},
+		{
 			Name:      "deploy",
 			Aliases:   []string{"d"},
 			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
@@ -313,6 +319,12 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:        "repos",
+			Usage:       "view and manage plural repositories",
+			Subcommands: p.reposCommands(),
+			Category:    "API",
+		},
+		{
+			Name:        "apps",
 			Usage:       "view and manage plural repositories",
 			Subcommands: p.reposCommands(),
 			Category:    "API",
