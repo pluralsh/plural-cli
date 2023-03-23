@@ -86,10 +86,6 @@ func Notes(installation *api.Installation) error {
 
 	repo := installation.Repository.Name
 	ctx, _ := context.Repo(installation.Repository.Name)
-	valuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "values.yaml"))
-	prevVals, _ := prevValues(valuesFile)
-	defaultValuesFile := pathing.SanitizeFilepath(filepath.Join(repoRoot, repo, "helm", repo, "default-values.yaml"))
-	defaultPrevVals, _ := prevValues(defaultValuesFile)
 
 	vals := map[string]interface{}{
 		"Values":        ctx,
@@ -120,10 +116,13 @@ func Notes(installation *api.Installation) error {
 		}
 	}
 
-	for k, v := range defaultPrevVals {
-		vals[k] = v
+	apps := &Applications{Root: repoRoot}
+	values, err := apps.HelmValues(repo)
+	if err != nil {
+		return err
 	}
-	for k, v := range prevVals {
+
+	for k, v := range values {
 		vals[k] = v
 	}
 
