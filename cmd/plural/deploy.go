@@ -121,7 +121,9 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	fmt.Printf("Building workspace for %s\n", repoName)
 
 	if !wkspace.Configured(repoName) {
-		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`", repoName, repoName, repoName)
+		fmt.Printf("You have not locally configured %s but have it registered as an installation in our api, ", repoName)
+		fmt.Printf("either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`\n", repoName, repoName)
+		return nil
 	}
 
 	workspace, err := wkspace.New(p.Client, installation)
@@ -146,42 +148,6 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	workspace.PrintLinks()
 
 	return err
-}
-
-func (p *Plural) validate(c *cli.Context) error {
-	p.InitPluralClient()
-	if c.IsSet("only") {
-		installation, err := p.GetInstallation(c.String("only"))
-		if err != nil {
-			return api.GetErrorResponse(err, "GetInstallation")
-		}
-		return p.doValidate(installation)
-	}
-
-	installations, err := p.getSortedInstallations("")
-	if err != nil {
-		return err
-	}
-
-	for _, installation := range installations {
-		if err := p.doValidate(installation); err != nil {
-			return err
-		}
-	}
-
-	utils.Success("Workspace providers are properly configured!\n")
-	return nil
-}
-
-func (p *Plural) doValidate(installation *api.Installation) error {
-	p.InitPluralClient()
-	utils.Highlight("Validating repository %s\n", installation.Repository.Name)
-	workspace, err := wkspace.New(p.Client, installation)
-	if err != nil {
-		return err
-	}
-
-	return workspace.Validate()
 }
 
 func (p *Plural) info(c *cli.Context) error {
