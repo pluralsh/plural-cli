@@ -183,19 +183,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Publishing",
 		},
 		{
-			Name:    "validate",
-			Aliases: []string{"v"},
-			Usage:   "validates your workspace",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "only",
-					Usage: "repository to (re)build",
-				},
-			},
-			Action:   latestVersion(p.validate),
-			Category: "Workspace",
-		},
-		{
 			Name:     "topsort",
 			Aliases:  []string{"top"},
 			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
