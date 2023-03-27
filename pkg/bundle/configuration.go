@@ -39,12 +39,15 @@ func evaluateCondition(ctx map[string]interface{}, cond *api.Condition, valueTyp
 		return ok && !booled // it must be a false boolean value
 	}
 
-	switch operationType {
-	case OperationType{Operation: "PREFIX", Type: String}:
+	if operationType.Operation == "PREFIX" {
 		return strings.HasPrefix(val.(string), condValue)
-	case OperationType{Operation: "SUFFIX", Type: String}:
-		val := ctx[cond.Field]
+	}
+
+	if operationType.Operation == "SUFFIX" {
 		return strings.HasSuffix(val.(string), condValue)
+	}
+
+	switch operationType {
 	case OperationType{Operation: "EQ", Type: String}:
 		return val == condValue
 	case OperationType{Operation: "EQ", Type: Int}:
