@@ -16,6 +16,21 @@ const (
 	waitTime = 5 * 60 * time.Second
 )
 
+func ListAll(kubeConf *rest.Config) ([]v1beta1.Application, error) {
+	apps, err := NewForConfig(kubeConf)
+	if err != nil {
+		return nil, err
+	}
+
+	client := apps.Applications("")
+	l, err := client.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return l.Items, nil
+}
+
 func Waiter(kubeConf *rest.Config, repo string, appFunc func(app *v1beta1.Application) (bool, error), timeout func() error) error {
 	conf := config.Read()
 	ctx := context.Background()
