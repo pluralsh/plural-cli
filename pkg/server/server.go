@@ -20,6 +20,7 @@ func SetUpRouter() *gin.Engine {
 		v1.POST("/setup", serverFunc(setupCli))
 		v1.GET("/health", healthcheck)
 		v1.GET("/configuration", serverFunc(configuration))
+		v1.GET("/applications", serverFunc(listApplications))
 		v1.POST("/context/configuration", serverFunc(contextConfiguration))
 	}
 	return r
