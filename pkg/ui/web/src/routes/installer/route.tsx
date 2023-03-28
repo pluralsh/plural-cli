@@ -1,10 +1,11 @@
+import React from 'react'
 import { DataRouteObject } from 'react-router-dom'
 
-import { Installer } from './Installer'
+const Installer = React.lazy(() => import('./Installer'))
 
 const route: DataRouteObject = {
   id: 'installer',
-  path: '/',
+  index: true,
   element: <Installer />,
 }
 

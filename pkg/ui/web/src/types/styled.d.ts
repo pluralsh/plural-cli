@@ -1,10 +1,10 @@
 // import original module declarations
 import 'styled-components'
-import { styledTheme } from '@pluralsh/design-system'
+import { theme } from '../styled/theme'
 
 import { DEFAULT_THEME } from '../theme'
 
-type StyledTheme = typeof styledTheme & typeof DEFAULT_THEME
+type StyledTheme = typeof theme & typeof DEFAULT_THEME
 
 // and extend them!
 declare module 'styled-components' {

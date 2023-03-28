@@ -6,6 +6,8 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/manifest"
 )
 
 // Client struct
@@ -14,12 +16,28 @@ type Client struct {
 	client api.Client
 }
 
-func (this *Client) ListRepositories(query string) ([]*api.Repository, error) {
-	return this.client.ListRepositories(query)
+func (this *Client) Token() string {
+	conf := config.Read()
+
+	return conf.Token
 }
 
-func (this *Client) ListRecipes(repo string, provider string) ([]*api.Recipe, error) {
-	return this.client.ListRecipes(repo, provider)
+func (this *Client) Project() *manifest.ProjectManifest {
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return nil
+	}
+
+	return project
+}
+
+func (this *Client) Context() *manifest.Context {
+	context, err := manifest.FetchContext()
+	if err != nil {
+		return nil
+	}
+
+	return context
 }
 
 // NewClient creates a new proxy client struct

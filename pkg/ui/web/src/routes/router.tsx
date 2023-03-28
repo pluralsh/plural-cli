@@ -1,12 +1,14 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createHashRouter } from 'react-router-dom'
 
-import { installerRoute } from '../installer/route'
+import { installerRoute } from './installer/route'
+import { nextStepsRoute } from './nextsteps/route'
 
 import { createRootRoute } from './root'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   createRootRoute([
     installerRoute,
+    nextStepsRoute,
   ]),
 ])
 

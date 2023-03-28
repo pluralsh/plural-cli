@@ -1,18 +1,18 @@
-export namespace api {
+export namespace manifest {
 	
-	export class Recipe {
-	    // Go type: OIDCSettings
-	    oidcSettings?: any;
-	    recipeDependencies: Recipe[];
+	export class Context {
+	    protect?: string[];
+	    // Go type: Globals
+	    globals?: any;
 	
 	    static createFrom(source: any = {}) {
-	        return new Recipe(source);
+	        return new Context(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.oidcSettings = this.convertValues(source["oidcSettings"], null);
-	        this.recipeDependencies = this.convertValues(source["recipeDependencies"], Recipe);
+	        this.protect = source["protect"];
+	        this.globals = this.convertValues(source["globals"], null);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

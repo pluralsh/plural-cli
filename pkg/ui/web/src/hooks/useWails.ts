@@ -5,7 +5,7 @@ import {
   useState,
 } from 'react'
 
-import { ClientBindingFactory, Endpoint } from '../services/client'
+import { Binding, ClientBindingFactory } from '../services/wails'
 
 type Error = any // TODO: figure out the type
 
@@ -22,9 +22,9 @@ interface QueryOptions<TVariables = OperationVariables> {
   variables?: TVariables
 }
 
-function useClientQuery<TResult = unknown, TVariables extends OperationVariables = OperationVariables>(endpoint: Endpoint,
+function useWailsQuery<TResult = unknown, TVariables extends OperationVariables = OperationVariables>(binding: Binding,
   options?: QueryOptions<TVariables>): QueryResponse<TResult> {
-  const binding = ClientBindingFactory<TResult>(endpoint)
+  const bindingFn = ClientBindingFactory<TResult>(binding)
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<TResult>()
   const [error, setError] = useState()
@@ -34,10 +34,10 @@ function useClientQuery<TResult = unknown, TVariables extends OperationVariables
     setError(undefined)
     setData(undefined)
 
-    binding(options?.variables ?? {}).then(res => setData(res))
+    bindingFn(options?.variables ?? {}).then(res => setData(res))
       .catch(err => setError(err))
       .finally(() => setLoading(false))
-  }, [binding])
+  }, [bindingFn, options?.variables])
 
   const refetch = useCallback(() => {
     if (loading) return
@@ -61,7 +61,7 @@ interface UpdateReponse {
   update: Dispatch<void>
 }
 
-function useClientUpdate(endpoint: Endpoint): UpdateReponse {
+function useWailsUpdate(endpoint: Binding): UpdateReponse {
   const binding = ClientBindingFactory(endpoint)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState()
@@ -81,4 +81,4 @@ function useClientUpdate(endpoint: Endpoint): UpdateReponse {
   }
 }
 
-export { useClientQuery, useClientUpdate }
+export { useWailsQuery, useWailsUpdate }

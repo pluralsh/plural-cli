@@ -1,35 +1,31 @@
-import { Endpoint } from '../services/client'
+import { Provider } from '../graphql/generated/graphql'
+import { Binding } from '../services/client'
 
 type ClientBinding<TResult = unknown> = (...args: any) => Promise<TResult>
-type Client = {[key in Endpoint]: ClientBinding}
+type Client = {[key in Binding]: ClientBinding}
 
-interface ListRepositoriesVariables {
-  query: string
+interface NetworkConfig {
+  subdomain: string
+  pluralDns: bool
 }
 
-interface ListRecipesVariables {
-  repo: string
-  provider: string // TODO: use provider enum
+interface PluralProject {
+  cluster: string
+  bucket: string
+  project: string
+  provider: Provider
+  region: string
+  bucketPrefix: string
+  network: NetworkConfig
+  context: Map<string, unknown>
 }
 
-interface Repository {
-  Id: string
-  Name: string
-  Description: string
-  Notes: string
-  Icon: string
-  DarkIcon: string
-  Recipes: Array<Recipe>
-}
-
-interface Recipe {
-  Id: string
-  Name: string
-  Provider: string
-  Description: string
-  Restricted: boolean
+interface PluralContext {
+  buckets: Array<string>
+  domains: Array<string>
+  configuration: Record<string, Record<string, unknown>>
 }
 
 export type {
-  Client, ClientBinding, Repository, Recipe, ListRecipesVariables, ListRepositoriesVariables,
+  Client, ClientBinding, PluralProject, PluralContext,
 }

@@ -1,5 +1,7 @@
 package manifest
 
+import jsoniter "github.com/json-iterator/go"
+
 type ChartManifest struct {
 	Id        string
 	Name      string
@@ -44,8 +46,8 @@ type Owner struct {
 }
 
 type NetworkConfig struct {
-	Subdomain string
-	PluralDns bool
+	Subdomain string `json:"subdomain"`
+	PluralDns bool   `json:"pluralDns"`
 }
 
 type ProjectManifest struct {
@@ -58,6 +60,32 @@ type ProjectManifest struct {
 	Network      *NetworkConfig
 	BucketPrefix string `yaml:"bucketPrefix"`
 	Context      map[string]interface{}
+}
+
+func (this *ProjectManifest) MarshalJSON() ([]byte, error) {
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+
+	return json.Marshal(&struct {
+		Cluster      string                 `json:"cluster"`
+		Bucket       string                 `json:"bucket"`
+		Project      string                 `json:"project"`
+		Provider     string                 `json:"provider"`
+		Region       string                 `json:"region"`
+		Owner        *Owner                 `json:"owner"`
+		Network      *NetworkConfig         `json:"network"`
+		BucketPrefix string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
+		Context      map[string]interface{} `json:"context"`
+	}{
+		Cluster:      this.Cluster,
+		Bucket:       this.Bucket,
+		Project:      this.Project,
+		Provider:     this.Provider,
+		Region:       this.Region,
+		Owner:        this.Owner,
+		Network:      this.Network,
+		BucketPrefix: this.BucketPrefix,
+		Context:      this.Context,
+	})
 }
 
 type VersionedManifest struct {

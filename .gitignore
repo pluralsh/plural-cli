@@ -21,3 +21,7 @@ plural*.o
 
 dist/
 build/
+
+# Testing files
+context.yaml
+workspace.yaml

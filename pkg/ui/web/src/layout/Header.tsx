@@ -4,11 +4,10 @@ import React, { useCallback } from 'react'
 import styled from 'styled-components'
 
 import { Close } from '../../wailsjs/go/ui/Window'
-import { WailsStyle } from '../styled/wails'
 
 const Header = styled(HeaderUnstyled)(({ theme }) => ({
   // Make window draggable via header
-  ...WailsStyle.Draggable,
+  ...theme.partials.draggable,
 
   // Layout
   display: 'flex',
@@ -44,4 +43,4 @@ function HeaderUnstyled({ ...props }): React.ReactElement {
   )
 }
 
-export { Header }
+export default Header
