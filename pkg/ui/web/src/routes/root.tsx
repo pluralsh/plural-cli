@@ -1,14 +1,12 @@
 import { ApolloProvider } from '@apollo/client'
 import { LoadingSpinner } from '@pluralsh/design-system'
-import React, { Suspense, useMemo } from 'react'
+import React, { Suspense, useContext, useMemo } from 'react'
 import { DataRouteObject, Outlet, RouteObject } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { useWailsQuery } from '../hooks/useWails'
-
+import { WailsContext } from '../context/wails'
 import Header from '../layout/Header'
 import { newApolloClient } from '../services/apollo'
-import { Binding } from '../services/wails'
 
 import { Routes } from './routes'
 
@@ -26,14 +24,8 @@ const Root = styled(RootUnstyled)(({ theme }) => ({
 }))
 
 function RootUnstyled({ ...props }): React.ReactElement {
-  const { data: token, loading } = useWailsQuery<string>(Binding.Token)
-  const client = useMemo(() => {
-    if (!token) return undefined
-
-    return newApolloClient(token)
-  }, [token])
-
-  if (loading || !token) return <LoadingSpinner />
+  const { token } = useContext(WailsContext)
+  const client = useMemo(() => newApolloClient(token), [token])
 
   return (
     <div {...props}>

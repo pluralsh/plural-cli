@@ -4,10 +4,8 @@ import React, { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 
-import { PluralContext, WailsContext, WailsContextProps } from './context/wails'
-
+import { WailsContext, WailsContextProps } from './context/wails'
 import { useWailsQuery } from './hooks/useWails'
-
 import { router } from './routes/router'
 import { Binding } from './services/wails'
 import { FontStyles } from './styled/fonts'
@@ -20,12 +18,7 @@ function Plural(): React.ReactElement {
   const { data: project } = useWailsQuery(Binding.Project)
   const { data: token } = useWailsQuery(Binding.Token)
 
-  console.log(context)
-  console.log(project)
-  console.log(token)
-
   const isReady = useMemo(() => !!context && !!project && !!token, [context, project, token])
-
   const wailsContext = useMemo(() => ({
     context,
     project,

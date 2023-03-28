@@ -1,6 +1,10 @@
 import { Context, Project, Token } from '../../wailsjs/go/ui/Client'
-import { PluralContext } from '../context/wails'
-import { Client, ClientBinding, PluralProject } from '../types/client'
+import {
+  Client,
+  ClientBinding,
+  PluralContext,
+  PluralProject,
+} from '../types/client'
 
 /**
  * List of supported client methods based on API Go client.
@@ -13,7 +17,7 @@ enum Binding {
 }
 
 /**
- * Client mapping from API "endpoint" to the proper backend binding.
+ * Client mapping from defined bindings to exposed Go backend methods.
  * Abstracts the backend calls and wraps them with proper return types
  * to simplify usage in the UI.
  * @see Binding
