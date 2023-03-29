@@ -137,6 +137,17 @@ func (this *Client) doInstall(application Application, context *manifest.Context
 	maps.Copy(mergedConfiguration, configuration)
 	context.Configuration[repoName] = mergedConfiguration
 
+	// Non-dependency apps need some additional handling
+	if !application.IsDependency {
+		// Add installed app to the context
+		context.AddBundle(repoName, recipe.Name)
+
+		// Install app recipe
+		if err := this.client.InstallRecipe(recipeID); err != nil {
+			return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
+		}
+	}
+
 	// Configure OIDC if enabled
 	if oidc {
 		confirm := false
@@ -144,19 +155,6 @@ func (this *Client) doInstall(application Application, context *manifest.Context
 		if err != nil {
 			return err
 		}
-	}
-
-	// Dependency apps do not need any additional steps
-	if application.IsDependency {
-		return nil
-	}
-
-	// Add installed app to the context
-	context.AddBundle(repoName, recipe.Name)
-
-	// Install app recipe
-	if err := this.client.InstallRecipe(recipeID); err != nil {
-		return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
 	}
 
 	return nil
