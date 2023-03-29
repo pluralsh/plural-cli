@@ -177,6 +177,92 @@ func (client *client) GetRecipe(repo, name string) (*Recipe, error) {
 	return r, nil
 }
 
+func (client *client) GetRecipeByID(id string) (*Recipe, error) {
+	resp, err := client.pluralClient.GetRecipeByID(client.ctx, &id)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &Recipe{
+		Id:                 resp.Recipe.ID,
+		Name:               resp.Recipe.Name,
+		Provider:           string(*resp.Recipe.Provider),
+		Description:        utils.ConvertStringPointer(resp.Recipe.Description),
+		Tests:              []*RecipeTest{},
+		RecipeSections:     []*RecipeSection{},
+		RecipeDependencies: []*Recipe{},
+	}
+	if resp.Recipe.OidcSettings != nil {
+		r.OidcSettings = &OIDCSettings{
+			DomainKey:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.DomainKey),
+			UriFormat:  utils.ConvertStringPointer(resp.Recipe.OidcSettings.URIFormat),
+			UriFormats: utils.ConvertStringArrayPointer(resp.Recipe.OidcSettings.URIFormats),
+			AuthMethod: string(resp.Recipe.OidcSettings.AuthMethod),
+		}
+		if resp.Recipe.OidcSettings.Subdomain != nil {
+			r.OidcSettings.Subdomain = *resp.Recipe.OidcSettings.Subdomain
+		}
+	}
+	if resp.Recipe.Repository != nil {
+		r.Repository = &Repository{
+			Id:   resp.Recipe.Repository.ID,
+			Name: resp.Recipe.Repository.Name,
+		}
+	}
+	if resp.Recipe.Restricted != nil {
+		r.Restricted = *resp.Recipe.Restricted
+	}
+
+	for _, dep := range resp.Recipe.RecipeDependencies {
+		r.RecipeDependencies = append(r.RecipeDependencies, convertRecipe(dep))
+	}
+
+	for _, section := range resp.Recipe.RecipeSections {
+		rs := &RecipeSection{
+			Id: fmt.Sprint(section.Index),
+			Repository: &Repository{
+				Id:          section.Repository.ID,
+				Name:        section.Repository.Name,
+				Description: utils.ConvertStringPointer(section.Repository.Description),
+				Icon:        utils.ConvertStringPointer(section.Repository.Icon),
+				DarkIcon:    utils.ConvertStringPointer(section.Repository.DarkIcon),
+				Notes:       utils.ConvertStringPointer(section.Repository.Notes),
+			},
+			RecipeItems:   []*RecipeItem{},
+			Configuration: []*ConfigurationItem{},
+		}
+		for _, conf := range section.Configuration {
+			rs.Configuration = append(rs.Configuration, convertConfigurationItem(conf))
+		}
+		for _, recipeItem := range section.RecipeItems {
+			rs.RecipeItems = append(rs.RecipeItems, convertRecipeItem(recipeItem))
+		}
+
+		r.RecipeSections = append(r.RecipeSections, rs)
+
+	}
+
+	for _, test := range resp.Recipe.Tests {
+		t := &RecipeTest{
+			Name:    test.Name,
+			Type:    string(test.Type),
+			Message: utils.ConvertStringPointer(test.Message),
+			Args:    []*TestArgument{},
+		}
+		for _, arg := range test.Args {
+			t.Args = append(t.Args, &TestArgument{
+				Name: arg.Name,
+				Repo: arg.Repo,
+				Key:  arg.Key,
+			})
+		}
+
+		r.Tests = append(r.Tests, t)
+	}
+
+	return r, nil
+}
+
 func convertRecipeItem(item *gqlclient.RecipeItemFragment) *RecipeItem {
 	ri := &RecipeItem{
 		Id:        utils.ConvertStringPointer(item.ID),

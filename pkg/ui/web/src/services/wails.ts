@@ -1,10 +1,20 @@
-import { Context, Project, Token } from '../../wailsjs/go/ui/Client'
+import { WizardStepConfig } from '@pluralsh/design-system'
+
+import { ui } from '../../wailsjs/go/models'
+import {
+  Context,
+  Install,
+  Project,
+  Token,
+} from '../../wailsjs/go/ui/Client'
 import {
   Client,
   ClientBinding,
   PluralContext,
   PluralProject,
 } from '../types/client'
+
+import Application = ui.Application;
 
 /**
  * List of supported client methods based on API Go client.
@@ -14,6 +24,7 @@ enum Binding {
   Token = 'Token',
   Project = 'Project',
   Context = 'Context',
+  Install = 'Install',
 }
 
 /**
@@ -26,6 +37,7 @@ const Plural: Client = {
   [Binding.Token]: (): Promise<string> => Token(),
   [Binding.Project]: (): Promise<PluralProject> => Project() as Promise<PluralProject>,
   [Binding.Context]: (): Promise<PluralContext> => Context() as Promise<PluralContext>,
+  [Binding.Install]: (apps: Array<WizardStepConfig>, domains: Array<string>, buckets: Array<string>): Promise<void> => Install(apps as Array<Application>, domains, buckets) as Promise<void>,
 }
 
 /**

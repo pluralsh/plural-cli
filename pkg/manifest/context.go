@@ -138,8 +138,8 @@ func (c *Context) HasBucket(bucket string) bool {
 	return false
 }
 
-func (c *Context) AddDomain(bucket string) {
-	c.Domains = append(c.Domains, bucket)
+func (c *Context) AddDomain(domain string) {
+	c.Domains = append(c.Domains, domain)
 }
 
 func (c *Context) Protected(name string) bool {

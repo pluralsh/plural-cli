@@ -49,7 +49,7 @@ build-web: ## Build just the embedded UI
 
 .PHONY: run-web
 run-web: $(PRE) ## Run the UI for development
-	@wails dev --tags ui -browser
+	@wails dev -tags ui -browser -skipbindings
 
 # This is somewhat an equivalent of wails `GenerateBindings` method.
 # Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28

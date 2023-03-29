@@ -1,32 +1,31 @@
+import { FormField, Input } from '@pluralsh/design-system'
+import { Switch } from 'honorable'
+import StartCase from 'lodash/startCase'
 import {
   useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
-import { Switch } from 'honorable'
-import StartCase from 'lodash/startCase'
-import { FormField, Input } from '@pluralsh/design-system'
 
 import { WailsContext } from '../../context/wails'
-
-import { Datatype, ShellConfiguration } from '../../graphql/generated/graphql'
+import { Datatype } from '../../graphql/generated/graphql'
+import { PluralProject } from '../../types/client'
 
 import ConfigurationFileInput from './ConfigurationFileInput'
 
 type ModifierFunction = (value: string, trim?: boolean) => string
 
-const modifierFactory = (type: Datatype,
-  configuration: ShellConfiguration): ModifierFunction => {
+const modifierFactory = (type: Datatype, project: PluralProject): ModifierFunction => {
   switch (type) {
   case Datatype.String:
   case Datatype.Int:
   case Datatype.Password:
     return stringModifier
   case Datatype.Bucket:
-    return bucketModifier.bind({ configuration })
+    return bucketModifier.bind({ project })
   case Datatype.Domain:
-    return domainModifier.bind({ configuration })
+    return domainModifier.bind({ project })
   }
 
   return stringModifier
@@ -34,19 +33,19 @@ const modifierFactory = (type: Datatype,
 
 const stringModifier = value => value
 
-function bucketModifier(this: {configuration: ShellConfiguration}, value: string, trim = false) {
-  const { configuration } = this
-  const bucketPrefix = configuration?.workspace?.bucketPrefix
-  const cluster = configuration?.workspace?.cluster
+function bucketModifier(this: {project: PluralProject}, value: string, trim = false) {
+  const { project } = this
+  const bucketPrefix = project?.bucketPrefix
+  const cluster = project?.cluster
   const prefix = `${bucketPrefix}-${cluster}-`
 
   if (trim) return value?.replace(prefix, '')
 
   return bucketPrefix && cluster ? `${prefix}${value}` : value
 }
-function domainModifier(this: {configuration: ShellConfiguration}, value: string, trim = false) {
-  const { configuration } = this
-  const subdomain = configuration?.workspace?.network?.subdomain || ''
+function domainModifier(this: {project: PluralProject}, value: string, trim = false) {
+  const { project } = this
+  const subdomain = project?.network?.subdomain || ''
   const suffix = subdomain ? `.${subdomain}` : ''
 
   if (trim) return value?.replace(suffix, '')
@@ -71,7 +70,7 @@ function ConfigurationField({
     optional,
     type,
   } = config
-  const { context: { configuration } = { configuration: {} }, project } = useContext(WailsContext)
+  const { project } = useContext(WailsContext)
 
   const value = useMemo(() => ctx[name]?.value, [ctx, name])
   const validator = useMemo(() => createValidator(new RegExp(validation?.regex ? `^${validation?.regex}$` : /.*/),
@@ -79,8 +78,8 @@ function ConfigurationField({
     validation?.message),
   [config.optional, validation?.message, validation?.regex])
   const { valid, message } = useMemo(() => validator(value), [validator, value])
-  const modifier = useMemo(() => modifierFactory(config.type, configuration),
-    [config.type, configuration])
+  const modifier = useMemo(() => modifierFactory(config.type, project),
+    [config.type, project])
 
   const isFile = type === Datatype.File
 

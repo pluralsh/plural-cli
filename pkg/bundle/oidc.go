@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -12,7 +13,7 @@ import (
 
 var oidcConfirmed bool
 
-func configureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
+func ConfigureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
 	if recipe.OidcSettings == nil {
 		return nil
 	}

@@ -9,17 +9,15 @@ import {
 } from '@pluralsh/design-system'
 
 import {
-  CreateQuickStackDocument,
   Datatype,
   GetRecipeDocument,
-  InstallStackShellDocument,
   ListRecipesDocument,
-  ListRepositoriesDocument,
   Provider,
   Recipe,
   RecipeSection,
   RootQueryType,
 } from '../../graphql/generated/graphql'
+import { Binding, ClientBindingFactory } from '../../services/wails'
 
 import { Application } from './Application'
 
@@ -105,24 +103,17 @@ const buildSteps = async (client: ApolloClient<unknown>, provider: Provider, sel
   return toDependencySteps(Array.from(dependencyMap.values()), provider)
 }
 
-const install = async (client: ApolloClient<unknown>, apps: Array<WizardStepConfig<any>>, provider: Provider) => {
-  const toAPIContext = (context: any) => ({ ...Object.keys(context || {}).reduce((acc, key) => ({ ...acc, [key]: context[key].value }), {}) })
-  const toDataTypeValues = (context: any, datatype: any) => Object.keys(context || {}).reduce((acc: Array<any>, key) => (context[key].type === datatype ? [...acc, context[key].value] : [...acc]), [])
-
-  const { data: { quickStack } } = await client.mutate({
-    mutation: CreateQuickStackDocument,
-    variables: { applicationIds: apps.filter(app => !app.isDependency).map(app => app.key), provider },
-  })
-
-  const configuration = apps.reduce((acc, app) => ({ ...acc, [app.label!]: toAPIContext(app.data?.context || {}) }), {})
+const install = async (client: ApolloClient<unknown>, apps: Array<WizardStepConfig<any>>) => {
+  const toAPIContext = context => ({ ...Object.keys(context || {}).reduce((acc, key) => ({ ...acc, [key]: context[key].value }), {}) })
+  const toDataTypeValues = (context, datatype) => Object.keys(context || {}).reduce((acc: Array<any>, key) => (context[key].type === datatype ? [...acc, context[key].value] : [...acc]), [])
+  const install = ClientBindingFactory<void>(Binding.Install)
   const domains = apps.reduce((acc: Array<any>, app) => [...acc, ...toDataTypeValues(app.data?.context || {}, Datatype.Domain)], [])
   const buckets = apps.reduce((acc: Array<any>, app) => [...acc, ...toDataTypeValues(app.data?.context || {}, Datatype.Bucket)], [])
 
-  return client.mutate({
-    mutation: InstallStackShellDocument,
-    variables: { name: quickStack.name, oidc: true, context: { configuration: JSON.stringify(configuration), domains, buckets } },
-    refetchQueries: [{ query: ListRepositoriesDocument, variables: { provider } }],
-  })
+  // Filter out some form validation fields from context
+  apps = apps.map(app => ({ ...app, data: { ...app.data, context: toAPIContext(app.data.context ?? {}) } }))
+
+  return install(apps.map(app => ({ ...app, dependencyOf: Array.from(app.dependencyOf ?? []) })), domains, buckets)
 }
 
 export {

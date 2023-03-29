@@ -33,6 +33,45 @@ export namespace manifest {
 		    return a;
 		}
 	}
+	export class NetworkConfig {
+	    subdomain: string;
+	    pluralDns: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new NetworkConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.subdomain = source["subdomain"];
+	        this.pluralDns = source["pluralDns"];
+	    }
+	}
+
+}
+
+export namespace ui {
+	
+	export class Application {
+	    key: string;
+	    label: string;
+	    isDependency: boolean;
+	    dependencyOf: {[key: string]: any};
+	    data: {[key: string]: any};
+	
+	    static createFrom(source: any = {}) {
+	        return new Application(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.key = source["key"];
+	        this.label = source["label"];
+	        this.isDependency = source["isDependency"];
+	        this.dependencyOf = source["dependencyOf"];
+	        this.data = source["data"];
+	    }
+	}
 
 }
 

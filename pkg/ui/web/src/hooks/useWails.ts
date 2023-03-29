@@ -55,29 +55,34 @@ function useWailsQuery<TResult = unknown, TVariables extends OperationVariables 
   } as QueryResponse<TResult>
 }
 
-interface UpdateReponse {
+interface UpdateReponse<T> {
   error: Error
   loading: boolean
   update: Dispatch<void>
+  data?: T
 }
 
-function useWailsUpdate(endpoint: Binding): UpdateReponse {
-  const binding = ClientBindingFactory(endpoint)
+function useWailsUpdate<TResult = void, TVariables extends OperationVariables = OperationVariables>(binding: Binding,
+  options?: QueryOptions<TVariables>): UpdateReponse<TResult> {
+  const bindingFn = ClientBindingFactory<TResult>(binding)
   const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<TResult>()
   const [error, setError] = useState()
 
   const update = useCallback(() => {
     setLoading(true)
 
-    binding()
+    bindingFn(options?.variables ?? {})
+      .then(data => setData(data))
       .catch(err => setError(err))
       .finally(() => setLoading(false))
-  }, [binding])
+  }, [bindingFn, options?.variables])
 
   return {
     error,
     loading,
     update,
+    data,
   }
 }
 

@@ -1,4 +1,5 @@
 import { ApolloError, useApolloClient, useQuery } from '@apollo/client'
+import { GraphQLErrors } from '@apollo/client/errors'
 import {
   GraphQLToast,
   LoopingLogo,
@@ -25,7 +26,7 @@ import {
 } from '../../graphql/generated/graphql'
 import { Routes } from '../routes'
 
-import { buildSteps, toDefaultSteps } from './helpers'
+import { buildSteps, install, toDefaultSteps } from './helpers'
 
 const FILTERED_APPS = ['bootstrap', 'ingress-nginx', 'postgres']
 const FORCED_APPS = {
@@ -44,7 +45,6 @@ function Installer(): React.ReactElement {
   const [steps, setSteps] = useState<Array<WizardStepConfig>>([])
   const [error, setError] = useState<ApolloError | undefined>()
   const [defaultSteps, setDefaultSteps] = useState<Array<WizardStepConfig>>([])
-  const [selectedApplications, setSelectedApplications] = useState<Array<string>>([])
 
   const { data: connection } = useQuery<Pick<RootQueryType, 'repositories'>, ListRepositoriesQueryVariables>(ListRepositoriesDocument, {
     variables: {
@@ -60,6 +60,17 @@ function Installer(): React.ReactElement {
     ?.map(repo => repo!.node)
     .filter(app => ((!app?.private ?? true)) && !FILTERED_APPS.includes(app!.name)), [connection?.repositories?.edges])
 
+  const onInstall = useCallback((payload: Array<WizardStepConfig>) => {
+    setStepsLoading(true)
+
+    install(client, payload)
+      .then(() => navigate(Routes.Next))
+      .catch(err => setError(err))
+      .finally(() => {
+        setStepsLoading(false)
+      })
+  }, [client])
+
   const onSelect = useCallback((selectedApplications: Array<WizardStepConfig>) => {
     const build = async () => {
       const steps = await buildSteps(client, provider!, selectedApplications)
@@ -67,7 +78,6 @@ function Installer(): React.ReactElement {
       setSteps(steps)
     }
 
-    setSelectedApplications(selectedApplications.map(app => app.label ?? 'unknown'))
     setStepsLoading(true)
     build().finally(() => setStepsLoading(false))
   }, [client, provider])
@@ -97,13 +107,13 @@ function Installer(): React.ReactElement {
       >
         {{
           stepper: <WizardStepper />,
-          navigation: <WizardNavigation onInstall={() => navigate(Routes.Next)} />,
+          navigation: <WizardNavigation onInstall={onInstall} />,
         }}
       </Wizard>
 
       {error && (
         <GraphQLToast
-          error={{ graphQLErrors: [...error.graphQLErrors] }}
+          error={{ graphQLErrors: error.graphQLErrors ? [...error.graphQLErrors] : [{ message: error as any }] }}
           header="Error"
           onClose={() => setError(undefined)}
           margin="medium"
