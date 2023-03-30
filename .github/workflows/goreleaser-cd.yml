@@ -1,5 +1,6 @@
 name: CD / CLI
 on:
+  # TODO: Update before merge to run on tag creation
   workflow_dispatch:
 
 jobs:
@@ -101,9 +102,9 @@ jobs:
           args: continue --merge
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          GITHUB_TOKEN: x # ${{ secrets.GITHUB_TOKEN }}
-          GITLAB_CLIENT_SECRET: x # ${{ secrets.GITLAB_CLIENT_SECRET }}
-          HOMEBREW_TAP_GITHUB_TOKEN: x # ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
 
   # Publish CLI / Cloud CLI container images
   publish:
