@@ -10,7 +10,8 @@ import (
 
 func (p *Plural) uiCommands() cli.Command {
 	return cli.Command{
-		Name:   "ui",
+		Name: "install",
+		// TODO: Update usage notes
 		Usage:  "todo",
 		Action: p.run,
 	}
