@@ -39,14 +39,6 @@ function HeaderUnstyled({ ...props }): React.ReactElement {
         small
         width={24}
         height={24}
-        onClick={() => navigate(Routes.Next)}
-      ><CloseIcon />
-      </Button>
-      <Button
-        secondary
-        small
-        width={24}
-        height={24}
         onClick={onClose}
       ><CloseIcon />
       </Button>
