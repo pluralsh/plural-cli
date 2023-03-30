@@ -1,6 +1,10 @@
 import { Button, Codeline } from '@pluralsh/design-system'
-import React from 'react'
+import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+
+import { Close } from '../../../wailsjs/go/ui/Window'
+import { Routes } from '../routes'
 
 const NextSteps = styled(NextStepsUnstyled)(({ theme }) => ({
   height: '100%',
@@ -36,10 +40,12 @@ const NextSteps = styled(NextStepsUnstyled)(({ theme }) => ({
 }))
 
 function NextStepsUnstyled({ ...props }): React.ReactElement {
+  const onClose = useCallback(Close, [])
+  const navigate = useNavigate()
+
   return (
     <div {...props}>
       <span className="title">Lorem ipsum dolor!</span>
-      {/* <span className="description">You can now build and deploy your applications.</span> */}
 
       <span className="codeline">Copy and run below command to build your applications:</span>
       <Codeline width="100%">plural build</Codeline>
@@ -48,8 +54,12 @@ function NextStepsUnstyled({ ...props }): React.ReactElement {
       <Codeline width="100%">plural deploy --commit "Installed few apps with Plural"</Codeline>
 
       <div className="actions">
-        <Button secondary>Close</Button>
-        <Button>Install more</Button>
+        <Button
+          secondary
+          onClick={onClose}
+        >Close
+        </Button>
+        <Button onClick={() => navigate(Routes.Root)}>Install more</Button>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "plural",
-  "appargs": "ui",
+  "appargs": "install",
   "outputfilename": "plural",
   "frontend:dir": "pkg/ui/web",
   "frontend:install": "yarn install",
