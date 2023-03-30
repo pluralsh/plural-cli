@@ -1,11 +1,9 @@
 import { Button, CloseIcon } from '@pluralsh/design-system'
 import PluralLogoFull from '@pluralsh/design-system/dist/components/icons/logo/PluralLogoFull'
 import React, { useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { Close } from '../../wailsjs/go/ui/Window'
-import { Routes } from '../routes/routes'
 
 const Header = styled(HeaderUnstyled)(({ theme }) => ({
   // Make window draggable via header
@@ -26,7 +24,6 @@ const Header = styled(HeaderUnstyled)(({ theme }) => ({
 
 function HeaderUnstyled({ ...props }): React.ReactElement {
   const onClose = useCallback(Close, [])
-  const navigate = useNavigate()
 
   return (
     <div {...props}>
