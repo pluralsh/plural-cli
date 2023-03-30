@@ -20,7 +20,6 @@ const NextSteps = styled(NextStepsUnstyled)(({ theme }) => ({
     ...theme.partials.text.body1,
 
     alignSelf: 'center',
-    // paddingBottom: theme.spacing.xxxlarge,
   },
 
   '.codeline': {
