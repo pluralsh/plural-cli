@@ -5,3 +5,7 @@
 export function Close() {
   return window['go']['ui']['Window']['Close']();
 }
+
+export function SetClipboard(arg1) {
+  return window['go']['ui']['Window']['SetClipboard'](arg1);
+}

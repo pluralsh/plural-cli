@@ -7,6 +7,7 @@ import {
   Project,
   Token,
 } from '../../wailsjs/go/ui/Client'
+import { SetClipboard } from '../../wailsjs/go/ui/Window'
 import {
   Client,
   ClientBinding,
@@ -25,6 +26,7 @@ enum Binding {
   Project = 'Project',
   Context = 'Context',
   Install = 'Install',
+  SetClipboard = 'SetClipboard',
 }
 
 /**
@@ -38,6 +40,7 @@ const Plural: Client = {
   [Binding.Project]: (): Promise<PluralProject> => Project() as Promise<PluralProject>,
   [Binding.Context]: (): Promise<PluralContext> => Context() as Promise<PluralContext>,
   [Binding.Install]: (apps: Array<WizardStepConfig>, domains: Array<string>, buckets: Array<string>): Promise<void> => Install(apps as Array<Application>, domains, buckets) as Promise<void>,
+  [Binding.SetClipboard]: (text: string): Promise<void> => SetClipboard(text),
 }
 
 /**

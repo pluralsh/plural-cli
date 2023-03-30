@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 
+import Loader from './components/loader/Loader'
 import { WailsContext, WailsContextProps } from './context/wails'
 import { useWailsQuery } from './hooks/useWails'
 import { router } from './routes/router'
@@ -33,6 +34,7 @@ function Plural(): React.ReactElement {
           <FontStyles />
           <ScrollbarStyles />
           {isReady && <RouterProvider router={router} />}
+          {!isReady && <Loader />}
         </WailsContext.Provider>
       </ThemeProvider>
     </HonorableThemeProvider>

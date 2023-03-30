@@ -1,7 +1,12 @@
 import { ApolloProvider } from '@apollo/client'
 import { LoadingSpinner } from '@pluralsh/design-system'
 import React, { Suspense, useContext, useMemo } from 'react'
-import { DataRouteObject, Outlet, RouteObject } from 'react-router-dom'
+import {
+  DataRouteObject,
+  Outlet,
+  RouteObject,
+  useNavigate,
+} from 'react-router-dom'
 import styled from 'styled-components'
 
 import { WailsContext } from '../context/wails'

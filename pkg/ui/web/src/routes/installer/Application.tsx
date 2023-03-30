@@ -1,11 +1,5 @@
 import { useQuery } from '@apollo/client'
-import {
-  Chip,
-  LoopingLogo,
-  WizardStep,
-  useActive,
-} from '@pluralsh/design-system'
-import { Box } from 'grommet'
+import { Chip, WizardStep, useActive } from '@pluralsh/design-system'
 import { Div, Span } from 'honorable'
 import {
   ReactElement,
@@ -15,6 +9,7 @@ import {
   useState,
 } from 'react'
 
+import Loader from '../../components/loader/Loader'
 import { WailsContext } from '../../context/wails'
 import {
   GetRecipeDocument,
@@ -70,14 +65,7 @@ export function Application({ provider, ...props }: any): ReactElement {
   if (!recipe) {
     return (
       <WizardStep {...props}>
-        <Box
-          overflow="hidden"
-          fill="vertical"
-          justify="center"
-        >
-          {/* @ts-expect-error */}
-          <LoopingLogo overflow="hidden" />
-        </Box>
+        <Loader />
       </WizardStep>
     )
   }

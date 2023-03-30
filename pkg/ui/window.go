@@ -37,6 +37,11 @@ func (this *Window) Close() {
 	runtime.Quit(this.ctx)
 }
 
+// SetClipboard allows to copy provided text to OS clipboard
+func (this *Window) SetClipboard(text string) error {
+	return runtime.ClipboardSetText(this.ctx, text)
+}
+
 // NewWindow creates a new App application struct
 func NewWindow() *Window {
 	return &Window{}

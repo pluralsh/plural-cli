@@ -26,6 +26,10 @@ WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
 
+# Targets to run before other targets
+# install-tools - Install binaries required to run targets
+PRE := install-tools
+
 .PHONY: git-push
 git-push:
 	git pull --rebase

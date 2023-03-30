@@ -17,18 +17,21 @@ import (
 )
 
 type Application struct {
-	Key          string                 `json:"key"`
-	Label        string                 `json:"label"`
-	IsDependency bool                   `json:"isDependency"`
+	Key          string `json:"key"`
+	Label        string `json:"label"`
+	IsDependency bool   `json:"isDependency"`
+	// DependencyOf is a set of application names that this app is a dependency of.
 	DependencyOf map[string]interface{} `json:"dependencyOf"`
 	Data         map[string]interface{} `json:"data"`
 }
 
 func (this *Application) UnmarshalJSON(data []byte) error {
 	type Alias struct {
-		Key          string                 `json:"key"`
-		Label        string                 `json:"label"`
-		IsDependency bool                   `json:"isDependency"`
+		Key          string `json:"key"`
+		Label        string `json:"label"`
+		IsDependency bool   `json:"isDependency"`
+		// Since Set does not exist in Go, we are passing array
+		// from the frontend and converting it to a map.
 		DependencyOf []string               `json:"dependencyOf"`
 		Data         map[string]interface{} `json:"data"`
 	}
@@ -53,7 +56,7 @@ func (this *Application) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Client struct
+// Client struct used by the frontend to access and update backend data.
 type Client struct {
 	ctx    *cli.Context
 	client api.Client
@@ -143,9 +146,9 @@ func (this *Client) doInstall(application Application, context *manifest.Context
 		context.AddBundle(repoName, recipe.Name)
 
 		// Install app recipe
-		if err := this.client.InstallRecipe(recipeID); err != nil {
-			return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
-		}
+		//if err := this.client.InstallRecipe(recipeID); err != nil {
+		//	return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
+		//}
 	}
 
 	// Configure OIDC if enabled

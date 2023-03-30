@@ -1,8 +1,6 @@
 import { ApolloError, useApolloClient, useQuery } from '@apollo/client'
-import { GraphQLErrors } from '@apollo/client/errors'
 import {
   GraphQLToast,
-  LoopingLogo,
   Wizard,
   WizardNavigation,
   WizardStepConfig,
@@ -10,14 +8,14 @@ import {
 } from '@pluralsh/design-system'
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { WailsContext } from '../../context/wails'
+import Loader from '../../components/loader/Loader'
 import {
   ListRepositoriesDocument,
   ListRepositoriesQueryVariables,
@@ -33,7 +31,11 @@ const FORCED_APPS = {
   console: 'The Plural Console will allow you to monitor, upgrade, and deploy applications easily from one centralized place.',
 }
 
-function Installer(): React.ReactElement {
+const Installer = styled(InstallerUnstyled)(() => ({
+  height: '100%',
+}))
+
+function InstallerUnstyled({ ...props }): React.ReactElement {
   const navigate = useNavigate()
   const client = useApolloClient()
   // const { project: { provider } } = useContext(WailsContext)
@@ -42,7 +44,7 @@ function Installer(): React.ReactElement {
   const provider = Provider.Aws
 
   const [stepsLoading, setStepsLoading] = useState(false)
-  const [steps, setSteps] = useState<Array<WizardStepConfig>>([])
+  const [steps, setSteps] = useState<Array<WizardStepConfig>>()
   const [error, setError] = useState<ApolloError | undefined>()
   const [defaultSteps, setDefaultSteps] = useState<Array<WizardStepConfig>>([])
 
@@ -66,10 +68,8 @@ function Installer(): React.ReactElement {
     install(client, payload)
       .then(() => navigate(Routes.Next))
       .catch(err => setError(err))
-      .finally(() => {
-        setStepsLoading(false)
-      })
-  }, [client])
+      .finally(() => setStepsLoading(false))
+  }, [client, navigate])
 
   const onSelect = useCallback((selectedApplications: Array<WizardStepConfig>) => {
     const build = async () => {
@@ -85,19 +85,11 @@ function Installer(): React.ReactElement {
   useEffect(() => setDefaultSteps(toDefaultSteps(applications, provider!, { ...FORCED_APPS })), [applications?.length, provider])
 
   if (!applications || defaultSteps.length === 0) {
-    return (
-      <div style={{
-        // TODO: move to styled css
-        display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%',
-      }}
-      >
-        <LoopingLogo />
-      </div>
-    )
+    return <Loader />
   }
 
   return (
-    <div style={{ height: '100%' }}>
+    <div {...props}>
       <Wizard
         onSelect={onSelect}
         defaultSteps={defaultSteps}
