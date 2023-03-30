@@ -146,9 +146,9 @@ func (this *Client) doInstall(application Application, context *manifest.Context
 		context.AddBundle(repoName, recipe.Name)
 
 		// Install app recipe
-		//if err := this.client.InstallRecipe(recipeID); err != nil {
-		//	return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
-		//}
+		if err := this.client.InstallRecipe(recipeID); err != nil {
+			return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
+		}
 	}
 
 	// Configure OIDC if enabled
