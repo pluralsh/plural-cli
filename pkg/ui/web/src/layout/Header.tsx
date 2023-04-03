@@ -1,5 +1,4 @@
-import { Button, CloseIcon } from '@pluralsh/design-system'
-import PluralLogoFull from '@pluralsh/design-system/dist/components/icons/logo/PluralLogoFull'
+import { Button, CloseIcon, PluralLogoFull } from '@pluralsh/design-system'
 import React, { useCallback } from 'react'
 import styled from 'styled-components'
 
