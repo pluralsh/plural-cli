@@ -1,7 +1,8 @@
 name: CD / CLI
 on:
-  # TODO: Update before merge to run on tag creation
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   # Build binaries with GoReleaser

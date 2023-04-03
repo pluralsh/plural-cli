@@ -10,7 +10,6 @@ before:
     - go mod tidy
 
 builds:
-  # Builds with embedded UI
   - id: plural-cli
     targets:
       - linux_amd64
@@ -33,6 +32,7 @@ builds:
       - production
       - ui
     binary: plural
+    # Do not embed UI into linux/arm64 and windows/arm64 binaries
     overrides:
       - goos: linux
         goarch: arm64
