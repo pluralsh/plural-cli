@@ -6,6 +6,8 @@ on:
 jobs:
   create-cluster:
     runs-on: ubuntu-latest
+    env:
+      GOBIN: ~/bin
     steps:
       - name: Checkout
         uses: actions/checkout@v3
