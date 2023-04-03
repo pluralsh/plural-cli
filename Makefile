@@ -58,7 +58,7 @@ run-web: $(PRE) ## Run the UI for development
 # This is somewhat an equivalent of wails `GenerateBindings` method.
 # Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
 .PHONY: generate-bindings
-generate-bindings: ## Generate backend bindings for the embedded UI
+generate-bindings: build-web ## Generate backend bindings for the embedded UI
 	@echo Building bindings binary
 	@go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
 	@echo Generating bindings

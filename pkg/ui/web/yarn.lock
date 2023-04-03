@@ -2937,9 +2937,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pluralsh/design-system@npm:1.324.3":
-  version: 1.324.3
-  resolution: "@pluralsh/design-system@npm:1.324.3"
+"@pluralsh/design-system@npm:1.329.1":
+  version: 1.329.1
+  resolution: "@pluralsh/design-system@npm:1.329.1"
   dependencies:
     "@floating-ui/react-dom-interactions": 0.13.3
     "@monaco-editor/react": 4.4.6
@@ -2996,7 +2996,7 @@ __metadata:
     react-dom: ">=16.0.0"
     react-transition-group: ">=4.4.2"
     styled-components: ">=5.3.5"
-  checksum: 01a20676b346e728995aac67f4a782348578beb00c800a2d4d754d23c2aa1be8e76557ace2c18fbf45fdf064d84f61138f9990217cfd6f556996199b8f3903f2
+  checksum: 762285f8395b935f32a077b1986ddc4ca6a03236f0b11a7c4fcc51914bcd43d5e981a6509f153b0fa36d8ae9a25e5b1ad176107f39b34d3c8827e6213d673c54
   languageName: node
   linkType: hard
 
@@ -6772,7 +6772,7 @@ __metadata:
     "@graphql-codegen/typescript": 3.0.2
     "@graphql-codegen/typescript-operations": 3.0.2
     "@graphql-codegen/typescript-react-apollo": 3.3.7
-    "@pluralsh/design-system": 1.324.3
+    "@pluralsh/design-system": 1.329.1
     "@pluralsh/eslint-config-typescript": 2.5.41
     "@types/absinthe__socket": 0.2.3
     "@types/absinthe__socket-apollo-link": 0.2.1

@@ -1,5 +1,5 @@
 import { theme } from '@pluralsh/design-system'
-import { ThemeProvider as HonorableThemeProvider } from 'honorable'
+import { HonorableTheme, ThemeProvider as HonorableThemeProvider } from 'honorable'
 import React, { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
@@ -27,7 +27,7 @@ function Plural(): React.ReactElement {
   } as WailsContextProps), [context, project, token])
 
   return (
-    <HonorableThemeProvider theme={theme}>
+    <HonorableThemeProvider theme={theme as HonorableTheme}>
       <ThemeProvider theme={styledTheme}>
         <WailsContext.Provider value={wailsContext}>
           <GlobalStyles />
