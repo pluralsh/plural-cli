@@ -20,6 +20,7 @@ const NextSteps = styled(NextStepsUnstyled)(({ theme }) => ({
     flexDirection: 'column',
     alignSelf: 'center',
     alignItems: 'center',
+    textAlign: 'center',
     paddingBottom: theme.spacing.xxxlarge,
   },
 
