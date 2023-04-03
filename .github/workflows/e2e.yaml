@@ -7,7 +7,7 @@ jobs:
   create-cluster:
     runs-on: ubuntu-latest
     env:
-      GOBIN: $HOME/bin
+      GOBIN: "$HOME"/bin/
     steps:
       - name: Checkout
         uses: actions/checkout@v3
