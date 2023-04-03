@@ -91,6 +91,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
 		{
+			Name:      "info",
+			Usage:     "Get information for your installation of APP",
+			ArgsUsage: "APP",
+			Action:    latestVersion(owned(rooted(p.info))),
+		},
+		{
 			Name:      "deploy",
 			Aliases:   []string{"d"},
 			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
@@ -144,7 +150,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(handleWatch, []string{"REPO"})),
+			Action:    latestVersion(initKubeconfig(requireArgs(handleWatch, []string{"REPO"}))),
 			Category:  "Debugging",
 		},
 		{
@@ -174,19 +180,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Publishing",
 		},
 		{
-			Name:    "validate",
-			Aliases: []string{"v"},
-			Usage:   "validates your workspace",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "only",
-					Usage: "repository to (re)build",
-				},
-			},
-			Action:   latestVersion(p.validate),
-			Category: "Workspace",
-		},
-		{
 			Name:     "topsort",
 			Aliases:  []string{"top"},
 			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
@@ -205,7 +198,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
 			ArgsUsage: "WKSPACE",
-			Action:    latestVersion(owned(p.bounce)),
+			Action:    latestVersion(initKubeconfig(owned(p.bounce))),
 		},
 		{
 			Name:      "readme",
@@ -310,6 +303,12 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:        "repos",
+			Usage:       "view and manage plural repositories",
+			Subcommands: p.reposCommands(),
+			Category:    "API",
+		},
+		{
+			Name:        "apps",
 			Usage:       "view and manage plural repositories",
 			Subcommands: p.reposCommands(),
 			Category:    "API",

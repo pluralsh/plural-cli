@@ -87,7 +87,7 @@ func TestTerminate(t *testing.T) {
 				Cluster:  "test",
 				Bucket:   "test",
 				Project:  "test",
-				Provider: "kind",
+				Provider: "test",
 				Region:   "test",
 			},
 			expectedResponse: ``,

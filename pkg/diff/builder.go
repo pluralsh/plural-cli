@@ -117,7 +117,7 @@ func DefaultDiff(path string, prev *Diff) (e *Diff) {
 	}
 
 	for i := 0; i < len(prev.Steps)-1; i++ {
-		graph.AddEdge(steps[i].Name, steps[i+1].Name)
+		graph.AddEdge(prev.Steps[i].Name, prev.Steps[i+1].Name)
 	}
 
 	sorted, _ := algorithms.TopsortGraph(graph)
@@ -136,8 +136,4 @@ func (d *Diff) Flush(root string) error {
 
 	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl")))
 	return os.WriteFile(path, io, 0644)
-}
-
-func pluralfile(base, name string) string {
-	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
 }

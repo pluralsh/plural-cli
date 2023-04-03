@@ -17,32 +17,50 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func templateInfo(path string) (t gqlclient.TemplateType, contents string, err error) {
+	gopath := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.tpl"))
+	if utils.Exists(gopath) {
+		contents, err = utils.ReadFile(gopath)
+		t = gqlclient.TemplateTypeGotemplate
+		return
+	}
+
+	luapath := pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.lua"))
+	if utils.Exists(gopath) {
+		contents, err = utils.ReadFile(luapath)
+		t = gqlclient.TemplateTypeLua
+		return
+	}
+
+	err = fmt.Errorf("could not find values.yaml.tpl or values.yaml.lua in directory, perhaps your link is to the wrong folder?")
+	return
+}
+
 func BuildValuesFromTemplate(vals map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
 	globals := map[string]interface{}{}
 	output := make(map[string]map[string]interface{})
 	for _, chartInst := range w.Charts {
 		chartName := chartInst.Chart.Name
 		tplate := chartInst.Version.ValuesTemplate
-		isLuaTemplate := chartInst.Version.TemplateType == gqlclient.TemplateTypeLua
+		templateType := chartInst.Version.TemplateType
+
 		if w.Links != nil {
 			if path, ok := w.Links.Helm[chartName]; ok {
 				var err error
-				tplate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.tpl")))
-				if os.IsNotExist(err) {
-					tplate, err = utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(path, "values.yaml.lua")))
-					if err != nil {
-						return nil, err
-					}
-					isLuaTemplate = true
+				templateType, tplate, err = templateInfo(path)
+				if err != nil {
+					return nil, err
 				}
 			}
 		}
-		if isLuaTemplate {
-			if err := FromLuaTemplate(vals, globals, output, chartName, tplate); err != nil {
+
+		switch templateType {
+		case gqlclient.TemplateTypeGotemplate:
+			if err := FromGoTemplate(vals, globals, output, chartName, tplate); err != nil {
 				return nil, err
 			}
-		} else {
-			if err := FromGoTemplate(vals, globals, output, chartName, tplate); err != nil {
+		case gqlclient.TemplateTypeLua:
+			if err := FromLuaTemplate(vals, globals, output, chartName, tplate); err != nil {
 				return nil, err
 			}
 		}

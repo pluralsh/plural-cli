@@ -57,7 +57,7 @@ func (w *Workspace) DestroyHelm() error {
 }
 
 func (w *Workspace) Bounce() error {
-	return w.ToMinimal().BounceHelm()
+	return w.ToMinimal().BounceHelm(false)
 }
 
 func (w *Workspace) HelmDiff() error {

@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
@@ -90,6 +91,24 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 			}
 		}
 		return err
+	}
+}
+
+func initKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		_, found := utils.ProjectRoot()
+		if found {
+			prov, err := provider.GetProvider()
+			if err != nil {
+				return err
+			}
+
+			if err := prov.KubeConfig(); err != nil {
+				return err
+			}
+		}
+
+		return fn(c)
 	}
 }
 

@@ -34,7 +34,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: latestVersion(p.bounceHelm),
+			Action: latestVersion(initKubeconfig(p.bounceHelm)),
 		},
 		{
 			Name:      "helm-diff",
@@ -58,7 +58,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(p.createCrds),
+			Action:    latestVersion(initKubeconfig(p.createCrds)),
 		},
 		{
 			Name:      "helm-template",
@@ -90,19 +90,15 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 		return err
 	}
 
-	args := []string{}
-	if c.IsSet("wait") {
-		args = append(args, "--wait")
-	}
+	skipArgs := []string{}
 	if c.IsSet("skip") {
 		for _, skipChart := range c.StringSlice("skip") {
 			skipString := fmt.Sprintf("%s.enabled=false", skipChart)
-			skip := []string{"--set", skipString}
-			args = append(args, skip...)
+			skipArgs = append(skipArgs, skipString)
 		}
 	}
 
-	return minimal.BounceHelm(args...)
+	return minimal.BounceHelm(c.IsSet("wait"), skipArgs...)
 }
 
 func (p *Plural) diffHelm(c *cli.Context) error {

@@ -37,14 +37,6 @@ func defaultSteps(path string) []*Step {
 			Sha:     "",
 		},
 		{
-			Name:    "kube-init",
-			Wkdir:   sanitizedPath,
-			Target:  pathing.SanitizeFilepath(pluralfile(path, "NONCE")),
-			Command: "plural",
-			Args:    []string{"wkspace", "kube-init"},
-			Sha:     "",
-		},
-		{
 			Name:    "crds",
 			Wkdir:   sanitizedPath,
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "crds")),

@@ -121,7 +121,9 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	fmt.Printf("Building workspace for %s\n", repoName)
 
 	if !wkspace.Configured(repoName) {
-		return fmt.Errorf("You have not locally configured %s but have it registered as an installation in our api, either delete it with `plural repos uninstall %s` or install it locally via a bundle in `plural bundle list %s`", repoName, repoName, repoName)
+		fmt.Printf("You have not locally configured %s but have it registered as an installation in our api, ", repoName)
+		fmt.Printf("either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`\n", repoName, repoName)
+		return nil
 	}
 
 	workspace, err := wkspace.New(p.Client, installation)
@@ -148,40 +150,18 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	return err
 }
 
-func (p *Plural) validate(c *cli.Context) error {
+func (p *Plural) info(c *cli.Context) error {
 	p.InitPluralClient()
-	if c.IsSet("only") {
-		installation, err := p.GetInstallation(c.String("only"))
-		if err != nil {
-			return api.GetErrorResponse(err, "GetInstallation")
-		}
-		return p.doValidate(installation)
-	}
-
-	installations, err := p.getSortedInstallations("")
+	repo := c.Args().Get(0)
+	installation, err := p.GetInstallation(repo)
 	if err != nil {
-		return err
+		return api.GetErrorResponse(err, "GetInstallation")
+	}
+	if installation == nil {
+		return fmt.Errorf("You have not installed %s", repo)
 	}
 
-	for _, installation := range installations {
-		if err := p.doValidate(installation); err != nil {
-			return err
-		}
-	}
-
-	utils.Success("Workspace providers are properly configured!\n")
-	return nil
-}
-
-func (p *Plural) doValidate(installation *api.Installation) error {
-	p.InitPluralClient()
-	utils.Highlight("Validating repository %s\n", installation.Repository.Name)
-	workspace, err := wkspace.New(p.Client, installation)
-	if err != nil {
-		return err
-	}
-
-	return workspace.Validate()
+	return scaffold.Notes(installation)
 }
 
 func (p *Plural) deploy(c *cli.Context) error {
@@ -344,9 +324,6 @@ func (p *Plural) doBounce(repoRoot string, installation *api.Installation) error
 	if err != nil {
 		return err
 	}
-	if err := workspace.Provider.KubeConfig(); err != nil {
-		return err
-	}
 
 	if err := os.Chdir(pathing.SanitizeFilepath(filepath.Join(repoRoot, repoName))); err != nil {
 		return err
@@ -381,6 +358,10 @@ func (p *Plural) destroy(c *cli.Context) error {
 		installation, err := p.GetInstallation(repoName)
 		if err != nil {
 			return api.GetErrorResponse(err, "GetInstallation")
+		}
+
+		if installation == nil {
+			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
 		}
 
 		return p.doDestroy(repoRoot, installation, delete)
