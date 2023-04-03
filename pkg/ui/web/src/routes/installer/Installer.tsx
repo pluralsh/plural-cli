@@ -8,6 +8,7 @@ import {
 } from '@pluralsh/design-system'
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
@@ -16,12 +17,8 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import Loader from '../../components/loader/Loader'
-import {
-  ListRepositoriesDocument,
-  ListRepositoriesQueryVariables,
-  Provider,
-  RootQueryType,
-} from '../../graphql/generated/graphql'
+import { WailsContext } from '../../context/wails'
+import { ListRepositoriesDocument, ListRepositoriesQueryVariables, RootQueryType } from '../../graphql/generated/graphql'
 import { Routes } from '../routes'
 
 import { buildSteps, install, toDefaultSteps } from './helpers'
@@ -38,10 +35,7 @@ const Installer = styled(InstallerUnstyled)(() => ({
 function InstallerUnstyled({ ...props }): React.ReactElement {
   const navigate = useNavigate()
   const client = useApolloClient()
-  // const { project: { provider } } = useContext(WailsContext)
-
-  // TODO: Use project provider when finished testing
-  const provider = Provider.Aws
+  const { project: { provider } } = useContext(WailsContext)
 
   const [stepsLoading, setStepsLoading] = useState(false)
   const [steps, setSteps] = useState<Array<WizardStepConfig>>()

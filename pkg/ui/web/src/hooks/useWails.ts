@@ -11,7 +11,7 @@ type Error = any // TODO: figure out the type
 
 interface QueryResponse<T> {
   data?: T
-  error: Error // TODO: figure out the type
+  error: Error
   loading: boolean
   refetch: Dispatch<void>
 }
