@@ -46,6 +46,7 @@ type OauthSettings struct {
 type RepositoryInput struct {
 	Name          string
 	Description   string
+	ReleaseStatus string `json:"releaseStatus,omitempty" yaml:"releaseStatus,omitempty"`
 	Private       bool   `json:"private" yaml:"private,omitempty"`
 	Tags          []Tag  `json:"tags,omitempty" yaml:"tags"`
 	Icon          string `json:"icon,omitempty" yaml:"icon"`
@@ -264,18 +265,24 @@ func ConstructGqlClientRepositoryInput(marshalled []byte) (*gqlclient.Repository
 
 	category := gqlclient.Category(repoInput.Category)
 
+	var releaseStatus *gqlclient.ReleaseStatus
+	if repoInput.ReleaseStatus != "" {
+		releaseStatus = lo.ToPtr(gqlclient.ReleaseStatus(repoInput.ReleaseStatus))
+	}
+
 	resp := &gqlclient.RepositoryAttributes{
-		Category:    &category,
-		DarkIcon:    &repoInput.DarkIcon,
-		Description: &repoInput.Description,
-		GitURL:      &repoInput.GitUrl,
-		Homepage:    &repoInput.Homepage,
-		Icon:        &repoInput.Icon,
-		Docs:        &repoInput.Docs,
-		Name:        &repoInput.Name,
-		Notes:       &repoInput.Notes,
-		Private:     &repoInput.Private,
-		Tags:        []*gqlclient.TagAttributes{},
+		Category:      &category,
+		DarkIcon:      &repoInput.DarkIcon,
+		Description:   &repoInput.Description,
+		ReleaseStatus: releaseStatus,
+		GitURL:        &repoInput.GitUrl,
+		Homepage:      &repoInput.Homepage,
+		Icon:          &repoInput.Icon,
+		Docs:          &repoInput.Docs,
+		Name:          &repoInput.Name,
+		Notes:         &repoInput.Notes,
+		Private:       &repoInput.Private,
+		Tags:          []*gqlclient.TagAttributes{},
 	}
 	if repoInput.OauthSettings != nil {
 		resp.OauthSettings = &gqlclient.OauthSettingsAttributes{
