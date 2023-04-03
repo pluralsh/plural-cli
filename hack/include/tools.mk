@@ -1,4 +1,4 @@
-WAILS_BINARY := $(shell which go)
+WAILS_BINARY := $(shell which wails)
 WAILS_VERSION := v2.4.1
 
 GO_BINARY := $(shell which go)

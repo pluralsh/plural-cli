@@ -44,7 +44,7 @@ build-cli: ## Build a CLI binary for the host architecture without embedded UI
 	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
 .PHONY: build-cli-ui
-build-cli-ui: generate-bindings ## Build a CLI binary for the host architecture with embedded UI
+build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
 	go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
 .PHONY: build-web
