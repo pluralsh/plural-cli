@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/polly/retry"
 )
 
 func fileExists(path string) bool {
@@ -165,9 +167,9 @@ func toYaml(val interface{}) (string, error) {
 
 func eabCredential(cluster, provider string) (*api.EabCredential, error) {
 	client := api.NewClient()
-	eabCredential, err := client.GetEabCredential(cluster, provider)
-	if err != nil {
-		return nil, api.GetErrorResponse(err, "GetEabCredential")
-	}
-	return eabCredential, nil
+	retrier := retry.NewConstant(15*time.Millisecond, 3)
+	eabCredential, err := retry.Retry(retrier, func() (*api.EabCredential, error) {
+		return client.GetEabCredential(cluster, provider)
+	})
+	return eabCredential, api.GetErrorResponse(err, "GetEabCredential")
 }
