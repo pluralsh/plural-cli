@@ -46,7 +46,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/gqlclient v1.3.12
 	github.com/pluralsh/plural-operator v0.5.3
-	github.com/pluralsh/polly v0.0.6
+	github.com/pluralsh/polly v0.1.1
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.33.0
 	github.com/thoas/go-funk v0.9.2
@@ -89,6 +89,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.3 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
