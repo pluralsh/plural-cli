@@ -151,13 +151,14 @@ func goTmpValuesFile(path string, conf *config.Config) (f *os.File, err error) {
 
 func genDefaultValues(conf *config.Config) map[string]interface{} {
 	return map[string]interface{}{
-		"Values":   map[string]interface{}{},
-		"License":  "example-license",
-		"Region":   "region",
-		"Project":  "example",
-		"Cluster":  "cluster",
-		"Provider": "provider",
-		"Config":   conf,
-		"Context":  map[string]interface{}{},
+		"Values":        map[string]interface{}{},
+		"Configuration": map[string]map[string]interface{}{},
+		"License":       "example-license",
+		"Region":        "region",
+		"Project":       "example",
+		"Cluster":       "cluster",
+		"Provider":      "provider",
+		"Config":        conf,
+		"Context":       map[string]interface{}{},
 	}
 }
