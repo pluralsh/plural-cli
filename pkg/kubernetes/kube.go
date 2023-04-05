@@ -270,8 +270,8 @@ func (k *kube) CreateNamespace(namespace string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
 			Labels: map[string]string{
-				"clusterctl.cluster.x-k8s.io/core": "capi-operator",
-				"control-plane":                    "controller-manager",
+				"app.kubernetes.io/managed-by": "plural",
+				"app.plural.sh/name":           namespace,
 			},
 		},
 	}, metav1.CreateOptions{})
