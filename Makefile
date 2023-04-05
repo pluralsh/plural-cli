@@ -2,6 +2,7 @@ ROOT_DIRECTORY := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 include $(ROOT_DIRECTORY)/hack/include/help.mk
 include $(ROOT_DIRECTORY)/hack/include/tools.mk
+include $(ROOT_DIRECTORY)/hack/include/build.mk
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
@@ -45,7 +46,7 @@ build-cli: ## Build a CLI binary for the host architecture without embedded UI
 
 .PHONY: build-cli-ui
 build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
-	go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
 
 .PHONY: build-web
 build-web: ## Build just the embedded UI
@@ -53,14 +54,14 @@ build-web: ## Build just the embedded UI
 
 .PHONY: run-web
 run-web: $(PRE) ## Run the UI for development
-	@wails dev -tags ui -browser -skipbindings
+	@CGO_LDFLAGS=$(CGO_LDFLAGS) wails dev -tags ui -browser -skipbindings
 
 # This is somewhat an equivalent of wails `GenerateBindings` method.
 # Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
 .PHONY: generate-bindings
 generate-bindings: build-web ## Generate backend bindings for the embedded UI
 	@echo Building bindings binary
-	@go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
+	@CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
 	@echo Generating bindings
 	@./$(WAILS_BINDINGS_BINARY_NAME) > /dev/null 2>&1
 	@echo Cleaning up
