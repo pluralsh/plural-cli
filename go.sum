@@ -899,14 +899,12 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
-github.com/pluralsh/gqlclient v1.3.12 h1:BM+7fILoO06kvVBrL4kEB5AuZMVc3TvqupNi/HNrZkA=
-github.com/pluralsh/gqlclient v1.3.12/go.mod h1:z1qHnvPeqIN/a+5OzFs40e6HI6tDxzh1+yJuEpvqGy4=
+github.com/pluralsh/gqlclient v1.3.13 h1:ihix+ruoIkwiVdPnvJecrsxrVYEKTG26JFHPiF36O3U=
+github.com/pluralsh/gqlclient v1.3.13/go.mod h1:z1qHnvPeqIN/a+5OzFs40e6HI6tDxzh1+yJuEpvqGy4=
 github.com/pluralsh/oauth v0.9.2 h1:tM9hBK4tCnJUeCOgX0ctxBBCS3hiCDPoxkJLODtedmQ=
 github.com/pluralsh/oauth v0.9.2/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
 github.com/pluralsh/plural-operator v0.5.3/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
-github.com/pluralsh/polly v0.1.0 h1:xr/+LWIORtA0CzedEQ8gM7YhHBjcql6Oekwwz1+SEfM=
-github.com/pluralsh/polly v0.1.0/go.mod h1:Yo1/jcW+4xwhWG+ZJikZy4J4HJkMNPZ7sq5auL2c/tY=
 github.com/pluralsh/polly v0.1.1 h1:VtbS83re2YuDgscvaFgfzEDZs9uXRV84fCdvKCgIRE4=
 github.com/pluralsh/polly v0.1.1/go.mod h1:Yo1/jcW+4xwhWG+ZJikZy4J4HJkMNPZ7sq5auL2c/tY=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

@@ -236,6 +236,18 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
+			Name:      "upgrade",
+			Usage:     "creates an upgrade in the upgrade queue QUEUE for application APP",
+			ArgsUsage: "QUEUE APP",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "f",
+					Usage: "file containing upgrade contents, use - for stdin",
+				},
+			},
+			Action: p.handleUpgrade,
+		},
+		{
 			Name:  "init",
 			Usage: "initializes plural within a git repo",
 			Flags: []cli.Flag{
