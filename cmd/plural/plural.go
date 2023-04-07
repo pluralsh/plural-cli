@@ -103,7 +103,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "deploy",
 			Aliases:   []string{"d"},
 			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
-			ArgsUsage: "WKSPACE",
+			ArgsUsage: "Workspace",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "silence",
@@ -297,7 +297,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "repair",
 			Usage:    "commits any new encrypted changes in your local workspace automatically",
 			Action:   latestVersion(handleRepair),
-			Category: "WORKSPACE",
+			Category: "Workspace",
 		},
 		{
 			Name:     "serve",
