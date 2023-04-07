@@ -173,6 +173,7 @@ type Recipe struct {
 	Name               string
 	Provider           string
 	Description        string
+	Primary            bool
 	Restricted         bool
 	Tests              []*RecipeTest
 	Repository         *Repository

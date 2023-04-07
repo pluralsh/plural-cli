@@ -100,6 +100,8 @@ func (client *client) GetRecipe(repo, name string) (*Recipe, error) {
 	r := &Recipe{
 		Id:                 resp.Recipe.ID,
 		Name:               resp.Recipe.Name,
+		Primary:            resp.Recipe.Primary != nil && *resp.Recipe.Primary,
+		Restricted:         resp.Recipe.Restricted != nil && *resp.Recipe.Restricted,
 		Provider:           string(*resp.Recipe.Provider),
 		Description:        utils.ConvertStringPointer(resp.Recipe.Description),
 		Tests:              []*RecipeTest{},
@@ -122,9 +124,6 @@ func (client *client) GetRecipe(repo, name string) (*Recipe, error) {
 			Id:   resp.Recipe.Repository.ID,
 			Name: resp.Recipe.Repository.Name,
 		}
-	}
-	if resp.Recipe.Restricted != nil {
-		r.Restricted = *resp.Recipe.Restricted
 	}
 
 	for _, dep := range resp.Recipe.RecipeDependencies {
@@ -233,6 +232,8 @@ func convertRecipe(rcp *gqlclient.RecipeFragment) *Recipe {
 	r := &Recipe{
 		Id:                 rcp.ID,
 		Name:               rcp.Name,
+		Primary:            rcp.Primary != nil && *rcp.Primary,
+		Restricted:         rcp.Restricted != nil && *rcp.Restricted,
 		Description:        utils.ConvertStringPointer(rcp.Description),
 		Tests:              []*RecipeTest{},
 		RecipeSections:     []*RecipeSection{},
@@ -252,9 +253,7 @@ func convertRecipe(rcp *gqlclient.RecipeFragment) *Recipe {
 			AuthMethod: string(rcp.OidcSettings.AuthMethod),
 		}
 	}
-	if rcp.Restricted != nil {
-		r.Restricted = *rcp.Restricted
-	}
+
 	if rcp.Provider != nil {
 		provider := *rcp.Provider
 		r.Provider = string(provider)
