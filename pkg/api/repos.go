@@ -52,6 +52,7 @@ type RepositoryInput struct {
 	Icon          string `json:"icon,omitempty" yaml:"icon"`
 	DarkIcon      string `json:"darkIcon,omitempty" yaml:"darkIcon"`
 	Docs          string `json:"docs,omitempty" yaml:"docs"`
+	Contributors  []string
 	Category      string
 	Notes         string         `json:"notes,omitempty" yaml:"notes"`
 	GitUrl        string         `json:"gitUrl" yaml:"gitUrl"`
@@ -275,6 +276,7 @@ func ConstructGqlClientRepositoryInput(marshalled []byte) (*gqlclient.Repository
 		DarkIcon:      &repoInput.DarkIcon,
 		Description:   &repoInput.Description,
 		ReleaseStatus: releaseStatus,
+		Contributors:  lo.ToSlicePtr(repoInput.Contributors),
 		GitURL:        &repoInput.GitUrl,
 		Homepage:      &repoInput.Homepage,
 		Icon:          &repoInput.Icon,
