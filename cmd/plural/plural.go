@@ -237,15 +237,15 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:      "upgrade",
-			Usage:     "creates an upgrade in the upgrade queue QUEUE for application APP",
-			ArgsUsage: "QUEUE APP",
+			Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
+			ArgsUsage: "QUEUE REPO",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "f",
 					Usage: "file containing upgrade contents, use - for stdin",
 				},
 			},
-			Action: p.handleUpgrade,
+			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
 		},
 		{
 			Name:  "init",
