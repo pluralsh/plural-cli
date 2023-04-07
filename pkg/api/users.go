@@ -8,10 +8,6 @@ import (
 	"github.com/samber/lo"
 )
 
-type UpgradeAttributes struct {
-	Message string
-}
-
 type UserEventAttributes struct {
 	Event  string
 	Data   string
