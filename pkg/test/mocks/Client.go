@@ -649,6 +649,32 @@ func (_m *Client) GetRecipe(repo string, name string) (*api.Recipe, error) {
 	return r0, r1
 }
 
+// GetRecipeByID provides a mock function with given fields: id
+func (_m *Client) GetRecipeByID(id string) (*api.Recipe, error) {
+	ret := _m.Called(id)
+
+	var r0 *api.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*api.Recipe, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *api.Recipe); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*api.Recipe)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetRepository provides a mock function with given fields: repo
 func (_m *Client) GetRepository(repo string) (*api.Repository, error) {
 	ret := _m.Called(repo)

@@ -1,10 +1,13 @@
-package main
+package plural
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/executor"
@@ -14,8 +17,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
 )
 
 func requireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {
@@ -181,7 +182,7 @@ func repoRoot() error {
 func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
-			utils.CheckLatestVersion(version)
+			utils.CheckLatestVersion(Version)
 		}
 
 		return fn(c)

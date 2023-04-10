@@ -8,6 +8,7 @@ import (
 	rawclient "github.com/Yamashou/gqlgenc/client"
 	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
 )
@@ -62,6 +63,7 @@ type Client interface {
 	ResetInstallations() (int, error)
 	CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error)
 	GetRecipe(repo string, name string) (*Recipe, error)
+	GetRecipeByID(id string) (*Recipe, error)
 	ListRecipes(repo string, provider string) ([]*Recipe, error)
 	InstallRecipe(id string) error
 	GetShell() (CloudShell, error)

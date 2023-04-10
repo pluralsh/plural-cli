@@ -5,13 +5,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/api"
+	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/yaml.v2"
+
+	"github.com/pluralsh/plural/pkg/api"
 )
 
 type Bundle struct {
-	Repository string
-	Name       string
+	Repository string `json:"repository"`
+	Name       string `json:"name"`
 }
 
 type SMTP struct {
@@ -36,6 +38,28 @@ type Context struct {
 	SMTP          *SMTP    `yaml:"smtp,omitempty"`
 	Globals       *Globals `yaml:"globals,omitempty" json:"globals,omitempty"`
 	Configuration map[string]map[string]interface{}
+}
+
+func (this *Context) MarshalJSON() ([]byte, error) {
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+
+	return json.Marshal(&struct {
+		Bundles       []*Bundle                         `json:"bundles"`
+		Buckets       []string                          `json:"buckets"`
+		Domains       []string                          `json:"domains"`
+		Protect       []string                          `yaml:"protect,omitempty" json:"protect,omitempty"`
+		SMTP          *SMTP                             `yaml:"smtp,omitempty" json:"smtp"`
+		Globals       *Globals                          `yaml:"globals,omitempty" json:"globals,omitempty"`
+		Configuration map[string]map[string]interface{} `json:"configuration"`
+	}{
+		Bundles:       this.Bundles,
+		Buckets:       this.Buckets,
+		Domains:       this.Domains,
+		Protect:       this.Protect,
+		SMTP:          this.SMTP,
+		Globals:       this.Globals,
+		Configuration: this.Configuration,
+	})
 }
 
 type VersionedContext struct {
@@ -114,8 +138,8 @@ func (c *Context) HasBucket(bucket string) bool {
 	return false
 }
 
-func (c *Context) AddDomain(bucket string) {
-	c.Domains = append(c.Domains, bucket)
+func (c *Context) AddDomain(domain string) {
+	c.Domains = append(c.Domains, domain)
 }
 
 func (c *Context) Protected(name string) bool {

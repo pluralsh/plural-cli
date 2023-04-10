@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/inancgumus/screen"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle/tests"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -86,13 +87,13 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 	}
 
 	confirm := false
-	if err := configureOidc(repo, client, recipe, context.Configuration[repo], &confirm); err != nil {
+	if err := ConfigureOidc(repo, client, recipe, context.Configuration[repo], &confirm); err != nil {
 		return err
 	}
 
 	for _, r := range recipe.RecipeDependencies {
 		repo := r.Repository.Name
-		if err := configureOidc(repo, client, r, context.Configuration[repo], &confirm); err != nil {
+		if err := ConfigureOidc(repo, client, r, context.Configuration[repo], &confirm); err != nil {
 			return err
 		}
 	}

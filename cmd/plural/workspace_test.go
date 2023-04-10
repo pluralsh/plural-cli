@@ -1,4 +1,4 @@
-package main_test
+package plural_test
 
 import (
 	"io"
