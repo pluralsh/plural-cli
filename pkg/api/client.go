@@ -85,6 +85,7 @@ type Client interface {
 	PromoteCluster() error
 	Clusters() ([]*Cluster, error)
 	Cluster(id string) (*Cluster, error)
+	CreateUpgrade(queue, repository string, attrs gqlclient.UpgradeAttributes) error
 }
 
 type client struct {

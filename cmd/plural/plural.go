@@ -100,7 +100,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "deploy",
 			Aliases:   []string{"d"},
 			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
-			ArgsUsage: "WKSPACE",
+			ArgsUsage: "Workspace",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "silence",
@@ -233,6 +233,18 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
+			Name:      "upgrade",
+			Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
+			ArgsUsage: "QUEUE REPO",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "f",
+					Usage: "file containing upgrade contents, use - for stdin",
+				},
+			},
+			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
+		},
+		{
 			Name:  "init",
 			Usage: "initializes plural within a git repo",
 			Flags: []cli.Flag{
@@ -282,7 +294,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "repair",
 			Usage:    "commits any new encrypted changes in your local workspace automatically",
 			Action:   latestVersion(handleRepair),
-			Category: "WORKSPACE",
+			Category: "Workspace",
 		},
 		{
 			Name:     "serve",

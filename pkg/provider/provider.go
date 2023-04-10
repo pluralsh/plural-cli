@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -50,7 +51,10 @@ type Providers struct {
 	Scaffolds          map[string]string
 }
 
-var providers = Providers{}
+var (
+	providers       = Providers{}
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
+)
 
 func GetProviderScaffold(provider, version string) (string, error) {
 	if providers.Scaffolds == nil {
@@ -130,17 +134,17 @@ func getAvailableProviders() error {
 	if providers.AvailableProviders == nil {
 		client := api.NewClient()
 		available, err := client.GetTfProviders()
-		available = algorithms.Filter(available, func(prov string) bool { return prov != "GENERIC" })
-		for i := range available {
-			if available[i] == "GCP" {
-				available[i] = "google"
-			}
-			available[i] = strings.ToLower(available[i])
-		}
 		if err != nil {
 			return api.GetErrorResponse(err, "GetTfProviders")
 		}
-		providers.AvailableProviders = available
+
+		available = containers.ToSet(available).Difference(filterProviders).List()
+		providers.AvailableProviders = algorithms.Map(available, func(p string) string {
+			if p == "GCP" {
+				return "google"
+			}
+			return strings.ToLower(p)
+		})
 	}
 	return nil
 }
