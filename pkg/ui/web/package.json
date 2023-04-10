@@ -1,0 +1,60 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "yarn lint:ts",
+    "lint:ts": "eslint ./src",
+    "fix": "yarn fix:ts",
+    "fix:ts": "eslint ./src --fix",
+    "graphql:codegen": "graphql-codegen --config codegen.yml"
+  },
+  "engines": {
+    "node": "18.12.1"
+  },
+  "packageManager": "yarn@3.4.1",
+  "dependencies": {
+    "@absinthe/socket": "0.2.1",
+    "@absinthe/socket-apollo-link": "0.2.1",
+    "@apollo/client": "3.7.10",
+    "@emotion/react": "11.10.6",
+    "@emotion/styled": "11.10.6",
+    "@pluralsh/design-system": "1.330.1",
+    "honorable": "0.194.0",
+    "honorable-theme-default": "0.77.0",
+    "lodash": "4.17.21",
+    "phoenix": "1.7.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-router-dom": "6.9.0",
+    "styled-components": "5.3.9"
+  },
+  "devDependencies": {
+    "@graphql-codegen/add": "4.0.1",
+    "@graphql-codegen/cli": "3.2.2",
+    "@graphql-codegen/introspection": "3.0.1",
+    "@graphql-codegen/typescript": "3.0.2",
+    "@graphql-codegen/typescript-operations": "3.0.2",
+    "@graphql-codegen/typescript-react-apollo": "3.3.7",
+    "@pluralsh/eslint-config-typescript": "2.5.41",
+    "@types/absinthe__socket": "0.2.3",
+    "@types/absinthe__socket-apollo-link": "0.2.1",
+    "@types/phoenix": "1.5.5",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
+    "@types/styled-components": "5.1.26",
+    "@typescript-eslint/eslint-plugin": "5.56.0",
+    "@vitejs/plugin-react": "3.1.0",
+    "eslint": "8.33.0",
+    "eslint-plugin-import": "2.27.5",
+    "eslint-plugin-import-newlines": "1.3.1",
+    "eslint-plugin-jsx-a11y": "6.7.1",
+    "eslint-plugin-react": "7.32.2",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "typescript": "5.0.2",
+    "vite": "4.2.1"
+  }
+}
