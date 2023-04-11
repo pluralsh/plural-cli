@@ -5,6 +5,7 @@ import (
 
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/samber/lo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,15 +27,16 @@ func TestConstructGqlClientRepositoryInput(t *testing.T) {
 		{
 			name: `test repository.yaml conversion`,
 			expected: &gqlclient.RepositoryAttributes{
-				Category:    &devopsCategory,
-				DarkIcon:    &emptyString,
-				Description: &testDescription,
-				GitURL:      &emptyString,
-				Homepage:    &emptyString,
-				Icon:        &icon,
-				Name:        &name,
-				Notes:       &notes,
-				Docs:        &emptyString,
+				Category:     &devopsCategory,
+				DarkIcon:     &emptyString,
+				Description:  &testDescription,
+				GitURL:       &emptyString,
+				Homepage:     &emptyString,
+				Contributors: lo.ToSlicePtr([]string{"someone@email.com"}),
+				Icon:         &icon,
+				Name:         &name,
+				Notes:        &notes,
+				Docs:         &emptyString,
 				OauthSettings: &gqlclient.OauthSettingsAttributes{
 					AuthMethod: "POST",
 					URIFormat:  "https://{domain}/oauth2/callback",
@@ -55,6 +57,8 @@ category: DEVOPS
 private: true
 icon: plural/icons/test.png
 notes: plural/notes.tpl
+contributors:
+- someone@email.com
 oauthSettings:
   uriFormat: https://{domain}/oauth2/callback
   authMethod: POST

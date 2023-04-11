@@ -1,0 +1,233 @@
+name: CD / CLI
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  # Build binaries with GoReleaser
+  prepare:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            goos: linux
+          - os: macos-latest
+            goos: darwin
+          - os: windows-latest
+            goos: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.18.1
+      - name: Setup SHA variable
+        shell: bash
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Setup Cache
+        uses: actions/cache@v3.2.3
+        with:
+          path: dist/${{ matrix.goos }}
+          key: ${{ matrix.goos }}-${{ env.sha_short }}
+          enableCrossOsArchive: true
+      - name: Install Dependencies
+        if: matrix.goos == 'linux'
+        shell: bash
+        run: sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev
+      - name: Build web
+        shell: bash
+        run: make build-web
+      - name: GoReleaser (Build)
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser-pro
+          version: latest
+          args: release --clean --split
+        env:
+          CGO_LDFLAGS: "${{ matrix.goos == 'darwin' && '-framework UniformTypeIdentifiers' || '' }}"
+          GOOS: ${{ matrix.GOOS }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+  # Release binaries with GoReleaser
+  release:
+    runs-on: ubuntu-latest
+    needs: prepare
+    env:
+      DOCKER_CLI_EXPERIMENTAL: "enabled"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+      - name: Copy Cache From Previous Job
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Restore Linux Cache
+        uses: actions/cache@v3.2.3
+        with:
+          path: dist/linux
+          key: linux-${{ env.sha_short }}
+      - name: Restore Darwin Cache
+        uses: actions/cache@v3.2.3
+        with:
+          path: dist/darwin
+          key: darwin-${{ env.sha_short }}
+      - name: Restore Windows Cache
+        uses: actions/cache@v3.2.3
+        with:
+          path: dist/windows
+          key: windows-${{ env.sha_short }}
+          enableCrossOsArchive: true
+      - name: GoReleaser (Release)
+        uses: goreleaser/goreleaser-action@v4
+        if: steps.cache.outputs.cache-hit != 'true' # do not run if cache hit
+        with:
+          distribution: goreleaser-pro
+          version: latest
+          args: continue --merge
+        env:
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+  # Publish CLI / Cloud CLI container images
+  publish:
+    strategy:
+      matrix:
+        image: [ plural-cli, plural-cli-cloud ]
+        include:
+          - image: plural-cli
+            dockerfile: ./Dockerfile
+          - image: plural-cli-cloud
+            dockerfile: ./dockerfiles/Dockerfile.cloud
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      packages: 'write'
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+          role-session-name: PluralCLI
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get EKS credentials
+        run: aws eks update-kubeconfig --name pluraldev
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/pluralsh/${{ matrix.image }}
+            gcr.io/pluralsh/${{ matrix.image }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=semver,pattern={{version}}
+      - name: Set up Docker Buildx
+        id: builder
+        uses: docker/setup-buildx-action@v2
+        with:
+          driver: kubernetes
+          platforms: linux/amd64
+          driver-opts: |
+            namespace=buildx
+            requests.cpu=1.5
+            requests.memory=3.5Gi
+            "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
+            "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
+      - name: Append ARM buildx builder from AWS
+        run: |
+          docker buildx create \
+            --append \
+            --bootstrap \
+            --name ${{ steps.builder.outputs.name }} \
+            --driver=kubernetes \
+            --platform linux/arm64 \
+            --node=${{ steps.builder.outputs.name }}-arm64 \
+            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
+            --driver-opt namespace=buildx \
+            --driver-opt requests.cpu=1.5 \
+            --driver-opt requests.memory=3.5Gi \
+            '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
+            '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
+      - uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GOOGLE_PROJECT_ID }}/locations/global/workloadIdentityPools/github/providers/github'
+          service_account: 'terraform@pluralsh.iam.gserviceaccount.com'
+          token_format: 'access_token'
+          create_credentials_file: true
+      - uses: google-github-actions/setup-gcloud@v1.0.1
+      - name: Login to gcr
+        run: gcloud auth configure-docker -q
+      - name: Login to plural registry
+        uses: docker/login-action@v2
+        with:
+          registry: dkr.plural.sh
+          username: mjg@plural.sh
+          password: ${{ secrets.PLURAL_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get current date
+        id: date
+        run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: "."
+          file: "${{ matrix.dockerfile }}"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            APP_VSN=${{ github.ref_name }}
+            APP_COMMIT=${{ github.sha }}
+            APP_DATE=${{ steps.date.outputs.date }}
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          hide-progress: false
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          scanners: 'vuln'
+          timeout: 10m
+          ignore-unfixed: true
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'

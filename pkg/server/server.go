@@ -22,6 +22,7 @@ func SetUpRouter() *gin.Engine {
 		v1.GET("/configuration", serverFunc(configuration))
 		v1.GET("/applications", serverFunc(listApplications))
 		v1.POST("/context/configuration", serverFunc(contextConfiguration))
+		v1.POST("/shutdown", serverFunc(shutdown))
 	}
 	return r
 }
@@ -52,6 +53,15 @@ func Run() error {
 
 func healthcheck(c *gin.Context) {
 	c.String(http.StatusOK, "OK")
+}
+
+func shutdown(c *gin.Context) error {
+	if err := syncGit(); err != nil {
+		return err
+	}
+
+	c.String(http.StatusOK, "OK")
+	return nil
 }
 
 func teardown() error {

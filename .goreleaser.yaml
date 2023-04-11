@@ -1,26 +1,56 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
+
+# Requires a GoReleaser Pro to run
+partial:
+  by: goos
+
 before:
   hooks:
     - go mod tidy
+
 builds:
-  - env:
-      - CGO_ENABLED=0
+  - id: plural-cli
+    targets:
+      - linux_amd64
+      - linux_arm64
+      - windows_amd64
+      - windows_arm64
+      - darwin_amd64
+      - darwin_arm64
+    env:
+      - CGO_ENABLED=1
     ldflags:
-    - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{ .Env.GITLAB_CLIENT_SECRET }}"
-    goos:
-      - linux
-      - windows
-      - darwin
-    main: ./cmd/plural
+      - -s
+      - -w
+      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
+    tags:
+      - desktop
+      - production
+      - ui
     binary: plural
+    # Do not embed UI into linux/arm64 and windows/arm64 binaries
+    overrides:
+      - goos: linux
+        goarch: arm64
+        tags: [linux]
+        env:
+          - CGO_ENABLED=0
+      - goos: windows
+        goarch: arm64
+        tags: [windows]
+        env:
+          - CGO_ENABLED=0
+
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: amd64
+  - name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -32,6 +62,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
 release:
   name_template: "{{.ProjectName}}-v{{.Version}}"
   header: |
@@ -40,6 +71,7 @@ release:
   footer: |
     ## Thanks!
     We'd like to thank all contributors for helping with improving our CLI!
+
 brews:
   - name: plural
     tap:

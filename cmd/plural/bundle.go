@@ -1,4 +1,4 @@
-package main
+package plural
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: tracked(latestVersion(rooted(requireArgs(p.bundleInstall, []string{"repo", "bundle-name"}))), "bundle.install"),
+			Action: tracked(latestVersion(rooted(p.bundleInstall)), "bundle.install"),
 		},
 	}
 }
@@ -63,15 +63,9 @@ func (p *Plural) stackCommands() []cli.Command {
 }
 
 func (p *Plural) bundleList(c *cli.Context) error {
-	man, err := manifest.FetchProject()
 	repo := c.Args().Get(0)
-	prov := ""
-	if err == nil {
-		prov = strings.ToUpper(man.Provider)
-	}
-
 	p.InitPluralClient()
-	recipes, err := p.ListRecipes(repo, prov)
+	recipes, err := p.listRecipes(repo)
 	if err != nil {
 		return api.GetErrorResponse(err, "ListRecipes")
 	}
@@ -85,7 +79,26 @@ func (p *Plural) bundleList(c *cli.Context) error {
 func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 	args := c.Args()
 	p.InitPluralClient()
-	err = bundle.Install(p.Client, args.Get(0), args.Get(1), c.Bool("refresh"))
+	repo := args.Get(0)
+	if repo == "" {
+		return fmt.Errorf("REPO argument required, try running `plural bundle install REPO` for the app you want to install")
+	}
+
+	bdl := args.Get(1)
+	if bdl == "" {
+		recipes, err := p.listRecipes(args.Get(0))
+		if err != nil {
+			return err
+		}
+		for _, recipe := range recipes {
+			if recipe.Primary {
+				bdl = recipe.Name
+				break
+			}
+		}
+	}
+
+	err = bundle.Install(p.Client, repo, bdl, c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
 }
@@ -114,4 +127,15 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 	return utils.PrintTable(stacks, headers, func(s *api.Stack) ([]string, error) {
 		return []string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)}, nil
 	})
+}
+
+func (p *Plural) listRecipes(repo string) (res []*api.Recipe, err error) {
+	man, err := manifest.FetchProject()
+	prov := ""
+	if err == nil {
+		prov = strings.ToUpper(man.Provider)
+	}
+
+	res, err = p.ListRecipes(repo, prov)
+	return
 }

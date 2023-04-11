@@ -1,20 +1,17 @@
-package main
+package plural
 
 import (
-	"log"
-	"math/rand"
 	"os"
-	"time"
 
-	"github.com/fatih/color"
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -103,7 +100,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "deploy",
 			Aliases:   []string{"d"},
 			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
-			ArgsUsage: "WKSPACE",
+			ArgsUsage: "Workspace",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "silence",
@@ -236,6 +233,18 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
+			Name:      "upgrade",
+			Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
+			ArgsUsage: "QUEUE REPO",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "f",
+					Usage: "file containing upgrade contents, use - for stdin",
+				},
+			},
+			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
+		},
+		{
 			Name:  "init",
 			Usage: "initializes plural within a git repo",
 			Flags: []cli.Flag{
@@ -285,7 +294,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "repair",
 			Usage:    "commits any new encrypted changes in your local workspace automatically",
 			Action:   latestVersion(handleRepair),
-			Category: "WORKSPACE",
+			Category: "Workspace",
 		},
 		{
 			Name:     "serve",
@@ -454,27 +463,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
+		p.uiCommands(),
 		{
 			Name:        "bootstrap",
 			Usage:       "Commands for bootstrapping cluster",
 			Subcommands: p.bootstrapCommands(),
 			Category:    "Bootstrap",
 		},
-	}
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	// init Kube when k8s config exists
-	plural := &Plural{}
-	app := CreateNewApp(plural)
-	if os.Getenv("ENABLE_COLOR") != "" {
-		color.NoColor = false
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 
