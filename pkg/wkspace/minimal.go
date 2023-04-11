@@ -2,7 +2,6 @@ package wkspace
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,7 @@ import (
 	helmdiff "github.com/databus23/helm-diff/v3/diff"
 	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/helm"
@@ -102,6 +102,7 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	// If a release does not exist, install it.
 	histClient := action.NewHistory(m.HelmConfig)
 	histClient.Max = 1
+
 	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(m.HelmConfig)
 		instClient.Namespace = namespace
@@ -118,12 +119,24 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 		_, err := instClient.Run(chart, defaultVals)
 		return err
 	}
+
 	client := action.NewUpgrade(m.HelmConfig)
 	client.Namespace = namespace
 	client.SkipCRDs = true
 	client.Timeout = time.Minute * 10
 	client.Wait = wait
 	_, err = client.Run(m.Name, chart, defaultVals)
+	if err != nil {
+		r, errReleases := m.HelmConfig.Releases.Last(m.Name)
+		if errReleases != nil {
+			return errors.Wrap(err, fmt.Sprintf("can't get the last release %v", errReleases))
+		}
+		if !r.Info.Status.IsPending() {
+			return err
+		}
+		rollback := action.NewRollback(m.HelmConfig)
+		return rollback.Run(m.Name)
+	}
 	return err
 }
 
