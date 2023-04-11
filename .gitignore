@@ -17,3 +17,4 @@ plural*.o
 # vendor/
 
 dist/
+.idea/
