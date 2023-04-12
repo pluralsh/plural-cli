@@ -224,6 +224,23 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		return err
 	}
 
+	diffFolder, err := m.constructDiffFolder()
+	if err != nil {
+		return err
+	}
+	outfile, err := os.Create(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(diffFolder, "helm"))))
+	if err != nil {
+		return err
+	}
+	defer func(outfile *os.File) {
+		_ = outfile.Close()
+	}(outfile)
+
+	// removes ANSI escape codes from the writer. It's needed because the helmdiff adds some.
+	stripAnsiWriter := utils.StripAnsiWriter{
+		Writer: outfile,
+	}
+	mw := io.MultiWriter(os.Stdout, stripAnsiWriter)
 	currentSpecs := diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	newSpecs := diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	helmdiff.Manifests(currentSpecs, newSpecs, &helmdiff.Options{
@@ -233,7 +250,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		ShowSecrets:     true,
 		SuppressedKinds: []string{},
 		FindRenames:     0,
-	}, os.Stdout)
+	}, mw)
 	return nil
 }
 
