@@ -74,6 +74,10 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 		return err
 	}
 
+	posthogProperty := utils.PosthogProperties{
+		ApplicationName: repo,
+		RecipeName:      recipe.Name,
+	}
 	if err := performTests(context, recipe); err != nil {
 		return err
 	}
@@ -81,6 +85,7 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 	if err := client.InstallRecipe(recipe.Id); err != nil {
 		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %w", api.GetErrorResponse(err, "InstallRecipe"))
 	}
+	utils.PosthogCapture(utils.InstallPosthogEvent, posthogProperty)
 
 	if recipe.OidcSettings == nil {
 		return nil

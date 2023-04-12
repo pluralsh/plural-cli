@@ -42,6 +42,7 @@ type Manifest struct {
 
 type Owner struct {
 	Email    string
+	ID       string
 	Endpoint string `yaml:"endpoint,omitempty"`
 }
 
@@ -56,6 +57,7 @@ type ProjectManifest struct {
 	Project      string
 	Provider     string
 	Region       string
+	SendMetrics  bool
 	Owner        *Owner
 	Network      *NetworkConfig
 	BucketPrefix string `yaml:"bucketPrefix"`

@@ -217,8 +217,11 @@ func (p *Plural) deploy(c *cli.Context) error {
 		if c.Bool("silence") {
 			continue
 		}
-
-		if man, err := fetchManifest(repo); err == nil && man.Wait {
+		man, err := fetchManifest(repo)
+		if err != nil {
+			return err
+		}
+		if man.Wait {
 			if kubeConf, err := kubernetes.KubeConfig(); err == nil {
 				fmt.Printf("Waiting for %s to become ready...\n", repo)
 				if err := application.SilentWait(kubeConf, repo); err != nil {
@@ -227,7 +230,25 @@ func (p *Plural) deploy(c *cli.Context) error {
 				fmt.Println("")
 			}
 		}
-
+		for _, ch := range man.Charts {
+			utils.PosthogCapture(utils.DeployPosthogEvent, utils.PosthogProperties{
+				ApplicationName: installation.Repository.Name,
+				ApplicationID:   installation.Id,
+				PackageType:     "helm",
+				PackageName:     ch.Name,
+				PackageId:       ch.Id,
+				PackageVersion:  ch.Version,
+			})
+		}
+		for _, tf := range man.Terraform {
+			utils.PosthogCapture(utils.DeployPosthogEvent, utils.PosthogProperties{
+				ApplicationName: installation.Repository.Name,
+				ApplicationID:   installation.Id,
+				PackageType:     "terraform",
+				PackageName:     tf.Name,
+				PackageId:       tf.Id,
+			})
+		}
 		if err := scaffold.Notes(installation); err != nil {
 			return err
 		}

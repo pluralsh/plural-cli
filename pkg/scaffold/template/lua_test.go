@@ -82,6 +82,7 @@ test:
       metadata: null
       spec:
         email: test@plural.sh
+        id: ""
         token: abc
         namespacePrefix: test
         endpoint: http://example.com
@@ -154,6 +155,7 @@ test:
       metadata: null
       spec:
         email: test@plural.sh
+        id: ""
         token: abc
         namespacePrefix: test
         endpoint: http://example.com

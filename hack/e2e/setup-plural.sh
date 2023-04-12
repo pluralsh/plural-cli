@@ -47,8 +47,10 @@ spec:
   project: ""
   provider: kind
   region: us-east-1
+  sendmetrics: true
   owner:
     email: cli-e2e@pluraldev.sh
+    id: testcli
   network:
     subdomain: clie2e.onplural.sh
     pluraldns: true
@@ -81,6 +83,8 @@ export PLURAL_REPOS_RESET_CONFIRM=true
 export PLURAL_LOGIN_AFFIRM_CURRENT_USER=true
 export PLURAL_INIT_AFFIRM_CURRENT_REPO=true
 export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
+
+export PLURAL_INIT_AFFIRM_SEND_METRICS=true
 
 plural init
 plural repos reset

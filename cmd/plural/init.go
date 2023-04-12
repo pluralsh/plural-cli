@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/manifest"
+
 	"github.com/pkg/browser"
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/server"
@@ -82,6 +83,16 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	}
 
 	if err := crypto.CreateKeyFingerprintFile(); err != nil {
+		return err
+	}
+
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+	project.Owner.ID = me.Id
+	project.SendMetrics = affirm("Would you be willing to send installation metrics to Plural? We will store data in an aggregated form to analyze the application's deployment", "PLURAL_INIT_AFFIRM_SEND_METRICS")
+	if err := project.Write(manifest.ProjectManifestPath()); err != nil {
 		return err
 	}
 
@@ -164,6 +175,7 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 	}
 
 	conf.Email = me.Email
+	conf.ID = me.Id
 	fmt.Printf("\nlogged in as %s!\n", me.Email)
 
 	saEmail := c.String("service-account")

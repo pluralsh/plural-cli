@@ -16,6 +16,7 @@ GOLANG_CROSS_VERSION  ?= v1.20.2
 PACKAGE ?= github.com/pluralsh/plural
 BASE_LDFLAGS ?= -s -w
 LDFLAGS ?= $(BASE_LDFLAGS) $\
+	-X "$(PACKAGE)/pkg/utils.version=$(APP_VSN)" $\
 	-X "$(PACKAGE)/cmd/plural.Version=$(APP_VSN)" $\
 	-X "$(PACKAGE)/cmd/plural.Commit=$(BUILD)" $\
 	-X "$(PACKAGE)/cmd/plural.Date=$(APP_DATE)" $\
