@@ -236,11 +236,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		_ = outfile.Close()
 	}(outfile)
 
-	// removes ANSI escape codes from the writer. It's needed because the helmdiff adds some.
-	stripAnsiWriter := utils.StripAnsiWriter{
-		Writer: outfile,
-	}
-	mw := io.MultiWriter(os.Stdout, stripAnsiWriter)
+	mw := io.MultiWriter(os.Stdout, outfile)
 	currentSpecs := diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	newSpecs := diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	helmdiff.Manifests(currentSpecs, newSpecs, &helmdiff.Options{
