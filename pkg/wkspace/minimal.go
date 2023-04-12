@@ -25,6 +25,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	relutil "helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
 	"sigs.k8s.io/yaml"
@@ -101,7 +102,7 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	}
 	// If a release does not exist, install it.
 	histClient := action.NewHistory(m.HelmConfig)
-	histClient.Max = 1
+	histClient.Max = 5
 
 	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(m.HelmConfig)
@@ -127,14 +128,24 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	client.Wait = wait
 	_, err = client.Run(m.Name, chart, defaultVals)
 	if err != nil {
-		r, errReleases := m.HelmConfig.Releases.Last(m.Name)
+		current, errReleases := m.HelmConfig.Releases.Last(m.Name)
 		if errReleases != nil {
 			return errors.Wrap(err, fmt.Sprintf("can't get the last release %v", errReleases))
 		}
-		if !r.Info.Status.IsPending() {
+		if !current.Info.Status.IsPending() {
 			return err
 		}
+		deployedReleases, errDeployed := m.HelmConfig.Releases.ListDeployed()
+		if errDeployed != nil {
+			return errors.Wrap(err, fmt.Sprintf("can't get deployed releases %v", errDeployed))
+		}
 		rollback := action.NewRollback(m.HelmConfig)
+		if len(deployedReleases) > 0 {
+			relutil.Reverse(deployedReleases, relutil.SortByRevision)
+			lastDeployed := deployedReleases[0].Version
+			rollback.Version = lastDeployed
+			utils.LogInfo().Printf("Rollback current: %d to last deployed %d \n", current.Version, deployedReleases[0].Version)
+		}
 		return rollback.Run(m.Name)
 	}
 	return err
