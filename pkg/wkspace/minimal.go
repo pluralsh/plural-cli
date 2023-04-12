@@ -2,7 +2,6 @@ package wkspace
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +13,7 @@ import (
 	helmdiff "github.com/databus23/helm-diff/v3/diff"
 	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/helm"
@@ -25,6 +25,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	relutil "helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
 	"sigs.k8s.io/yaml"
@@ -101,7 +102,8 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	}
 	// If a release does not exist, install it.
 	histClient := action.NewHistory(m.HelmConfig)
-	histClient.Max = 1
+	histClient.Max = 5
+
 	if _, err := histClient.Run(m.Name); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(m.HelmConfig)
 		instClient.Namespace = namespace
@@ -118,12 +120,34 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 		_, err := instClient.Run(chart, defaultVals)
 		return err
 	}
+
 	client := action.NewUpgrade(m.HelmConfig)
 	client.Namespace = namespace
 	client.SkipCRDs = true
 	client.Timeout = time.Minute * 10
 	client.Wait = wait
 	_, err = client.Run(m.Name, chart, defaultVals)
+	if err != nil {
+		current, errReleases := m.HelmConfig.Releases.Last(m.Name)
+		if errReleases != nil {
+			return errors.Wrap(err, fmt.Sprintf("can't get the last release %v", errReleases))
+		}
+		if !current.Info.Status.IsPending() {
+			return err
+		}
+		deployedReleases, errDeployed := m.HelmConfig.Releases.ListDeployed()
+		if errDeployed != nil {
+			return errors.Wrap(err, fmt.Sprintf("can't get deployed releases %v", errDeployed))
+		}
+		rollback := action.NewRollback(m.HelmConfig)
+		if len(deployedReleases) > 0 {
+			relutil.Reverse(deployedReleases, relutil.SortByRevision)
+			lastDeployed := deployedReleases[0].Version
+			rollback.Version = lastDeployed
+			utils.LogInfo().Printf("Rollback current: %d to last deployed %d \n", current.Version, deployedReleases[0].Version)
+		}
+		return rollback.Run(m.Name)
+	}
 	return err
 }
 
@@ -200,6 +224,19 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		return err
 	}
 
+	diffFolder, err := m.constructDiffFolder()
+	if err != nil {
+		return err
+	}
+	outfile, err := os.Create(pathing.SanitizeFilepath(pathing.SanitizeFilepath(filepath.Join(diffFolder, "helm"))))
+	if err != nil {
+		return err
+	}
+	defer func(outfile *os.File) {
+		_ = outfile.Close()
+	}(outfile)
+
+	mw := io.MultiWriter(os.Stdout, outfile)
 	currentSpecs := diffmanifest.Parse(string(releaseManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	newSpecs := diffmanifest.Parse(string(installManifest), namespace, false, helm3TestHook, helm2TestSuccessHook)
 	helmdiff.Manifests(currentSpecs, newSpecs, &helmdiff.Options{
@@ -209,7 +246,7 @@ func (m *MinimalWorkspace) DiffHelm() error {
 		ShowSecrets:     true,
 		SuppressedKinds: []string{},
 		FindRenames:     0,
-	}, os.Stdout)
+	}, mw)
 	return nil
 }
 
