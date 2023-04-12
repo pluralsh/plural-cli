@@ -24,6 +24,7 @@ const (
 	InstallPosthogEvent PosthogEvent = "cli_install"
 	BuildPosthogEvent   PosthogEvent = "cli_build"
 	DeployPosthogEvent  PosthogEvent = "cli_deploy"
+	ErrorPosthogEvent   PosthogEvent = "cli_error"
 )
 
 var posthogClient posthog.Client
@@ -39,7 +40,8 @@ type ProjectInfoSpec struct {
 	Owner       *ProjectInfoOwner
 }
 type ProjectInfoOwner struct {
-	ID string
+	ID    string
+	Email string
 }
 
 type PosthogProperties struct {
@@ -76,6 +78,9 @@ func posthogCapture(posthogClient posthog.Client, event PosthogEvent, property P
 		userID := "cli-user"
 		if project.Spec.Owner != nil {
 			userID = project.Spec.Owner.ID
+			if project.Spec.Owner.ID == "" {
+				userID = project.Spec.Owner.Email
+			}
 		}
 		LogInfo().Printf("send posthog event %v \n", properties)
 		return posthogClient.Enqueue(posthog.Capture{

@@ -81,13 +81,15 @@ func tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error
 			} else {
 				event.Data = fmt.Sprint(err)
 			}
+			utils.PosthogCapture(utils.ErrorPosthogEvent, utils.PosthogProperties{Error: err})
 		}
-
 		conf := config.Read()
 		if conf.ReportErrors {
 			client := api.FromConfig(&conf)
 			if err := client.CreateEvent(&event); err != nil {
-				return api.GetErrorResponse(err, "CreateEvent")
+				err = api.GetErrorResponse(err, "CreateEvent")
+				utils.PosthogCapture(utils.ErrorPosthogEvent, utils.PosthogProperties{Error: err})
+				return err
 			}
 		}
 		return err

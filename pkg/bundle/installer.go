@@ -79,14 +79,10 @@ func doInstall(client api.Client, recipe *api.Recipe, repo, name string, refresh
 		RecipeName:      recipe.Name,
 	}
 	if err := performTests(context, recipe); err != nil {
-		posthogProperty.Error = fmt.Errorf("failed to perform tests")
-		utils.PosthogCapture(utils.InstallPosthogEvent, posthogProperty)
 		return err
 	}
 
 	if err := client.InstallRecipe(recipe.Id); err != nil {
-		posthogProperty.Error = fmt.Errorf("failed install recipe")
-		utils.PosthogCapture(utils.InstallPosthogEvent, posthogProperty)
 		return fmt.Errorf("Install failed, does your plural user have install permissions? error: %w", api.GetErrorResponse(err, "InstallRecipe"))
 	}
 	utils.PosthogCapture(utils.InstallPosthogEvent, posthogProperty)
