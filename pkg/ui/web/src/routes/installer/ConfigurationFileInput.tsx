@@ -15,9 +15,6 @@ export default function ConfigurationFileInput({
   const [fileSelected, setFileSelected] = useState<boolean>(!!value)
   const theme = useTheme()
 
-  console.log(theme)
-  console.log(fileInputTheme({ selected: fileSelected, theme }))
-
   const readFile = useCallback(async (files: FileList | undefined | null) => {
     setFileSelected(false)
 
