@@ -86,6 +86,15 @@ func (this *Client) Context() *manifest.Context {
 	return context
 }
 
+func (this *Client) Provider() string {
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return ""
+	}
+
+	return api.NormalizeProvider(project.Provider)
+}
+
 func (this *Client) Install(applications []Application, domains, buckets []string) error {
 	path := manifest.ContextPath()
 	context, err := manifest.ReadContext(path)
