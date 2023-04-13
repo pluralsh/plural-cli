@@ -1,6 +1,7 @@
-import { ComponentProps, useCallback, useState } from 'react'
+import { FileInput } from 'grommet'
+import { ThemeContext } from 'grommet/contexts'
 import { Span } from 'honorable'
-import { FileInput, ThemeContext } from 'grommet'
+import { ComponentProps, useCallback, useState } from 'react'
 import { useTheme } from 'styled-components'
 
 import { fileInputTheme } from '../../grommet/fileInputTheme'
@@ -13,6 +14,9 @@ export default function ConfigurationFileInput({
 >) {
   const [fileSelected, setFileSelected] = useState<boolean>(!!value)
   const theme = useTheme()
+
+  console.log(theme)
+  console.log(fileInputTheme({ selected: fileSelected, theme }))
 
   const readFile = useCallback(async (files: FileList | undefined | null) => {
     setFileSelected(false)

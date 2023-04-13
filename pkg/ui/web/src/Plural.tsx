@@ -1,6 +1,6 @@
-import { theme } from '@pluralsh/design-system'
-import { Grommet, ThemeType } from 'grommet'
-import { HonorableTheme, ThemeProvider as HonorableThemeProvider } from 'honorable'
+import { theme as honorableTheme } from '@pluralsh/design-system'
+import { Grommet } from 'grommet'
+import { ThemeProvider as HonorableThemeProvider } from 'honorable'
 import React, { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
@@ -8,13 +8,14 @@ import { ThemeProvider } from 'styled-components'
 import Loader from './components/loader/Loader'
 import { WailsContext, WailsContextProps } from './context/wails'
 import { Provider } from './graphql/generated/graphql'
+import { grommetTheme } from './grommet/theme'
 import { useWailsQuery } from './hooks/useWails'
 import { router } from './routes/router'
 import { Binding } from './services/wails'
 import { FontStyles } from './styled/fonts'
 import { GlobalStyles } from './styled/global'
 import { ScrollbarStyles } from './styled/scrollbar'
-import { theme as styledTheme } from './styled/theme'
+import { styledTheme } from './styled/theme'
 import { PluralProject } from './types/client'
 
 function Plural(): React.ReactElement {
@@ -31,13 +32,12 @@ function Plural(): React.ReactElement {
   } as WailsContextProps), [context, project, provider, token])
 
   return (
-    <HonorableThemeProvider theme={theme as HonorableTheme}>
-      <ThemeProvider theme={styledTheme}>
-        <Grommet
-          full
-          theme={styledTheme as any as ThemeType}
-          themeMode="dark"
-        >
+    <HonorableThemeProvider theme={honorableTheme}>
+      <Grommet
+        full
+        theme={grommetTheme}
+      >
+        <ThemeProvider theme={styledTheme}>
           <WailsContext.Provider value={wailsContext}>
             <GlobalStyles />
             <FontStyles />
@@ -45,8 +45,8 @@ function Plural(): React.ReactElement {
             {isReady && <RouterProvider router={router} />}
             {!isReady && <Loader />}
           </WailsContext.Provider>
-        </Grommet>
-      </ThemeProvider>
+        </ThemeProvider>
+      </Grommet>
     </HonorableThemeProvider>
   )
 }
