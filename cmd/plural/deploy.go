@@ -444,17 +444,6 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	return nil
 }
 
-func (p *Plural) buildContext(_ *cli.Context) error {
-	p.InitPluralClient()
-	insts, err := p.GetInstallations()
-	if err != nil {
-		return api.GetErrorResponse(err, "GetInstallation")
-	}
-
-	path := manifest.ContextPath()
-	return manifest.BuildContext(path, insts)
-}
-
 func fetchManifest(repo string) (*manifest.Manifest, error) {
 	p, err := manifest.ManifestPath(repo)
 	if err != nil {
