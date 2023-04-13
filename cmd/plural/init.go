@@ -3,6 +3,7 @@ package plural
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/pluralsh/plural/pkg/scm"
 	"github.com/pluralsh/plural/pkg/server"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
 )
@@ -151,6 +153,29 @@ func handleLogin(c *cli.Context) error {
 	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?", "PLURAL_LOGIN_AFFIRM_REPORT_ERRORS")
 	client = api.FromConfig(conf)
 	return postLogin(conf, client, c)
+}
+
+func handleClone(c *cli.Context) error {
+	url := c.Args().Get(0)
+	cmd := exec.Command("git", "clone", url)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	repo := git.RepoName(url)
+	_ = os.Chdir(repo)
+	if err := cryptoInit(c); err != nil {
+		return err
+	}
+
+	if err := handleUnlock(c); err != nil {
+		return err
+	}
+
+	utils.Success("Your repo has been cloned and decrypted, cd %s to start working\n", repo)
+	return nil
 }
 
 func downloadReadme(c *cli.Context) error {

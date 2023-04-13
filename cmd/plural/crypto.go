@@ -278,7 +278,7 @@ func cryptoInit(c *cli.Context) error {
 		{"diff.plural-crypt.textconv", "plural crypto decrypt"},
 	}
 
-	utils.Highlight("Creating git encryption filters\n\n")
+	utils.Highlight("Creating git encryption filters\n")
 	for _, conf := range encryptConfig {
 		if err := gitConfig(conf[0], conf[1]); err != nil {
 			return err

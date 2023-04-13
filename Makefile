@@ -37,8 +37,8 @@ git-push:
 	git push
 
 .PHONY: install
-install:
-	go install -ldflags '$(LDFLAGS)' .
+install: build-cli-ui
+	mv $(OUTFILE) ~/bin/plural
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
