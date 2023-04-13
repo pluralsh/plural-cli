@@ -1,4 +1,5 @@
 import { theme } from '@pluralsh/design-system'
+import { Grommet, ThemeType } from 'grommet'
 import { HonorableTheme, ThemeProvider as HonorableThemeProvider } from 'honorable'
 import React, { useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
@@ -32,13 +33,19 @@ function Plural(): React.ReactElement {
   return (
     <HonorableThemeProvider theme={theme as HonorableTheme}>
       <ThemeProvider theme={styledTheme}>
-        <WailsContext.Provider value={wailsContext}>
-          <GlobalStyles />
-          <FontStyles />
-          <ScrollbarStyles />
-          {isReady && <RouterProvider router={router} />}
-          {!isReady && <Loader />}
-        </WailsContext.Provider>
+        <Grommet
+          full
+          theme={styledTheme as any as ThemeType}
+          themeMode="dark"
+        >
+          <WailsContext.Provider value={wailsContext}>
+            <GlobalStyles />
+            <FontStyles />
+            <ScrollbarStyles />
+            {isReady && <RouterProvider router={router} />}
+            {!isReady && <Loader />}
+          </WailsContext.Provider>
+        </Grommet>
       </ThemeProvider>
     </HonorableThemeProvider>
   )
