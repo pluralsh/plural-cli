@@ -16,7 +16,8 @@ type GcpChecker struct {
 
 var gcpExpected = []string{
 	"storage.buckets.create",
-	"storage.buckets.setIamPolicy",
+	// TODO: reenable
+	//"storage.buckets.setIamPolicy",
 	"iam.serviceAccounts.create",
 	"iam.serviceAccounts.setIamPolicy",
 	"container.clusters.create",

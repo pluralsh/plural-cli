@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -15,14 +16,6 @@ import (
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/manifest"
-	permissions "github.com/pluralsh/plural/pkg/provider/permissions"
-	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/polly/algorithms"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -30,6 +23,15 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider/permissions"
+	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
+	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
 )
 
 type GCPProvider struct {
@@ -142,11 +144,17 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 		return
 	}
 
+	creds, err := google.FindDefaultCredentials(context.Background())
+	if err != nil {
+		return
+	}
+
 	provider.storageClient = client
 	provider.ctx = map[string]interface{}{
 		"BucketLocation": getBucketLocation(provider.Region()),
 		// Location might conflict with the region set by users. However, this is only a temporary solution that should be removed
-		"Location": provider.Reg,
+		"Location":    provider.Reg,
+		"Credentials": base64.StdEncoding.EncodeToString(creds.JSON),
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -191,6 +199,11 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		return nil, err
 	}
 
+	creds, err := google.FindDefaultCredentials(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
 	// Needed to update legacy deployments
 	if man.Region == "" {
 		man.Region = "us-east1"
@@ -215,6 +228,13 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 	// Needed to update legacy deployments
 	if _, ok := man.Context["Location"]; !ok {
 		man.Context["Location"] = man.Region
+		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
+			return nil, err
+		}
+	}
+
+	if _, exists := man.Context["Credentials"]; !exists {
+		man.Context["Credentials"] = base64.StdEncoding.EncodeToString(creds.JSON)
 		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
 			return nil, err
 		}
