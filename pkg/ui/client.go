@@ -113,14 +113,14 @@ func (this *Client) Install(applications []Application, domains, buckets []strin
 		return app.IsDependency
 	})
 
-	for _, dep := range dependencies {
-		if err = this.doInstall(dep, context); err != nil {
+	for _, app := range installableApplications {
+		if err = this.doInstall(app, context); err != nil {
 			return err
 		}
 	}
 
-	for _, app := range installableApplications {
-		if err = this.doInstall(app, context); err != nil {
+	for _, dep := range dependencies {
+		if err = this.doInstall(dep, context); err != nil {
 			return err
 		}
 	}
@@ -162,7 +162,7 @@ func (this *Client) doInstall(application Application, context *manifest.Context
 
 	// Configure OIDC if enabled
 	if oidc {
-		confirm := false
+		confirm := true
 		err = bundle.ConfigureOidc(repoName, this.client, recipe, configuration, &confirm)
 		if err != nil {
 			return err
