@@ -86,6 +86,7 @@ type Client interface {
 	Clusters() ([]*Cluster, error)
 	Cluster(id string) (*Cluster, error)
 	CreateUpgrade(queue, repository string, attrs gqlclient.UpgradeAttributes) error
+	TransferOwnership(name, email string) error
 }
 
 type client struct {
