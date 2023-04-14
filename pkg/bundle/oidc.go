@@ -116,6 +116,10 @@ func formatRedirectUris(settings *api.OIDCSettings, ctx map[string]interface{}) 
 }
 
 func confirmOidc(confirm *bool) (bool, error) {
+	if confirm != nil && *confirm {
+		oidcConfirmed = true
+	}
+
 	if oidcConfirmed {
 		return true, nil
 	}
@@ -132,8 +136,5 @@ func confirmOidc(confirm *bool) (bool, error) {
 		}
 	}
 
-	if *confirm {
-		oidcConfirmed = true
-	}
 	return *confirm, nil
 }

@@ -18,7 +18,12 @@ import styled from 'styled-components'
 
 import Loader from '../../components/loader/Loader'
 import { WailsContext } from '../../context/wails'
-import { ListRepositoriesDocument, ListRepositoriesQueryVariables, RootQueryType } from '../../graphql/generated/graphql'
+import {
+  ListRepositoriesDocument,
+  ListRepositoriesQueryVariables,
+  Provider,
+  RootQueryType,
+} from '../../graphql/generated/graphql'
 import { Routes } from '../routes'
 
 import { buildSteps, install, toDefaultSteps } from './helpers'
