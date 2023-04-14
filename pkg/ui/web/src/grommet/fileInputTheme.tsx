@@ -1,11 +1,12 @@
 import { CloseIcon } from '@pluralsh/design-system'
+import { DefaultTheme } from 'styled-components'
 
 export const fileInputTheme = ({
   selected = false, error = false, theme,
 }: {
   selected?: boolean;
   error?: boolean;
-  theme: any;
+  theme: DefaultTheme;
 }) => ({
   fileInput: {
     message: {
