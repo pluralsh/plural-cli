@@ -1,6 +1,7 @@
-import { ComponentProps, useCallback, useState } from 'react'
+import { FileInput } from 'grommet'
+import { ThemeContext } from 'grommet/contexts'
 import { Span } from 'honorable'
-import { FileInput, ThemeContext } from 'grommet'
+import { ComponentProps, useCallback, useState } from 'react'
 import { useTheme } from 'styled-components'
 
 import { fileInputTheme } from '../../grommet/fileInputTheme'

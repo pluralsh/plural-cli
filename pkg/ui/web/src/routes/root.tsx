@@ -1,17 +1,12 @@
 import { ApolloProvider } from '@apollo/client'
-import { LoadingSpinner } from '@pluralsh/design-system'
-import React, { Suspense, useContext, useMemo } from 'react'
-import {
-  DataRouteObject,
-  Outlet,
-  RouteObject,
-  useNavigate,
-} from 'react-router-dom'
+import { GraphQLToast, LoadingSpinner } from '@pluralsh/design-system'
+import React, { Suspense, useContext } from 'react'
+import { DataRouteObject, Outlet, RouteObject } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { WailsContext } from '../context/wails'
 import Header from '../layout/Header'
-import { newApolloClient } from '../services/apollo'
+import { useApolloClient } from '../services/apollo'
 
 import { Routes } from './routes'
 
@@ -30,13 +25,21 @@ const Root = styled(RootUnstyled)(({ theme }) => ({
 
 function RootUnstyled({ ...props }): React.ReactElement {
   const { token } = useContext(WailsContext)
-  const client = useMemo(() => newApolloClient(token), [token])
+  const { client, error } = useApolloClient(token)
 
   return (
     <div {...props}>
       <ApolloProvider client={client!}>
         <Header />
         <div className="content"><Outlet /></div>
+        {error && (
+          <GraphQLToast
+            margin="large"
+            error={{ graphQLErrors: [...error] }}
+            header="Error"
+            closeTimeout={10000}
+          />
+        )}
       </ApolloProvider>
     </div>
   )

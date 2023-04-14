@@ -14,6 +14,10 @@ export function Project() {
   return window['go']['ui']['Client']['Project']();
 }
 
+export function Provider() {
+  return window['go']['ui']['Client']['Provider']();
+}
+
 export function Token() {
   return window['go']['ui']['Client']['Token']();
 }

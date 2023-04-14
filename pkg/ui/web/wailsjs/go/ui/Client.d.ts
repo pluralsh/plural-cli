@@ -8,4 +8,6 @@ export function Install(arg1:Array<ui.Application>,arg2:Array<string>,arg3:Array
 
 export function Project():Promise<any>;
 
+export function Provider():Promise<string>;
+
 export function Token():Promise<string>;
