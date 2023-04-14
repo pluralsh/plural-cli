@@ -14,7 +14,7 @@ func (p *Plural) uiCommands() cli.Command {
 	return cli.Command{
 		Name:   "install",
 		Usage:  "opens installer UI that simplifies application configuration",
-		Action: p.run,
+		Action: tracked(rooted(p.run), "cli.install"),
 	}
 }
 
