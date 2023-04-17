@@ -12,11 +12,28 @@ func defaultSteps(path string) []*Step {
 
 	return []*Step{
 		{
-			Name:    "namespace",
+			Name:    "terraform-init",
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Command: "terraform",
+			Args:    []string{"init", "-upgrade"},
+			Sha:     "",
+		},
+		{
+			Name:    "terraform-apply",
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Command: "terraform",
+			Args:    []string{"apply", "-auto-approve"},
+			Sha:     "",
+			Retries: 2,
+		},
+		{
+			Name:    "terraform-output",
+			Wkdir:   app,
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "plural",
-			Args:    []string{"bootstrap", "namespace", "create", app, "--skip-if-exists"},
+			Args:    []string{"output", "terraform", app},
 			Sha:     "",
 		},
 		{

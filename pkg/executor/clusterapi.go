@@ -1,13 +1,14 @@
 package executor
 
 import (
+	"github.com/pluralsh/plural/pkg/manifest"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 func clusterAPISteps(path string) []*Step {
-	//app := pathing.SanitizeFilepath(filepath.Base(path))
+	pm, _ := manifest.FetchProject()
 	sanitizedPath := pathing.SanitizeFilepath(path)
 
 	return []*Step{
@@ -40,7 +41,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   sanitizedPath,
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Command: "plural",
-			Args:    []string{"--bootstrap", "bootstrap", "cluster", "watch", "test-aws"},
+			Args:    []string{"--bootstrap", "bootstrap", "cluster", "watch", pm.Cluster},
 			Sha:     "",
 			Retries: 1,
 			Verbose: true,
@@ -61,6 +62,22 @@ func clusterAPISteps(path string) []*Step {
 			Args:    []string{"wkspace", "helm", sanitizedPath},
 			Sha:     "",
 			Retries: 2,
+		},
+		{
+			Name:    "terraform-init",
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Command: "terraform",
+			Args:    []string{"init", "-upgrade"},
+			Sha:     "",
+		},
+		{
+			Name:    "terraform-import",
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Command: "terraform",
+			Args:    []string{"import", "aws_eks_cluster.cluster", pm.Cluster},
+			Sha:     "",
 		},
 	}
 }
