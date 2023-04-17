@@ -1,4 +1,4 @@
-package main
+package plural
 
 import (
 	"context"

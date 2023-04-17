@@ -1,10 +1,7 @@
-package main
+package plural
 
 import (
-	"log"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
@@ -15,8 +12,6 @@ import (
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -91,10 +86,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "force",
 					Usage: "force workspace to build even if remote is out of sync",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "use cluster API for cluster provisioning",
 				},
 			},
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
@@ -195,38 +186,24 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Publishing",
 		},
 		{
-			Name:     "topsort",
-			Aliases:  []string{"top"},
-			Usage:    "renders a dependency-inferred topological sort of the installations in a workspace",
-			Action:   latestVersion(p.topsort),
-			Category: "Workspace",
-		},
-		{
-			Name:     "dependencies",
-			Aliases:  []string{"deps"},
-			Usage:    "prints ordered dependencies for a repo in your workspace",
-			Action:   latestVersion(p.dependencies),
-			Category: "Workspace",
-		},
-		{
 			Name:      "bounce",
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
-			ArgsUsage: "WKSPACE",
+			ArgsUsage: "APP",
 			Action:    latestVersion(initKubeconfig(owned(p.bounce))),
 		},
 		{
-			Name:      "readme",
-			Aliases:   []string{"b"},
-			Usage:     "generates the readme for your installation repo",
-			ArgsUsage: "WKSPACE",
-			Action:    latestVersion(downloadReadme),
+			Name:     "readme",
+			Aliases:  []string{"b"},
+			Usage:    "generates the readme for your installation repo",
+			Category: "Workspace",
+			Action:   latestVersion(downloadReadme),
 		},
 		{
 			Name:      "destroy",
 			Aliases:   []string{"d"},
 			Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
-			ArgsUsage: "WKSPACE",
+			ArgsUsage: "APP",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "from",
@@ -248,6 +225,18 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
+			Name:      "upgrade",
+			Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
+			ArgsUsage: "QUEUE REPO",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "f",
+					Usage: "file containing upgrade contents, use - for stdin",
+				},
+			},
+			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
+		},
+		{
 			Name:  "init",
 			Usage: "initializes plural within a git repo",
 			Flags: []cli.Flag{
@@ -267,9 +256,10 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(latestVersion(p.handleInit), "cli.init"),
 		},
 		{
-			Name:   "preflights",
-			Usage:  "runs provider preflight checks",
-			Action: latestVersion(preflights),
+			Name:     "preflights",
+			Usage:    "runs provider preflight checks",
+			Category: "Workspace",
+			Action:   latestVersion(preflights),
 		},
 		{
 			Name:   "login",
@@ -297,7 +287,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "repair",
 			Usage:    "commits any new encrypted changes in your local workspace automatically",
 			Action:   latestVersion(handleRepair),
-			Category: "WORKSPACE",
+			Category: "Workspace",
 		},
 		{
 			Name:     "serve",
@@ -449,12 +439,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Publishing",
 		},
 		{
-			Name:     "build-context",
-			Usage:    "creates a fresh context.yaml for legacy repos",
-			Action:   latestVersion(p.buildContext),
-			Category: "Workspace",
-		},
-		{
 			Name:     "changed",
 			Usage:    "shows repos with pending changes",
 			Action:   latestVersion(diffed),
@@ -466,21 +450,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(formatDashboard),
 			Category: "Publishing",
 		},
-	}
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	// init Kube when k8s config exists
-	plural := &Plural{}
-	app := CreateNewApp(plural)
-	if os.Getenv("ENABLE_COLOR") != "" {
-		color.NoColor = false
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
+		{
+			Name:        "bootstrap",
+			Usage:       "Commands for bootstrapping cluster",
+			Subcommands: p.bootstrapCommands(),
+			Category:    "Bootstrap",
+		},
+		p.uiCommands(),
 	}
 }
 
@@ -503,6 +479,11 @@ func globalFlags() []cli.Flag {
 			Usage:       "enable debug mode",
 			EnvVar:      "PLURAL_DEBUG_ENABLE",
 			Destination: &utils.EnableDebug,
+		},
+		cli.BoolFlag{
+			Name:        "bootstrap",
+			Usage:       "enable bootstrap mode",
+			Destination: &bootstrapMode,
 		},
 	}
 }
