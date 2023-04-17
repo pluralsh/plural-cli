@@ -92,6 +92,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "force",
 					Usage: "force workspace to build even if remote is out of sync",
 				},
+				cli.BoolFlag{
+					Name:  "cluster-api",
+					Usage: "use cluster API for cluster provisioning",
+				},
 			},
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},

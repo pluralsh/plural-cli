@@ -114,7 +114,7 @@ func (wk *Workspace) ToMinimal() *MinimalWorkspace {
 	}
 }
 
-func (wk *Workspace) Prepare() error {
+func (wk *Workspace) Prepare(clusterAPI bool) error {
 	repo := wk.Installation.Repository
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -136,7 +136,7 @@ func (wk *Workspace) Prepare() error {
 		return err
 	}
 
-	if err := wk.buildExecution(repoRoot); err != nil {
+	if err := wk.buildExecution(repoRoot, clusterAPI); err != nil {
 		return err
 	}
 
@@ -162,7 +162,7 @@ func (wk *Workspace) requiresWait() bool {
 	return false
 }
 
-func (wk *Workspace) buildExecution(repoRoot string) error {
+func (wk *Workspace) buildExecution(repoRoot string, clusterAPI bool) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
@@ -186,7 +186,7 @@ func (wk *Workspace) buildExecution(repoRoot string) error {
 
 	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(wkspaceRoot), "deploy")
 
-	return executor.DefaultExecution(name, exec).Flush(repoRoot)
+	return executor.DefaultExecution(name, exec, clusterAPI).Flush(repoRoot)
 }
 
 func (wk *Workspace) buildDiff(repoRoot string) error {

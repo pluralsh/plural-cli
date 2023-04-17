@@ -2,6 +2,7 @@ package executor
 
 import (
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -10,6 +11,10 @@ import (
 func clusterAPISteps(path string) []*Step {
 	pm, _ := manifest.FetchProject()
 	sanitizedPath := pathing.SanitizeFilepath(path)
+	importModule := ""
+	if pm.Provider == provider.AWS {
+		importModule = "module.aws-bootstrap-cluster-api.aws_eks_cluster.cluster"
+	}
 
 	return []*Step{
 		{
@@ -76,7 +81,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
-			Args:    []string{"import", "aws_eks_cluster.cluster", pm.Cluster},
+			Args:    []string{"import", importModule, pm.Cluster},
 			Sha:     "",
 		},
 	}
