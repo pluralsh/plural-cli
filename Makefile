@@ -21,7 +21,7 @@ LDFLAGS ?= $(BASE_LDFLAGS) $\
 	-X "$(PACKAGE)/cmd/plural.Date=$(APP_DATE)" $\
 	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
 	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
-WAILS_TAGS ?= desktop,production,ui
+WAILS_TAGS ?= desktop,production,ui,debug
 WAILS_BINDINGS_TAGS ?= bindings,generate
 WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
@@ -37,8 +37,8 @@ git-push:
 	git push
 
 .PHONY: install
-install:
-	go install -ldflags '$(LDFLAGS)' .
+install: build-cli-ui
+	mv $(OUTFILE) ~/bin/plural
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI

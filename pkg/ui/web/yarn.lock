@@ -2937,9 +2937,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pluralsh/design-system@npm:1.330.1":
-  version: 1.330.1
-  resolution: "@pluralsh/design-system@npm:1.330.1"
+"@pluralsh/design-system@npm:1.334.0":
+  version: 1.334.0
+  resolution: "@pluralsh/design-system@npm:1.334.0"
   dependencies:
     "@floating-ui/react-dom-interactions": 0.13.3
     "@monaco-editor/react": 4.4.6
@@ -2996,7 +2996,7 @@ __metadata:
     react-dom: ">=16.0.0"
     react-transition-group: ">=4.4.2"
     styled-components: ">=5.3.5"
-  checksum: 66c28d9ce652d6a16095b56bee9a6aa6559400e839079df9fd7aae9811adb0866f3420d1209c208aba85c6e96360e5cf97d9527f2229ab614b4a5e5d52426e15
+  checksum: 9e8ffb14590473ad3c1d4b4871ecf6eb00cd4d82d5559b5e5b37980c468a4164a104c46d96bd537e626ef7f26c060cc0161813e2c81248d28c085d6d8de10559
   languageName: node
   linkType: hard
 
@@ -6772,7 +6772,7 @@ __metadata:
     "@graphql-codegen/typescript": 3.0.2
     "@graphql-codegen/typescript-operations": 3.0.2
     "@graphql-codegen/typescript-react-apollo": 3.3.7
-    "@pluralsh/design-system": 1.330.1
+    "@pluralsh/design-system": 1.334.0
     "@pluralsh/eslint-config-typescript": 2.5.41
     "@types/absinthe__socket": 0.2.3
     "@types/absinthe__socket-apollo-link": 0.2.1
@@ -6788,6 +6788,7 @@ __metadata:
     eslint-plugin-jsx-a11y: 6.7.1
     eslint-plugin-react: 7.32.2
     eslint-plugin-react-hooks: 4.6.0
+    grommet: 2.31.0
     honorable: 0.194.0
     honorable-theme-default: 0.77.0
     lodash: 4.17.21
@@ -7110,7 +7111,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"grommet-icons@npm:^4.8.0":
+"grommet-icons@npm:^4.10.0, grommet-icons@npm:^4.8.0":
   version: 4.10.0
   resolution: "grommet-icons@npm:4.10.0"
   dependencies:
@@ -7147,6 +7148,22 @@ __metadata:
     react-dom: ^16.6.1 || ^17.0.0 || ^18.0.0
     styled-components: ">= 5.1"
   checksum: f16f68ad7a0d5984bd5f3a6f84d84575bc168a3f9eb53095f80a7da702e3a6113b6e465390c8045650aedce813d0a3165cad96508939ff8463b00f99eefd54d1
+  languageName: node
+  linkType: hard
+
+"grommet@npm:2.31.0":
+  version: 2.31.0
+  resolution: "grommet@npm:2.31.0"
+  dependencies:
+    grommet-icons: ^4.10.0
+    hoist-non-react-statics: ^3.2.0
+    markdown-to-jsx: ^7.2.0
+    prop-types: ^15.8.1
+  peerDependencies:
+    react: ^16.6.1 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.6.1 || ^17.0.0 || ^18.0.0
+    styled-components: ">= 5.1"
+  checksum: a15b8834ecd352713a1a4ad997f210db21f5eac2b9ba0917f8f7a14d9f0efaaac8e35e539694efba1c656fb775f4ab52c7f464d640fd0272fe8e1d0131537a29
   languageName: node
   linkType: hard
 
@@ -8283,7 +8300,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"markdown-to-jsx@npm:^7.1.5":
+"markdown-to-jsx@npm:^7.1.5, markdown-to-jsx@npm:^7.2.0":
   version: 7.2.0
   resolution: "markdown-to-jsx@npm:7.2.0"
   peerDependencies:

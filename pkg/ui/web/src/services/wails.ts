@@ -5,9 +5,11 @@ import {
   Context,
   Install,
   Project,
+  Provider,
   Token,
 } from '../../wailsjs/go/ui/Client'
 import { SetClipboard } from '../../wailsjs/go/ui/Window'
+import { Provider as APIProvider } from '../graphql/generated/graphql'
 import {
   Client,
   ClientBinding,
@@ -24,6 +26,7 @@ import Application = ui.Application;
 enum Binding {
   Token = 'Token',
   Project = 'Project',
+  Provider = 'Provider',
   Context = 'Context',
   Install = 'Install',
   SetClipboard = 'SetClipboard',
@@ -38,6 +41,7 @@ enum Binding {
 const Plural: Client = {
   [Binding.Token]: (): Promise<string> => Token(),
   [Binding.Project]: (): Promise<PluralProject> => Project() as Promise<PluralProject>,
+  [Binding.Provider]: (): Promise<APIProvider> => Provider() as Promise<APIProvider>,
   [Binding.Context]: (): Promise<PluralContext> => Context() as Promise<PluralContext>,
   [Binding.Install]: (apps: Array<WizardStepConfig>, domains: Array<string>, buckets: Array<string>): Promise<void> => Install(apps as Array<Application>, domains, buckets) as Promise<void>,
   [Binding.SetClipboard]: (text: string): Promise<void> => SetClipboard(text),

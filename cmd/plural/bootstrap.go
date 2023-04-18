@@ -7,6 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	bv1alpha1 "github.com/pluralsh/bootstrap-operator/apis/bootstrap/v1alpha1"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,9 +20,6 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kind/pkg/cluster"
-
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/utils"
 )
 
 var runtimescheme = runtime.NewScheme()
