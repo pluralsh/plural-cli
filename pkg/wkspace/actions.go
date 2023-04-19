@@ -64,13 +64,20 @@ func (w *Workspace) HelmDiff() error {
 	return w.ToMinimal().DiffHelm()
 }
 
-func (w *Workspace) Destroy() error {
+func (w *Workspace) Destroy(clusterAPI bool) error {
 	if err := w.DestroyHelm(); err != nil {
 		return err
 	}
-
-	if err := w.DestroyTerraform(); err != nil {
-		return err
+	repo := w.Installation.Repository
+	if clusterAPI && repo.Name == "bootstrap" {
+		utils.LogInfo().Println("deleting cluster API cluster")
+		if err := w.DestroyClusterAPI(); err != nil {
+			return err
+		}
+	} else {
+		if err := w.DestroyTerraform(); err != nil {
+			return err
+		}
 	}
 
 	return w.Reset()
@@ -144,6 +151,45 @@ func uninstallHelm(name, namespace string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (w *Workspace) DestroyClusterAPI() error {
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+	name := w.Installation.Repository.Name
+	wkspaceRoot := filepath.Join(repoRoot, name)
+	path, err := filepath.Abs(pathing.SanitizeFilepath(wkspaceRoot))
+	if err != nil {
+		return err
+	}
+	if err := os.Chdir(path); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "move"); err != nil {
+		return err
+	}
+
+	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "wkspace", "crds"); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "wkspace", "helm", name); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "bootstrap", "cluster", "watch", w.Provider.Cluster()); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "destroy-cluster-api", w.Provider.Cluster()); err != nil {
+		return err
+	}
+	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"); err != nil {
+		return err
 	}
 	return nil
 }

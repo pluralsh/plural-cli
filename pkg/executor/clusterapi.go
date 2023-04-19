@@ -1,9 +1,10 @@
 package executor
 
 import (
+	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
-	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
@@ -18,7 +19,7 @@ func clusterAPISteps(path string) []*Step {
 
 	return []*Step{
 		{
-			Name:    "create-bootstrap-cluster",
+			Name:    "create bootstrap cluster",
 			Target:  pathing.SanitizeFilepath(path),
 			Command: "plural",
 			Args:    []string{"bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -46,10 +47,17 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   sanitizedPath,
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Command: "plural",
-			Args:    []string{"--bootstrap", "bootstrap", "cluster", "watch", pm.Cluster},
+			Args:    []string{"--bootstrap", "bootstrap", "cluster", "watch", "--enable-cluster-creation", pm.Cluster},
 			Sha:     "",
 			Retries: 1,
 			Verbose: true,
+		},
+		{
+			Name:    "delete bootstrap cluster",
+			Target:  pathing.SanitizeFilepath(path),
+			Command: "plural",
+			Args:    []string{"--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
+			Sha:     "",
 		},
 		{
 			Name:    "crds",
@@ -74,6 +82,14 @@ func clusterAPISteps(path string) []*Step {
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
 			Args:    []string{"init", "-upgrade"},
+			Sha:     "",
+		},
+		{
+			Name:    "terraform state rm",
+			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
+			Command: "terraform",
+			Args:    []string{"state", "rm", importModule},
 			Sha:     "",
 		},
 		{
