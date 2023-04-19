@@ -225,6 +225,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "all",
 					Usage: "tear down the entire cluster gracefully in one go",
 				},
+				cli.BoolFlag{
+					Name:  "cluster-api",
+					Usage: "deletes the cluster API provider components from the bootstrap cluster",
+				},
 			},
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},

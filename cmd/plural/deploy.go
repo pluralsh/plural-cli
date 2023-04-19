@@ -336,11 +336,12 @@ func (p *Plural) destroy(c *cli.Context) error {
 	p.InitPluralClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
-	force := c.Bool("force")
-	all := c.Bool("all")
 	if err != nil {
 		return err
 	}
+	force := c.Bool("force")
+	all := c.Bool("all")
+	clusterAPI := c.Bool("cluster-api")
 
 	infix := "this workspace"
 	if repoName != "" {
@@ -365,7 +366,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
 		}
 
-		return p.doDestroy(repoRoot, installation, delete)
+		return p.doDestroy(repoRoot, installation, delete, clusterAPI)
 	}
 
 	installations, err := p.getSortedInstallations(repoName)
@@ -385,7 +386,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doDestroy(repoRoot, installation, delete); err != nil {
+		if err := p.doDestroy(repoRoot, installation, delete, clusterAPI); err != nil {
 			return err
 		}
 	}
@@ -417,7 +418,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete bool) error {
+func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete, clusterAPI bool) error {
 	p.InitPluralClient()
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
@@ -433,7 +434,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if err := workspace.Destroy(); err != nil {
+	if err := workspace.Destroy(clusterAPI); err != nil {
 		return err
 	}
 
