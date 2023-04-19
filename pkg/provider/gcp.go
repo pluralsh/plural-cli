@@ -3,8 +3,10 @@ package provider
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -39,6 +41,7 @@ type GCPProvider struct {
 	Proj          string `survey:"project"`
 	bucket        string
 	Reg           string `survey:"region"`
+	Credentials   string `survey:"credentials"`
 	storageClient *storage.Client
 	ctx           map[string]interface{}
 	writer        manifest.Writer
@@ -83,6 +86,7 @@ var (
 		"southamerica-east1",
 		"southamerica-west1",
 	}
+	validCredentials = survey.ComposeValidators(utils.FileExists, validServiceAccountCredentials)
 )
 
 func getGCPSurvey() []*survey.Question {
@@ -102,6 +106,12 @@ func getGCPSurvey() []*survey.Question {
 			Name:     "region",
 			Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east1", Options: gcpRegions},
 			Validate: survey.Required,
+		},
+		{
+			Name:      "credentials",
+			Prompt:    &survey.Input{Message: "Enter the path to service account credentials.json file:"},
+			Validate:  validCredentials,
+			Transform: toCredentialsJSON,
 		},
 	}
 }
@@ -144,17 +154,12 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 		return
 	}
 
-	creds, err := google.FindDefaultCredentials(context.Background())
-	if err != nil {
-		return
-	}
-
 	provider.storageClient = client
 	provider.ctx = map[string]interface{}{
 		"BucketLocation": getBucketLocation(provider.Region()),
 		// Location might conflict with the region set by users. However, this is only a temporary solution that should be removed
 		"Location":    provider.Reg,
-		"Credentials": base64.StdEncoding.EncodeToString(creds.JSON),
+		"Credentials": provider.Credentials,
 	}
 
 	projectManifest := manifest.ProjectManifest{
@@ -199,11 +204,6 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		return nil, err
 	}
 
-	creds, err := google.FindDefaultCredentials(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	// Needed to update legacy deployments
 	if man.Region == "" {
 		man.Region = "us-east1"
@@ -233,14 +233,7 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		}
 	}
 
-	if _, exists := man.Context["Credentials"]; !exists {
-		man.Context["Credentials"] = base64.StdEncoding.EncodeToString(creds.JSON)
-		if err := man.Write(manifest.ProjectManifestPath()); err != nil {
-			return nil, err
-		}
-	}
-
-	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil, nil}, nil
+	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, "", client, man.Context, nil, nil}, nil
 }
 
 func (gcp *GCPProvider) KubeConfig() error {
@@ -548,4 +541,44 @@ func listInstanceGroupManagers(ctx context.Context, c *compute.InstanceGroupMana
 		instances = append(instances, resp)
 	}
 	return instances, nil
+}
+
+type credentials struct {
+	Email string          `json:"client_email"`
+	ID    string          `json:"client_id"`
+	Type  credentialsType `json:"type"`
+}
+
+type credentialsType = string
+
+const (
+	ServiceAccountType credentialsType = "service_account"
+)
+
+func validServiceAccountCredentials(val interface{}) error {
+	path, _ := val.(string)
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	creds := new(credentials)
+	if err = json.Unmarshal(bytes, creds); err != nil {
+		return err
+	}
+
+	if creds.Type != ServiceAccountType || len(creds.Email) == 0 || len(creds.ID) == 0 {
+		return fmt.Errorf("provided credentials file is not a valid service account. Must have type 'service_account' and both 'client_id' and 'client_email' set")
+	}
+
+	// TODO: required permission validation?
+
+	return nil
+}
+
+func toCredentialsJSON(val interface{}) interface{} {
+	path, _ := val.(string)
+	bytes, _ := os.ReadFile(path)
+
+	return base64.StdEncoding.EncodeToString(bytes)
 }

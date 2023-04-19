@@ -5,14 +5,15 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
-	v1 "k8s.io/api/core/v1"
 )
 
 type Provider interface {
@@ -73,10 +74,10 @@ func GetProviderScaffold(provider, version string) (string, error) {
 }
 
 func GetProvider() (Provider, error) {
-	path := manifest.ProjectManifestPath()
-	if project, err := manifest.ReadProject(path); err == nil {
-		return FromManifest(project)
-	}
+	//path := manifest.ProjectManifestPath()
+	//if project, err := manifest.ReadProject(path); err == nil {
+	//	return FromManifest(project)
+	//}
 	if err := getAvailableProviders(); err != nil {
 		return nil, err
 	}

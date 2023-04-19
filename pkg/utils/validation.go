@@ -2,9 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
+
 	"github.com/pluralsh/plural/pkg/utils/errors"
 )
 
@@ -72,4 +74,22 @@ func Confirm(msg string) bool {
 		return false
 	}
 	return res
+}
+
+func FileExists(val interface{}) error {
+	path, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("value is not a string: %v", val)
+	}
+
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return err
+	}
+
+	if info.IsDir() {
+		return fmt.Errorf("provided path points to a directory, not a file: %s", path)
+	}
+
+	return nil
 }
