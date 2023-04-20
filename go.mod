@@ -68,6 +68,7 @@ require (
 	layeh.com/gopher-luar v1.0.10
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/cluster-api v1.4.1
+	sigs.k8s.io/cluster-api-operator v0.1.0
 	sigs.k8s.io/kind v0.18.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -111,7 +112,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/coredns/caddy v1.1.0 // indirect
+	github.com/coredns/caddy v1.1.1 // indirect
 	github.com/coredns/corefile-migration v1.0.20 // indirect
 	github.com/drone/envsubst/v2 v2.0.0-20210730161058-179042472c46 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
@@ -159,6 +160,9 @@ require (
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	github.com/weaveworks/eksctl v0.136.0 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/genproto v0.0.0-20230303212802-e74f57abe488 // indirect
