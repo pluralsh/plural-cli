@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -13,8 +14,17 @@ func clusterAPISteps(path string) []*Step {
 	pm, _ := manifest.FetchProject()
 	sanitizedPath := pathing.SanitizeFilepath(path)
 	importModule := ""
-	if pm.Provider == provider.AWS {
+	moduleArgs := ""
+
+	// TODO: refactor
+	switch pm.Provider {
+	case provider.AWS:
 		importModule = "module.aws-bootstrap-cluster-api.aws_eks_cluster.cluster"
+		moduleArgs = pm.Cluster
+	case provider.GCP:
+		importModule = "module.google_container_cluster.cluster"
+		moduleArgs = fmt.Sprintf("%s/%s/%s", pm.Project, pm.Region, pm.Cluster)
+
 	}
 
 	return []*Step{
@@ -97,7 +107,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
-			Args:    []string{"import", importModule, pm.Cluster},
+			Args:    []string{"import", importModule, moduleArgs},
 			Sha:     "",
 		},
 	}
