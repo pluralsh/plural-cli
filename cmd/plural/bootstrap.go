@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 
 	"github.com/pkg/errors"
 	bv1alpha1 "github.com/pluralsh/bootstrap-operator/apis/bootstrap/v1alpha1"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/provider"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -31,6 +29,11 @@ import (
 	ctrlruntime "sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kind/pkg/cluster"
+
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 var runtimescheme = runtime.NewScheme()
@@ -153,7 +156,7 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	utils.Warn("Waiting for operator")
 	WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
 		pods := &corev1.PodList{}
-		selector := fmt.Sprintf("infrastructure-%s", pm.Provider)
+		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(api.NormalizeProvider(pm.Provider)))
 		if err := client.List(context.Background(), pods, ctrlruntimeclient.MatchingLabels{"cluster.x-k8s.io/provider": selector}); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return false, fmt.Errorf("failed to get pods: %w", err)
