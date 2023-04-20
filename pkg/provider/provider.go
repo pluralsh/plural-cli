@@ -74,10 +74,10 @@ func GetProviderScaffold(provider, version string) (string, error) {
 }
 
 func GetProvider() (Provider, error) {
-	//path := manifest.ProjectManifestPath()
-	//if project, err := manifest.ReadProject(path); err == nil {
-	//	return FromManifest(project)
-	//}
+	path := manifest.ProjectManifestPath()
+	if project, err := manifest.ReadProject(path); err == nil {
+		return FromManifest(project)
+	}
 	if err := getAvailableProviders(); err != nil {
 		return nil, err
 	}

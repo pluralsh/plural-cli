@@ -85,7 +85,7 @@ func clusterAPISteps(path string) []*Step {
 			Sha:     "",
 		},
 		{
-			Name:    "terraform state rm",
+			Name:    "terraform-state-rm",
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Command: "terraform",
