@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/manifest"
+
 	"github.com/pkg/errors"
 	bv1alpha1 "github.com/pluralsh/bootstrap-operator/apis/bootstrap/v1alpha1"
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -23,6 +25,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	clusterapioperator "sigs.k8s.io/cluster-api-operator/api/v1alpha1"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	apiclient "sigs.k8s.io/cluster-api/cmd/clusterctl/client"
 	ctrlruntime "sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,6 +40,7 @@ func init() {
 	utilruntime.Must(bv1alpha1.AddToScheme(runtimescheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(runtimescheme))
 	utilruntime.Must(clusterapi.AddToScheme(runtimescheme))
+	utilruntime.Must(clusterapioperator.AddToScheme(runtimescheme))
 }
 
 func (p *Plural) bootstrapCommands() []cli.Command {
@@ -127,6 +131,10 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	if !found {
 		return fmt.Errorf("You're not within an installation repo")
 	}
+	pm, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
 	prov := &provider.KINDProvider{Clust: "bootstrap"}
 	if err := prov.KubeConfig(); err != nil {
 		return err
@@ -142,6 +150,24 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	utils.Warn("Waiting for operator")
+	WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
+		pods := &corev1.PodList{}
+		selector := fmt.Sprintf("infrastructure-%s", pm.Provider)
+		if err := client.List(context.Background(), pods, ctrlruntimeclient.MatchingLabels{"cluster.x-k8s.io/provider": selector}); err != nil {
+			if !apierrors.IsNotFound(err) {
+				return false, fmt.Errorf("failed to get pods: %w", err)
+			}
+			return false, nil
+		}
+		if len(pods.Items) > 0 {
+			if isReady(pods.Items[0].Status.Conditions) {
+				return true, nil
+			}
+		}
+		utils.Warn(".")
+		return false, nil
+	})
 	if err := client.Delete(context.Background(), &clusterapi.Cluster{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "bootstrap"},
 	}); err != nil {
@@ -158,6 +184,15 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		utils.Warn(".")
 		return false, nil
 	})
+}
+
+func isReady(conditions []corev1.PodCondition) bool {
+	for _, cond := range conditions {
+		if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Plural) handleMoveCluster(c *cli.Context) error {
