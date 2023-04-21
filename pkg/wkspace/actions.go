@@ -167,7 +167,7 @@ func (w *Workspace) DestroyClusterAPI() error {
 		return err
 	}
 
-	if err := execution.Execute(true); err != nil {
+	if err := execution.Execute("deleting", true); err != nil {
 		utils.Note("It looks like the destroy failed. This may be a transient issue and rerunning the `plural destroy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
 		return err
 	}
