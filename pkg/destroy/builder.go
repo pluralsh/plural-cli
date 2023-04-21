@@ -1,4 +1,4 @@
-package executor
+package destroy
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl"
+	"github.com/pluralsh/plural/pkg/executor"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/polly/algorithms"
@@ -14,9 +16,9 @@ import (
 	"github.com/rodaine/hclencoder"
 )
 
-type Execution struct {
-	Metadata Metadata `hcl:"metadata"`
-	Steps    []*Step  `hcl:"step"`
+type Destroy struct {
+	Metadata Metadata         `hcl:"metadata"`
+	Steps    []*executor.Step `hcl:"step"`
 }
 
 type Metadata struct {
@@ -24,34 +26,30 @@ type Metadata struct {
 	Name string `hcl:"name"`
 }
 
-const (
-	pluralIgnore = `terraform/.terraform`
-)
-
-func Ignore(root string) error {
-	ignoreFile := pathing.SanitizeFilepath(filepath.Join(root, ".pluralignore"))
-	return os.WriteFile(ignoreFile, []byte(pluralIgnore), 0644)
-}
-
-func GetExecution(path, name string) (*Execution, error) {
+func GetDestroy(path, name string) (*Destroy, error) {
 	fullpath := pathing.SanitizeFilepath(filepath.Join(path, name+".hcl"))
 	contents, err := os.ReadFile(fullpath)
-	ex := Execution{}
+	diff := Destroy{}
 	if err != nil {
-		return &ex, err
+		return &diff, nil
 	}
 
-	err = hcl.Decode(&ex, string(contents))
-	if err != nil {
-		return &ex, err
-	}
-
-	return &ex, nil
+	err = hcl.Decode(&diff, string(contents))
+	return &diff, err
 }
 
-func (e *Execution) Execute(verbose bool) error {
+func (e *Destroy) Execute() error {
 	root, err := git.Root()
 	if err != nil {
+		return err
+	}
+
+	path := pathing.SanitizeFilepath(filepath.Join(root, "destroy"))
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return err
+	}
+
+	if err := utils.EmptyDirectory(path); err != nil {
 		return err
 	}
 
@@ -60,15 +58,9 @@ func (e *Execution) Execute(verbose bool) error {
 		return err
 	}
 
-	fmt.Printf("destroing %s.\n", e.Metadata.Path)
+	fmt.Printf("destroing %s, hold on to your butts\n", e.Metadata.Path)
 	for i, step := range e.Steps {
-		prev := step.Verbose
-		if verbose {
-			step.Verbose = true
-		}
-
 		newSha, err := step.Execute(root, ignore)
-		step.Verbose = prev
 		if err != nil {
 			if err := e.Flush(root); err != nil {
 				return err
@@ -83,7 +75,7 @@ func (e *Execution) Execute(verbose bool) error {
 	return e.Flush(root)
 }
 
-func (e *Execution) IgnoreFile(root string) ([]string, error) {
+func (e *Destroy) IgnoreFile(root string) ([]string, error) {
 	ignorePath := pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, ".pluralignore"))
 	contents, err := os.ReadFile(ignorePath)
 	if err != nil {
@@ -102,12 +94,9 @@ func (e *Execution) IgnoreFile(root string) ([]string, error) {
 	return result, nil
 }
 
-func DefaultExecution(path string, prev *Execution, clusterAPI bool) (e *Execution) {
-	byName := make(map[string]*Step)
-	steps := defaultSteps(path)
-	if strings.Contains(path, "bootstrap") && clusterAPI {
-		steps = clusterAPISteps(path)
-	}
+func DefaultDestroy(path string, prev *Destroy) (e *Destroy) {
+	byName := map[string]*executor.Step{}
+	steps := defaultDestroy(path)
 
 	for _, step := range prev.Steps {
 		byName[step.Name] = step
@@ -132,19 +121,19 @@ func DefaultExecution(path string, prev *Execution, clusterAPI bool) (e *Executi
 	}
 
 	sorted, _ := algorithms.TopsortGraph(graph)
-	finalizedSteps := algorithms.Map(sorted, func(s string) *Step { return byName[s] })
-	return &Execution{
-		Metadata: Metadata{Path: path, Name: "deploy"},
+	finalizedSteps := algorithms.Map(sorted, func(s string) *executor.Step { return byName[s] })
+	return &Destroy{
+		Metadata: Metadata{Path: path, Name: "destroy"},
 		Steps:    finalizedSteps,
 	}
 }
 
-func (e *Execution) Flush(root string) error {
-	io, err := hclencoder.Encode(&e)
+func (d *Destroy) Flush(root string) error {
+	io, err := hclencoder.Encode(&d)
 	if err != nil {
 		return err
 	}
 
-	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, e.Metadata.Path, e.Metadata.Name+".hcl")))
+	path, _ := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(root, d.Metadata.Path, d.Metadata.Name+".hcl")))
 	return os.WriteFile(path, io, 0644)
 }

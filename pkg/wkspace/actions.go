@@ -160,37 +160,19 @@ func (w *Workspace) DestroyClusterAPI() error {
 	if err != nil {
 		return err
 	}
-	name := w.Installation.Repository.Name
-	wkspaceRoot := filepath.Join(repoRoot, name)
-	path, err := filepath.Abs(pathing.SanitizeFilepath(wkspaceRoot))
+	repo := w.Installation.Repository.Name
+
+	execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "destroy")
 	if err != nil {
 		return err
 	}
-	if err := os.Chdir(path); err != nil {
-		return err
-	}
-	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"); err != nil {
-		return err
-	}
-	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "move"); err != nil {
-		return err
-	}
 
-	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "wkspace", "crds"); err != nil {
+	if err := execution.Execute(true); err != nil {
+		utils.Note("It looks like the destroy failed. This may be a transient issue and rerunning the `plural destroy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
 		return err
 	}
-	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "wkspace", "helm", name); err != nil {
-		return err
-	}
-	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "bootstrap", "cluster", "watch", w.Provider.Cluster()); err != nil {
-		return err
-	}
-	if err := alwaysErr.execSuppressed("plural", "bootstrap", "cluster", "destroy-cluster-api", w.Provider.Cluster()); err != nil {
-		return err
-	}
-	if err := alwaysErr.execSuppressed("plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"); err != nil {
-		return err
-	}
+	fmt.Printf("\n")
+
 	return nil
 }
 

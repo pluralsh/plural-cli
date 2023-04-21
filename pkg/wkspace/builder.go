@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/plural/pkg/destroy"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -144,6 +146,11 @@ func (wk *Workspace) Prepare(clusterAPI bool) error {
 		return err
 	}
 
+	if clusterAPI {
+		if err := wk.buildDestroy(repoRoot); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -196,6 +203,15 @@ func (wk *Workspace) buildDiff(repoRoot string) error {
 	d, _ := diff.GetDiff(pathing.SanitizeFilepath(wkspaceRoot), "diff")
 
 	return diff.DefaultDiff(name, d).Flush(repoRoot)
+}
+
+func (wk *Workspace) buildDestroy(repoRoot string) error {
+	name := wk.Installation.Repository.Name
+	wkspaceRoot := pathing.SanitizeFilepath(filepath.Join(repoRoot, name))
+
+	d, _ := destroy.GetDestroy(pathing.SanitizeFilepath(wkspaceRoot), "destroy")
+
+	return destroy.DefaultDestroy(name, d).Flush(repoRoot)
 }
 
 func DiffedRepos() ([]string, error) {

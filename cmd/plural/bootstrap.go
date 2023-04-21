@@ -153,8 +153,8 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	utils.Warn("Waiting for operator")
-	WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
+	utils.Warn("Waiting for the operator ")
+	if err := WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
 		pods := &corev1.PodList{}
 		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(api.NormalizeProvider(pm.Provider)))
 		if err := client.List(context.Background(), pods, ctrlruntimeclient.MatchingLabels{"cluster.x-k8s.io/provider": selector}); err != nil {
@@ -170,7 +170,10 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		}
 		utils.Warn(".")
 		return false, nil
-	})
+	}); err != nil {
+		return err
+	}
+	fmt.Println()
 	if err := client.Delete(context.Background(), &clusterapi.Cluster{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "bootstrap"},
 	}); err != nil {
