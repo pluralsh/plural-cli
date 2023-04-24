@@ -76,6 +76,10 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 	return
 }
 
+func (man *ProjectManifest) Flush() error {
+	return man.Write(ProjectManifestPath())
+}
+
 func (man *Manifest) Write(path string) error {
 	versioned := &VersionedManifest{
 		ApiVersion: "plural.sh/v1alpha1",
