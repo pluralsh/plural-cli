@@ -37,27 +37,35 @@ func (p *Plural) InitKube() error {
 	return nil
 }
 
+func (p *Plural) assumeServiceAccount(conf config.Config, man *manifest.ProjectManifest) error {
+	owner := man.Owner
+	jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
+	if err != nil {
+		utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+		return err
+	}
+	conf.Email = email
+	conf.Token = jwt
+	p.Client = api.FromConfig(&conf)
+	accessToken, err := p.GrabAccessToken()
+	if err != nil {
+		utils.Error("failed to create access token, bailing")
+		return api.GetErrorResponse(err, "GrabAccessToken")
+	}
+	conf.Token = accessToken
+	config.SetConfig(&conf)
+	return nil
+}
+
 func (p *Plural) InitPluralClient() {
 	if p.Client == nil {
 		if project, err := manifest.FetchProject(); err == nil && config.Exists() {
 			conf := config.Read()
 			if owner := project.Owner; owner != nil && conf.Email != owner.Email {
 				utils.LogInfo().Printf("Trying to impersonate service account: %s \n", owner.Email)
-				jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
-				if err != nil {
-					utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+				if err := p.assumeServiceAccount(conf, project); err != nil {
 					os.Exit(1)
 				}
-				conf.Email = email
-				conf.Token = jwt
-				p.Client = api.FromConfig(&conf)
-				accessToken, err := p.Client.GrabAccessToken()
-				if err != nil {
-					utils.Error("failed to create access token, bailing")
-					os.Exit(1)
-				}
-				conf.Token = accessToken
-				config.SetConfig(&conf)
 				return
 			}
 		}
