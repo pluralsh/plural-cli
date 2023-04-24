@@ -24,6 +24,11 @@ func (client *client) PromoteCluster() error {
 	return err
 }
 
+func (client *client) TransferOwnership(name, email string) error {
+	_, err := client.pluralClient.TransferOwnership(client.ctx, name, email)
+	return err
+}
+
 func (client *client) Clusters() ([]*Cluster, error) {
 	resp, err := client.pluralClient.Clusters(client.ctx, nil)
 	if err != nil {
