@@ -47,10 +47,10 @@ func (p *Plural) assumeServiceAccount(conf config.Config, man *manifest.ProjectM
 	conf.Email = email
 	conf.Token = jwt
 	p.Client = api.FromConfig(&conf)
-	accessToken, err := p.Client.GrabAccessToken()
+	accessToken, err := p.GrabAccessToken()
 	if err != nil {
 		utils.Error("failed to create access token, bailing")
-		return err
+		return api.GetErrorResponse(err, "GrabAccessToken")
 	}
 	conf.Token = accessToken
 	config.SetConfig(&conf)

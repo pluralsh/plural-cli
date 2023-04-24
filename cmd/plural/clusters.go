@@ -83,8 +83,8 @@ func (p *Plural) transferOwnership(c *cli.Context) error {
 		return err
 	}
 
-	if err := p.Client.TransferOwnership(man.Cluster, email); err != nil {
-		return err
+	if err := p.TransferOwnership(man.Cluster, email); err != nil {
+		return api.GetErrorResponse(err, "TransferOwnership")
 	}
 
 	man.Owner.Email = email
