@@ -89,3 +89,7 @@ func clusterAPISteps(path string) []*Step {
 		},
 	}
 }
+
+func pluralFile(base, name string) string {
+	return pathing.SanitizeFilepath(filepath.Join(base, ".plural", name))
+}
