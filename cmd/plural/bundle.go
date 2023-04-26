@@ -96,6 +96,10 @@ func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 				break
 			}
 		}
+
+		if bdl == "" {
+			return fmt.Errorf("you need to specify a bundle name, run `plural bundle list %s` to find eligible bundles then `plural bundle install %s <name>` to install", repo, repo)
+		}
 	}
 
 	err = bundle.Install(p.Client, repo, bdl, c.Bool("refresh"))
