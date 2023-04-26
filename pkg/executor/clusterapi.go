@@ -14,7 +14,7 @@ func clusterAPISteps(path string) []*Step {
 	return []*Step{
 		{
 			Name:    "create bootstrap cluster",
-			Target:  pathing.SanitizeFilepath(path),
+			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
 			Args:    []string{"bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
 			Sha:     "",
@@ -22,7 +22,7 @@ func clusterAPISteps(path string) []*Step {
 		{
 			Name:    "bootstrap crds",
 			Wkdir:   sanitizedPath,
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "crds")),
+			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
 			Args:    []string{"--bootstrap", "wkspace", "crds", sanitizedPath},
 			Sha:     "",
@@ -30,7 +30,7 @@ func clusterAPISteps(path string) []*Step {
 		{
 			Name:    "bootstrap bounce",
 			Wkdir:   sanitizedPath,
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
+			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
 			Args:    []string{"--bootstrap", "wkspace", "helm", sanitizedPath},
 			Sha:     "",
@@ -39,7 +39,7 @@ func clusterAPISteps(path string) []*Step {
 		{
 			Name:    "progress",
 			Wkdir:   sanitizedPath,
-			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
+			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
 			Args:    []string{"--bootstrap", "bootstrap", "cluster", "watch", "--enable-cluster-creation", pm.Cluster},
 			Sha:     "",
@@ -48,7 +48,7 @@ func clusterAPISteps(path string) []*Step {
 		},
 		{
 			Name:    "delete bootstrap cluster",
-			Target:  pathing.SanitizeFilepath(path),
+			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
 			Args:    []string{"--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Sha:     "",
