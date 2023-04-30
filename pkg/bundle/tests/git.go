@@ -29,25 +29,40 @@ func testGit(ctx *manifest.Context, test *api.RecipeTest) error {
 }
 
 func authMethod(args map[string]*ContextValue) (transport.AuthMethod, error) {
-	if arg, ok := args["password"]; ok && arg.Present && arg.Val.(string) != "" {
-		username := args["username"]
-		return git.BasicAuth(username.Val.(string), arg.Val.(string))
+	if arg, ok := args["password"]; ok && arg.Present {
+		if pass, ok := arg.Val.(string); ok && pass != "" {
+			if user, ok := args["username"].Val.(string); ok {
+				return git.BasicAuth(user, pass)
+			}
+			return nil, fmt.Errorf("No valid username/password pair for basic auth")
+		}
 	}
 
 	urlArg := args["url"]
 	if !urlArg.Present {
 		return nil, fmt.Errorf("requires a git url")
 	}
-	url := urlArg.Val.(string)
+
+	url, ok := urlArg.Val.(string)
+	if !ok {
+		return nil, fmt.Errorf("No valid git url")
+	}
+
 	privateKeyArg := args["private_key"]
 	if !privateKeyArg.Present {
 		return nil, fmt.Errorf("requires a ssh private key for authentication")
 	}
-	pk := privateKeyArg.Val.(string)
-	passArg, ok := args["passphrase"]
+
+	pk, ok := privateKeyArg.Val.(string)
+	if !ok {
+		return nil, fmt.Errorf("No valid git ssh private key")
+	}
+
 	passphrase := ""
-	if ok && passArg.Present {
-		passphrase = passArg.Val.(string)
+	if passArg, ok := args["passphrase"]; ok && passArg.Present {
+		if pass, ok := passArg.Val.(string); ok {
+			passphrase = pass
+		}
 	}
 
 	user, _, _, _, err := git.UrlComponents(url)
