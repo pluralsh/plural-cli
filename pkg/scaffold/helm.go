@@ -149,7 +149,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	prevVals, _ := prevValues(valuesFile)
 
 	if !utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, []byte(""), 0644); err != nil {
+		if err := os.WriteFile(valuesFile, []byte("{}\n"), 0644); err != nil {
 			return err
 		}
 	}
@@ -229,9 +229,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	values, err := yaml.Marshal(patchValues)
 	if err != nil {
 		return err
-	}
-	if len(patchValues) == 0 {
-		values = []byte{}
 	}
 	if err := utils.WriteFile(valuesFile, values); err != nil {
 		return err
