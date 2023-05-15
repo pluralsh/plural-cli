@@ -21,7 +21,7 @@ var (
 )
 
 func checkRecency() error {
-	if os.Getenv("CLOUD_SHELL") == "1" {
+	if os.Getenv("CLOUD_SHELL") == "1" || os.Getenv("PLURAL_CONSOLE") == "1" {
 		return nil
 	}
 
