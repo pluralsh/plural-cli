@@ -181,7 +181,7 @@ func repoRoot() error {
 
 func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
+		if os.Getenv("PLURAL_CONSOLE") != "1" && os.Getenv("CLOUD_SHELL") != "1" && algorithms.Coinflip(1, 5) {
 			utils.CheckLatestVersion(Version)
 		}
 
