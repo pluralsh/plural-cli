@@ -44,9 +44,11 @@ builds:
         tags: [windows]
         env:
           - CGO_ENABLED=0
-  # Build CLI binary without embedded UI for linux/amd64 arch. Required by our Console.
+  # Build CLI binary without embedded UI for linux. Required by our Console.
   - id: plural-cli-console
-    targets: [linux_amd64]
+    targets:
+      - linux_amd64
+      - linux_arm64
     ldflags:
       - -s
       - -w
