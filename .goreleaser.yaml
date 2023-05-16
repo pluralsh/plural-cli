@@ -44,6 +44,18 @@ builds:
         tags: [windows]
         env:
           - CGO_ENABLED=0
+  # Build CLI binary without embedded UI for linux/amd64 arch. Required by our Console.
+  - id: plural-cli-console
+    targets: [linux_amd64]
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
+    tags: [linux]
+    binary: plural
 
 archives:
   - name_template: >-
