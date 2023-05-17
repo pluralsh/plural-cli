@@ -5,6 +5,7 @@
 *.so
 *.o
 *.dylib
+__debug_bin
 
 # Test binary, built with `go test -c`
 *.test
@@ -16,8 +17,9 @@ plural*.o
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-# IDE dirs
+# IDE
 .idea/
+.vscode/
 
 dist/
 build/

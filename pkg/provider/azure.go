@@ -198,6 +198,16 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 		}
 	}
 
+	ctx, err := manifest.FetchContext()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if ctx.Configuration != nil && ctx.Configuration["bootstrap"] != nil {
+		man.Context["ClientId"] = ctx.Configuration["bootstrap"]["client_id"]
+		man.Context["ClientSecret"] = ctx.Configuration["bootstrap"]["client_secret"]
+	}
+
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil, clients}, nil
 }
 
