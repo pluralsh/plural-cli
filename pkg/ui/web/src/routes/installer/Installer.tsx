@@ -18,15 +18,11 @@ import styled from 'styled-components'
 
 import Loader from '../../components/loader/Loader'
 import { WailsContext } from '../../context/wails'
-import {
-  ListRepositoriesDocument,
-  ListRepositoriesQueryVariables,
-  Provider,
-  RootQueryType,
-} from '../../graphql/generated/graphql'
+import { ListRepositoriesDocument, ListRepositoriesQueryVariables, RootQueryType } from '../../graphql/generated/graphql'
 import { Routes } from '../routes'
 
 import { buildSteps, install, toDefaultSteps } from './helpers'
+import { InstallerContext } from './context'
 
 const FILTERED_APPS = ['bootstrap', 'ingress-nginx', 'postgres']
 const FORCED_APPS = {
@@ -46,6 +42,7 @@ function InstallerUnstyled({ ...props }): React.ReactElement {
   const [steps, setSteps] = useState<Array<WizardStepConfig>>()
   const [error, setError] = useState<ApolloError | undefined>()
   const [defaultSteps, setDefaultSteps] = useState<Array<WizardStepConfig>>([])
+  const [domains, setDomains] = useState<Record<string, string>>({})
 
   const { data: connection } = useQuery<Pick<RootQueryType, 'repositories'>, ListRepositoriesQueryVariables>(ListRepositoriesDocument, {
     variables: {
@@ -55,6 +52,7 @@ function InstallerUnstyled({ ...props }): React.ReactElement {
     fetchPolicy: 'network-only',
   })
 
+  const context = useMemo(() => ({ domains, setDomains }), [domains])
   const applications = useMemo(() => connection
     ?.repositories
     ?.edges
@@ -89,28 +87,30 @@ function InstallerUnstyled({ ...props }): React.ReactElement {
 
   return (
     <div {...props}>
-      <Wizard
-        onSelect={onSelect}
-        defaultSteps={defaultSteps}
-        dependencySteps={steps}
-        limit={5}
-        loading={stepsLoading}
-      >
-        {{
-          stepper: <WizardStepper />,
-          navigation: <WizardNavigation onInstall={onInstall} />,
-        }}
-      </Wizard>
+      <InstallerContext.Provider value={context}>
+        <Wizard
+          onSelect={onSelect}
+          defaultSteps={defaultSteps}
+          dependencySteps={steps}
+          limit={5}
+          loading={stepsLoading}
+        >
+          {{
+            stepper: <WizardStepper />,
+            navigation: <WizardNavigation onInstall={onInstall} />,
+          }}
+        </Wizard>
 
-      {error && (
-        <GraphQLToast
-          error={{ graphQLErrors: error.graphQLErrors ? [...error.graphQLErrors] : [{ message: error as any }] }}
-          header="Error"
-          onClose={() => setError(undefined)}
-          margin="medium"
-          closeTimeout={20000}
-        />
-      )}
+        {error && (
+          <GraphQLToast
+            error={{ graphQLErrors: error.graphQLErrors ? [...error.graphQLErrors] : [{ message: error as any }] }}
+            header="Error"
+            onClose={() => setError(undefined)}
+            margin="medium"
+            closeTimeout={20000}
+          />
+        )}
+      </InstallerContext.Provider>
     </div>
   )
 }
