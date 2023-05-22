@@ -203,7 +203,7 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 		fmt.Println(err)
 	}
 
-	if ctx.Configuration != nil && ctx.Configuration["bootstrap"] != nil {
+	if ctx != nil && ctx.Configuration != nil && ctx.Configuration["bootstrap"] != nil {
 		man.Context["ClientId"] = ctx.Configuration["bootstrap"]["client_id"]
 		man.Context["ClientSecret"] = ctx.Configuration["bootstrap"]["client_secret"]
 	}
