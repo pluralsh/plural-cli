@@ -108,8 +108,8 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 			Usage:     "Watches cluster creation progress",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "enable-cluster-creation",
-					Usage: "enable cluster creation",
+					Name:  "move-cluster",
+					Usage: "move cluster resources to destination cluster",
 				},
 			},
 			Action: latestVersion(initKubeconfig(requireArgs(p.handleWatchCluster, []string{"NAME"}))),
@@ -295,7 +295,7 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 
 func (p *Plural) handleWatchCluster(c *cli.Context) error {
 	name := c.Args().Get(0)
-	enableCreation := c.Bool("enable-cluster-creation")
+	moveCluster := c.Bool("move-cluster")
 	if err := p.InitKube(); err != nil {
 		return err
 	}
@@ -320,9 +320,9 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 			return false, err
 		}
 
-		if bootstrapCluster.Spec.SkipClusterCreation && enableCreation {
+		if !bootstrapCluster.Spec.MoveCluster && bootstrapCluster.Spec.SkipClusterCreation && moveCluster {
 			copy := bootstrapCluster.DeepCopy()
-			copy.Spec.SkipClusterCreation = false
+			copy.Spec.MoveCluster = true
 			if err := client.Update(context.Background(), copy); err != nil {
 				return false, err
 			}
@@ -377,7 +377,7 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 			capiOperatorComponentsReady = true
 			utils.Success("\n")
 			utils.Success("[3/5] CAPI operator components installed successfully \n")
-			if !enableCreation {
+			if bootstrapCluster.Spec.SkipClusterCreation && !moveCluster {
 				return true, nil
 			}
 			utils.Warn("Waiting for cluster ")
