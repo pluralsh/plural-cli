@@ -85,7 +85,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   sanitizedPath,
 			Target:  pathing.SanitizeFilepath(filepath.Join(path, "helm")),
 			Command: "plural",
-			Args:    []string{"wkspace", "helm", sanitizedPath},
+			Args:    []string{"wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"},
 			Sha:     "",
 			Retries: 2,
 		},

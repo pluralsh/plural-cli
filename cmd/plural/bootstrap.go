@@ -329,6 +329,15 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 			return false, nil
 		}
 
+		if !bootstrapCluster.Spec.BootstrapMode {
+			copy := bootstrapCluster.DeepCopy()
+			copy.Spec.BootstrapMode = true
+			if err := client.Update(context.Background(), copy); err != nil {
+				return false, err
+			}
+			return false, nil
+		}
+
 		if bootstrapCluster.Status.ProviderStatus == nil {
 			return false, nil
 		}

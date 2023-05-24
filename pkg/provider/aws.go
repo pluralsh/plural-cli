@@ -134,10 +134,15 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	if err != nil {
 		return nil, err
 	}
+	accountId, err := GetAwsAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
 	providerCtx := map[string]interface{}{}
 	providerCtx["AccessKey"] = cred.AccessKeyID
 	providerCtx["SecretAccessKey"] = cred.SecretAccessKey
 	providerCtx["SessionToken"] = cred.SessionToken
+	providerCtx["AWSAccountID"] = accountId
 	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
 }
 
