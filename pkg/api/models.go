@@ -348,6 +348,12 @@ type UpgradeInfo struct {
 	Installation *Installation
 }
 
+type ChatMessage struct {
+	Name    string
+	Content string
+	Role    string
+}
+
 const CrdFragment = `
 	fragment CrdFragment on Crd {
 		id
