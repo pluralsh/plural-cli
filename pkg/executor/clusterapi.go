@@ -53,7 +53,7 @@ func clusterAPISteps(path string) []*Step {
 			Command: "plural",
 			Args:    []string{"--bootstrap", "wkspace", "helm", sanitizedPath},
 			Sha:     "",
-			Retries: 2,
+			Retries: 5,
 		},
 		{
 			Name:    "progress cluster",
@@ -87,7 +87,7 @@ func clusterAPISteps(path string) []*Step {
 			Command: "plural",
 			Args:    []string{"wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"},
 			Sha:     "",
-			Retries: 2,
+			Retries: 5,
 		},
 		{
 			Name:    "terraform-init",
