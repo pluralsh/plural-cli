@@ -108,8 +108,8 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 			Usage:     "Watches cluster creation progress",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "move-cluster",
-					Usage: "move cluster resources to destination cluster",
+					Name:  "wait-for-capi",
+					Usage: "wait for CAPI components",
 				},
 			},
 			Action: latestVersion(initKubeconfig(requireArgs(p.handleWatchCluster, []string{"NAME"}))),
@@ -295,7 +295,7 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 
 func (p *Plural) handleWatchCluster(c *cli.Context) error {
 	name := c.Args().Get(0)
-	moveCluster := c.Bool("move-cluster")
+	waitForCapi := c.Bool("wait-for-capi")
 	if err := p.InitKube(); err != nil {
 		return err
 	}
@@ -318,24 +318,6 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 
 		if err := client.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: name, Namespace: "bootstrap"}, &bootstrapCluster); err != nil {
 			return false, err
-		}
-
-		if !bootstrapCluster.Spec.MoveCluster && bootstrapCluster.Spec.SkipClusterCreation && moveCluster {
-			copy := bootstrapCluster.DeepCopy()
-			copy.Spec.MoveCluster = true
-			if err := client.Update(context.Background(), copy); err != nil {
-				return false, err
-			}
-			return false, nil
-		}
-
-		if !bootstrapCluster.Spec.BootstrapMode {
-			copy := bootstrapCluster.DeepCopy()
-			copy.Spec.BootstrapMode = true
-			if err := client.Update(context.Background(), copy); err != nil {
-				return false, err
-			}
-			return false, nil
 		}
 
 		if bootstrapCluster.Status.ProviderStatus == nil {
@@ -386,7 +368,7 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 			capiOperatorComponentsReady = true
 			utils.Success("\n")
 			utils.Success("[3/5] CAPI operator components installed successfully \n")
-			if bootstrapCluster.Spec.SkipClusterCreation && !moveCluster {
+			if bootstrapCluster.Spec.SkipClusterCreation && waitForCapi {
 				return true, nil
 			}
 			utils.Warn("Waiting for cluster ")

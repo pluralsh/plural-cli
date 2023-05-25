@@ -71,7 +71,7 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	return
 }
 
-func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
+func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs, setArgs []string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
@@ -82,6 +82,11 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 	}
 
 	for _, arg := range skipArgs {
+		if err := strvals.ParseInto(arg, defaultVals); err != nil {
+			return err
+		}
+	}
+	for _, arg := range setArgs {
 		if err := strvals.ParseInto(arg, defaultVals); err != nil {
 			return err
 		}

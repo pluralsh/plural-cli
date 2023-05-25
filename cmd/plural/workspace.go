@@ -29,6 +29,10 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Name:  "skip",
 					Usage: "helm sub-chart to skip. can be passed multiple times",
 				},
+				cli.StringSliceFlag{
+					Name:  "set",
+					Usage: "helm value to set. can be passed multiple times",
+				},
 				cli.BoolFlag{
 					Name:  "wait",
 					Usage: "have helm wait until all pods are in ready state",
@@ -97,8 +101,14 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 			skipArgs = append(skipArgs, skipString)
 		}
 	}
+	setArgs := []string{}
+	if c.IsSet("set") {
+		for _, setArg := range c.StringSlice("set") {
+			setArgs = append(setArgs, setArg)
+		}
+	}
 
-	return minimal.BounceHelm(c.IsSet("wait"), skipArgs...)
+	return minimal.BounceHelm(c.IsSet("wait"), skipArgs, setArgs)
 }
 
 func (p *Plural) diffHelm(c *cli.Context) error {
