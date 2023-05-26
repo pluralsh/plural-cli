@@ -23,6 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.17
+	github.com/briandowns/spinner v1.23.0
 	github.com/buger/goterm v1.0.4
 	github.com/chartmuseum/helm-push v0.10.3
 	github.com/coreos/go-semver v0.3.0
@@ -44,7 +45,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/gqlclient v1.3.16
+	github.com/pluralsh/gqlclient v1.3.17
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
 	github.com/rodaine/hclencoder v0.0.1
