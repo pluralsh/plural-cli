@@ -52,12 +52,26 @@ function InstallerUnstyled({ ...props }): React.ReactElement {
     fetchPolicy: 'network-only',
   })
 
+  const { data: installed } = useQuery<Pick<RootQueryType, 'repositories'>, ListRepositoriesQueryVariables>(ListRepositoriesDocument, {
+    variables: {
+      installed: true,
+      provider,
+    },
+    fetchPolicy: 'network-only',
+  })
+
   const context = useMemo(() => ({ domains, setDomains }), [domains])
+
   const applications = useMemo(() => connection
     ?.repositories
     ?.edges
     ?.map(repo => repo!.node)
     .filter(app => ((!app?.private ?? true)) && !FILTERED_APPS.includes(app!.name)), [connection?.repositories?.edges])
+
+  const installedApplications = useMemo(() => installed
+    ?.repositories
+    ?.edges
+    ?.map(repo => repo!.node) ?? [], [installed])
 
   const onInstall = useCallback((payload: Array<WizardStepConfig>) => {
     setStepsLoading(true)
@@ -70,14 +84,19 @@ function InstallerUnstyled({ ...props }): React.ReactElement {
 
   const onSelect = useCallback((selectedApplications: Array<WizardStepConfig>) => {
     const build = async () => {
-      const steps = await buildSteps(client, provider!, selectedApplications)
+      const steps = await buildSteps(
+        client,
+        provider!,
+        selectedApplications,
+        new Set<string>(installedApplications.map(repository => repository!.name)),
+      )
 
       setSteps(steps)
     }
 
     setStepsLoading(true)
     build().finally(() => setStepsLoading(false))
-  }, [client, provider])
+  }, [client, installedApplications, provider])
 
   useEffect(() => setDefaultSteps(toDefaultSteps(applications, provider!, { ...FORCED_APPS })), [applications?.length, provider])
 
