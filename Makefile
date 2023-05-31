@@ -159,6 +159,6 @@ lint:
 
 .PHONY: delete-tag
 delete-tag:
-	@read -p "Version: " tag: \
-	git tag -d $$tag
+	@read -p "Version: " tag; \
+	git tag -d $$tag; \
 	git push origin :$$tag
