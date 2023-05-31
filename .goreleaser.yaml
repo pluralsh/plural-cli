@@ -46,9 +46,7 @@ builds:
           - CGO_ENABLED=0
   # Build CLI binary without embedded UI for linux. Required by our Console.
   - id: plural-cli-console
-    targets:
-      - linux_amd64
-      - linux_arm64
+    targets: [linux_amd64]
     ldflags:
       - -s
       - -w
@@ -60,11 +58,21 @@ builds:
     binary: plural
 
 archives:
-  - name_template: >-
+  - id: plural-cli
+    builds: [plural-cli]
+    name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
+  - id: plural-cli-console
+    builds: [plural-cli-console]
+    name_template: >-
+      {{ .ProjectName }}_console_{{ .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:
