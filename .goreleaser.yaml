@@ -96,6 +96,7 @@ release:
 
 brews:
   - name: plural
+    ids: [plural-cli]
     tap:
       owner: pluralsh
       name: homebrew-plural
