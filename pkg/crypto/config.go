@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -33,35 +32,37 @@ func ReadConfig() (conf *Config, err error) {
 	return
 }
 
-func Build() (Provider, error) {
+func Build() (prov Provider, err error) {
 	key, err := Materialize()
 	if err != nil {
-		return nil, err
+		return
 	}
 	keyID, err := GetKeyID()
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	if err := validateKey(keyID, key); err != nil {
-		return nil, err
-	}
-
+	prov, err = fallbackProvider(key)
 	if utils.Exists(configPath()) {
-		conf, err := ReadConfig()
+		var conf *Config
+		conf, err = ReadConfig()
 		if err != nil {
-			return fallbackProvider(key)
+			return
 		}
 
 		switch conf.Type {
 		case KEY:
-			return buildKeyProvider(conf, key)
+			prov, err = buildKeyProvider(conf, key)
 		case AGE:
-			return BuildAgeProvider()
+			prov, err = BuildAgeProvider()
 		}
 	}
 
-	return fallbackProvider(key)
+	if prov.ID() != keyID {
+		err = errFingerprint
+	}
+
+	return
 }
 
 func fallbackProvider(key *AESKey) (*KeyProvider, error) {
@@ -70,7 +71,7 @@ func fallbackProvider(key *AESKey) (*KeyProvider, error) {
 
 func validateKey(keyID string, key *AESKey) error {
 	if keyID != "" && key.ID() != keyID {
-		return fmt.Errorf("the key fingerprint doesn't match")
+		return errFingerprint
 	}
 	return nil
 }

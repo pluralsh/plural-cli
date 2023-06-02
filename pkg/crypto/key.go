@@ -172,7 +172,6 @@ func GetKeyID() (string, error) {
 		return "", err
 	}
 	return k.KeyID, nil
-
 }
 
 func CreateKeyFingerprintFile() error {
