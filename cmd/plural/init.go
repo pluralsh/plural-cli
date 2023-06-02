@@ -166,6 +166,11 @@ func handleClone(c *cli.Context) error {
 
 	repo := git.RepoName(url)
 	_ = os.Chdir(repo)
+
+	if err := crypto.CreateKeyFingerprintFile(); err != nil {
+		return err
+	}
+
 	if err := cryptoInit(c); err != nil {
 		return err
 	}
