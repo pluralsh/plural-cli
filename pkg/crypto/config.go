@@ -68,10 +68,3 @@ func Build() (prov Provider, err error) {
 func fallbackProvider(key *AESKey) (*KeyProvider, error) {
 	return &KeyProvider{key: key.Key}, nil
 }
-
-func validateKey(keyID string, key *AESKey) error {
-	if keyID != "" && key.ID() != keyID {
-		return errFingerprint
-	}
-	return nil
-}
