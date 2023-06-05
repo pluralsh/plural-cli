@@ -25,8 +25,12 @@ jobs:
       - run: hack/e2e/setup-plural.sh
         env:
           CLI_E2E_CONF: ${{ secrets.CLI_E2E_CONF }}
+          CLI_E2E_IDENTITY_FILE: ${{ secrets.CLI_E2E_IDENTITY_FILE }}
+          CLI_E2E_KEY_FILE: ${{ secrets.CLI_E2E_KEY_FILE }}
           CLI_E2E_PUBLIC_KEY: ${{ secrets.CLI_E2E_PUBLIC_KEY }}
           CLI_E2E_PRIVATE_KEY: ${{ secrets.CLI_E2E_PRIVATE_KEY }}
+          CLI_E2E_SHARING_PRIVATE_KEY: ${{ secrets.CLI_E2E_SHARING_PRIVATE_KEY }}
+          CLI_E2E_SHARING_PUBLIC_KEY: ${{ secrets.CLI_E2E_SHARING_PUBLIC_KEY }}
       - run: go test -v -race ./pkg/test/e2e/... -tags="e2e"
       - run: |
           cd $HOME/test
