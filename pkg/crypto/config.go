@@ -43,11 +43,14 @@ func Build() (prov Provider, err error) {
 	}
 
 	prov, err = fallbackProvider(key)
+	if err != nil {
+		return
+	}
 	if utils.Exists(configPath()) {
 		var conf *Config
 		conf, err = ReadConfig()
 		if err != nil {
-			return
+			return fallbackProvider(key)
 		}
 
 		switch conf.Type {
@@ -55,6 +58,9 @@ func Build() (prov Provider, err error) {
 			prov, err = buildKeyProvider(conf, key)
 		case AGE:
 			prov, err = BuildAgeProvider()
+		}
+		if err != nil {
+			return
 		}
 	}
 
