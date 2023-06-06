@@ -9,6 +9,7 @@ source hack/lib.sh
 
 PLURALHOME="$HOME"/.plural
 TESTDIR="$HOME"/test
+SHAREDIR="$HOME"/share
 
 mkdir -p "$PLURALHOME"
 mkdir -p "$HOME"/.ssh
@@ -18,9 +19,24 @@ cat << EOF > "$PLURALHOME"/config.yml
 $CLI_E2E_CONF
 EOF
 
+echodate "Creating identity ..."
+cat << EOF > "$PLURALHOME"/identity
+$CLI_E2E_IDENTITY_FILE
+EOF
+
+echodate "Creating key ..."
+cat << EOF > "$PLURALHOME"/key
+$CLI_E2E_KEY_FILE
+EOF
+
 echodate "Creating private ssh key ..."
 cat << EOF > "$HOME"/.ssh/id_rsa
 $CLI_E2E_PRIVATE_KEY
+EOF
+
+echodate "Creating private sharing ssh key ..."
+cat << EOF > "$HOME"/.ssh/id_sharing
+$CLI_E2E_SHARING_PRIVATE_KEY
 EOF
 
 echodate "Creating public ssh key ..."
@@ -28,9 +44,16 @@ cat << EOF > "$HOME"/.ssh/id_rsa.pub
 $CLI_E2E_PUBLIC_KEY
 EOF
 
+echodate "Creating public sharing ssh key ..."
+cat << EOF > "$HOME"/.ssh/id_sharing.pub
+$CLI_E2E_SHARING_PUBLIC_KEY
+EOF
+
 chmod 600 ~/.ssh/id_rsa
+chmod 600 ~/.ssh/id_sharing
 
 git -c core.sshCommand="ssh -i ~/.ssh/id_rsa" clone git@github.com:pluralsh/cli-e2e-tests.git "$TESTDIR"
+git -c core.sshCommand="ssh -i ~/.ssh/id_sharing" clone git@github.com:pluralsh/e2e-sharing.git "$SHAREDIR"
 git config --global user.email cli-e2e@pluraldev.sh
 git config --global user.name cli-e2e
 
