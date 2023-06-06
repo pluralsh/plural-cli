@@ -58,7 +58,7 @@ func Build() (prov Provider, err error) {
 		}
 	}
 
-	if prov.ID() != keyID {
+	if keyID != "" && prov.ID() != keyID {
 		err = errFingerprint
 	}
 

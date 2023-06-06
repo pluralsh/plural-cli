@@ -334,12 +334,16 @@ func handleUnlock(c *cli.Context) error {
 		return err
 	}
 
-	gitIndex, _ := filepath.Abs(filepath.Join(repoRoot, ".git", "index"))
-	dump, err := os.CreateTemp("", "index.bak")
+	// fixes Invalid cross-device link when using os.Rename
+	gitIndexDir, err := filepath.Abs(filepath.Join(repoRoot, ".git"))
 	if err != nil {
 		return err
 	}
-
+	gitIndex := filepath.Join(gitIndexDir, "index")
+	dump, err := os.CreateTemp(gitIndexDir, "index.bak")
+	if err != nil {
+		return err
+	}
 	if err := os.Rename(gitIndex, dump.Name()); err != nil {
 		return err
 	}
