@@ -227,6 +227,10 @@ func (equinix *EQUINIXProvider) KubeConfig() error {
 	return os.WriteFile(pathing.SanitizeFilepath(filepath.Join(usr.HomeDir, ".kube/config")), output, 0644)
 }
 
+func (equinix *EQUINIXProvider) KubeContext() string {
+	return equinix.Cluster() // TODO: this might not be correct so needs to be tested
+}
+
 func (equinix *EQUINIXProvider) Name() string {
 	return EQUINIX
 }

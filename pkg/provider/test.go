@@ -38,6 +38,10 @@ func (t TestProvider) KubeConfig() error {
 	return nil
 }
 
+func (t TestProvider) KubeContext() string {
+	return t.Clust
+}
+
 func (t TestProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	return "test", nil
 }

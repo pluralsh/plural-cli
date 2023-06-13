@@ -6,6 +6,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
@@ -17,6 +18,10 @@ func defaultDestroy(path string) []*executor.Step {
 	pm, _ := manifest.FetchProject()
 	sanitizedPath := pathing.SanitizeFilepath(path)
 	homedir, _ := os.UserHomeDir()
+
+	prov, _ := provider.GetProvider()
+
+	clusterKubeContext := prov.KubeContext()
 
 	// stateRemoveModuleArg := ""
 	// switch pm.Provider {
@@ -78,7 +83,7 @@ func defaultDestroy(path string) []*executor.Step {
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pluralFile(path, "ONCE"),
 			Command: "clusterctl", // TODO: we need to get the current context before we run these commands
-			Args:    []string{"move", "-n", "bootstrap", "--kubeconfig-context", "arn:aws:eks:eu-central-1:312272277431:cluster/david-capi", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config")), "--to-kubeconfig-context", "kind-bootstrap"},
+			Args:    []string{"move", "-n", "bootstrap", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config")), "--to-kubeconfig-context", "kind-bootstrap"},
 			Sha:     "",
 		},
 		// {

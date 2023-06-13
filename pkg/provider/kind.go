@@ -105,6 +105,10 @@ func (kind *KINDProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (kind *KINDProvider) KubeContext() string {
+	return fmt.Sprintf("kind-%s", kind.Cluster())
+}
+
 func (kind *KINDProvider) Name() string {
 	return KIND
 }

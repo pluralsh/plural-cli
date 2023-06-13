@@ -190,6 +190,10 @@ func (aws *AWSProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (aws *AWSProvider) KubeContext() string {
+	return fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", aws.Region(), aws.project, aws.Cluster())
+}
+
 func (p *AWSProvider) mkBucket(name string) error {
 	client := p.storageClient
 	_, err := client.HeadBucket(*p.goContext, &s3.HeadBucketInput{Bucket: &name})

@@ -248,6 +248,10 @@ func (gcp *GCPProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (gcp *GCPProvider) KubeContext() string {
+	return fmt.Sprintf("gke_%s_%s_%s", gcp.Proj, gcp.Reg, gcp.Clust)
+}
+
 func (gcp *GCPProvider) Flush() error {
 	if gcp.writer == nil {
 		return nil

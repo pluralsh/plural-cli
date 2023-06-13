@@ -286,6 +286,10 @@ func (azure *AzureProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (azure *AzureProvider) KubeContext() string {
+	return fmt.Sprintf("%s", azure.cluster)
+}
+
 func (az *AzureProvider) Name() string {
 	return AZURE
 }
