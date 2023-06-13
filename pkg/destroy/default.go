@@ -11,6 +11,7 @@ import (
 
 // TODO: where are normal destroys handled?
 // TODO: the destroy for CAPI also needs to destroy the terraform. The question is when to do that?
+// TODO: after destroy we need to nullify the deploy.hcl so on a new build it will go through bootstrapping again
 
 func defaultDestroy(path string) []*executor.Step {
 	pm, _ := manifest.FetchProject()
