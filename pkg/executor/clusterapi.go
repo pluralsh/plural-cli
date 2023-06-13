@@ -10,9 +10,32 @@ import (
 
 func clusterAPISteps(path string) []*Step {
 	pm, _ := manifest.FetchProject()
+	// app := pathing.SanitizeFilepath(filepath.Base(path))
 	sanitizedPath := pathing.SanitizeFilepath(path)
 
 	homedir, _ := os.UserHomeDir()
+
+	providerBootstrapFlags := []string{}
+
+	switch pm.Provider {
+	case "aws":
+		providerBootstrapFlags = []string{
+			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
+			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",
+			"--set", "bootstrap.aws-load-balancer-controller.enabled=false",
+			"--set", "bootstrap.cluster-autoscaler.enabled=false",
+			"--set", "bootstrap.metrics-server.enabled=false",
+			"--set", "bootstrap.snapshot-controller.enabled=false",
+			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
+			"--set", "bootstrap.tigera-operator.enabled=false",
+		}
+	case "azure":
+		providerBootstrapFlags = []string{}
+	case "gcp":
+		providerBootstrapFlags = []string{}
+	case "google":
+		providerBootstrapFlags = []string{}
+	}
 
 	steps := []*Step{
 		{
@@ -30,12 +53,21 @@ func clusterAPISteps(path string) []*Step {
 			Args:    []string{"--bootstrap", "wkspace", "crds", sanitizedPath},
 			Sha:     "",
 		},
+		// {
+		// 	Name:    "install prerequisites",
+		// 	Wkdir:   sanitizedPath,
+		// 	Target:  pluralFile(path, "ONCE"),
+		// 	Command: "plural",
+		// 	Args:    []string{"--bootstrap", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-operator", "--skip", "cluster-api-cluster", "--set", "cluster-api-operator.secret.bootstrap=true"},
+		// 	Sha:     "",
+		// 	Retries: 2,
+		// },
 		{
-			Name:    "install bootstrap bounce",
+			Name:    "install capi operators",
 			Wkdir:   sanitizedPath,
 			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
-			Args:    []string{"--bootstrap", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster", "--set", "cluster-api-operator.secret.bootstrap=true"},
+			Args:    append([]string{"--bootstrap", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			Sha:     "",
 			Retries: 2,
 		},
@@ -54,7 +86,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   sanitizedPath,
 			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
-			Args:    []string{"--bootstrap", "wkspace", "helm", sanitizedPath, "--set", "cluster-api-operator.secret.bootstrap=true"},
+			Args:    append([]string{"--bootstrap", "wkspace", "helm", sanitizedPath}, providerBootstrapFlags...),
 			Sha:     "",
 			Retries: 5,
 		},
@@ -85,7 +117,7 @@ func clusterAPISteps(path string) []*Step {
 		// 	Verbose: true,
 		// },
 		{
-			Name:    "kube-init",
+			Name:    "kube-init-bootstrap",
 			Wkdir:   sanitizedPath,
 			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
@@ -101,7 +133,7 @@ func clusterAPISteps(path string) []*Step {
 			Sha:     "",
 		},
 		{
-			Name:    "crds",
+			Name:    "crds-bootstrap",
 			Wkdir:   sanitizedPath,
 			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
@@ -113,7 +145,7 @@ func clusterAPISteps(path string) []*Step {
 			Wkdir:   sanitizedPath,
 			Target:  pluralFile(path, "ONCE"),
 			Command: "plural",
-			Args:    []string{"wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster", "--set", "cluster-api-operator.secret.bootstrap=true"},
+			Args:    append([]string{"wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			Sha:     "",
 			Retries: 5,
 		},
@@ -125,29 +157,12 @@ func clusterAPISteps(path string) []*Step {
 			Args:    []string{"move", "-n", "bootstrap", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
 			Sha:     "",
 		},
-		{
-			Name:    "delete bootstrap cluster",
-			Target:  pluralFile(path, "ONCE"),
-			Command: "plural",
-			Args:    []string{"--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
-			Sha:     "",
-		},
-		// {
-		// 	Name:    "terraform-init",
-		// 	Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-		// 	Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-		// 	Command: "terraform",
-		// 	Args:    []string{"init", "-upgrade"},
+		// { // TODO: re-anable this once we've debugged the move command so it works properly to avoid dangling resources
+		// 	Name:    "delete bootstrap cluster",
+		// 	Target:  pluralFile(path, "ONCE"),
+		// 	Command: "plural",
+		// 	Args:    []string{"--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 		// 	Sha:     "",
-		// },
-		// {
-		// 	Name:    "terraform-apply",
-		// 	Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-		// 	Target:  pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
-		// 	Command: "terraform",
-		// 	Args:    []string{"apply", "-auto-approve"},
-		// 	Sha:     "",
-		// 	Retries: 2,
 		// },
 	}
 
