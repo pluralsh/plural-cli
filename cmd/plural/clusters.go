@@ -3,10 +3,16 @@ package plural
 import (
 	"fmt"
 
+	tm "github.com/buger/goterm"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/cluster"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/machinepool"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -47,7 +53,101 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Usage:  "promote pending upgrades to your cluster",
 			Action: latestVersion(p.promoteCluster),
 		},
+		{
+			Name:      "watch",
+			Usage:     "watches a cluster until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWatch, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
+		{
+			Name:      "wait",
+			Usage:     "waits on a cluster until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
+		{
+			Name:      "mpwatch",
+			Usage:     "watches a machine pool until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWatch, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
+		{
+			Name:      "mpwait",
+			Usage:     "waits on a machine pool until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
 	}
+}
+
+func handleClusterWatch(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	timeout := func() error { return nil }
+	return cluster.Waiter(kubeConf, namespace, name, func(clust *clusterapi.Cluster) (bool, error) {
+		tm.MoveCursor(1, 1)
+		cluster.Print(kube.GetClient(), clust)
+		cluster.Flush()
+		return false, nil
+	}, timeout)
+}
+
+func handleClusterWait(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+
+	return cluster.Wait(kubeConf, namespace, name)
+}
+
+func handleMPWatch(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	timeout := func() error { return nil }
+	return machinepool.Waiter(kubeConf, namespace, name, func(mp *clusterapiExp.MachinePool) (bool, error) {
+		tm.MoveCursor(1, 1)
+		machinepool.Print(kube.GetClient(), mp)
+		machinepool.Flush()
+		return false, nil
+	}, timeout)
+}
+
+func handleMPWait(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+
+	return machinepool.Wait(kubeConf, namespace, name)
 }
 
 func (p *Plural) listClusters(c *cli.Context) error {
