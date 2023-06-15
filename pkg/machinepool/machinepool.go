@@ -73,8 +73,8 @@ func (c *machinepoolClient) Watch(ctx context.Context, opts metav1.ListOptions) 
 		Watch(ctx)
 }
 
-func WatchNamespace(ctx context.Context, client MachinePoolInterface) (watch.Interface, error) {
-	mps, err := client.List(ctx, metav1.ListOptions{})
+func WatchNamespace(ctx context.Context, client MachinePoolInterface, listOps metav1.ListOptions) (watch.Interface, error) {
+	mps, err := client.List(ctx, listOps)
 	if err != nil {
 		return nil, err
 	}

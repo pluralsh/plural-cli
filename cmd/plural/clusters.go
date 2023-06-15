@@ -147,7 +147,7 @@ func handleMPWait(c *cli.Context) error {
 		return err
 	}
 
-	return machinepool.Wait(kubeConf, namespace, name)
+	return machinepool.WaitAll(kubeConf, namespace, name)
 }
 
 func (p *Plural) listClusters(c *cli.Context) error {
