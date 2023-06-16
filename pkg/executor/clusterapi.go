@@ -153,8 +153,8 @@ func clusterAPISteps(path string) []*Step {
 			Name:    "clusterctl-move",
 			Wkdir:   pathing.SanitizeFilepath(filepath.Join(path, "terraform")),
 			Target:  pluralFile(path, "ONCE"),
-			Command: "clusterctl",
-			Args:    []string{"move", "-n", "bootstrap", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
+			Command: "plural",
+			Args:    []string{"bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
 			Sha:     "",
 		},
 		// { // TODO: re-anable this once we've debugged the move command so it works properly to avoid dangling resources

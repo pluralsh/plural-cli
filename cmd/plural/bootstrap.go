@@ -3,8 +3,6 @@ package plural
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,7 +31,6 @@ import (
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 var runtimescheme = runtime.NewScheme()
@@ -115,8 +112,26 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 			Action: latestVersion(initKubeconfig(requireArgs(p.handleWatchCluster, []string{"NAME"}))),
 		},
 		{
-			Name:   "move",
-			Usage:  "Move cluster API object to bootstrap cluster",
+			Name:  "move",
+			Usage: "Move cluster API objects",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "kubeconfig",
+					Usage: "path to the kubeconfig file for the source management cluster. If unspecified, default discovery rules apply.",
+				},
+				cli.StringFlag{
+					Name:  "kubeconfig-context",
+					Usage: "context to be used within the kubeconfig file for the source management cluster. If empty, current context will be used.",
+				},
+				cli.StringFlag{
+					Name:  "to-kubeconfig",
+					Usage: "path to the kubeconfig file to use for the destination management cluster.",
+				},
+				cli.StringFlag{
+					Name:  "to-kubeconfig-context",
+					Usage: "Context to be used within the kubeconfig file for the destination management cluster. If empty, current context will be used.",
+				},
+			},
 			Action: latestVersion(p.handleMoveCluster),
 		},
 		{
@@ -206,82 +221,25 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 	if !found {
 		return fmt.Errorf("You're not within an installation repo")
 	}
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return err
-	}
-	if err := prov.KubeConfig(); err != nil {
-		return err
-	}
-	config, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	clientFrom, err := genClientFromConfig(config)
-	if err != nil {
-		return err
-	}
-
-	crdList := &apiextensionsv1.CustomResourceDefinitionList{}
-	if err := getCRDList(context.Background(), clientFrom, crdList); err != nil {
-		return err
-	}
-	homedir, _ := os.UserHomeDir()
-	src := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
-	fileFrom, err := os.CreateTemp("", "from.config")
-	if err != nil {
-		return err
-	}
-	if err := utils.CopyFile(src, fileFrom.Name()); err != nil {
-		return err
-	}
-	prov = &provider.KINDProvider{Clust: "bootstrap"}
-	if err := prov.KubeConfig(); err != nil {
-		return err
-	}
-	fileTo, err := os.CreateTemp("", "to.config")
-	if err != nil {
-		return err
-	}
-	if err := utils.CopyFile(src, fileTo.Name()); err != nil {
-		return err
-	}
-
-	config, err = kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	clientTo, err := genClientFromConfig(config)
-	if err != nil {
-		return err
-	}
-	for _, crd := range crdList.Items {
-		if crd.Spec.Group != "operator.cluster.x-k8s.io" {
-			copy := crd.DeepCopy()
-			copy.ObjectMeta.ResourceVersion = ""
-			if err := clientTo.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: copy.Name}, copy); err != nil {
-				if !apierrors.IsNotFound(err) {
-					return fmt.Errorf("failed to get Object(%T): %w", copy, err)
-				}
-				if err := clientTo.Create(context.Background(), copy); err != nil {
-					return err
-				}
-			}
-		}
-	}
 
 	client, err := apiclient.New("")
 	if err != nil {
 		return err
 	}
 
+	kubeconfig := c.String("kubeconfig")
+	kubeconfigContext := c.String("kubeconfig-context")
+	toKubeconfig := c.String("to-kubeconfig")
+	toKubeconfigContext := c.String("to-kubeconfig-context")
+
 	options := apiclient.MoveOptions{
 		FromKubeconfig: apiclient.Kubeconfig{
-			Path: fileFrom.Name(),
+			Path:    kubeconfig,
+			Context: kubeconfigContext,
 		},
 		ToKubeconfig: apiclient.Kubeconfig{
-			Path:    fileTo.Name(),
-			Context: "kind-bootstrap",
+			Path:    toKubeconfig,
+			Context: toKubeconfigContext,
 		},
 		Namespace: "bootstrap",
 		DryRun:    false,
