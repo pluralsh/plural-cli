@@ -1,6 +1,8 @@
 package plural
 
 import (
+	"path/filepath"
+
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/urfave/cli"
 )
@@ -35,6 +37,10 @@ func linkCommands() []cli.Command {
 func handleLink(c *cli.Context) error {
 	tool, repo := c.Args().Get(0), c.Args().Get(1)
 	name, path := c.String("name"), c.String("path")
+
+	if name == "" {
+		name = filepath.Base(path)
+	}
 
 	manPath, err := manifest.ManifestPath(repo)
 	if err != nil {
