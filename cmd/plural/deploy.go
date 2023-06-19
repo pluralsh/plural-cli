@@ -88,7 +88,6 @@ func diffed(_ *cli.Context) error {
 func (p *Plural) build(c *cli.Context) error {
 	p.InitPluralClient()
 	force := c.Bool("force")
-	clusterAPI := c.Bool("cluster-api")
 	if err := CheckGitCrypt(c); err != nil {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
@@ -101,7 +100,7 @@ func (p *Plural) build(c *cli.Context) error {
 			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
 		}
 
-		return p.doBuild(installation, force, clusterAPI)
+		return p.doBuild(installation, force)
 	}
 
 	installations, err := p.getSortedInstallations("")
@@ -110,14 +109,14 @@ func (p *Plural) build(c *cli.Context) error {
 	}
 
 	for _, installation := range installations {
-		if err := p.doBuild(installation, force, clusterAPI); err != nil {
+		if err := p.doBuild(installation, force); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *Plural) doBuild(installation *api.Installation, force, clusterAPI bool) error {
+func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)
 
@@ -132,7 +131,7 @@ func (p *Plural) doBuild(installation *api.Installation, force, clusterAPI bool)
 		return err
 	}
 
-	if err := workspace.Prepare(clusterAPI); err != nil {
+	if err := workspace.Prepare(); err != nil {
 		return err
 	}
 
@@ -196,14 +195,21 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
-		if err != nil {
-			return err
-		}
+		if !c.Bool("cluster-api") {
+			execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
+			if err != nil {
+				return err
+			}
 
-		if err := execution.Execute("deploying", verbose); err != nil {
-			utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
-			return err
+			if err := execution.Execute("deploying", verbose); err != nil {
+				utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
+				return err
+			}
+		} else if repo == "bootstrap" {
+			err := ExecuteClusterAPI(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), repo)
+			if err != nil {
+				return err
+			}
 		}
 		fmt.Printf("\n")
 

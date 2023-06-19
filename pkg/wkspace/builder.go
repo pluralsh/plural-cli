@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pluralsh/plural/pkg/destroy"
-
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -116,7 +114,7 @@ func (wk *Workspace) ToMinimal() *MinimalWorkspace {
 	}
 }
 
-func (wk *Workspace) Prepare(clusterAPI bool) error {
+func (wk *Workspace) Prepare() error {
 	repo := wk.Installation.Repository
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -138,7 +136,7 @@ func (wk *Workspace) Prepare(clusterAPI bool) error {
 		return err
 	}
 
-	if err := wk.buildExecution(repoRoot, clusterAPI); err != nil {
+	if err := wk.buildExecution(repoRoot); err != nil {
 		return err
 	}
 
@@ -146,11 +144,6 @@ func (wk *Workspace) Prepare(clusterAPI bool) error {
 		return err
 	}
 
-	if clusterAPI {
-		if err := wk.buildDestroy(repoRoot); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -169,7 +162,7 @@ func (wk *Workspace) requiresWait() bool {
 	return false
 }
 
-func (wk *Workspace) buildExecution(repoRoot string, clusterAPI bool) error {
+func (wk *Workspace) buildExecution(repoRoot string) error {
 	name := wk.Installation.Repository.Name
 	wkspaceRoot := filepath.Join(repoRoot, name)
 
@@ -193,7 +186,7 @@ func (wk *Workspace) buildExecution(repoRoot string, clusterAPI bool) error {
 
 	exec, _ := executor.GetExecution(pathing.SanitizeFilepath(wkspaceRoot), "deploy")
 
-	return executor.DefaultExecution(name, exec, clusterAPI).Flush(repoRoot)
+	return executor.DefaultExecution(name, exec).Flush(repoRoot)
 }
 
 func (wk *Workspace) buildDiff(repoRoot string) error {
@@ -203,15 +196,6 @@ func (wk *Workspace) buildDiff(repoRoot string) error {
 	d, _ := diff.GetDiff(pathing.SanitizeFilepath(wkspaceRoot), "diff")
 
 	return diff.DefaultDiff(name, d).Flush(repoRoot)
-}
-
-func (wk *Workspace) buildDestroy(repoRoot string) error {
-	name := wk.Installation.Repository.Name
-	wkspaceRoot := pathing.SanitizeFilepath(filepath.Join(repoRoot, name))
-
-	d, _ := destroy.GetDestroy(pathing.SanitizeFilepath(wkspaceRoot), "destroy")
-
-	return destroy.DefaultDestroy(name, d).Flush(repoRoot)
 }
 
 func DiffedRepos() ([]string, error) {

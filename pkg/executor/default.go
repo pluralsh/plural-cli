@@ -39,7 +39,7 @@ func defaultSteps(path string) []*Step {
 		{
 			Name:    "kube-init",
 			Wkdir:   sanitizedPath,
-			Target:  pluralFile(path, "NONCE"),
+			Target:  path,
 			Command: "plural",
 			Args:    []string{"wkspace", "kube-init"},
 			Sha:     "",

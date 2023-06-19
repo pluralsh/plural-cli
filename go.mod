@@ -28,6 +28,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/databus23/helm-diff/v3 v3.6.0
 	github.com/fatih/color v1.15.0
+	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-github/v45 v45.2.0
@@ -48,6 +49,7 @@ require (
 	github.com/pluralsh/gqlclient v1.3.15
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
+	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.33.0
 	github.com/thoas/go-funk v0.9.2
@@ -110,7 +112,6 @@ require (
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/gdamore/tcell/v2 v2.6.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobuffalo/flect v1.0.2 // indirect
@@ -139,7 +140,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
-	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.15.0 // indirect

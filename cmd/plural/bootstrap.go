@@ -24,7 +24,6 @@ import (
 	clusterapioperator "sigs.k8s.io/cluster-api-operator/api/v1alpha1"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	apiclient "sigs.k8s.io/cluster-api/cmd/clusterctl/client"
-	ctrlruntime "sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kind/pkg/cluster"
 
@@ -367,14 +366,13 @@ func (p *Plural) handleWatchCluster(c *cli.Context) error {
 
 func (p *Plural) handleCreateNamespace(c *cli.Context) error {
 	name := c.Args().Get(0)
-	skipCreation := c.Bool("skip-if-exists")
 	fmt.Printf("Creating namespace %s ...\n", name)
 	err := p.InitKube()
 	if err != nil {
 		return err
 	}
 	if err := p.CreateNamespace(name); err != nil {
-		if apierrors.IsAlreadyExists(err) && skipCreation {
+		if apierrors.IsAlreadyExists(err) {
 			return nil
 		}
 		return err
@@ -510,11 +508,4 @@ func WaitFor(timeout, interval time.Duration, f func() (bool, error)) error {
 
 		time.Sleep(interval)
 	}
-}
-
-func getCRDList(ctx context.Context, client ctrlruntime.Client, crdList *apiextensionsv1.CustomResourceDefinitionList) error {
-	if err := client.List(ctx, crdList); err != nil {
-		return err
-	}
-	return nil
 }

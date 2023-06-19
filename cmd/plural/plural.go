@@ -134,6 +134,10 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "force",
 					Usage: "use force push when pushing to git",
 				},
+				cli.BoolFlag{
+					Name:  "cluster-api",
+					Usage: "use clusterAPI deployment",
+				},
 			},
 			Action: tracked(latestVersion(owned(rooted(p.deploy))), "cli.deploy"),
 		},
