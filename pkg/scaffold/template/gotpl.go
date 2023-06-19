@@ -4,9 +4,10 @@ import (
 	"bytes"
 
 	"github.com/imdario/mergo"
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
-	"gopkg.in/yaml.v2"
 )
 
 func FromGoTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
@@ -22,7 +23,7 @@ func FromGoTemplate(vals map[string]interface{}, globals map[string]interface{},
 		return err
 	}
 
-	var subVals map[string]interface{}
+	var subVals = map[string]interface{}{}
 	if err := yaml.Unmarshal(buf.Bytes(), &subVals); err != nil {
 		return err
 	}
