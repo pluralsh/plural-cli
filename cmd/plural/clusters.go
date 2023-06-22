@@ -2,7 +2,6 @@ package plural
 
 import (
 	"fmt"
-
 	tm "github.com/buger/goterm"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/cluster"
@@ -81,7 +80,17 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
+		{
+			Name:     "migrate",
+			Usage:    "migrate to Cluster API",
+			Action:   latestVersion(rooted(initKubeconfig(handleMigration))),
+			Category: "Publishing",
+		},
 	}
+}
+
+func handleMigration(c *cli.Context) error {
+	return ExecuteMigration()
 }
 
 func handleClusterWatch(c *cli.Context) error {
