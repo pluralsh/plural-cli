@@ -72,10 +72,6 @@ type Bootstrap struct {
 	ClusterAPICluster *api.Values `json:"cluster-api-cluster"`
 }
 
-type dataModel struct {
-	Bootstrap Bootstrap `json:"bootstrap"`
-}
-
 func ExecuteMigration() error {
 	prov, err := provider.GetProvider()
 	if err != nil {
@@ -90,7 +86,7 @@ func ExecuteMigration() error {
 	if err != nil {
 		return err
 	}
-	data, err := yaml.Marshal(dataModel{Bootstrap: Bootstrap{ClusterAPICluster: values}})
+	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
 	if err != nil {
 		return err
 	}
