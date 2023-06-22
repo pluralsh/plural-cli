@@ -7,10 +7,11 @@ import (
 
 	"github.com/pluralsh/plural/pkg/manifest"
 
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"sigs.k8s.io/yaml"
 )
 
 type ActionFunc func(arguments []string) error
@@ -138,7 +139,7 @@ func clusterAPIDeploySteps(path string) []*Step {
 			Execute: RunPlural,
 		},
 		{
-			Name:    "clusterctl-init-workfload",
+			Name:    "clusterctl-init-workload",
 			Args:    append([]string{"plural", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			Execute: RunPlural,
 		},
@@ -165,6 +166,26 @@ func clusterAPIDeploySteps(path string) []*Step {
 			Args:       []string{"apply", "-auto-approve"},
 			TargetPath: filepath.Join(path, "terraform"),
 			Execute:    RunTerraform,
+		},
+		{
+			Name:    "terraform output",
+			Args:    []string{"output", "terraform", "bootstrap"},
+			Execute: RunPlural,
+		},
+		{
+			Name:    "kube init",
+			Args:    []string{"wkspace", "kube-init"},
+			Execute: RunPlural,
+		},
+		{
+			Name:    "crds bootstrap",
+			Args:    []string{"wkspace", "crds", "bootstrap"},
+			Execute: RunPlural,
+		},
+		{
+			Name:    "helm bootstrap",
+			Args:    []string{"wkspace", "helm", "bootstrap"},
+			Execute: RunPlural,
 		},
 	}
 
