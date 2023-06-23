@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -56,6 +57,7 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 
 		return provider, &config
 	case api.ClusterProviderAWS:
+		os.Setenv("AWS_REGION", cliProvider.Region())
 		config := &api.Configuration{
 			AWSConfiguration: &api.AWSConfiguration{
 				ClusterName: cliProvider.Cluster(),
@@ -73,11 +75,7 @@ type Bootstrap struct {
 }
 
 func ExecuteMigration() error {
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return err
-	}
-	m, err := migrator.NewMigrator(newConfiguration(prov))
+	m, err := getMigrator()
 	if err != nil {
 		return err
 	}
@@ -125,11 +123,16 @@ func clusterAPIMigrateSteps(path string) []*Step {
 
 	sanitizedPath := pathing.SanitizeFilepath(path)
 	providerBootstrapFlags := []string{}
+	providerTags := []string{}
+
 	root, _ := git.Root()
 	switch pm.Provider {
 	case "aws":
 		providerBootstrapFlags = []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
+		}
+		providerTags = []string{
+			fmt.Sprintf("kubernetes.io/cluster/%s=owned", pm.Cluster),
 		}
 	case "azure":
 		providerBootstrapFlags = []string{}
@@ -171,6 +174,12 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			Execute:    RunPlural,
 		},
 		{
+			Name:       "add tags",
+			Args:       providerTags,
+			TargetPath: sanitizedPath,
+			Execute:    RunAddTags,
+		},
+		{
 			Name:       "deploy cluster",
 			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap"}, providerBootstrapFlags...),
 			TargetPath: sanitizedPath,
@@ -189,6 +198,29 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			Execute:    RunPlural,
 		},
 	}
+}
+
+func getMigrator() (api.Migrator, error) {
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	return migrator.NewMigrator(newConfiguration(prov))
+}
+
+func RunAddTags(arguments []string) error {
+	m, err := getMigrator()
+	if err != nil {
+		return err
+	}
+	tags := map[string]string{}
+	for _, arg := range arguments {
+		split := strings.Split(arg, "=")
+		if len(split) == 2 {
+			tags[split[0]] = split[1]
+		}
+	}
+	return m.AddTags(tags)
 }
 
 func RunPlural(arguments []string) error {
