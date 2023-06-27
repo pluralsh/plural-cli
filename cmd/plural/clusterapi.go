@@ -5,10 +5,9 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/pluralsh/plural/pkg/manifest"
-
 	"sigs.k8s.io/yaml"
 
+	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -158,13 +157,13 @@ func clusterAPIDeploySteps(path string) []*Step {
 		{
 			Name:       "terraform init",
 			Args:       []string{"init", "-upgrade"},
-			TargetPath: filepath.Join(path, "terraform"),
+			TargetPath: "terraform",
 			Execute:    RunTerraform,
 		},
 		{
 			Name:       "terraform apply",
 			Args:       []string{"apply", "-auto-approve"},
-			TargetPath: filepath.Join(path, "terraform"),
+			TargetPath: "terraform",
 			Execute:    RunTerraform,
 		},
 		{
@@ -201,7 +200,12 @@ func ExecuteClusterAPI(path, repo string) error {
 
 	for _, step := range clusterAPIDeploySteps(repo) {
 		utils.Highlight("%s \n", step.Name)
-		err := step.Execute(step.Args)
+		err = os.Chdir(step.TargetPath)
+		if err != nil {
+			return err
+		}
+
+		err = step.Execute(step.Args)
 		if err != nil {
 			status.Error = err.Error()
 			status.Save()
@@ -213,6 +217,11 @@ func ExecuteClusterAPI(path, repo string) error {
 			field.SetBool(true)
 		}
 		status.Save()
+
+		err = os.Chdir(path)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
