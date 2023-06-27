@@ -3,6 +3,8 @@ package machinepool
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"time"
 
 	tm "github.com/buger/goterm"
@@ -39,16 +41,21 @@ type MachinePoolWaiter interface {
 }
 
 type machinePoolWaiterClient struct {
-	pools *clusterapiExp.MachinePoolList
-	phase map[string]clusterapiExp.MachinePoolPhase
-	app   *tview.Application
-	table *tview.Table
+	pools     *clusterapiExp.MachinePoolList
+	phase     map[string]clusterapiExp.MachinePoolPhase
+	condition map[string]clusterapi.Condition
+	app       *tview.Application
+	table     *tview.Table
 }
 
 func (c *machinePoolWaiterClient) Init() {
 	c.phase = make(map[string]clusterapiExp.MachinePoolPhase)
+	c.condition = make(map[string]clusterapi.Condition)
 	for _, mp := range c.pools.Items {
 		c.phase[mp.Name] = findReadiness(&mp)
+	}
+	for _, mp := range c.pools.Items {
+		c.condition[mp.Name] = findCondition(&mp)
 	}
 
 	app := tview.NewApplication()
@@ -80,18 +87,18 @@ func (c *machinePoolWaiterClient) UpdateTable() {
 
 func (c *machinePoolWaiterClient) Check(mp *clusterapiExp.MachinePool) bool {
 	c.phase[mp.Name] = findReadiness(mp)
-
+	c.condition[mp.Name] = findCondition(mp)
 	c.UpdateTable()
 	c.app.Draw()
 
-	return allTrue(c.phase)
+	return allTrue(c.condition)
 	// return false
 }
 
 // function that check if all values in map[string]bool are true
-func allTrue(m map[string]clusterapiExp.MachinePoolPhase) bool {
+func allTrue(m map[string]clusterapi.Condition) bool {
 	for _, v := range m {
-		if v != clusterapiExp.MachinePoolPhaseRunning {
+		if v.Status != corev1.ConditionTrue {
 			return false
 		}
 	}

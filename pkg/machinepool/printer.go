@@ -2,6 +2,7 @@ package machinepool
 
 import (
 	"fmt"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"strings"
 
 	tm "github.com/buger/goterm"
@@ -133,6 +134,16 @@ func Flush() {
 
 func findReadiness(mp *clusterapiExp.MachinePool) clusterapiExp.MachinePoolPhase {
 	return clusterapiExp.MachinePoolPhase(mp.Status.Phase)
+}
+
+func findCondition(mp *clusterapiExp.MachinePool) (condition clusterapi.Condition) {
+	for _, cond := range mp.Status.Conditions {
+		if cond.Type == clusterapi.ReadyCondition {
+			condition = cond
+			return
+		}
+	}
+	return
 }
 
 func warn(line string, args ...interface{}) {

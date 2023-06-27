@@ -1327,8 +1327,8 @@ github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZ
 github.com/pkg/sftp v1.13.1/go.mod h1:3HaPG6Dq1ILlpPZRO0HVMrsydcdLt6HRDccSgb87qRg=
 github.com/pluralsh/bootstrap-operator v0.0.16 h1:XWssgHU9X85zerBItPVXtrdSb0xRrZ/mbMNjTw8Ed2Q=
 github.com/pluralsh/bootstrap-operator v0.0.16/go.mod h1:U2J5SRBbKTje+ZACm/ejhsaWPjhMvEfXOcwg05JZ1WA=
-github.com/pluralsh/cluster-api-migration v0.0.2 h1:jEnIII8gOc9muvGFwIQAELRFZWCZqq18I2wHKfclEiE=
-github.com/pluralsh/cluster-api-migration v0.0.2/go.mod h1:+HvNFotxthUBSr6HIrVPW2Qxnmm4IUi4iR3pzgF0JsE=
+github.com/pluralsh/cluster-api-migration v0.0.3 h1:CIjC1+jfGW4+mDglnR2YwE8gN0pIFTC49hRm6XSDsCc=
+github.com/pluralsh/cluster-api-migration v0.0.3/go.mod h1:+HvNFotxthUBSr6HIrVPW2Qxnmm4IUi4iR3pzgF0JsE=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
 github.com/pluralsh/gqlclient v1.3.15 h1:QA6VEMDxeG0/e+qXvr7xgorHl45o4/Qg9CwsPyVn2gE=
