@@ -246,7 +246,7 @@ func clusterAPIDeploySteps() []*Step {
 		},
 		{
 			Name:       "helm bootstrap",
-			Args:       []string{"plural", "wkspace", "helm", "bootstrap"},
+			Args:       []string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"},
 			Execute:    RunPlural,
 			TargetPath: sanitizedPath,
 		},
