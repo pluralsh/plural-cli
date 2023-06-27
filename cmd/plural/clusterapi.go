@@ -1,6 +1,7 @@
 package plural
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -23,17 +24,67 @@ type Step struct {
 }
 
 type ClusterAPIStatus struct {
-	BootstrapCluster            bool   `json:"bootstrapCluster"`
-	BootstrapCRDS               bool   `json:"bootstrapCrds"`
-	BootstrapDeployCapiOperator bool   `json:"bootstrapDeployCapiOperator"`
-	BootstrapDeployCapiCluster  bool   `json:"bootstrapDeployCapiCluster"`
-	BootstrapCapiClusterReady   bool   `json:"bootstrapCapiClusterReady"`
-	BootstrapCapiMpReady        bool   `json:"bootstrapCapiMpReady"`
-	Error                       string `json:"error"`
+	BootstrapCluster                bool   `json:"bootstrapCluster"`
+	BootstrapCRDS                   bool   `json:"bootstrapCrds"`
+	BootstrapDeployCapiOperator     bool   `json:"bootstrapDeployCapiOperator"`
+	BootstrapDeployCapiCluster      bool   `json:"bootstrapDeployCapiCluster"`
+	BootstrapCapiClusterReady       bool   `json:"bootstrapCapiClusterReady"`
+	BootstrapCapiMpReady            bool   `json:"bootstrapCapiMpReady"`
+	TargetClusterNamespace          bool   `json:"targetClusterNamespace"`
+	TargetClusterCRDS               bool   `json:"targetClusterCRDS"`
+	TargetClusterDeployCapiOperator bool   `json:"targetClusterDeployCapiOperator"`
+	TargetClusterMoveCluster        bool   `json:"targetClusterMoveCluster"`
+	Error                           string `json:"error"`
+}
+
+func getStatus() (*ClusterAPIStatus, error) {
+	repoRoot, err := git.Root()
+	if err != nil {
+		return nil, err
+	}
+	path := pathing.SanitizeFilepath(filepath.Join(repoRoot, "clusterapi.yaml"))
+	if !utils.Exists(path) {
+		return &ClusterAPIStatus{}, nil
+	}
+	content, err := utils.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var status *ClusterAPIStatus
+
+	if err := yaml.Unmarshal([]byte(content), &status); err != nil {
+		return nil, err
+	}
+	return status, nil
 }
 
 func (c *ClusterAPIStatus) Marshal() ([]byte, error) {
 	return yaml.Marshal(&c)
+}
+
+func (c *ClusterAPIStatus) isReady(step *Step) bool {
+	repoRoot, err := git.Root()
+	if err != nil {
+		return false
+	}
+	content, err := utils.ReadFile(pathing.SanitizeFilepath(filepath.Join(repoRoot, "clusterapi.yaml")))
+	if err != nil {
+		return false
+	}
+
+	var status *ClusterAPIStatus
+
+	if err := yaml.Unmarshal([]byte(content), &status); err != nil {
+		return false
+	}
+	ps := reflect.ValueOf(status).Elem()
+	field := ps.FieldByName(step.SuccessStatusName)
+	if field.IsValid() && field.CanSet() {
+		return field.Bool()
+	}
+
+	return false
 }
 
 func (c *ClusterAPIStatus) Save() error {
@@ -127,36 +178,33 @@ func clusterAPIDeploySteps() []*Step {
 			TargetPath: sanitizedPath,
 		},
 		{
-			Name:       "create-bootstrap-namespace-workload-cluster",
-			Args:       []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
-			Execute:    RunPlural,
-			TargetPath: sanitizedPath,
+			Name:              "create-bootstrap-namespace-workload-cluster",
+			Args:              []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
+			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
+			SuccessStatusName: "TargetClusterNamespace",
 		},
 
 		{
-			Name:       "crds-bootstrap",
-			Args:       []string{"plural", "wkspace", "crds", "bootstrap"},
-			Execute:    RunPlural,
-			TargetPath: sanitizedPath,
-		},
-
-		{
-			Name:       "create-bootstrap-namespace-workload-cluster",
-			Args:       []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
-			Execute:    RunPlural,
-			TargetPath: sanitizedPath,
+			Name:              "install CRDs on target cluster",
+			Args:              []string{"plural", "wkspace", "crds", "bootstrap"},
+			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
+			SuccessStatusName: "TargetClusterCRDS",
 		},
 		{
-			Name:       "clusterctl-init-workload",
-			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
-			Execute:    RunPlural,
-			TargetPath: sanitizedPath,
+			Name:              "clusterctl-init-workload",
+			Args:              append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
+			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
+			SuccessStatusName: "TargetClusterDeployCapiOperator",
 		},
 		{
-			Name:       "clusterctl-move",
-			Args:       []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
-			Execute:    RunPlural,
-			TargetPath: sanitizedPath,
+			Name:              "clusterctl-move",
+			Args:              []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
+			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
+			SuccessStatusName: "TargetClusterMoveCluster",
 		},
 		// { // TODO: re-anable this once we've debugged the move command so it works properly to avoid dangling resources
 		// 	Name:    "delete bootstrap cluster",
@@ -165,6 +213,7 @@ func clusterAPIDeploySteps() []*Step {
 		// 	Args:    []string{"--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 		// 	Sha:     "",
 		// },
+
 		{
 			Name:       "terraform init",
 			Args:       []string{"init", "-upgrade"},
@@ -206,8 +255,10 @@ func clusterAPIDeploySteps() []*Step {
 }
 
 func ExecuteClusterAPI(path string) error {
-	status := &ClusterAPIStatus{}
-
+	status, err := getStatus()
+	if err != nil {
+		return err
+	}
 	for _, step := range clusterAPIDeploySteps() {
 		utils.Highlight("%s \n", step.Name)
 		err := os.Chdir(step.TargetPath)
@@ -215,6 +266,10 @@ func ExecuteClusterAPI(path string) error {
 			return err
 		}
 
+		if status.isReady(step) {
+			fmt.Println("ready")
+			continue
+		}
 		err = step.Execute(step.Args)
 		if err != nil {
 			status.Error = err.Error()
@@ -227,7 +282,6 @@ func ExecuteClusterAPI(path string) error {
 			field.SetBool(true)
 		}
 		status.Save()
-
 		err = os.Chdir(path)
 		if err != nil {
 			return err
