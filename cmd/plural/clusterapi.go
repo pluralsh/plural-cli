@@ -5,12 +5,11 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"sigs.k8s.io/yaml"
 )
 
 type ActionFunc func(arguments []string) error
@@ -50,10 +49,10 @@ func (c *ClusterAPIStatus) Save() error {
 	return os.WriteFile(sanitizedPath, data, 0644)
 }
 
-func clusterAPIDeploySteps(path string) []*Step {
+func clusterAPIDeploySteps() []*Step {
 	pm, _ := manifest.FetchProject()
-
-	sanitizedPath := pathing.SanitizeFilepath(path)
+	root, _ := git.Root()
+	sanitizedPath := pathing.SanitizeFilepath(filepath.Join(root, "bootstrap"))
 
 	homedir, _ := os.UserHomeDir()
 	providerBootstrapFlags := []string{}
@@ -84,68 +83,80 @@ func clusterAPIDeploySteps(path string) []*Step {
 			Args:              []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
 			SuccessStatusName: "BootstrapCluster",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
 			Name:              "bootstrap crds",
-			Args:              []string{"plural", "--bootstrap", "wkspace", "crds", sanitizedPath},
+			Args:              []string{"plural", "--bootstrap", "wkspace", "crds", "bootstrap"},
 			SuccessStatusName: "BootstrapCRDS",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
 			Name:              "install capi operators",
-			Args:              append([]string{"plural", "--bootstrap", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
+			Args:              append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			SuccessStatusName: "BootstrapDeployCapiOperator",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
 			Name:              "deploy cluster",
-			Args:              append([]string{"plural", "--bootstrap", "wkspace", "helm", sanitizedPath}, providerBootstrapFlags...),
+			Args:              append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, providerBootstrapFlags...),
 			SuccessStatusName: "BootstrapDeployCapiCluster",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
 			Name:              "wait-for-cluster",
 			Args:              []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", pm.Cluster},
 			SuccessStatusName: "BootstrapCapiClusterReady",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
 			Name:              "wait-for-machines-running",
 			Args:              []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", pm.Cluster},
 			SuccessStatusName: "BootstrapCapiMpReady",
 			Execute:           RunPlural,
+			TargetPath:        sanitizedPath,
 		},
 		{
-			Name:    "init kubeconfig for target cluster",
-			Args:    []string{"plural", "wkspace", "kube-init"},
-			Execute: RunPlural,
+			Name:       "init kubeconfig for target cluster",
+			Args:       []string{"plural", "wkspace", "kube-init"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		{
-			Name:    "create-bootstrap-namespace-workload-cluster",
-			Args:    []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
-			Execute: RunPlural,
-		},
-
-		{
-			Name:    "crds-bootstrap",
-			Args:    []string{"plural", "wkspace", "crds", sanitizedPath},
-			Execute: RunPlural,
+			Name:       "create-bootstrap-namespace-workload-cluster",
+			Args:       []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 
 		{
-			Name:    "create-bootstrap-namespace-workload-cluster",
-			Args:    []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
-			Execute: RunPlural,
+			Name:       "crds-bootstrap",
+			Args:       []string{"plural", "wkspace", "crds", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
+		},
+
+		{
+			Name:       "create-bootstrap-namespace-workload-cluster",
+			Args:       []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		{
-			Name:    "clusterctl-init-workload",
-			Args:    append([]string{"plural", "wkspace", "helm", sanitizedPath, "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
-			Execute: RunPlural,
+			Name:       "clusterctl-init-workload",
+			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		{
-			Name:    "clusterctl-move",
-			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
-			Execute: RunPlural,
+			Name:       "clusterctl-move",
+			Args:       []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		// { // TODO: re-anable this once we've debugged the move command so it works properly to avoid dangling resources
 		// 	Name:    "delete bootstrap cluster",
@@ -157,50 +168,49 @@ func clusterAPIDeploySteps(path string) []*Step {
 		{
 			Name:       "terraform init",
 			Args:       []string{"init", "-upgrade"},
-			TargetPath: "terraform",
 			Execute:    RunTerraform,
+			TargetPath: filepath.Join(sanitizedPath, "terraform"),
 		},
 		{
 			Name:       "terraform apply",
 			Args:       []string{"apply", "-auto-approve"},
-			TargetPath: "terraform",
 			Execute:    RunTerraform,
+			TargetPath: filepath.Join(sanitizedPath, "terraform"),
 		},
 		{
-			Name:    "terraform output",
-			Args:    []string{"output", "terraform", "bootstrap"},
-			Execute: RunPlural,
+			Name:       "terraform output",
+			Args:       []string{"plural", "output", "terraform", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: filepath.Join(sanitizedPath, "terraform"),
 		},
 		{
-			Name:    "kube init",
-			Args:    []string{"wkspace", "kube-init"},
-			Execute: RunPlural,
+			Name:       "kube init",
+			Args:       []string{"plural", "wkspace", "kube-init"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		{
-			Name:    "crds bootstrap",
-			Args:    []string{"wkspace", "crds", "bootstrap"},
-			Execute: RunPlural,
+			Name:       "crds bootstrap",
+			Args:       []string{"plural", "wkspace", "crds", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 		{
-			Name:    "helm bootstrap",
-			Args:    []string{"wkspace", "helm", "bootstrap"},
-			Execute: RunPlural,
+			Name:       "helm bootstrap",
+			Args:       []string{"plural", "wkspace", "helm", "bootstrap"},
+			Execute:    RunPlural,
+			TargetPath: sanitizedPath,
 		},
 	}
 
 }
 
-func ExecuteClusterAPI(path, repo string) error {
-	err := os.Chdir(path)
-	if err != nil {
-		return err
-	}
-
+func ExecuteClusterAPI(path string) error {
 	status := &ClusterAPIStatus{}
 
-	for _, step := range clusterAPIDeploySteps(repo) {
+	for _, step := range clusterAPIDeploySteps() {
 		utils.Highlight("%s \n", step.Name)
-		err = os.Chdir(step.TargetPath)
+		err := os.Chdir(step.TargetPath)
 		if err != nil {
 			return err
 		}
