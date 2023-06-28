@@ -138,6 +138,10 @@ func clusterAPIMigrateSteps(path string) []*Step {
 		}
 	case "azure":
 		providerBootstrapFlags = []string{}
+		providerTags = []string{
+			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", pm.Cluster),
+			"sigs.k8s.io_cluster-api-provider-azure_role=common",
+		}
 	case "gcp":
 		providerBootstrapFlags = []string{}
 	case "google":
