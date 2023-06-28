@@ -46,10 +46,7 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 				SubscriptionID: utils.ToString(context["SubscriptionId"]),
 				ResourceGroup:  cliProvider.Project(),
 				Name:           cliProvider.Cluster(),
-				// TODO: Update this.
-				// It can be retrieved by using terraform show command in installation repo's bootstap/terraform directory.
-				// The path is module.azure-bootstrap.module.aks.tls_private_key.ssh.public_key_openssh.
-				SSHPublicKey: os.Getenv("AZURE_B64ENCODED_SSH_PUBLIC_KEY"),
+				SSHPublicKey:   "", // Skipped as it is not required in forked version of CAPZ.
 			},
 		}
 
