@@ -21,8 +21,9 @@ import (
 )
 
 func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.Configuration) {
-	provider := api.ClusterProvider(cliProvider.Name())
-	switch provider {
+	context := cliProvider.Context()
+	clusterProvider := api.ClusterProvider(cliProvider.Name())
+	switch clusterProvider {
 	case api.ClusterProviderGoogle:
 		kubeconfigPath := os.Getenv("KUBECONFIG")
 		credentials, err := base64.StdEncoding.DecodeString(os.Getenv("GCP_B64ENCODED_CREDENTIALS"))
@@ -30,7 +31,7 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 			panic(err)
 		}
 
-		return provider, &api.Configuration{
+		return clusterProvider, &api.Configuration{
 			GCPConfiguration: &api.GCPConfiguration{
 				Credentials:    string(credentials),
 				Project:        cliProvider.Project(),
@@ -42,9 +43,10 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 	case api.ClusterProviderAzure:
 		config := api.Configuration{
 			AzureConfiguration: &api.AzureConfiguration{
-				SubscriptionID: os.Getenv("AZURE_SUBSCRIPTION_ID"),
-				ResourceGroup:  "rgmarcin",
-				Name:           "azuremarcin",
+				SubscriptionID: utils.ToString(context["SubscriptionId"]),
+				ResourceGroup:  cliProvider.Project(),
+				Name:           cliProvider.Cluster(),
+				// TODO: Update this.
 				// It can be retrieved by using terraform show command in installation repo's bootstap/terraform directory.
 				// The path is module.azure-bootstrap.module.aks.tls_private_key.ssh.public_key_openssh.
 				SSHPublicKey: os.Getenv("AZURE_B64ENCODED_SSH_PUBLIC_KEY"),
@@ -55,7 +57,7 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 			log.Fatalln(err)
 		}
 
-		return provider, &config
+		return clusterProvider, &config
 	case api.ClusterProviderAWS:
 		os.Setenv("AWS_REGION", cliProvider.Region())
 		config := &api.Configuration{
@@ -64,7 +66,7 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 				Region:      cliProvider.Region(),
 			},
 		}
-		return provider, config
+		return clusterProvider, config
 	}
 
 	return "", nil
