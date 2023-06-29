@@ -440,8 +440,15 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if err := workspace.Destroy(clusterAPI); err != nil {
-		return err
+	if repo == "bootstrap" && clusterAPI {
+		if err = ExecuteClusterAPIDestroy(workspace.Destroy); err != nil {
+			return err
+		}
+
+	} else {
+		if err := workspace.Destroy(); err != nil {
+			return err
+		}
 	}
 
 	if delete {
