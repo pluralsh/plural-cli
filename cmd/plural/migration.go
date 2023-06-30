@@ -135,7 +135,7 @@ func clusterAPIMigrateSteps(path string) []*Step {
 		}
 	case "azure":
 		providerBootstrapFlags = []string{
-			"--set", "bootstrap.azure-identity.enabled=false", // TODO: Uninstall this?
+			"--set", "azure-identity.enabled=false",
 		}
 		providerTags = []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", pm.Cluster),
