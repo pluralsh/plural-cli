@@ -51,6 +51,7 @@ type NetworkConfig struct {
 }
 
 type ProjectManifest struct {
+	ClusterAPI   bool
 	Cluster      string
 	Bucket       string
 	Project      string
