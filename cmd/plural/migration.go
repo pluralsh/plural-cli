@@ -134,17 +134,10 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", pm.Cluster),
 		}
 	case "azure":
-		providerBootstrapFlags = []string{
-			"--set", "azure-identity.enabled=false",
-		}
 		providerTags = []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", pm.Cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
 		}
-	case "gcp":
-		providerBootstrapFlags = []string{}
-	case "google":
-		providerBootstrapFlags = []string{}
 	}
 
 	return []*Step{
