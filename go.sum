@@ -924,6 +924,8 @@ github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxD
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
 github.com/pluralsh/gqlclient v1.3.17 h1:hD/rG+lhxP3kN1UUXrzZd2uN7P76MvNTEJEzYOpERXo=
 github.com/pluralsh/gqlclient v1.3.17/go.mod h1:z1qHnvPeqIN/a+5OzFs40e6HI6tDxzh1+yJuEpvqGy4=
+github.com/pluralsh/gqlclient v1.3.18 h1:SthOBnlEgXh1bAKQXrZDNZRekaw3zDku4I4xgVsumDE=
+github.com/pluralsh/gqlclient v1.3.18/go.mod h1:z1qHnvPeqIN/a+5OzFs40e6HI6tDxzh1+yJuEpvqGy4=
 github.com/pluralsh/oauth v0.9.2 h1:tM9hBK4tCnJUeCOgX0ctxBBCS3hiCDPoxkJLODtedmQ=
 github.com/pluralsh/oauth v0.9.2/go.mod h1:aTUw/75rzcsbvW+/TLvWtHVDXFIdtFrDtUncOq9vHyM=
 github.com/pluralsh/plural-operator v0.5.3 h1:GaPL3LgimfzKZNHt7zXzqYZpb0hgyW9noHYnkA+rqNs=
