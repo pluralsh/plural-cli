@@ -209,8 +209,12 @@ func (client *client) ListRepositories(query string) ([]*Repository, error) {
 	return res, err
 }
 
-func (client *client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
+func (client *client) Release(name string, tags []string) error {
+	_, err := client.pluralClient.Release(context.Background(), name, tags)
+	return err
+}
 
+func (client *client) Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error) {
 	scaffolds, err := client.pluralClient.Scaffolds(context.Background(), in.Application, in.Publisher, gqlclient.Category(strings.ToUpper(in.Category)), &in.Ingress, &in.Postgres)
 	if err != nil {
 		return nil, err
