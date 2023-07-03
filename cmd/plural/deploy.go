@@ -206,7 +206,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 				return err
 			}
 		} else if repo == "bootstrap" {
-			err := ExecuteClusterAPI(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)))
+			err := ExecuteClusterAPI()
 			if err != nil {
 				return err
 			}
