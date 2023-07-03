@@ -87,6 +87,7 @@ type Client interface {
 	Cluster(id string) (*Cluster, error)
 	CreateUpgrade(queue, repository string, attrs gqlclient.UpgradeAttributes) error
 	TransferOwnership(name, email string) error
+	Release(name string, tags []string) error
 	Chat(history []*ChatMessage) (*ChatMessage, error)
 }
 

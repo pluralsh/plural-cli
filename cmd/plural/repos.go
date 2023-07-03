@@ -19,8 +19,20 @@ func (p *Plural) reposCommands() []cli.Command {
 		{
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
-			ArgsUsage: "REPO",
-			Action:    latestVersion(p.handleUnlockRepo),
+			ArgsUsage: "APP",
+			Action:    latestVersion(requireArgs(p.handleUnlockRepo, []string{"APP"})),
+		},
+		{
+			Name:      "release",
+			Usage:     "tags the installations in the current cluster with the given release channels",
+			ArgsUsage: "APP",
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:  "tag",
+					Usage: "tag name for a given release channel, eg stable, warm, dev, prod",
+				},
+			},
+			Action: latestVersion(requireArgs(p.handleRelease, []string{"APP"})),
 		},
 		{
 			Name:  "reinstall",
@@ -61,6 +73,19 @@ func (p *Plural) reposCommands() []cli.Command {
 			Action: latestVersion(p.handleListRepositories),
 		},
 	}
+}
+
+func (p *Plural) handleRelease(c *cli.Context) error {
+	p.InitPluralClient()
+	app := c.Args().First()
+	tags := c.StringSlice("tag")
+	err := p.Release(c.Args().First(), c.StringSlice("tag"))
+	if err != nil {
+		return api.GetErrorResponse(err, "Release")
+	}
+
+	utils.Success("Published release for %s to channels [%s]\n", app, strings.Join(tags, ", "))
+	return nil
 }
 
 func (p *Plural) handleUnlockRepo(c *cli.Context) error {
