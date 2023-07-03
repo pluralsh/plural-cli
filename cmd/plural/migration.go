@@ -180,6 +180,7 @@ func clusterAPIMigrateSteps(path string) []*Step {
 	}
 
 	if pm.Provider == "azure" {
+		os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		steps = append(steps, []*Step{{
 			Name:       "uninstall azure-identity",
 			Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
