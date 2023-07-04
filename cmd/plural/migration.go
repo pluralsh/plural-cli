@@ -140,7 +140,19 @@ func clusterAPIMigrateSteps(path string) []*Step {
 		}
 	}
 
-	steps := []*Step{
+	var steps []*Step
+
+	if pm.Provider == "azure" {
+		os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
+		steps = append(steps, []*Step{{
+			Name:       "uninstall azure-identity",
+			Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
+			TargetPath: root,
+			Execute:    RunPlural,
+		}}...)
+	}
+
+	return append(steps, []*Step{
 		{
 			Name:       "build values",
 			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
@@ -177,19 +189,6 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			TargetPath: sanitizedPath,
 			Execute:    RunAddTags,
 		},
-	}
-
-	if pm.Provider == "azure" {
-		os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
-		steps = append(steps, []*Step{{
-			Name:       "uninstall azure-identity",
-			Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
-			TargetPath: root,
-			Execute:    RunPlural,
-		}}...)
-	}
-
-	return append(steps, []*Step{
 		{
 			Name:       "deploy cluster",
 			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap"}, providerBootstrapFlags...),
