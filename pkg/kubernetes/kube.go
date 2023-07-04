@@ -16,7 +16,9 @@ import (
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/polly/containers"
 	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -151,17 +153,100 @@ func (k *kube) Nodes() (*v1.NodeList, error) {
 	return k.Kube.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 }
 
+type GroupResource struct {
+	Name         string
+	APIGroup     string
+	APIResource  metav1.APIResource
+	GroupVersion schema.GroupVersion
+}
+
 func (k *kube) FinalizeNamespace(namespace string) error {
 	ctx := context.Background()
-	client := k.Kube.CoreV1().Namespaces()
-	ns, err := client.Get(ctx, namespace, metav1.GetOptions{})
-	if err != nil {
+
+	if err := k.cleanupFinalizersForAllNamespaceResources(ctx, namespace); err != nil {
 		return err
 	}
 
-	ns.Spec.Finalizers = []v1.FinalizerName{}
-	_, err = client.Finalize(ctx, ns, metav1.UpdateOptions{})
-	return err
+	return nil
+}
+
+func (k *kube) cleanupFinalizersForAllNamespaceResources(ctx context.Context, namespace string) error {
+	resources, err := k.getResourceTypes()
+	if err != nil {
+		return err
+	}
+	for _, res := range resources {
+		gvr := schema.GroupVersionResource{
+			Group:    res.APIGroup,
+			Version:  res.GroupVersion.Version,
+			Resource: res.APIResource.Name,
+		}
+		objList, err := k.Dynamic.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+
+		for _, item := range objList.Items {
+			if len(item.GetFinalizers()) > 0 {
+				utils.LogInfo().Println("found finalizers for resource ", item.GetKind(), item.GetName())
+				item.SetFinalizers([]string{})
+				_, err = k.Dynamic.Resource(gvr).Namespace(item.GetNamespace()).Update(ctx, &item, metav1.UpdateOptions{})
+				if err != nil {
+					if !k8serrors.IsNotFound(err) {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (k *kube) getResourceTypes() ([]GroupResource, error) {
+	discoveryClient := memory.NewMemCacheClient(k.Discovery)
+	discoveryClient.Invalidate()
+	lists, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return nil, err
+	}
+	var resources []GroupResource
+	resources = make([]GroupResource, 0)
+	for _, list := range lists {
+		if len(list.APIResources) == 0 {
+			continue
+		}
+		gv, err := schema.ParseGroupVersion(list.GroupVersion)
+		if err != nil {
+			continue
+		}
+		for _, resource := range list.APIResources {
+			if len(resource.Verbs) == 0 {
+				continue
+			}
+			verbs := containers.ToSet[string](resource.Verbs)
+			if !verbs.Has("get") || !verbs.Has("update") {
+				continue
+			}
+
+			// filter namespaced
+			if !resource.Namespaced {
+				continue
+			}
+
+			name := resource.Name
+			if len(gv.Group) > 0 {
+				name += "." + gv.Group
+			}
+
+			resources = append(resources, GroupResource{
+				Name:         name,
+				APIGroup:     gv.Group,
+				APIResource:  resource,
+				GroupVersion: gv,
+			})
+		}
+	}
+	return resources, nil
 }
 
 func (k *kube) LogTailList(namespace string) (*platformv1alpha1.LogTailList, error) {
