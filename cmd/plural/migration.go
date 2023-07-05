@@ -9,15 +9,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
+	api2 "github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"sigs.k8s.io/yaml"
-
-	"github.com/pluralsh/cluster-api-migration/pkg/api"
 )
 
 func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.Configuration) {
@@ -144,12 +144,23 @@ func clusterAPIMigrateSteps(path string) []*Step {
 
 	if pm.Provider == "azure" {
 		os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
-		steps = append(steps, []*Step{{
-			Name:       "uninstall azure-identity",
-			Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
-			TargetPath: root,
-			Execute:    RunPlural,
-		}}...)
+		steps = append(steps, []*Step{
+			{
+				Name:       "uninstall azure-identity",
+				Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
+				TargetPath: root,
+				Execute:    RunPlural,
+			},
+			{
+				Name:       "clear package cache",
+				TargetPath: root,
+				Execute: func(_ []string) error {
+					api2.ClearPackageCache()
+
+					return nil
+				},
+			},
+		}...)
 	}
 
 	return append(steps, []*Step{
