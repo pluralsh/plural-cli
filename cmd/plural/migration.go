@@ -46,7 +46,6 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 				SubscriptionID: utils.ToString(context["SubscriptionId"]),
 				ResourceGroup:  cliProvider.Project(),
 				Name:           cliProvider.Cluster(),
-				SSHPublicKey:   "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFEVTRhRmJ3anNSSG5nU1Jsdmh2TUVoeW5DN29zTDBTRWEvQ0c3ZWtFOXlFS2Npa0pTanVNcGZrTm80NnFPRld3ZWFhV1QyRFlDdUpEQXRuZ3dyT1A3dmNKbEFnbmcvQW9qMDJ1VHJRZVoySW5qekhnQlFvWmgrcE9kYm8wdDVwTXVNckxmUFdlY2M3aGN6TlVDSDRxYjNnNEl1VG9SbjhkVUFjb1UxZFNkVWpTTDk2U3BmNTdKVHBaTTVwRGFPT1ZXL0llUHdDSVlJODdqdGZUQ3ZGSi9JR2tNK0hPbGlzcE1FQ05UY25saEE2a0QvRHdvVTR0eVVSKzFlS3ExU1hpb3ZZcHcrYkFlaTFReGptK1VMUzNXSzdubnZCbE5seHB3MjRPUzBleGphRGJ4TzhjYkRSYXhzVWMwZW9JbUROU1pWUjhMbWc3UzJnRCsvOGErbTA3VnI=", // Mocked as it is not used but required in forked version of CAPZ.
 			},
 		}
 
