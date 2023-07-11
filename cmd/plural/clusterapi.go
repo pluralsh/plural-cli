@@ -133,6 +133,18 @@ func clusterAPIDeploySteps() []*Step {
 }
 
 func ExecuteClusterAPI() error {
+	path := manifest.ProjectManifestPath()
+	project, err := manifest.ReadProject(path)
+	if err != nil {
+		return err
+	}
+
+	project.ClusterAPI = true
+	err = project.Write(path)
+	if err != nil {
+		return err
+	}
+
 	for _, step := range clusterAPIDeploySteps() {
 		utils.Highlight("%s \n", step.Name)
 		err := os.Chdir(step.TargetPath)
@@ -144,11 +156,6 @@ func ExecuteClusterAPI() error {
 			return err
 		}
 	}
-	path := manifest.ProjectManifestPath()
-	project, err := manifest.ReadProject(path)
-	if err != nil {
-		return err
-	}
-	project.ClusterAPI = true
-	return project.Write(path)
+
+	return nil
 }
