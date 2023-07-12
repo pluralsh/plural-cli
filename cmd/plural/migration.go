@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
 	api2 "github.com/pluralsh/plural/pkg/api"
@@ -17,6 +18,10 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -170,18 +175,6 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "terraform init",
-			Args:       []string{"init", "-upgrade"},
-			TargetPath: filepath.Join(path, "terraform"),
-			Execute:    RunTerraform,
-		},
-		{
-			Name:       "terraform apply",
-			Args:       []string{"apply", "-auto-approve"},
-			TargetPath: filepath.Join(path, "terraform"),
-			Execute:    RunTerraform,
-		},
-		{
 			Name:       "bootstrap crds",
 			Args:       []string{"plural", "wkspace", "crds", sanitizedPath},
 			TargetPath: sanitizedPath,
@@ -217,6 +210,44 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
+		{
+			Name:       "set capi flag",
+			TargetPath: root,
+			Execute: func(_ []string) error {
+				path := manifest.ProjectManifestPath()
+				project, err := manifest.ReadProject(path)
+				if err != nil {
+					return err
+				}
+
+				project.ClusterAPI = true
+				return project.Write(path)
+			},
+		},
+		{
+			Name:       "build values",
+			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
+			TargetPath: root,
+			Execute:    RunPlural,
+		},
+		{
+			Name:       "delink terraform state",
+			Args:       []string{filepath.Join(path, "terraform")},
+			TargetPath: filepath.Join(path, "terraform"), // Not used but required.
+			Execute:    RunDelinker,
+		},
+		{
+			Name:       "terraform init",
+			Args:       []string{"init", "-upgrade"},
+			TargetPath: filepath.Join(path, "terraform"),
+			Execute:    RunTerraform,
+		},
+		{
+			Name:       "terraform apply",
+			Args:       []string{"apply", "-auto-approve"},
+			TargetPath: filepath.Join(path, "terraform"),
+			Execute:    RunTerraform,
+		},
 	}...)
 }
 
@@ -226,6 +257,23 @@ func getMigrator() (api.Migrator, error) {
 		return nil, err
 	}
 	return migrator.NewMigrator(newConfiguration(prov))
+}
+
+func RunDelinker(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("path argument is missing")
+	}
+
+	path := args[0]
+	planner := delinkerplan.NewPlanner(delinkerplan.WithTerraform(delinkerexec.WithDir(path)))
+	plan, err := planner.Plan()
+	if err != nil {
+		return err
+	}
+
+	report := delinkeranalyze.NewAnalyzer(plan).Analyze(tfjson.ActionDelete)
+	delinker := delinkerdelink.NewDelinker(delinkerdelink.WithTerraform(delinkerexec.WithDir(path)))
+	return delinker.Run(report)
 }
 
 func RunAddTags(arguments []string) error {

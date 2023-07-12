@@ -48,6 +48,7 @@ func clusterAPIDeploySteps() []*Step {
 		providerBootstrapFlags = []string{}
 	}
 
+	// TODO: Add checks if cluster exists. This command will now only work if cluster doesn't exist.
 	return []*Step{
 		{
 			Name:       "create bootstrap cluster",
@@ -97,7 +98,6 @@ func clusterAPIDeploySteps() []*Step {
 			Execute:    RunPlural,
 			TargetPath: sanitizedPath,
 		},
-
 		{
 			Name:       "install CRDs on target cluster",
 			Args:       []string{"plural", "wkspace", "crds", "bootstrap"},
@@ -139,7 +139,7 @@ func ExecuteClusterAPI() error {
 		return err
 	}
 
-	project.ClusterAPI = true
+	project.ClusterAPI = true // TODO: Later this can be set as true by default, just after running "plural init".
 	err = project.Write(path)
 	if err != nil {
 		return err
