@@ -99,7 +99,13 @@ func (wk *Workspace) PrintLinks() {
 func (wk *Workspace) RequiredCliVsn() (vsn string, ok bool) {
 	cVsns := algorithms.Map(wk.Charts, func(c *api.ChartInstallation) string { return c.Version.Dependencies.CliVsn })
 	tVsns := algorithms.Map(wk.Terraform, func(t *api.TerraformInstallation) string { return t.Version.Dependencies.CliVsn })
-	vsns := append(cVsns, tVsns...)
+	vsns := algorithms.Filter(append(cVsns, tVsns...), func(v string) bool { return v != "" })
+	vsns = algorithms.Map(vsns, func(v string) string {
+		if strings.HasPrefix(v, "v") {
+			return v
+		}
+		return fmt.Sprintf("v%s", v)
+	})
 	vsns = algorithms.Filter(vsns, semver.IsValid)
 	if len(vsns) == 0 {
 		return

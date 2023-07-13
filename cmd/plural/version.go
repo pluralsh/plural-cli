@@ -23,7 +23,11 @@ var (
 )
 
 func versionValid(vsn string) bool {
-	return semver.Compare(vsn, Version) <= 0
+	current := Version
+	if !strings.HasPrefix(current, "v") {
+		current = fmt.Sprintf("v%s", current)
+	}
+	return semver.Compare(vsn, current) <= 0
 }
 
 func checkRecency() error {
