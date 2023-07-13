@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -19,6 +21,10 @@ var (
 	Commit  = ""
 	Date    = ""
 )
+
+func versionValid(vsn string) bool {
+	return semver.Compare(vsn, Version) <= 0
+}
 
 func checkRecency() error {
 	if os.Getenv("CLOUD_SHELL") == "1" || os.Getenv("PLURAL_CONSOLE") == "1" {
