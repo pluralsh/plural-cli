@@ -185,6 +185,9 @@ func convertDependencies(depFragment *gqlclient.DependenciesFragment) *Dependenc
 	if depFragment.ProviderVsn != nil {
 		dep.ProviderVsn = *depFragment.ProviderVsn
 	}
+	if depFragment.CliVsn != nil {
+		dep.CliVsn = *depFragment.CliVsn
+	}
 	if depFragment.Application != nil {
 		dep.Application = *depFragment.Application
 	}

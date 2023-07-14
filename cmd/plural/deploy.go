@@ -131,6 +131,11 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 		return err
 	}
 
+	vsn, ok := workspace.RequiredCliVsn()
+	if ok && !versionValid(vsn) {
+		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
+	}
+
 	if err := workspace.Prepare(); err != nil {
 		return err
 	}
