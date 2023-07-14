@@ -76,6 +76,7 @@ type Dependencies struct {
 	ProviderWirings map[string]interface{}
 	Outputs         map[string]interface{}
 	ProviderVsn     string
+	CliVsn          string
 }
 
 type Dependency struct {
