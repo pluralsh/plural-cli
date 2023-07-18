@@ -410,6 +410,13 @@ func repoUrl(w *wkspace.Workspace, repo string, chart string) string {
 func appVersion(charts []*api.ChartInstallation) string {
 	for _, inst := range charts {
 		if inst.Chart.Dependencies.Application {
+			if inst.Version.Helm != nil {
+				if vsn, ok := inst.Version.Helm["appVersion"]; ok {
+					if v, ok := vsn.(string); ok {
+						return v
+					}
+				}
+			}
 			return inst.Version.Version
 		}
 	}
