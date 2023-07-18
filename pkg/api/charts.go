@@ -138,6 +138,7 @@ func convertVersion(version *gqlclient.VersionFragment) *Version {
 	v := &Version{
 		Id:      version.ID,
 		Version: version.Version,
+		Helm:    version.Helm,
 	}
 	if version.Readme != nil {
 		v.Readme = *version.Readme

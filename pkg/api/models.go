@@ -50,6 +50,7 @@ type Version struct {
 	Id             string
 	Version        string
 	Readme         string
+	Helm           map[string]interface{}
 	Package        string
 	ValuesTemplate string
 	TemplateType   gqlclient.TemplateType
