@@ -240,11 +240,14 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 	}
 
-	utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
+	// Do not ask for commit twice as "plural deploy --cluster-api" runs "plural deploy" internally.
+	if !c.Bool("cluster-api") {
+		utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
 
-	if commit := commitMsg(c); commit != "" {
-		utils.Highlight("Pushing upstream...\n")
-		return git.Sync(repoRoot, commit, c.Bool("force"))
+		if commit := commitMsg(c); commit != "" {
+			utils.Highlight("Pushing upstream...\n")
+			return git.Sync(repoRoot, commit, c.Bool("force"))
+		}
 	}
 
 	return nil
