@@ -51,6 +51,12 @@ func clusterAPIDeploySteps() []*Step {
 	// TODO: Add checks if cluster exists. This command will now only work if cluster doesn't exist.
 	return []*Step{
 		{
+			Name:       "build values",
+			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
+			TargetPath: root,
+			Execute:    RunPlural,
+		},
+		{
 			Name:       "create bootstrap cluster",
 			Args:       []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
 			Execute:    RunPlural,
