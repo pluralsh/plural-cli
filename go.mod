@@ -47,7 +47,7 @@ require (
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/bootstrap-operator v0.0.16
-	github.com/pluralsh/cluster-api-migration v0.1.6
+	github.com/pluralsh/cluster-api-migration v0.1.7
 	github.com/pluralsh/gqlclient v1.3.15
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
