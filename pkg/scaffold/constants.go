@@ -55,7 +55,7 @@ spec:
     kind: Job
   descriptor:
     type: {{ .Name }}
-    version: {{ .Version }}
+    version: "{{ .Version }}"
     description: {{ .Description }}
     icons:
     - src: {{ .Icon }}
