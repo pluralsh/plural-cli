@@ -10,12 +10,13 @@ import (
 	"strings"
 
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 )
@@ -25,8 +26,9 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 	clusterProvider := api.ClusterProvider(cliProvider.Name())
 	switch clusterProvider {
 	case api.ClusterProviderGoogle:
+		// TODO: Make sure those are set and point to the correct cluster
 		kubeconfigPath := os.Getenv("KUBECONFIG")
-		credentials, err := base64.StdEncoding.DecodeString(os.Getenv("GCP_B64ENCODED_CREDENTIALS"))
+		credentials, err := base64.StdEncoding.DecodeString(utils.ToString(context["Credentials"]))
 		if err != nil {
 			panic(err)
 		}
