@@ -42,10 +42,10 @@ func clusterAPIDeploySteps() []*Step {
 		}
 	case "azure":
 		providerBootstrapFlags = []string{}
-	case "gcp":
-		providerBootstrapFlags = []string{}
 	case "google":
-		providerBootstrapFlags = []string{}
+		providerBootstrapFlags = []string{
+			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
+		}
 	}
 
 	// TODO: Add checks if cluster exists. This command will now only work if cluster doesn't exist.
