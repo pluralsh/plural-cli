@@ -197,7 +197,12 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if !project.ClusterAPI {
+		if repo == "bootstrap" && project.ClusterAPI {
+			err := ExecuteClusterAPI()
+			if err != nil {
+				return err
+			}
+		} else {
 			execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
 			if err != nil {
 				return err
@@ -207,12 +212,8 @@ func (p *Plural) deploy(c *cli.Context) error {
 				utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
 				return err
 			}
-		} else if repo == "bootstrap" {
-			err := ExecuteClusterAPI()
-			if err != nil {
-				return err
-			}
 		}
+
 		fmt.Printf("\n")
 
 		installation, err := p.GetInstallation(repo)
