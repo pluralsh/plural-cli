@@ -121,6 +121,8 @@ func (pMan *ProjectManifest) Configure() Writer {
 		return nil
 	}
 
+	pMan.ClusterAPI = true
+
 	return func() error { return pMan.Write(ProjectManifestPath()) }
 }
 
