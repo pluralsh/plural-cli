@@ -1,10 +1,16 @@
 package plural
 
 import (
+	"context"
 	"fmt"
+	"github.com/pluralsh/plural/pkg/cluster"
+	"github.com/pluralsh/plural/pkg/config"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
@@ -197,21 +203,21 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI {
-			err := ExecuteClusterAPI()
+		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetry(project.Cluster, "bootstrap", 3, 10*time.Second) {
+			err := BootstrapClusterAPI()
 			if err != nil {
 				return err
 			}
-		} else {
-			execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
-			if err != nil {
-				return err
-			}
+		}
 
-			if err := execution.Execute("deploying", verbose); err != nil {
-				utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
-				return err
-			}
+		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
+		if err != nil {
+			return err
+		}
+
+		if err := execution.Execute("deploying", verbose); err != nil {
+			utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
+			return err
 		}
 
 		fmt.Printf("\n")
@@ -476,4 +482,45 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 	}
 
 	return manifest.Read(p)
+}
+
+func checkIfClusterExists(name, namespace string) bool {
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return false
+	}
+
+	conf := config.Read()
+	ctx := context.Background()
+	clusters, err := cluster.NewForConfig(kubeConf)
+	if err != nil {
+		return false
+	}
+
+	client := clusters.Clusters(conf.Namespace(namespace))
+	c, err := client.Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return false
+	}
+
+	for _, cond := range c.Status.Conditions {
+		if cond.Type == clusterapi.ReadyCondition && cond.Status == "True" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func checkIfClusterExistsWithRetry(name, namespace string, retries int, sleep time.Duration) bool {
+	if checkIfClusterExists(name, namespace) {
+		return true
+	}
+
+	if retries--; retries > 0 {
+		time.Sleep(sleep)
+		return checkIfClusterExistsWithRetry(name, namespace, retries, sleep)
+	}
+
+	return false
 }

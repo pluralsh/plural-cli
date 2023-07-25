@@ -48,7 +48,6 @@ func clusterAPIDeploySteps() []*Step {
 		providerBootstrapFlags = []string{}
 	}
 
-	// TODO: Add checks if cluster exists. This command will now only work if cluster doesn't exist.
 	return []*Step{
 		{
 			Name:       "build values",
@@ -128,28 +127,10 @@ func clusterAPIDeploySteps() []*Step {
 			Execute:    RunPlural,
 			TargetPath: sanitizedPath,
 		},
-		{
-			Name:       "plural deploy",
-			Args:       []string{"plural", "deploy"},
-			Execute:    RunPlural,
-			TargetPath: root,
-		},
 	}
-
 }
 
-func ExecuteClusterAPI() error {
-	path := manifest.ProjectManifestPath()
-	project, err := manifest.ReadProject(path)
-	if err != nil {
-		return err
-	}
-
-	err = project.Write(path)
-	if err != nil {
-		return err
-	}
-
+func BootstrapClusterAPI() error {
 	for _, step := range clusterAPIDeploySteps() {
 		utils.Highlight("%s \n", step.Name)
 		err := os.Chdir(step.TargetPath)
