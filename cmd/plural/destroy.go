@@ -38,6 +38,7 @@ func ExecuteClusterAPIDestroy(destroy func() error) error {
 func clusterAPIDestroySteps(path string, destroy func() error) []*Step {
 	pm, _ := manifest.FetchProject()
 	homedir, _ := os.UserHomeDir()
+	root, _ := git.Root()
 	sanitizedPath := pathing.SanitizeFilepath(path)
 	providerBootstrapFlags := []string{}
 	prov, _ := provider.GetProvider()
@@ -68,6 +69,12 @@ func clusterAPIDestroySteps(path string, destroy func() error) []*Step {
 	}
 
 	return []*Step{
+		{
+			Name:       "build values",
+			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
+			TargetPath: root,
+			Execute:    RunPlural,
+		},
 		{
 			Name:       "create bootstrap cluster",
 			Args:       []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
