@@ -136,6 +136,7 @@ func clusterAPIMigrateSteps(path string) []*Step {
 		}
 		providerTags = []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", pm.Cluster),
+			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", pm.Cluster),
 		}
 	case "azure":
 		providerTags = []string{
