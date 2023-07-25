@@ -14,19 +14,17 @@ import (
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
 	"sigs.k8s.io/yaml"
 
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+
 	api2 "github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
-	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
-	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
-	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
-	"sigs.k8s.io/yaml"
-
-	"github.com/pluralsh/cluster-api-migration/pkg/api"
 )
 
 func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.Configuration) {
