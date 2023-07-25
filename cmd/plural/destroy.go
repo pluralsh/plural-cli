@@ -61,10 +61,10 @@ func clusterAPIDestroySteps(path string, destroy func() error) []*Step {
 		}
 	case "azure":
 		providerBootstrapFlags = []string{}
-	case "gcp":
-		providerBootstrapFlags = []string{}
 	case "google":
-		providerBootstrapFlags = []string{}
+		providerBootstrapFlags = []string{
+			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
+		}
 	}
 
 	return []*Step{
