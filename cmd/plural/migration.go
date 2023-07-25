@@ -9,14 +9,22 @@ import (
 	"path/filepath"
 	"strings"
 
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
 	"sigs.k8s.io/yaml"
 
+	api2 "github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 )
@@ -48,10 +56,6 @@ func newConfiguration(cliProvider provider.Provider) (api.ClusterProvider, *api.
 				SubscriptionID: utils.ToString(context["SubscriptionId"]),
 				ResourceGroup:  cliProvider.Project(),
 				Name:           cliProvider.Cluster(),
-				// TODO: Update this.
-				// It can be retrieved by using terraform show command in installation repo's bootstap/terraform directory.
-				// The path is module.azure-bootstrap.module.aks.tls_private_key.ssh.public_key_openssh.
-				SSHPublicKey: os.Getenv("AZURE_B64ENCODED_SSH_PUBLIC_KEY"),
 			},
 		}
 
@@ -137,39 +141,44 @@ func clusterAPIMigrateSteps(path string) []*Step {
 		}
 		providerTags = []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", pm.Cluster),
+			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", pm.Cluster),
 		}
 	case "azure":
-		providerBootstrapFlags = []string{
-			"--set", "bootstrap.azure-identity.enabled=false", // TODO: Uninstall this?
-		}
 		providerTags = []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", pm.Cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
 		}
-	case "gcp":
-		providerBootstrapFlags = []string{}
-	case "google":
-		providerBootstrapFlags = []string{}
 	}
 
-	return []*Step{
+	var steps []*Step
+
+	if pm.Provider == "azure" {
+		os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
+		steps = append(steps, []*Step{
+			{
+				Name:       "uninstall azure-identity",
+				Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
+				TargetPath: root,
+				Execute:    RunPlural,
+			},
+			{
+				Name:       "clear package cache",
+				TargetPath: root,
+				Execute: func(_ []string) error {
+					api2.ClearPackageCache()
+
+					return nil
+				},
+			},
+		}...)
+	}
+
+	return append(steps, []*Step{
 		{
 			Name:       "build values",
 			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
 			TargetPath: root,
 			Execute:    RunPlural,
-		},
-		{
-			Name:       "terraform init",
-			Args:       []string{"init", "-upgrade"},
-			TargetPath: filepath.Join(path, "terraform"),
-			Execute:    RunTerraform,
-		},
-		{
-			Name:       "terraform apply",
-			Args:       []string{"apply", "-auto-approve"},
-			TargetPath: filepath.Join(path, "terraform"),
-			Execute:    RunTerraform,
 		},
 		{
 			Name:       "bootstrap crds",
@@ -207,7 +216,45 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
-	}
+		{
+			Name:       "set capi flag",
+			TargetPath: root,
+			Execute: func(_ []string) error {
+				path := manifest.ProjectManifestPath()
+				project, err := manifest.ReadProject(path)
+				if err != nil {
+					return err
+				}
+
+				project.ClusterAPI = true
+				return project.Write(path)
+			},
+		},
+		{
+			Name:       "build values",
+			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
+			TargetPath: root,
+			Execute:    RunPlural,
+		},
+		{
+			Name:       "delink terraform state",
+			Args:       []string{filepath.Join(path, "terraform")},
+			TargetPath: filepath.Join(path, "terraform"), // Not used but required.
+			Execute:    RunDelinker,
+		},
+		{
+			Name:       "terraform init",
+			Args:       []string{"init", "-upgrade"},
+			TargetPath: filepath.Join(path, "terraform"),
+			Execute:    RunTerraform,
+		},
+		{
+			Name:       "terraform apply",
+			Args:       []string{"apply", "-auto-approve"},
+			TargetPath: filepath.Join(path, "terraform"),
+			Execute:    RunTerraform,
+		},
+	}...)
 }
 
 func getMigrator() (api.Migrator, error) {
@@ -216,6 +263,23 @@ func getMigrator() (api.Migrator, error) {
 		return nil, err
 	}
 	return migrator.NewMigrator(newConfiguration(prov))
+}
+
+func RunDelinker(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("path argument is missing")
+	}
+
+	path := args[0]
+	planner := delinkerplan.NewPlanner(delinkerplan.WithTerraform(delinkerexec.WithDir(path)))
+	plan, err := planner.Plan()
+	if err != nil {
+		return err
+	}
+
+	report := delinkeranalyze.NewAnalyzer(plan).Analyze(tfjson.ActionDelete)
+	delinker := delinkerdelink.NewDelinker(delinkerdelink.WithTerraform(delinkerexec.WithDir(path)))
+	return delinker.Run(report)
 }
 
 func RunAddTags(arguments []string) error {

@@ -62,6 +62,10 @@ func (client *client) GetChartInstallations(repoId string) ([]*ChartInstallation
 	return insts, err
 }
 
+func ClearPackageCache() {
+	packageCache = make(map[string]*packageCacheEntry)
+}
+
 func (client *client) GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error) {
 	if entry, ok := packageCache[repoId]; ok {
 		return entry.Charts, entry.Terraform, nil

@@ -156,9 +156,6 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	if err := prov.KubeConfig(); err != nil {
 		return err
 	}
-	if err := prov.KubeConfig(); err != nil {
-		return err
-	}
 	config, err := kubernetes.KubeConfig()
 	if err != nil {
 		return err

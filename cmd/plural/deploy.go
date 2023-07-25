@@ -206,7 +206,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 				return err
 			}
 		} else if repo == "bootstrap" {
-			err := ExecuteClusterAPI(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)))
+			err := ExecuteClusterAPI()
 			if err != nil {
 				return err
 			}
@@ -240,11 +240,14 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 	}
 
-	utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
+	// Do not ask for commit twice as "plural deploy --cluster-api" runs "plural deploy" internally.
+	if !c.Bool("cluster-api") {
+		utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
 
-	if commit := commitMsg(c); commit != "" {
-		utils.Highlight("Pushing upstream...\n")
-		return git.Sync(repoRoot, commit, c.Bool("force"))
+		if commit := commitMsg(c); commit != "" {
+			utils.Highlight("Pushing upstream...\n")
+			return git.Sync(repoRoot, commit, c.Bool("force"))
+		}
 	}
 
 	return nil
@@ -440,8 +443,15 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if err := workspace.Destroy(clusterAPI); err != nil {
-		return err
+	if repo == "bootstrap" && clusterAPI {
+		if err = ExecuteClusterAPIDestroy(workspace.Destroy); err != nil {
+			return err
+		}
+
+	} else {
+		if err := workspace.Destroy(); err != nil {
+			return err
+		}
 	}
 
 	if delete {

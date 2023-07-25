@@ -64,20 +64,13 @@ func (w *Workspace) HelmDiff() error {
 	return w.ToMinimal().DiffHelm()
 }
 
-func (w *Workspace) Destroy(clusterAPI bool) error {
+func (w *Workspace) Destroy() error {
 	if err := w.DestroyHelm(); err != nil {
 		return err
 	}
-	repo := w.Installation.Repository
-	if clusterAPI && repo.Name == "bootstrap" {
-		utils.LogInfo().Println("deleting cluster API cluster")
-		if err := w.DestroyClusterAPI(); err != nil {
-			return err
-		}
-	} else {
-		if err := w.DestroyTerraform(); err != nil {
-			return err
-		}
+
+	if err := w.DestroyTerraform(); err != nil {
+		return err
 	}
 
 	return w.Reset()
@@ -107,7 +100,11 @@ func (w *Workspace) Reset() error {
 
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
-	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repo.Name, "terraform")))
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "terraform")))
 	if err != nil {
 		return err
 	}
@@ -152,27 +149,6 @@ func uninstallHelm(name, namespace string) error {
 			return err
 		}
 	}
-	return nil
-}
-
-func (w *Workspace) DestroyClusterAPI() error {
-	repoRoot, err := git.Root()
-	if err != nil {
-		return err
-	}
-	repo := w.Installation.Repository.Name
-
-	execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "destroy")
-	if err != nil {
-		return err
-	}
-
-	if err := execution.Execute("deleting", true); err != nil {
-		utils.Note("It looks like the destroy failed. This may be a transient issue and rerunning the `plural destroy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
-		return err
-	}
-	fmt.Printf("\n")
-
 	return nil
 }
 
