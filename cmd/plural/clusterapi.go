@@ -145,7 +145,6 @@ func ExecuteClusterAPI() error {
 		return err
 	}
 
-	project.ClusterAPI = true // TODO: Later this can be set as true by default, just after running "plural init".
 	err = project.Write(path)
 	if err != nil {
 		return err

@@ -168,7 +168,11 @@ func (p *Plural) deploy(c *cli.Context) error {
 	p.InitPluralClient()
 	verbose := c.Bool("verbose")
 	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
 
+	project, err := manifest.FetchProject()
 	if err != nil {
 		return err
 	}
@@ -182,11 +186,9 @@ func (p *Plural) deploy(c *cli.Context) error {
 	default:
 		sorted, err = getSortedNames(true)
 	}
-
 	if err != nil {
 		return err
 	}
-
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
 
 	ignoreConsole := c.Bool("ignore-console")
@@ -195,7 +197,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if !c.Bool("cluster-api") {
+		if !project.ClusterAPI {
 			execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
 			if err != nil {
 				return err
@@ -240,8 +242,8 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 	}
 
-	// Do not ask for commit twice as "plural deploy --cluster-api" runs "plural deploy" internally.
-	if !c.Bool("cluster-api") {
+	// Do not ask for commit twice as CAPI deploy runs "plural deploy" internally.
+	if !project.ClusterAPI {
 		utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
 
 		if commit := commitMsg(c); commit != "" {
@@ -350,7 +352,11 @@ func (p *Plural) destroy(c *cli.Context) error {
 	}
 	force := c.Bool("force")
 	all := c.Bool("all")
-	clusterAPI := c.Bool("cluster-api")
+
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
 
 	infix := "this workspace"
 	if repoName != "" {
@@ -375,7 +381,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
 		}
 
-		return p.doDestroy(repoRoot, installation, delete, clusterAPI)
+		return p.doDestroy(repoRoot, installation, delete, project.ClusterAPI)
 	}
 
 	installations, err := p.getSortedInstallations(repoName)
@@ -395,7 +401,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doDestroy(repoRoot, installation, delete, clusterAPI); err != nil {
+		if err := p.doDestroy(repoRoot, installation, delete, project.ClusterAPI); err != nil {
 			return err
 		}
 	}
