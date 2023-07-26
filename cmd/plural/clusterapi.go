@@ -131,6 +131,8 @@ func clusterAPIDeploySteps() []*Step {
 }
 
 func BootstrapClusterAPI() error {
+	utils.Note("Bootstrapping cluster with Cluster API...\n")
+
 	for _, step := range clusterAPIDeploySteps() {
 		utils.Highlight("%s \n", step.Name)
 		err := os.Chdir(step.TargetPath)
@@ -142,6 +144,8 @@ func BootstrapClusterAPI() error {
 			return err
 		}
 	}
+
+	utils.Success("Cluster bootstrapped successfully!")
 
 	return nil
 }

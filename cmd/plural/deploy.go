@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/provider"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
@@ -203,7 +204,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetry(project.Cluster, "bootstrap", 3, 10*time.Second) {
+		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
 			err := BootstrapClusterAPI()
 			if err != nil {
 				return err
@@ -249,14 +250,11 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 	}
 
-	// Do not ask for commit twice as CAPI deploy runs "plural deploy" internally.
-	if !project.ClusterAPI {
-		utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
+	utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
 
-		if commit := commitMsg(c); commit != "" {
-			utils.Highlight("Pushing upstream...\n")
-			return git.Sync(repoRoot, commit, c.Bool("force"))
-		}
+	if commit := commitMsg(c); commit != "" {
+		utils.Highlight("Pushing upstream...\n")
+		return git.Sync(repoRoot, commit, c.Bool("force"))
 	}
 
 	return nil
@@ -485,6 +483,16 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 }
 
 func checkIfClusterExists(name, namespace string) bool {
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return false
+	}
+
+	err = prov.KubeConfig()
+	if err != nil {
+		return false
+	}
+
 	kubeConf, err := kubernetes.KubeConfig()
 	if err != nil {
 		return false
@@ -512,14 +520,18 @@ func checkIfClusterExists(name, namespace string) bool {
 	return false
 }
 
-func checkIfClusterExistsWithRetry(name, namespace string, retries int, sleep time.Duration) bool {
+func checkIfClusterExistsWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
+	if log {
+		utils.Note("Checking cluster status...\n")
+	}
+
 	if checkIfClusterExists(name, namespace) {
 		return true
 	}
 
 	if retries--; retries > 0 {
 		time.Sleep(sleep)
-		return checkIfClusterExistsWithRetry(name, namespace, retries, sleep)
+		return checkIfClusterExistsWithRetries(name, namespace, retries, sleep, false)
 	}
 
 	return false
