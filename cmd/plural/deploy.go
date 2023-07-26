@@ -204,7 +204,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetry(project.Cluster, "bootstrap", 3, 2*time.Second) {
+		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
 			err := BootstrapClusterAPI()
 			if err != nil {
 				return err
@@ -520,14 +520,18 @@ func checkIfClusterExists(name, namespace string) bool {
 	return false
 }
 
-func checkIfClusterExistsWithRetry(name, namespace string, retries int, sleep time.Duration) bool {
+func checkIfClusterExistsWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
+	if log {
+		utils.Note("Checking cluster status...\n")
+	}
+
 	if checkIfClusterExists(name, namespace) {
 		return true
 	}
 
 	if retries--; retries > 0 {
 		time.Sleep(sleep)
-		return checkIfClusterExistsWithRetry(name, namespace, retries, sleep)
+		return checkIfClusterExistsWithRetries(name, namespace, retries, sleep, false)
 	}
 
 	return false
