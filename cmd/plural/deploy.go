@@ -522,7 +522,7 @@ func checkIfClusterExists(name, namespace string) bool {
 
 func checkIfClusterExistsWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
 	if log {
-		utils.Note("Checking cluster status...\n")
+		utils.Highlight("Checking cluster status...\n")
 	}
 
 	if checkIfClusterExists(name, namespace) {
