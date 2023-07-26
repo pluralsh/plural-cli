@@ -145,7 +145,7 @@ func BootstrapClusterAPI() error {
 		}
 	}
 
-	utils.Success("Cluster bootstrapped successfully!")
+	utils.Success("Cluster bootstrapped successfully!\n")
 
 	return nil
 }
