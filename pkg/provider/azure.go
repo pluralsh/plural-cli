@@ -139,14 +139,26 @@ var azureSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
 		Validate: utils.ValidateAlphaNumExtended,
 	},
+	{
+		Name:     "clientId",
+		Prompt:   &survey.Input{Message: "Enter client ID of service principal to use for authentication: "},
+		Validate: survey.Required,
+	},
+	{
+		Name:     "clientSecret",
+		Prompt:   &survey.Input{Message: "Enter client secret of service principal to use for authentication: "},
+		Validate: survey.Required,
+	},
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	var resp struct {
-		Cluster  string
-		Storage  string
-		Region   string
-		Resource string
+		Cluster      string
+		Storage      string
+		Region       string
+		Resource     string
+		ClientId     string
+		ClientSecret string
 	}
 	err = survey.Ask(azureSurvey, &resp)
 	if err != nil {
@@ -170,6 +182,8 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 			"SubscriptionId": subId,
 			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
+			"ClientId":       resp.ClientId,
+			"ClientSecret":   resp.ClientSecret,
 		},
 		nil,
 		clients,
@@ -196,16 +210,6 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	ctx, err := manifest.FetchContext()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	if ctx != nil && ctx.Configuration != nil && ctx.Configuration["bootstrap"] != nil {
-		man.Context["ClientId"] = ctx.Configuration["bootstrap"]["client_id"]
-		man.Context["ClientSecret"] = ctx.Configuration["bootstrap"]["client_secret"]
 	}
 
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil, clients}, nil
