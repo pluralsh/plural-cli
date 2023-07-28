@@ -7,7 +7,6 @@ import (
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"time"
 
-	tm "github.com/buger/goterm"
 	"github.com/gdamore/tcell/v2"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/rivo/tview"
@@ -69,7 +68,7 @@ func (c *machinePoolWaiterClient) Init() {
 	c.table = table
 }
 
-// function that will update the table with the current status of the machine pools
+// UpdateTable updates the table with the current status of the machine pools
 // the table has 2 columns, the first one is the name of the machine pool and the second one is the phase
 func (c *machinePoolWaiterClient) UpdateTable() {
 	c.table.Clear()
@@ -91,14 +90,13 @@ func (c *machinePoolWaiterClient) Check(mp *clusterapiExp.MachinePool) bool {
 	c.UpdateTable()
 	c.app.Draw()
 
-	return allTrue(c.condition)
-	// return false
+	return areAllConditionsTrue(c.condition)
 }
 
-// function that check if all values in map[string]bool are true
-func allTrue(m map[string]clusterapi.Condition) bool {
-	for _, v := range m {
-		if v.Status != corev1.ConditionTrue {
+// areAllConditionsTrue checks if all conditions in provided map are true.
+func areAllConditionsTrue(conditions map[string]clusterapi.Condition) bool {
+	for _, condition := range conditions {
+		if condition.Status != corev1.ConditionTrue {
 			return false
 		}
 	}
@@ -135,6 +133,7 @@ func AllWaiter(kubeConf *rest.Config, namespace string, clusterName string, time
 	}()
 
 	if ready := waitClient.Check(&pools.Items[0]); ready {
+		waitClient.app.Stop()
 		return err
 	}
 
@@ -147,9 +146,9 @@ func AllWaiter(kubeConf *rest.Config, namespace string, clusterName string, time
 	for {
 		select {
 		case event := <-ch:
-			// tm.Clear()
 			mp, ok := event.Object.(*clusterapiExp.MachinePool)
 			if !ok {
+				waitClient.app.Stop()
 				return fmt.Errorf("Failed to parse watch event")
 			}
 
@@ -158,6 +157,7 @@ func AllWaiter(kubeConf *rest.Config, namespace string, clusterName string, time
 				return nil
 			}
 		case <-time.After(waitTime):
+			waitClient.app.Stop()
 			if err := timeout(); err != nil {
 				return err
 			}
@@ -179,7 +179,6 @@ func Waiter(kubeConf *rest.Config, namespace string, name string, mpFunc func(mp
 		return err
 	}
 
-	tm.Clear()
 	if ready, err := mpFunc(mp); ready || err != nil {
 		return err
 	}
@@ -193,7 +192,6 @@ func Waiter(kubeConf *rest.Config, namespace string, name string, mpFunc func(mp
 	for {
 		select {
 		case event := <-ch:
-			tm.Clear()
 			mp, ok := event.Object.(*clusterapiExp.MachinePool)
 			if !ok {
 				return fmt.Errorf("Failed to parse watch event")
@@ -212,7 +210,7 @@ func Waiter(kubeConf *rest.Config, namespace string, name string, mpFunc func(mp
 
 func SilentWait(kubeConf *rest.Config, namespace string, name string) error {
 	timeout := func() error {
-		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwatch %s %s` to get an idea where to debug", namespace, name)
+		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwait %s %s` to get an idea where to debug", namespace, name)
 	}
 
 	return Waiter(kubeConf, namespace, name, func(mp *clusterapiExp.MachinePool) (bool, error) {
@@ -227,11 +225,10 @@ func SilentWait(kubeConf *rest.Config, namespace string, name string) error {
 
 func Wait(kubeConf *rest.Config, namespace string, name string) error {
 	timeout := func() error {
-		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwatch %s %s` to get an idea where to debug", namespace, name)
+		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwait %s %s` to get an idea where to debug", namespace, name)
 	}
 
 	return Waiter(kubeConf, namespace, name, func(mp *clusterapiExp.MachinePool) (bool, error) {
-		tm.MoveCursor(1, 1)
 		ready := Ready(mp)
 		Flush()
 		return ready, nil
@@ -240,7 +237,7 @@ func Wait(kubeConf *rest.Config, namespace string, name string) error {
 
 func WaitAll(kubeConf *rest.Config, namespace string, clusterName string) error {
 	timeout := func() error {
-		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwatch %s %s` to get an idea where to debug", namespace, clusterName)
+		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwait %s %s` to get an idea where to debug", namespace, clusterName)
 	}
 
 	return AllWaiter(kubeConf, namespace, clusterName, timeout)

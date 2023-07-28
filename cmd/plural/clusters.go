@@ -11,7 +11,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
-	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -67,13 +66,6 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Category:  "Debugging",
 		},
 		{
-			Name:      "mpwatch",
-			Usage:     "watches a machine pool until it becomes ready",
-			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWatch, []string{"NAMESPACE", "NAME"}))),
-			Category:  "Debugging",
-		},
-		{
 			Name:      "mpwait",
 			Usage:     "waits on a machine pool until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
@@ -124,28 +116,6 @@ func handleClusterWait(c *cli.Context) error {
 	}
 
 	return cluster.Wait(kubeConf, namespace, name)
-}
-
-func handleMPWatch(c *cli.Context) error {
-	namespace := c.Args().Get(0)
-	name := c.Args().Get(1)
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	timeout := func() error { return nil }
-	return machinepool.Waiter(kubeConf, namespace, name, func(mp *clusterapiExp.MachinePool) (bool, error) {
-		tm.MoveCursor(1, 1)
-		machinepool.Print(kube.GetClient(), mp)
-		machinepool.Flush()
-		return false, nil
-	}, timeout)
 }
 
 func handleMPWait(c *cli.Context) error {
