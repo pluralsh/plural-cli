@@ -110,6 +110,12 @@ func clusterAPIDestroySteps(path string, destroy func() error) []*Step {
 			TargetPath: sanitizedPath,
 		},
 		{
+			Name:       "cleanup cluster resources",
+			Args:       nil,
+			TargetPath: sanitizedPath,
+			Execute:    CleanupClusterResources,
+		},
+		{
 			Name:       "destroy cluster API",
 			Args:       []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", pm.Cluster},
 			Execute:    RunPlural,
@@ -122,4 +128,13 @@ func clusterAPIDestroySteps(path string, destroy func() error) []*Step {
 			TargetPath: sanitizedPath,
 		},
 	}
+}
+
+func CleanupClusterResources(_ []string) error {
+	m, err := getMigrator()
+	if err != nil {
+		return err
+	}
+
+	return m.Destroy()
 }
