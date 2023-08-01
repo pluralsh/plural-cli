@@ -1,4 +1,14 @@
-# Binaries for programs and plugins
+# IDE files
+.idea/
+.vscode/
+
+# Testing files
+context.yaml
+workspace.yaml
+
+# Build files and binaries
+dist/
+build/
 *.exe
 *.exe~
 *.dll
@@ -14,16 +24,3 @@ __debug_bin
 *.out
 forge*.o
 plural*.o
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# IDE
-.idea/
-.vscode/
-
-dist/
-build/
-
-# Testing files
-context.yaml
-workspace.yaml
