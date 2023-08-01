@@ -2,16 +2,14 @@ package plural
 
 import (
 	"fmt"
-	tm "github.com/buger/goterm"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/cluster"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/machinepool"
-	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -64,13 +62,6 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Action: latestVersion(p.promoteCluster),
 		},
 		{
-			Name:      "watch",
-			Usage:     "watches a cluster until it becomes ready",
-			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWatch, []string{"NAMESPACE", "NAME"}))),
-			Category:  "Debugging",
-		},
-		{
 			Name:      "wait",
 			Usage:     "waits on a cluster until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
@@ -95,28 +86,6 @@ func (p *Plural) clusterCommands() []cli.Command {
 
 func handleMigration(c *cli.Context) error {
 	return ExecuteMigration()
-}
-
-func handleClusterWatch(c *cli.Context) error {
-	namespace := c.Args().Get(0)
-	name := c.Args().Get(1)
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	timeout := func() error { return nil }
-	return cluster.Waiter(kubeConf, namespace, name, func(clust *clusterapi.Cluster) (bool, error) {
-		tm.MoveCursor(1, 1)
-		cluster.Print(kube.GetClient(), clust)
-		cluster.Flush()
-		return false, nil
-	}, timeout)
 }
 
 func handleClusterWait(c *cli.Context) error {
