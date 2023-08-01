@@ -114,7 +114,7 @@ func initKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
 			if err := prov.KubeConfig(); err != nil {
 				return err
 			}
-			utils.LogInfo().Println("init %s provider", prov.Name())
+			utils.LogInfo().Println("init", prov.Name(), "provider")
 		} else {
 			utils.LogInfo().Println("not found provider")
 		}
