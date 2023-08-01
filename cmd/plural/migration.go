@@ -106,8 +106,11 @@ func ExecuteMigration() error {
 		return fmt.Errorf("can't save %s file", valuesFile)
 	}
 
-	for _, step := range clusterAPIMigrateSteps(bootstrapRepoPath) {
-		utils.Highlight("%s \n", step.Name)
+	utils.Highlight("Migrating cluster to Cluster API...\n")
+
+	steps := clusterAPIMigrateSteps(bootstrapRepoPath)
+	for i, step := range steps {
+		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 		err := os.Chdir(step.TargetPath)
 		if err != nil {
 			return err
@@ -118,6 +121,7 @@ func ExecuteMigration() error {
 		}
 	}
 
+	utils.Success("Cluster migrated successfully!\n")
 	return nil
 }
 
