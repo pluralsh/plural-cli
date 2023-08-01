@@ -7,6 +7,7 @@ import (
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/machinepool"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
@@ -19,6 +20,17 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Name:   "list",
 			Usage:  "lists clusters accessible to your user",
 			Action: latestVersion(p.listClusters),
+		},
+		{
+			Name:   "transfer",
+			Usage:  "transfers ownership of the current cluster to another",
+			Action: latestVersion(rooted(p.transferOwnership)),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "email",
+					Usage: "the email of the new owner",
+				},
+			},
 		},
 		{
 			Name:  "view",
@@ -140,6 +152,51 @@ func (p *Plural) listClusters(c *cli.Context) error {
 	return utils.PrintTable(clusters, headers, func(c *api.Cluster) ([]string, error) {
 		return []string{c.Id, c.Name, c.Provider, c.GitUrl, c.Owner.Email}, nil
 	})
+}
+
+func (p *Plural) transferOwnership(c *cli.Context) error {
+	p.InitPluralClient()
+	email := c.String("email")
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	if err := p.TransferOwnership(man.Cluster, email); err != nil {
+		return api.GetErrorResponse(err, "TransferOwnership")
+	}
+
+	man.Owner.Email = email
+	if err := man.Flush(); err != nil {
+		return err
+	}
+
+	if err := p.assumeServiceAccount(config.Read(), man); err != nil {
+		return err
+	}
+
+	utils.Highlight("rebuilding bootstrap and console to sync your cluster with the new owner:\n")
+
+	for _, app := range []string{"bootstrap", "console"} {
+		installation, err := p.GetInstallation(app)
+		if err != nil {
+			return api.GetErrorResponse(err, "GetInstallation")
+		} else if installation == nil {
+			continue
+		}
+
+		if err := p.doBuild(installation, false); err != nil {
+			return err
+		}
+	}
+
+	utils.Highlight("deploying rebuilt applications\n")
+	if err := p.deploy(c); err != nil {
+		return err
+	}
+
+	utils.Success("Ownership successfully transferred to %s", email)
+	return nil
 }
 
 func (p *Plural) showCluster(c *cli.Context) error {

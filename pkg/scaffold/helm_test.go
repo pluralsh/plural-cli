@@ -36,6 +36,7 @@ test:
   - name: ARM_USE_MSI
     value: "true"
 `,
+			expectedValues: "{}\n",
 			man: &manifest.ProjectManifest{
 				Cluster:  "test",
 				Bucket:   "test",

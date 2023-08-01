@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
@@ -16,6 +18,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+
+	"github.com/pluralsh/polly/algorithms"
 )
 
 type Workspace struct {
@@ -90,6 +94,25 @@ func (wk *Workspace) PrintLinks() {
 	fmt.Printf("\n")
 	doPrintLinks("helm", wk.Links.Helm)
 	doPrintLinks("terraform", wk.Links.Terraform)
+}
+
+func (wk *Workspace) RequiredCliVsn() (vsn string, ok bool) {
+	cVsns := algorithms.Map(wk.Charts, func(c *api.ChartInstallation) string { return c.Version.Dependencies.CliVsn })
+	tVsns := algorithms.Map(wk.Terraform, func(t *api.TerraformInstallation) string { return t.Version.Dependencies.CliVsn })
+	vsns := algorithms.Filter(append(cVsns, tVsns...), func(v string) bool { return v != "" })
+	vsns = algorithms.Map(vsns, func(v string) string {
+		if strings.HasPrefix(v, "v") {
+			return v
+		}
+		return fmt.Sprintf("v%s", v)
+	})
+	vsns = algorithms.Filter(vsns, semver.IsValid)
+	if len(vsns) == 0 {
+		return
+	}
+
+	semver.Sort(vsns)
+	return vsns[len(vsns)-1], true
 }
 
 func doPrintLinks(name string, links map[string]string) {

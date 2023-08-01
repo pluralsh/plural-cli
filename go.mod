@@ -19,10 +19,11 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/Yamashou/gqlgenc v0.11.0
+	github.com/Yamashou/gqlgenc v0.14.0
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.12
 	github.com/aws/aws-sdk-go-v2/service/sts v1.19.0
+	github.com/briandowns/spinner v1.23.0
 	github.com/buger/goterm v1.0.4
 	github.com/chartmuseum/helm-push v0.10.3
 	github.com/coreos/go-semver v0.3.0
@@ -48,7 +49,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/bootstrap-operator v0.0.16
 	github.com/pluralsh/cluster-api-migration v0.2.5
-	github.com/pluralsh/gqlclient v1.3.15
+	github.com/pluralsh/gqlclient v1.6.0
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
 	github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247

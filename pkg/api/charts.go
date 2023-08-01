@@ -142,6 +142,7 @@ func convertVersion(version *gqlclient.VersionFragment) *Version {
 	v := &Version{
 		Id:      version.ID,
 		Version: version.Version,
+		Helm:    version.Helm,
 	}
 	if version.Readme != nil {
 		v.Readme = *version.Readme
@@ -188,6 +189,9 @@ func convertDependencies(depFragment *gqlclient.DependenciesFragment) *Dependenc
 	}
 	if depFragment.ProviderVsn != nil {
 		dep.ProviderVsn = *depFragment.ProviderVsn
+	}
+	if depFragment.CliVsn != nil {
+		dep.CliVsn = *depFragment.CliVsn
 	}
 	if depFragment.Application != nil {
 		dep.Application = *depFragment.Application
