@@ -99,18 +99,6 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(handleDeleteCluster, []string{"NAME"})),
 		},
 		{
-			Name:      "watch",
-			ArgsUsage: "NAME",
-			Usage:     "Watches cluster creation progress",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "wait-for-capi",
-					Usage: "wait for CAPI components",
-				},
-			},
-			Action: latestVersion(initKubeconfig(requireArgs(p.handleWatchCluster, []string{"NAME"}))),
-		},
-		{
 			Name:  "move",
 			Usage: "Move cluster API objects",
 			Flags: []cli.Flag{
@@ -245,120 +233,6 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-func (p *Plural) handleWatchCluster(c *cli.Context) error {
-	name := c.Args().Get(0)
-	waitForCapi := c.Bool("wait-for-capi")
-	if err := p.InitKube(); err != nil {
-		return err
-	}
-	config, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	client, err := genClientFromConfig(config)
-	if err != nil {
-		return err
-	}
-	var bootstrapCluster bv1alpha1.Bootstrap
-	errorCount := 0
-	providerReady := false
-	capiOperatorReady := false
-	capiOperatorComponentsReady := false
-	capiCluster := false
-	moveReady := false
-	return WaitFor(30*time.Minute, 5*time.Second, func() (bool, error) {
-
-		if err := client.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: name, Namespace: "bootstrap"}, &bootstrapCluster); err != nil {
-			return false, err
-		}
-
-		if bootstrapCluster.Status.ProviderStatus == nil {
-			return false, nil
-		}
-
-		if !bootstrapCluster.Status.ProviderStatus.Ready {
-			if bootstrapCluster.Status.ProviderStatus.Phase == bv1alpha1.Error {
-				errorCount++
-			}
-			if errorCount == 10 {
-				return false, fmt.Errorf("\n %s", bootstrapCluster.Status.ProviderStatus.Message)
-			}
-			return false, nil
-		} else if !providerReady {
-			errorCount = 0
-			providerReady = true
-			utils.Success("[1/5] Provider initialized successfully \n")
-			utils.Warn("Waiting for CAPI operator ")
-		}
-		if !bootstrapCluster.Status.CapiOperatorStatus.Ready {
-			utils.Warn(".")
-			if bootstrapCluster.Status.CapiOperatorStatus.Phase == bv1alpha1.Error {
-				errorCount++
-			}
-			if errorCount == 10 {
-				return false, fmt.Errorf("\n %s", bootstrapCluster.Status.CapiOperatorStatus.Message)
-			}
-			return false, nil
-		} else if !capiOperatorReady {
-			errorCount = 0
-			capiOperatorReady = true
-			utils.Success("\n")
-			utils.Success("[2/5] CAPI operator installed successfully \n")
-			utils.Warn("Waiting for CAPI operator components ")
-
-		}
-		if !bootstrapCluster.Status.CapiOperatorComponentsStatus.Ready {
-			utils.Warn(".")
-			if bootstrapCluster.Status.CapiOperatorComponentsStatus.Phase == bv1alpha1.Error {
-				errorCount++
-			}
-			if errorCount == 10 {
-				return false, fmt.Errorf("\n %s", bootstrapCluster.Status.CapiOperatorComponentsStatus.Message)
-			}
-		} else if !capiOperatorComponentsReady {
-			errorCount = 0
-			capiOperatorComponentsReady = true
-			utils.Success("\n")
-			utils.Success("[3/5] CAPI operator components installed successfully \n")
-			if bootstrapCluster.Spec.SkipClusterCreation && waitForCapi {
-				return true, nil
-			}
-			utils.Warn("Waiting for cluster ")
-		}
-
-		if !bootstrapCluster.Status.CapiClusterStatus.Ready {
-			utils.Warn(".")
-			if bootstrapCluster.Status.CapiClusterStatus.Phase == bv1alpha1.Error {
-				errorCount++
-			}
-			if errorCount == 10 {
-				return false, fmt.Errorf("\n %s", bootstrapCluster.Status.CapiClusterStatus.Message)
-			}
-		} else if !capiCluster {
-			errorCount = 0
-			capiCluster = true
-			utils.Success("\n")
-			utils.Success("[4/5] Cluster installed successfully \n")
-			utils.Warn("Moving CAPI objects to the new cluster ")
-		}
-		if !bootstrapCluster.Status.Ready {
-			utils.Warn(".")
-			if bootstrapCluster.Status.Phase == bv1alpha1.Error {
-				errorCount++
-			}
-			if errorCount == 10 {
-				return false, fmt.Errorf("\n %s", bootstrapCluster.Status.Message)
-			}
-		} else if !moveReady {
-			utils.Success("\n")
-			utils.Success("[5/5] Moving cluster object to the new cluster finished successfully \n")
-			return true, nil
-		}
-
-		return false, nil
-	})
 }
 
 func (p *Plural) handleCreateNamespace(c *cli.Context) error {
