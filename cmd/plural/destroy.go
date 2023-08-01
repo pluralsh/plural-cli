@@ -20,8 +20,11 @@ func ExecuteClusterAPIDestroy(destroy func() error) error {
 	bootstrapRepo := filepath.Join(root, "bootstrap")
 	bootstrapRepoPath := pathing.SanitizeFilepath(bootstrapRepo)
 
-	for _, step := range clusterAPIDestroySteps(bootstrapRepoPath, destroy) {
-		utils.Highlight("%s \n", step.Name)
+	utils.Highlight("Destroying Cluster API cluster...\n")
+
+	steps := clusterAPIDestroySteps(bootstrapRepoPath, destroy)
+	for i, step := range steps {
+		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 		err := os.Chdir(step.TargetPath)
 		if err != nil {
 			return err
@@ -32,6 +35,7 @@ func ExecuteClusterAPIDestroy(destroy func() error) error {
 		}
 	}
 
+	utils.Success("Cluster destroyed successfully!\n")
 	return nil
 }
 
