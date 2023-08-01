@@ -20,17 +20,10 @@ type Step struct {
 	Execute          ActionFunc
 }
 
-func clusterAPIDeploySteps() []*Step {
-	pm, _ := manifest.FetchProject()
-	root, _ := git.Root()
-	sanitizedPath := pathing.SanitizeFilepath(filepath.Join(root, "bootstrap"))
-
-	homedir, _ := os.UserHomeDir()
-	providerBootstrapFlags := []string{}
-
-	switch pm.Provider {
+func getProviderBootstrapFlags(provider string) []string {
+	switch provider {
 	case "aws":
-		providerBootstrapFlags = []string{
+		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
 			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",
 			"--set", "bootstrap.aws-load-balancer-controller.enabled=false",
@@ -40,13 +33,17 @@ func clusterAPIDeploySteps() []*Step {
 			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
 			"--set", "bootstrap.tigera-operator.enabled=false",
 		}
-	case "azure":
-		providerBootstrapFlags = []string{}
-	case "gcp":
-		providerBootstrapFlags = []string{}
-	case "google":
-		providerBootstrapFlags = []string{}
+	default:
+		return []string{}
 	}
+}
+
+func clusterAPIDeploySteps() []*Step {
+	pm, _ := manifest.FetchProject()
+	root, _ := git.Root()
+	sanitizedPath := pathing.SanitizeFilepath(filepath.Join(root, "bootstrap"))
+	homedir, _ := os.UserHomeDir()
+	providerBootstrapFlags := getProviderBootstrapFlags(pm.Provider)
 
 	return []*Step{
 		{
@@ -62,7 +59,7 @@ func clusterAPIDeploySteps() []*Step {
 			TargetPath: sanitizedPath,
 		},
 		{
-			Name:       "Install CAPI operators in local cluster",
+			Name:       "Install Cluster API operators in local cluster",
 			Args:       append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			Execute:    RunPlural,
 			TargetPath: sanitizedPath,
@@ -104,7 +101,7 @@ func clusterAPIDeploySteps() []*Step {
 			TargetPath: sanitizedPath,
 		},
 		{
-			Name:       "Install CAPI operators in target cluster",
+			Name:       "Install Cluster API operators in target cluster",
 			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			Execute:    RunPlural,
 			TargetPath: sanitizedPath,

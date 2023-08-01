@@ -125,29 +125,41 @@ func ExecuteMigration() error {
 	return nil
 }
 
-func clusterAPIMigrateSteps(path string) []*Step {
-	pm, _ := manifest.FetchProject()
-
-	sanitizedPath := pathing.SanitizeFilepath(path)
-	providerBootstrapFlags := []string{}
-	providerTags := []string{}
-
-	root, _ := git.Root()
-	switch pm.Provider {
+func getProviderTags(provider, cluster string) []string {
+	switch provider {
 	case "aws":
-		providerBootstrapFlags = []string{
-			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
-		}
-		providerTags = []string{
-			fmt.Sprintf("kubernetes.io/cluster/%s=owned", pm.Cluster),
-			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", pm.Cluster),
+		return []string{
+			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
+			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
 		}
 	case "azure":
-		providerTags = []string{
-			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", pm.Cluster),
+		return []string{
+			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
 		}
+	default:
+		return []string{}
 	}
+
+}
+
+func getMigrationProviderBootstrapFlags(provider string) []string {
+	switch provider {
+	case "aws":
+		return []string{
+			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
+		}
+	default:
+		return []string{}
+	}
+}
+
+func clusterAPIMigrateSteps(path string) []*Step {
+	pm, _ := manifest.FetchProject()
+	root, _ := git.Root()
+	sanitizedPath := pathing.SanitizeFilepath(path)
+	providerTags := getProviderTags(pm.Provider, pm.Cluster)
+	providerBootstrapFlags := getMigrationProviderBootstrapFlags(pm.Provider)
 
 	var steps []*Step
 
@@ -174,49 +186,49 @@ func clusterAPIMigrateSteps(path string) []*Step {
 
 	return append(steps, []*Step{
 		{
-			Name:       "build values",
+			Name:       "Build values",
 			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
 			TargetPath: root,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "bootstrap crds",
+			Name:       "Bootstrap CRDs",
 			Args:       []string{"plural", "wkspace", "crds", sanitizedPath},
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "install capi operators",
+			Name:       "Install Cluster API operators",
 			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, providerBootstrapFlags...),
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "add tags",
+			Name:       "Add Cluster API tags for provider resources",
 			Args:       providerTags,
 			TargetPath: sanitizedPath,
 			Execute:    RunAddTags,
 		},
 		{
-			Name:       "deploy cluster",
+			Name:       "Deploy cluster",
 			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap"}, providerBootstrapFlags...),
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "wait-for-cluster",
+			Name:       "Wait for cluster",
 			Args:       []string{"plural", "clusters", "wait", "bootstrap", pm.Cluster},
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "wait-for-machines-running",
+			Name:       "Wait for machine pools",
 			Args:       []string{"plural", "clusters", "mpwait", "bootstrap", pm.Cluster},
 			TargetPath: sanitizedPath,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "set capi flag",
+			Name:       "Mark cluster as migrated to Cluster API",
 			TargetPath: root,
 			Execute: func(_ []string) error {
 				path := manifest.ProjectManifestPath()
@@ -230,25 +242,25 @@ func clusterAPIMigrateSteps(path string) []*Step {
 			},
 		},
 		{
-			Name:       "build values",
+			Name:       "Build values",
 			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
 			TargetPath: root,
 			Execute:    RunPlural,
 		},
 		{
-			Name:       "delink terraform state",
+			Name:       "Delink resources managed by Cluster API from Terraform",
 			Args:       []string{filepath.Join(path, "terraform")},
 			TargetPath: filepath.Join(path, "terraform"), // Not used but required.
 			Execute:    RunDelinker,
 		},
 		{
-			Name:       "terraform init",
+			Name:       "Run Terraform init",
 			Args:       []string{"init", "-upgrade"},
 			TargetPath: filepath.Join(path, "terraform"),
 			Execute:    RunTerraform,
 		},
 		{
-			Name:       "terraform apply",
+			Name:       "Run Terraform apply",
 			Args:       []string{"apply", "-auto-approve"},
 			TargetPath: filepath.Join(path, "terraform"),
 			Execute:    RunTerraform,
