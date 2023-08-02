@@ -2,7 +2,6 @@ package plural
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural/pkg/bootstrap"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/application"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -196,6 +196,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
 
 	ignoreConsole := c.Bool("ignore-console")

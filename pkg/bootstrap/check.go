@@ -13,6 +13,7 @@ import (
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
+// CheckClusterReadiness checks if Cluster API cluster is in ready state.
 func CheckClusterReadiness(name, namespace string) bool {
 	prov, err := provider.GetProvider()
 	if err != nil {
@@ -51,6 +52,7 @@ func CheckClusterReadiness(name, namespace string) bool {
 	return false
 }
 
+// CheckClusterReadinessWithRetries checks (possibly multiple times) if Cluster API cluster is in ready state.
 func CheckClusterReadinessWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
 	if log {
 		utils.Highlight("Checking cluster status...\n")
