@@ -95,10 +95,6 @@ func (p *Plural) getCommands() []cli.Command {
 					Name:  "force",
 					Usage: "force workspace to build even if remote is out of sync",
 				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "use cluster API for cluster provisioning",
-				},
 			},
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
@@ -141,10 +137,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "force",
 					Usage: "use force push when pushing to git",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "use clusterAPI deployment",
 				},
 			},
 			Action: tracked(latestVersion(owned(rooted(p.deploy))), "cli.deploy"),
@@ -236,10 +228,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "all",
 					Usage: "tear down the entire cluster gracefully in one go",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "deletes the cluster API provider components from the bootstrap cluster",
 				},
 			},
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
@@ -477,12 +465,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Bootstrap",
 		},
 		p.uiCommands(),
-		{
-			Name:        "bootstrap",
-			Usage:       "Commands for bootstrapping cluster",
-			Subcommands: p.bootstrapCommands(),
-			Category:    "Bootstrap",
-		},
 	}
 }
 
