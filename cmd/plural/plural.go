@@ -526,3 +526,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 
 	return app
 }
+
+func RunPlural(arguments []string) error {
+	return CreateNewApp(&Plural{}).Run(arguments)
+}

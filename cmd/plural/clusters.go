@@ -3,6 +3,7 @@ package plural
 import (
 	"fmt"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -85,7 +86,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 }
 
 func handleMigration(c *cli.Context) error {
-	return ExecuteMigration()
+	return bootstrap.MigrateCluster(RunPlural)
 }
 
 func handleClusterWait(c *cli.Context) error {

@@ -3,6 +3,7 @@ package plural
 import (
 	"context"
 	"fmt"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -210,7 +211,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 		}
 
 		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
-			err := BootstrapClusterAPI()
+			err := bootstrap.BootstrapCluster(RunPlural)
 			if err != nil {
 				return err
 			}
@@ -460,7 +461,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	}
 
 	if repo == "bootstrap" && clusterAPI {
-		if err = ExecuteClusterAPIDestroy(workspace.Destroy); err != nil {
+		if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
 			return err
 		}
 
