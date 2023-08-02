@@ -4,10 +4,9 @@ import (
 	"bytes"
 
 	"github.com/imdario/mergo"
-	"gopkg.in/yaml.v2"
-
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
+	"gopkg.in/yaml.v2"
 )
 
 func FromGoTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {

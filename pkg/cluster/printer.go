@@ -6,7 +6,6 @@ import (
 
 	tm "github.com/buger/goterm"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
-	// corev1 "k8s.io/api/core/v1"
 )
 
 func Ready(cluster *clusterapi.Cluster) bool {

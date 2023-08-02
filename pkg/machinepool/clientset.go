@@ -2,10 +2,8 @@ package machinepool
 
 import (
 	"k8s.io/client-go/kubernetes/scheme"
-	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
-
-	// "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
+	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
 type MachinePoolV1Beta1Interface interface {

@@ -2,10 +2,8 @@ package application
 
 import (
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/application/api/v1beta1"
-
-	// "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/application/api/v1beta1"
 )
 
 type ApplicationV1Beta1Interface interface {

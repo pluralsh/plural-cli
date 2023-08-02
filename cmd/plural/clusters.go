@@ -2,6 +2,7 @@ package plural
 
 import (
 	"fmt"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/cluster"
