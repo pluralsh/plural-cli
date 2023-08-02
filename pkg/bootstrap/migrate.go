@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
