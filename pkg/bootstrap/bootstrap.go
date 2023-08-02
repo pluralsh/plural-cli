@@ -2,12 +2,9 @@ package bootstrap
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
@@ -17,18 +14,16 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 		return nil, err
 	}
 
-	gitRootDir, err := git.Root()
+	kubeconfigPath, err := getKubeconfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	homeDir, err := os.UserHomeDir()
+	bootstrapPath, err := getBootstrapPath()
 	if err != nil {
 		return nil, err
 	}
 
-	bootstrapPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
-	kubeconfigPath := pathing.SanitizeFilepath(filepath.Join(homeDir, ".kube", "config"))
 	flags := getBootstrapFlags(projectManifest.Provider)
 
 	return []*Step{

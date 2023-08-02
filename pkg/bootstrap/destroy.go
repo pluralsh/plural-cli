@@ -2,29 +2,29 @@ package bootstrap
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 // getDestroySteps returns list of steps to run during cluster destroy.
-func getDestroySteps(path string, destroy func() error, runPlural ActionFunc) ([]*Step, error) {
+func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error) {
 	projectManifest, err := manifest.FetchProject()
 	if err != nil {
 		return nil, err
 	}
 
-	homeDir, err := os.UserHomeDir()
+	kubeconfigPath, err := getKubeconfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	sanitizedPath := pathing.SanitizeFilepath(path)
-	kubeconfigPath := pathing.SanitizeFilepath(filepath.Join(homeDir, ".kube", "config"))
+	bootstrapPath, err := getBootstrapPath()
+	if err != nil {
+		return nil, err
+	}
+
 	flags := getBootstrapFlags(projectManifest.Provider)
 
 	prov, err := provider.GetProvider()
@@ -38,30 +38,30 @@ func getDestroySteps(path string, destroy func() error, runPlural ActionFunc) ([
 		{
 			Name:       "Create local bootstrap cluster",
 			Args:       []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 			Execute:    runPlural,
 		},
 		{
 			Name:       "Bootstrap CRDs in local cluster",
 			Args:       []string{"plural", "--bootstrap", "wkspace", "crds", "bootstrap"},
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 			Execute:    runPlural,
 		},
 		{
 			Name:       "Install Cluster API operators in local cluster",
 			Args:       append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 			Execute:    runPlural,
 		},
 		{
 			Name:       "Move resources from target to local cluster",
 			Args:       []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", "kind-bootstrap"},
 			Execute:    runPlural,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 		},
 		{
 			Name:       "Destroy bootstrap on target cluster",
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 			Execute: func(_ []string) error {
 				return destroy()
 			},
@@ -70,18 +70,17 @@ func getDestroySteps(path string, destroy func() error, runPlural ActionFunc) ([
 			Name:       "Wait for cluster",
 			Args:       []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
 			Execute:    runPlural,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 		},
 		{
 			Name:       "Wait for machine pools",
 			Args:       []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute:    runPlural,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 		},
 		{
 			Name:       "Cleanup cluster resources",
-			Args:       nil,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 			Execute: func(_ []string) error {
 				m, err := getMigrator()
 				if err != nil {
@@ -95,29 +94,23 @@ func getDestroySteps(path string, destroy func() error, runPlural ActionFunc) ([
 			Name:       "Destroy cluster API",
 			Args:       []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", projectManifest.Cluster},
 			Execute:    runPlural,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 		},
 		{
 			Name:       "Destroy local cluster",
 			Args:       []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute:    runPlural,
-			TargetPath: sanitizedPath,
+			TargetPath: bootstrapPath,
 		},
 	}, nil
 }
 
 // DestroyCluster destroys cluster managed by Cluster API.
 func DestroyCluster(destroy func() error, runPlural ActionFunc) error {
-	gitRootDir, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	bootstrapRepoPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
 
 	utils.Highlight("Destroying Cluster API cluster...\n")
 
-	steps, err := getDestroySteps(bootstrapRepoPath, destroy, runPlural)
+	steps, err := getDestroySteps(destroy, runPlural)
 	if err != nil {
 		return err
 	}

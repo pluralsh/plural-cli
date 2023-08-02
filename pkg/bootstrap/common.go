@@ -3,6 +3,10 @@ package bootstrap
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 // runTerraform executes terraform command with provided arguments, i.e. "terraform init".
@@ -30,4 +34,24 @@ func getBootstrapFlags(provider string) []string {
 	default:
 		return []string{}
 	}
+}
+
+// getKubeconfigPath returns path to kubeconfig in user home directory.
+func getKubeconfigPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	return pathing.SanitizeFilepath(filepath.Join(homeDir, ".kube", "config")), nil
+}
+
+// getBootstrapPath returns bootstrap repository path.
+func getBootstrapPath() (string, error) {
+	gitRootPath, err := git.Root()
+	if err != nil {
+		return "", err
+	}
+
+	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
 }

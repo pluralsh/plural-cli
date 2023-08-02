@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sigs.k8s.io/yaml"
+
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
@@ -22,6 +22,8 @@ import (
 	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
 	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
 	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+
+	"sigs.k8s.io/yaml"
 )
 
 func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
@@ -331,10 +333,13 @@ func MigrateCluster(runPlural ActionFunc) error {
 
 	for i, step := range steps {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
+
 		err := os.Chdir(step.TargetPath)
+
 		if err != nil {
 			return err
 		}
+
 		err = step.Execute(step.Args)
 		if err != nil {
 			return err
