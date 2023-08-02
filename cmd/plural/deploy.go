@@ -1,16 +1,10 @@
 package plural
 
 import (
-	"context"
 	"fmt"
 	"github.com/pluralsh/plural/pkg/bootstrap"
-	"github.com/pluralsh/plural/pkg/cluster"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/provider"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"strings"
 	"time"
 
@@ -210,7 +204,9 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
+		if repo == "bootstrap" &&
+			project.ClusterAPI &&
+			!bootstrap.CheckClusterReadinessWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
 			err := bootstrap.BootstrapCluster(RunPlural)
 			if err != nil {
 				return err
@@ -486,59 +482,4 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 	}
 
 	return manifest.Read(p)
-}
-
-func checkIfClusterExists(name, namespace string) bool {
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return false
-	}
-
-	err = prov.KubeConfig()
-	if err != nil {
-		return false
-	}
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return false
-	}
-
-	conf := config.Read()
-	ctx := context.Background()
-	clusters, err := cluster.NewForConfig(kubeConf)
-	if err != nil {
-		return false
-	}
-
-	client := clusters.Clusters(conf.Namespace(namespace))
-	c, err := client.Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return false
-	}
-
-	for _, cond := range c.Status.Conditions {
-		if cond.Type == clusterapi.ReadyCondition && cond.Status == "True" {
-			return true
-		}
-	}
-
-	return false
-}
-
-func checkIfClusterExistsWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
-	if log {
-		utils.Highlight("Checking cluster status...\n")
-	}
-
-	if checkIfClusterExists(name, namespace) {
-		return true
-	}
-
-	if retries--; retries > 0 {
-		time.Sleep(sleep)
-		return checkIfClusterExistsWithRetries(name, namespace, retries, sleep, false)
-	}
-
-	return false
 }
