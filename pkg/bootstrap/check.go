@@ -43,6 +43,9 @@ func CheckClusterReadiness(name, namespace string) bool {
 		return false
 	}
 
+	// TODO:
+	// 	If cluster exists but is not ready then we should handle it better.
+	// 	Right now it would attempt to bootstrap new cluster.
 	for _, cond := range c.Status.Conditions {
 		if cond.Type == clusterapi.ReadyCondition && cond.Status == "True" {
 			return true
