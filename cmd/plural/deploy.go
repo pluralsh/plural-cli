@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
@@ -205,12 +204,20 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" &&
-			project.ClusterAPI &&
-			!bootstrap.CheckClusterReadinessWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
-			err := bootstrap.BootstrapCluster(RunPlural)
-			if err != nil {
+		if repo == "bootstrap" && project.ClusterAPI {
+			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, "bootstrap")
+
+			// Stop if cluster exists, but it is not ready yet.
+			if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
 				return err
+			}
+
+			// If cluster does not exist bootstrap needs to be done first.
+			if !ready {
+				err := bootstrap.BootstrapCluster(RunPlural)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
