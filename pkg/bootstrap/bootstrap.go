@@ -64,6 +64,18 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 			TargetPath: bootstrapPath,
 		},
 		{
+			Name:       "Post install  resources",
+			TargetPath: bootstrapPath,
+			Execute: func(_ []string) error {
+				m, err := getMigrator()
+				if err != nil {
+					return err
+				}
+
+				return m.PostInstall()
+			},
+		},
+		{
 			Name:       "Initialize kubeconfig for target cluster",
 			Args:       []string{"plural", "wkspace", "kube-init"},
 			Execute:    runPlural,
