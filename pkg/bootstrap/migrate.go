@@ -31,6 +31,7 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider api.Cluster
 	case api.ClusterProviderGoogle:
 		// TODO: Make sure those are set and point to the correct cluster
 		kubeconfigPath := os.Getenv("KUBECONFIG")
+		context := cliProvider.Context()
 		credentials, err := base64.StdEncoding.DecodeString(utils.ToString(context["Credentials"]))
 		if err != nil {
 			panic(err)

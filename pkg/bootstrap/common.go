@@ -31,6 +31,10 @@ func getBootstrapFlags(provider string) []string {
 			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
 			"--set", "bootstrap.tigera-operator.enabled=false",
 		}
+	case "google":
+		return []string{
+			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
+		}
 	default:
 		return []string{}
 	}
