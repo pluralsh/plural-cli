@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	tm "github.com/buger/goterm"
-	"k8s.io/client-go/kubernetes"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
-	// corev1 "k8s.io/api/core/v1"
 )
 
 func Ready(cluster *clusterapi.Cluster) bool {
@@ -33,54 +31,6 @@ func Ready(cluster *clusterapi.Cluster) bool {
 
 	tm.Println("")
 	return false
-}
-
-func Print(client *kubernetes.Clientset, cluster *clusterapi.Cluster) (err error) {
-	Ready(cluster)
-	if _, err := tm.Println(cluster.ObjectMeta.Name); err != nil {
-		return err
-	}
-	if _, err := tm.Printf("\nCluster ControlPlane Ready: %v\n", cluster.Status.ControlPlaneReady); err != nil {
-		return err
-	}
-	if _, err := tm.Printf("\nCluster Infrastructure Ready: %v\n", cluster.Status.InfrastructureReady); err != nil {
-		return err
-	}
-	// first := true
-	// for _, comp := range cluster.Status.ComponentList.Objects {
-	// 	if comp.Status != "Ready" {
-	// 		if first {
-	// 			if _, err := tm.Println("\nUnready Components:"); err != nil {
-	// 				return err
-	// 			}
-	// 		}
-	// 		kind := strings.ToLower(comp.Kind)
-	// 		if _, err := tm.Printf("- %s/%s :: %s\n", kind, comp.Name, comp.Status); err != nil {
-	// 			return err
-	// 		}
-	// 		additionalDetails(client, kind, comp.Name, app.Namespace)
-	// 		if _, err := tm.Printf("\tUse `kubectl describe %s %s -n %s` to investigate\n", kind, comp.Name, app.Namespace); err != nil {
-	// 			return err
-	// 		}
-	// 		first = false
-	// 	}
-	// }
-
-	// first = true
-	// for _, comp := range app.Status.ComponentList.Objects {
-	// 	if comp.Status == "Ready" {
-	// 		if first {
-	// 			if _, err := tm.Println("\nReady Components:"); err != nil {
-	// 				return err
-	// 			}
-	// 		}
-	// 		if _, err := tm.Printf("- %s/%s :: %s\n", strings.ToLower(comp.Kind), comp.Name, comp.Status); err != nil {
-	// 			return err
-	// 		}
-	// 		first = false
-	// 	}
-	// }
-	return
 }
 
 func Flush() {

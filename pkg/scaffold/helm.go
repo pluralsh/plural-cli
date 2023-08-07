@@ -149,7 +149,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	prevVals, _ := prevValues(valuesFile)
 
 	if !utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, []byte(""), 0644); err != nil {
+		if err := os.WriteFile(valuesFile, []byte("{}\n"), 0644); err != nil {
 			return err
 		}
 	}
@@ -230,9 +230,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	values, err := yaml.Marshal(patchValues)
 	if err != nil {
 		return err
-	}
-	if len(patchValues) == 0 {
-		values = []byte{}
 	}
 	if err := utils.WriteFile(valuesFile, values); err != nil {
 		return err
@@ -410,6 +407,13 @@ func repoUrl(w *wkspace.Workspace, repo string, chart string) string {
 func appVersion(charts []*api.ChartInstallation) string {
 	for _, inst := range charts {
 		if inst.Chart.Dependencies.Application {
+			if inst.Version.Helm != nil {
+				if vsn, ok := inst.Version.Helm["appVersion"]; ok {
+					if v, ok := vsn.(string); ok {
+						return v
+					}
+				}
+			}
 			return inst.Version.Version
 		}
 	}

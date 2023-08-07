@@ -114,7 +114,7 @@ func initKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
 			if err := prov.KubeConfig(); err != nil {
 				return err
 			}
-			utils.LogInfo().Println("init %s provider", prov.Name())
+			utils.LogInfo().Println("init", prov.Name(), "provider")
 		} else {
 			utils.LogInfo().Println("not found provider")
 		}
@@ -192,7 +192,7 @@ func repoRoot() error {
 
 func latestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
-		if os.Getenv("PLURAL_CONSOLE") != "1" && algorithms.Coinflip(1, 5) {
+		if os.Getenv("PLURAL_CONSOLE") != "1" && os.Getenv("CLOUD_SHELL") != "1" && algorithms.Coinflip(1, 5) {
 			utils.CheckLatestVersion(Version)
 		}
 

@@ -209,6 +209,19 @@ func (client *client) GetHelp(prompt string) (string, error) {
 	return lo.FromPtr(res.HelpQuestion), nil
 }
 
+func (client *client) Chat(history []*ChatMessage) (res *ChatMessage, err error) {
+	hist := algorithms.Map(history, func(m *ChatMessage) *gqlclient.ChatMessageAttributes {
+		return &gqlclient.ChatMessageAttributes{Role: m.Role, Content: m.Content}
+	})
+	chat, err := client.pluralClient.Chat(client.ctx, hist)
+	if err != nil {
+		return
+	}
+	msg := chat.Chat
+	res = &ChatMessage{Role: msg.Role, Name: lo.FromPtr(msg.Name), Content: msg.Content}
+	return
+}
+
 func (client *client) CreateKeyBackup(attrs KeyBackupAttributes) error {
 	converted := gqlclient.KeyBackupAttributes{
 		Name:         attrs.Name,

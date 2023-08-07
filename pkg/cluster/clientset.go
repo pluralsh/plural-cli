@@ -2,10 +2,8 @@ package cluster
 
 import (
 	"k8s.io/client-go/kubernetes/scheme"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
-
-	// "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 type ClusterV1Beta1Interface interface {

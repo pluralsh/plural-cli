@@ -1,21 +1,15 @@
 package plural
 
 import (
-	"context"
 	"fmt"
-	"github.com/pluralsh/plural/pkg/cluster"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/provider"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"strings"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/application"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -138,6 +132,11 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 		return err
 	}
 
+	vsn, ok := workspace.RequiredCliVsn()
+	if ok && !versionValid(vsn) {
+		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
+	}
+
 	if err := workspace.Prepare(); err != nil {
 		return err
 	}
@@ -196,6 +195,7 @@ func (p *Plural) deploy(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Deploying applications [%s] in topological order\n\n", strings.Join(sorted, ", "))
 
 	ignoreConsole := c.Bool("ignore-console")
@@ -204,10 +204,20 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI && !checkIfClusterExistsWithRetries(project.Cluster, "bootstrap", 3, 2*time.Second, true) {
-			err := BootstrapClusterAPI()
-			if err != nil {
+		if repo == "bootstrap" && project.ClusterAPI {
+			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, "bootstrap")
+
+			// Stop if cluster exists, but it is not ready yet.
+			if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
 				return err
+			}
+
+			// If cluster does not exist bootstrap needs to be done first.
+			if !ready {
+				err := bootstrap.BootstrapCluster(RunPlural)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -455,7 +465,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	}
 
 	if repo == "bootstrap" && clusterAPI {
-		if err = ExecuteClusterAPIDestroy(workspace.Destroy); err != nil {
+		if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
 			return err
 		}
 
@@ -480,59 +490,4 @@ func fetchManifest(repo string) (*manifest.Manifest, error) {
 	}
 
 	return manifest.Read(p)
-}
-
-func checkIfClusterExists(name, namespace string) bool {
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return false
-	}
-
-	err = prov.KubeConfig()
-	if err != nil {
-		return false
-	}
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return false
-	}
-
-	conf := config.Read()
-	ctx := context.Background()
-	clusters, err := cluster.NewForConfig(kubeConf)
-	if err != nil {
-		return false
-	}
-
-	client := clusters.Clusters(conf.Namespace(namespace))
-	c, err := client.Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return false
-	}
-
-	for _, cond := range c.Status.Conditions {
-		if cond.Type == clusterapi.ReadyCondition && cond.Status == "True" {
-			return true
-		}
-	}
-
-	return false
-}
-
-func checkIfClusterExistsWithRetries(name, namespace string, retries int, sleep time.Duration, log bool) bool {
-	if log {
-		utils.Highlight("Checking cluster status...\n")
-	}
-
-	if checkIfClusterExists(name, namespace) {
-		return true
-	}
-
-	if retries--; retries > 0 {
-		time.Sleep(sleep)
-		return checkIfClusterExistsWithRetries(name, namespace, retries, sleep, false)
-	}
-
-	return false
 }

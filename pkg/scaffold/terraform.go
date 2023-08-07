@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/maps"
+
 	"golang.org/x/mod/semver"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -220,7 +222,11 @@ func (scaffold *Scaffold) buildOutputs(wk *wkspace.Workspace) error {
 	})
 	for _, tfInst := range wk.Terraform {
 		tfName := tfInst.Terraform.Name
-		for name, value := range tfInst.Version.Dependencies.Outputs {
+		outs := tfInst.Version.Dependencies.Outputs
+		outputs := maps.Keys(outs)
+		sort.Strings(outputs)
+		for _, name := range outputs {
+			value := outs[name]
 			err = tmp.Execute(&buf, map[string]interface{}{"Name": name, "Value": value, "Module": tfName})
 			if err != nil {
 				return err

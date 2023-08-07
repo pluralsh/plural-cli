@@ -78,7 +78,9 @@ func TestGetConfiguration(t *testing.T) {
 				t.Fatalf("Expected HTTP status code %d, got %d: %s", test.expectedHTTPStatus, res.Code, res.Body.String())
 			}
 
-			test.expectedResponse = fmt.Sprintf(test.expectedResponse, dir, filepath.Base(dir))
+			realDir, err := filepath.EvalSymlinks(dir)
+			assert.NoError(t, err)
+			test.expectedResponse = fmt.Sprintf(test.expectedResponse, realDir, filepath.Base(dir))
 
 			if res.Code == http.StatusOK {
 				CompareWithResult(t, res, test.expectedResponse)

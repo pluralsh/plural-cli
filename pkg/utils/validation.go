@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
-
 	"github.com/pluralsh/plural/pkg/utils/errors"
 )
 

@@ -50,6 +50,7 @@ type Version struct {
 	Id             string
 	Version        string
 	Readme         string
+	Helm           map[string]interface{}
 	Package        string
 	ValuesTemplate string
 	TemplateType   gqlclient.TemplateType
@@ -76,6 +77,7 @@ type Dependencies struct {
 	ProviderWirings map[string]interface{}
 	Outputs         map[string]interface{}
 	ProviderVsn     string
+	CliVsn          string
 }
 
 type Dependency struct {
@@ -346,6 +348,12 @@ type Cluster struct {
 type UpgradeInfo struct {
 	Count        int64
 	Installation *Installation
+}
+
+type ChatMessage struct {
+	Name    string
+	Content string
+	Role    string
 }
 
 const CrdFragment = `

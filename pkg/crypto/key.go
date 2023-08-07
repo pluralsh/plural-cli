@@ -31,7 +31,7 @@ func (prov *KeyProvider) SymmetricKey() ([]byte, error) {
 
 func (prov *KeyProvider) ID() string {
 	sha := sha256.Sum256([]byte(prov.key))
-	return "SHA256:" + base64.StdEncoding.EncodeToString(sha[:])
+	return "SHA256:" + base32.StdEncoding.EncodeToString(sha[:])
 }
 
 func (prov *KeyProvider) Marshall() ([]byte, error) {
@@ -172,7 +172,6 @@ func GetKeyID() (string, error) {
 		return "", err
 	}
 	return k.KeyID, nil
-
 }
 
 func CreateKeyFingerprintFile() error {

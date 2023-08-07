@@ -21,14 +21,14 @@ func TestBuild(t *testing.T) {
 		{
 			name:       `when faulty config exists create default fallbackProvider`,
 			keyContent: "key: abc",
-			expected:   "SHA256:ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=",
+			expected:   "SHA256:XJ4BNP4PAHH6UQKBIDPF3LRCEOYAGYNDSYLXVHFUCD7WD4QACWWQ====",
 			genConfig:  true,
 		},
 		{
 			name:       `when config doesn't exist create default fallbackProvider`,
 			genConfig:  false,
 			keyContent: "key: abc",
-			expected:   "SHA256:ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=",
+			expected:   "SHA256:XJ4BNP4PAHH6UQKBIDPF3LRCEOYAGYNDSYLXVHFUCD7WD4QACWWQ====",
 		},
 	}
 	for _, test := range tests {

@@ -37,27 +37,35 @@ func (p *Plural) InitKube() error {
 	return nil
 }
 
+func (p *Plural) assumeServiceAccount(conf config.Config, man *manifest.ProjectManifest) error {
+	owner := man.Owner
+	jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
+	if err != nil {
+		utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+		return err
+	}
+	conf.Email = email
+	conf.Token = jwt
+	p.Client = api.FromConfig(&conf)
+	accessToken, err := p.GrabAccessToken()
+	if err != nil {
+		utils.Error("failed to create access token, bailing")
+		return api.GetErrorResponse(err, "GrabAccessToken")
+	}
+	conf.Token = accessToken
+	config.SetConfig(&conf)
+	return nil
+}
+
 func (p *Plural) InitPluralClient() {
 	if p.Client == nil {
 		if project, err := manifest.FetchProject(); err == nil && config.Exists() {
 			conf := config.Read()
 			if owner := project.Owner; owner != nil && conf.Email != owner.Email {
 				utils.LogInfo().Printf("Trying to impersonate service account: %s \n", owner.Email)
-				jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
-				if err != nil {
-					utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
+				if err := p.assumeServiceAccount(conf, project); err != nil {
 					os.Exit(1)
 				}
-				conf.Email = email
-				conf.Token = jwt
-				p.Client = api.FromConfig(&conf)
-				accessToken, err := p.Client.GrabAccessToken()
-				if err != nil {
-					utils.Error("failed to create access token, bailing")
-					os.Exit(1)
-				}
-				conf.Token = accessToken
-				config.SetConfig(&conf)
 				return
 			}
 		}
@@ -86,10 +94,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "force",
 					Usage: "force workspace to build even if remote is out of sync",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "use cluster API for cluster provisioning",
 				},
 			},
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
@@ -133,10 +137,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "force",
 					Usage: "use force push when pushing to git",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "use clusterAPI deployment",
 				},
 			},
 			Action: tracked(latestVersion(owned(rooted(p.deploy))), "cli.deploy"),
@@ -228,10 +228,6 @@ func (p *Plural) getCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "all",
 					Usage: "tear down the entire cluster gracefully in one go",
-				},
-				cli.BoolFlag{
-					Name:  "cluster-api",
-					Usage: "deletes the cluster API provider components from the bootstrap cluster",
 				},
 			},
 			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
@@ -469,12 +465,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Bootstrap",
 		},
 		p.uiCommands(),
-		{
-			Name:        "bootstrap",
-			Usage:       "Commands for bootstrapping cluster",
-			Subcommands: p.bootstrapCommands(),
-			Category:    "Bootstrap",
-		},
 	}
 }
 
@@ -517,4 +507,8 @@ func CreateNewApp(plural *Plural) *cli.App {
 	app.Commands = append(app.Commands, links...)
 
 	return app
+}
+
+func RunPlural(arguments []string) error {
+	return CreateNewApp(&Plural{}).Run(arguments)
 }

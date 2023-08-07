@@ -44,7 +44,9 @@ jobs:
       - name: Install Dependencies
         if: matrix.goos == 'linux'
         shell: bash
-        run: sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev
       - name: Build web
         shell: bash
         run: make build-web

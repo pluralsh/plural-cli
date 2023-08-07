@@ -19,11 +19,13 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/Yamashou/gqlgenc v0.11.0
+	github.com/Yamashou/gqlgenc v0.14.0
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.12
 	github.com/aws/aws-sdk-go-v2/service/sts v1.19.0
+	github.com/briandowns/spinner v1.23.0
 	github.com/buger/goterm v1.0.4
+	github.com/cert-manager/cert-manager v1.10.0
 	github.com/chartmuseum/helm-push v0.10.3
 	github.com/coreos/go-semver v0.3.0
 	github.com/databus23/helm-diff/v3 v3.6.0
@@ -47,8 +49,8 @@ require (
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/bootstrap-operator v0.0.16
-	github.com/pluralsh/cluster-api-migration v0.2.3
-	github.com/pluralsh/gqlclient v1.3.15
+	github.com/pluralsh/cluster-api-migration v0.2.6
+	github.com/pluralsh/gqlclient v1.6.0
 	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
 	github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247
@@ -182,6 +184,7 @@ require (
 	github.com/leaanthony/slicer v1.5.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/miekg/dns v1.1.50 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
 	github.com/muesli/cancelreader v0.2.0 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
@@ -250,8 +253,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/cluster-bootstrap v0.25.3 // indirect
 	k8s.io/kops v1.25.2 // indirect
+	k8s.io/kube-aggregator v0.25.2 // indirect
 	k8s.io/kubelet v0.25.2 // indirect
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.1.4 // indirect
+	sigs.k8s.io/gateway-api v0.5.0 // indirect
 )
 
 require (

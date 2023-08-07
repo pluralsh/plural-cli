@@ -141,9 +141,13 @@ release-vsn: # tags and pushes a new release
 	git tag -a $$tag -m "new release"; \
 	git push origin $$tag
 
+.PHONY: setup-tests
+setup-tests:
+	go install gotest.tools/gotestsum@latest
+
 .PHONY: test
-test:
-	go test -v -race ./pkg/... ./cmd/...
+test: setup-tests
+	gotestsum --format testname -- -v -race ./pkg/... ./cmd/...
 
 .PHONY: format
 format: # formats all go code to prep for linting
@@ -159,6 +163,6 @@ lint:
 
 .PHONY: delete-tag
 delete-tag:
-	@read -p "Version: " tag: \
-	git tag -d $$tag
+	@read -p "Version: " tag; \
+	git tag -d $$tag; \
 	git push origin :$$tag

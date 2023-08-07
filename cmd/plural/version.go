@@ -2,12 +2,14 @@ package plural
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
-	"github.com/urfave/cli"
+	"golang.org/x/mod/semver"
 
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 const (
@@ -20,7 +22,19 @@ var (
 	Date    = ""
 )
 
+func versionValid(vsn string) bool {
+	current := Version
+	if !strings.HasPrefix(current, "v") {
+		current = fmt.Sprintf("v%s", current)
+	}
+	return semver.Compare(vsn, current) <= 0
+}
+
 func checkRecency() error {
+	if os.Getenv("CLOUD_SHELL") == "1" || os.Getenv("PLURAL_CONSOLE") == "1" {
+		return nil
+	}
+
 	if Version == versionPlaceholder || strings.Contains(Version, "-") {
 		utils.Warn("\nThis is a development version, which can be significantly different from official releases")
 		utils.Warn("\nYou can download latest release from https://github.com/pluralsh/plural-cli/releases/latest\n")

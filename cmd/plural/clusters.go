@@ -2,16 +2,16 @@ package plural
 
 import (
 	"fmt"
-	tm "github.com/buger/goterm"
+
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/cluster"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/machinepool"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
-	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -20,6 +20,17 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Name:   "list",
 			Usage:  "lists clusters accessible to your user",
 			Action: latestVersion(p.listClusters),
+		},
+		{
+			Name:   "transfer",
+			Usage:  "transfers ownership of the current cluster to another",
+			Action: latestVersion(rooted(p.transferOwnership)),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "email",
+					Usage: "the email of the new owner",
+				},
+			},
 		},
 		{
 			Name:  "view",
@@ -53,24 +64,10 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Action: latestVersion(p.promoteCluster),
 		},
 		{
-			Name:      "watch",
-			Usage:     "watches a cluster until it becomes ready",
-			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWatch, []string{"NAMESPACE", "NAME"}))),
-			Category:  "Debugging",
-		},
-		{
 			Name:      "wait",
 			Usage:     "waits on a cluster until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
 			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
-			Category:  "Debugging",
-		},
-		{
-			Name:      "mpwatch",
-			Usage:     "watches a machine pool until it becomes ready",
-			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWatch, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
 		{
@@ -90,29 +87,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 }
 
 func handleMigration(c *cli.Context) error {
-	return ExecuteMigration()
-}
-
-func handleClusterWatch(c *cli.Context) error {
-	namespace := c.Args().Get(0)
-	name := c.Args().Get(1)
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	timeout := func() error { return nil }
-	return cluster.Waiter(kubeConf, namespace, name, func(clust *clusterapi.Cluster) (bool, error) {
-		tm.MoveCursor(1, 1)
-		cluster.Print(kube.GetClient(), clust)
-		cluster.Flush()
-		return false, nil
-	}, timeout)
+	return bootstrap.MigrateCluster(RunPlural)
 }
 
 func handleClusterWait(c *cli.Context) error {
@@ -124,28 +99,6 @@ func handleClusterWait(c *cli.Context) error {
 	}
 
 	return cluster.Wait(kubeConf, namespace, name)
-}
-
-func handleMPWatch(c *cli.Context) error {
-	namespace := c.Args().Get(0)
-	name := c.Args().Get(1)
-
-	kubeConf, err := kubernetes.KubeConfig()
-	if err != nil {
-		return err
-	}
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	timeout := func() error { return nil }
-	return machinepool.Waiter(kubeConf, namespace, name, func(mp *clusterapiExp.MachinePool) (bool, error) {
-		tm.MoveCursor(1, 1)
-		machinepool.Print(kube.GetClient(), mp)
-		machinepool.Flush()
-		return false, nil
-	}, timeout)
 }
 
 func handleMPWait(c *cli.Context) error {
@@ -170,6 +123,51 @@ func (p *Plural) listClusters(c *cli.Context) error {
 	return utils.PrintTable(clusters, headers, func(c *api.Cluster) ([]string, error) {
 		return []string{c.Id, c.Name, c.Provider, c.GitUrl, c.Owner.Email}, nil
 	})
+}
+
+func (p *Plural) transferOwnership(c *cli.Context) error {
+	p.InitPluralClient()
+	email := c.String("email")
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	if err := p.TransferOwnership(man.Cluster, email); err != nil {
+		return api.GetErrorResponse(err, "TransferOwnership")
+	}
+
+	man.Owner.Email = email
+	if err := man.Flush(); err != nil {
+		return err
+	}
+
+	if err := p.assumeServiceAccount(config.Read(), man); err != nil {
+		return err
+	}
+
+	utils.Highlight("rebuilding bootstrap and console to sync your cluster with the new owner:\n")
+
+	for _, app := range []string{"bootstrap", "console"} {
+		installation, err := p.GetInstallation(app)
+		if err != nil {
+			return api.GetErrorResponse(err, "GetInstallation")
+		} else if installation == nil {
+			continue
+		}
+
+		if err := p.doBuild(installation, false); err != nil {
+			return err
+		}
+	}
+
+	utils.Highlight("deploying rebuilt applications\n")
+	if err := p.deploy(c); err != nil {
+		return err
+	}
+
+	utils.Success("Ownership successfully transferred to %s", email)
+	return nil
 }
 
 func (p *Plural) showCluster(c *cli.Context) error {

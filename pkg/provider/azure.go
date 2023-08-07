@@ -139,14 +139,26 @@ var azureSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
 		Validate: utils.ValidateAlphaNumExtended,
 	},
+	{
+		Name:     "clientId",
+		Prompt:   &survey.Input{Message: "Enter client ID of service principal to use for authentication: "},
+		Validate: survey.Required,
+	},
+	{
+		Name:     "clientSecret",
+		Prompt:   &survey.Input{Message: "Enter client secret of service principal to use for authentication: "},
+		Validate: survey.Required,
+	},
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	var resp struct {
-		Cluster  string
-		Storage  string
-		Region   string
-		Resource string
+		Cluster      string
+		Storage      string
+		Region       string
+		Resource     string
+		ClientId     string
+		ClientSecret string
 	}
 	err = survey.Ask(azureSurvey, &resp)
 	if err != nil {
@@ -170,6 +182,8 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 			"SubscriptionId": subId,
 			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
+			"ClientId":       resp.ClientId,
+			"ClientSecret":   resp.ClientSecret,
 		},
 		nil,
 		clients,
@@ -198,39 +212,29 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 		}
 	}
 
-	ctx, err := manifest.FetchContext()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	if ctx != nil && ctx.Configuration != nil && ctx.Configuration["bootstrap"] != nil {
-		man.Context["ClientId"] = ctx.Configuration["bootstrap"]["client_id"]
-		man.Context["ClientSecret"] = ctx.Configuration["bootstrap"]["client_secret"]
-	}
-
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil, clients}, nil
 }
 
-func (azure *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := azure.CreateResourceGroup(azure.Project()); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", azure.Project()))
+func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
+	if err := az.CreateResourceGroup(az.Project()); err != nil {
+		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", az.Project()))
 	}
 
-	if err := azure.CreateBucket(azure.bucket); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", azure.bucket))
+	if err := az.CreateBucket(az.bucket); err != nil {
+		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", az.bucket))
 	}
 
-	ctx["Region"] = azure.Region()
-	ctx["Bucket"] = azure.Bucket()
+	ctx["Region"] = az.Region()
+	ctx["Bucket"] = az.Bucket()
 	ctx["Prefix"] = prefix
-	ctx["ResourceGroup"] = azure.Project()
-	ctx["__CLUSTER__"] = azure.Cluster()
-	ctx["Context"] = azure.Context()
+	ctx["ResourceGroup"] = az.Project()
+	ctx["__CLUSTER__"] = az.Cluster()
+	ctx["Context"] = az.Context()
 	if cluster, ok := ctx["cluster"]; ok {
 		ctx["Cluster"] = cluster
 		ctx["ClusterCreated"] = true
 	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, azure.Cluster())
+		ctx["Cluster"] = fmt.Sprintf(`"%s"`, az.Cluster())
 	}
 
 	scaffold, err := GetProviderScaffold("AZURE", version)
@@ -276,18 +280,18 @@ func (az *AzureProvider) CreateResourceGroup(resourceGroup string) error {
 	return nil
 }
 
-func (azure *AzureProvider) KubeConfig() error {
+func (az *AzureProvider) KubeConfig() error {
 	if kubernetes.InKubernetes() {
 		return nil
 	}
 
 	cmd := exec.Command(
-		"az", "aks", "get-credentials", "--overwrite-existing", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
+		"az", "aks", "get-credentials", "--overwrite-existing", "--name", az.cluster, "--resource-group", az.resourceGroup)
 	return utils.Execute(cmd)
 }
 
-func (azure *AzureProvider) KubeContext() string {
-	return fmt.Sprintf("%s", azure.cluster)
+func (az *AzureProvider) KubeContext() string {
+	return fmt.Sprintf("%s", az.cluster)
 }
 
 func (az *AzureProvider) Name() string {
@@ -322,11 +326,11 @@ func (*AzureProvider) Permissions() (permissions.Checker, error) {
 	return permissions.NullChecker(), nil
 }
 
-func (azure *AzureProvider) Flush() error {
-	if azure.writer == nil {
+func (az *AzureProvider) Flush() error {
+	if az.writer == nil {
 		return nil
 	}
-	return azure.writer()
+	return az.writer()
 }
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {

@@ -37,3 +37,20 @@ func TestKeyValidation(t *testing.T) {
 	assert.Error(t, err, "expected: 'the key fingerprint doesn't match' error")
 	fmt.Println(string(cmdOutput))
 }
+
+func TestRepoSharing(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	assert.NoError(t, err)
+	testDir := path.Join(homeDir, "share")
+	err = os.Chdir(testDir)
+	assert.NoError(t, err)
+
+	cmd := exec.Command("plural", "crypto", "init")
+	cmdOutput, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	fmt.Println(string(cmdOutput))
+	cmd = exec.Command("plural", "crypto", "unlock")
+	cmdOutput, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	fmt.Println(string(cmdOutput))
+}
