@@ -100,6 +100,45 @@ func getMigrator() (api.Migrator, error) {
 	return migrator.NewMigrator(clusterProvider, configuration)
 }
 
+// generateValuesFile generates values.yaml file based on current cluster configuration that will be used by Cluster API.
+func generateValuesFile() error {
+	utils.Highlight("Generating values.yaml file based on current cluster configuration...\n")
+
+	m, err := getMigrator()
+	if err != nil {
+		return err
+	}
+
+	values, err := m.Convert()
+	if err != nil {
+		return err
+	}
+
+	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
+	if err != nil {
+		return err
+	}
+
+	gitRootDir, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
+	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
+	if utils.Exists(valuesFile) {
+		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("can't save %s file", valuesFile)
+	}
+
+	utils.Success("values.yaml saved successfully!\n")
+
+	return nil
+}
+
 // getProviderTags returns list of tags to set on provider resources during migration.
 func getProviderTags(provider, cluster string) []string {
 	switch provider {
@@ -220,40 +259,34 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute:    runPlural,
 		},
 		{
-			Name:       "Bootstrap CRDs",
-			Args:       []string{"plural", "wkspace", "crds", bootstrapPath},
-			TargetPath: bootstrapPath,
-			Execute:    runPlural,
+			Name:    "Bootstrap CRDs",
+			Args:    []string{"plural", "wkspace", "crds", bootstrapPath},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Install Cluster API operators",
-			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
-			TargetPath: bootstrapPath,
-			Execute:    runPlural,
+			Name:    "Install Cluster API operators",
+			Args:    append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Execute: runPlural,
 		},
 		{
-			Name:       "Add Cluster API tags for provider resources",
-			Args:       tags,
-			TargetPath: bootstrapPath,
-			Execute:    tagResources,
+			Name:    "Add Cluster API tags for provider resources",
+			Args:    tags,
+			Execute: tagResources,
 		},
 		{
-			Name:       "Deploy cluster",
-			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap"}, flags...),
-			TargetPath: bootstrapPath,
-			Execute:    runPlural,
+			Name:    "Deploy cluster",
+			Args:    append([]string{"plural", "wkspace", "helm", "bootstrap"}, flags...),
+			Execute: runPlural,
 		},
 		{
-			Name:       "Wait for cluster",
-			Args:       []string{"plural", "clusters", "wait", "bootstrap", projectManifest.Cluster},
-			TargetPath: bootstrapPath,
-			Execute:    runPlural,
+			Name:    "Wait for cluster",
+			Args:    []string{"plural", "clusters", "wait", "bootstrap", projectManifest.Cluster},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Wait for machine pools",
-			Args:       []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
-			TargetPath: bootstrapPath,
-			Execute:    runPlural,
+			Name:    "Wait for machine pools",
+			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
+			Execute: runPlural,
 		},
 		{
 			Name:       "Mark cluster as migrated to Cluster API",
@@ -276,10 +309,9 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute:    runPlural,
 		},
 		{
-			Name:       "Delink resources managed by Cluster API from Terraform state",
-			Args:       []string{terraformPath},
-			TargetPath: terraformPath, // Not used but required.
-			Execute:    delinkTerraformState,
+			Name:    "Delink resources managed by Cluster API from Terraform state",
+			Args:    []string{terraformPath},
+			Execute: delinkTerraformState,
 		},
 		{
 			Name:       "Run Terraform init",
@@ -298,57 +330,21 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 // MigrateCluster migrates existing clusters to Cluster API.
 func MigrateCluster(runPlural ActionFunc) error {
-	m, err := getMigrator()
-	if err != nil {
-		return err
-	}
-
-	values, err := m.Convert()
-	if err != nil {
-		return err
-	}
-
-	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
-	if err != nil {
-		return err
-	}
-
-	gitRootDir, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
-
-	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
-	if utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("can't save %s file", valuesFile)
-	}
-
 	utils.Highlight("Migrating cluster to Cluster API...\n")
+
+	err := generateValuesFile()
+	if err != nil {
+		return err
+	}
 
 	steps, err := getMigrationSteps(runPlural)
 	if err != nil {
 		return err
 	}
 
-	for i, step := range steps {
-		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
-
-		err := os.Chdir(step.TargetPath)
-
-		if err != nil {
-			return err
-		}
-
-		err = step.Execute(step.Args)
-		if err != nil {
-			return err
-		}
+	err = ExecuteSteps(steps)
+	if err != nil {
+		return err
 	}
 
 	utils.Success("Cluster migrated successfully!\n")

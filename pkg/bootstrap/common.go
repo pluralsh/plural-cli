@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
@@ -50,12 +51,46 @@ func getKubeconfigPath() (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(homeDir, ".kube", "config")), nil
 }
 
-// getBootstrapPath returns bootstrap repository path.
-func getBootstrapPath() (string, error) {
+// GetBootstrapPath returns bootstrap repository path.
+func GetBootstrapPath() (string, error) {
 	gitRootPath, err := git.Root()
 	if err != nil {
 		return "", err
 	}
 
 	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
+}
+
+// GetStepPath returns path from which step will be executed.
+func GetStepPath(step *Step, defaultPath string) string {
+	if step != nil && step.TargetPath != "" {
+		return step.TargetPath
+	}
+
+	return defaultPath
+}
+
+// ExecuteSteps of a bootstrap, migration or destroy process.
+func ExecuteSteps(steps []*Step) error {
+	defaultPath, err := GetBootstrapPath()
+	if err != nil {
+		return err
+	}
+
+	for i, step := range steps {
+		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
+
+		path := GetStepPath(step, defaultPath)
+		err := os.Chdir(path)
+		if err != nil {
+			return err
+		}
+
+		err = step.Execute(step.Args)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
