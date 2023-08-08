@@ -17,53 +17,41 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 		return nil, err
 	}
 
-	bootstrapPath, err := getBootstrapPath()
-	if err != nil {
-		return nil, err
-	}
-
 	flags := getBootstrapFlags(projectManifest.Provider)
 
 	return []*Step{
 		{
-			Name:       "Create local bootstrap cluster",
-			Args:       []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Create local bootstrap cluster",
+			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Bootstrap CRDs in local cluster",
-			Args:       []string{"plural", "--bootstrap", "wkspace", "crds", "bootstrap"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Bootstrap CRDs in local cluster",
+			Args:    []string{"plural", "--bootstrap", "wkspace", "crds", "bootstrap"},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Install Cluster API operators in local cluster",
-			Args:       append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Install Cluster API operators in local cluster",
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Execute: runPlural,
 		},
 		{
-			Name:       "Deploy cluster",
-			Args:       append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Deploy cluster",
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
+			Execute: runPlural,
 		},
 		{
-			Name:       "Wait for cluster",
-			Args:       []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Wait for cluster",
+			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Wait for machine pools",
-			Args:       []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Wait for machine pools",
+			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Post install  resources",
-			TargetPath: bootstrapPath,
+			Name: "Post install  resources",
 			Execute: func(_ []string) error {
 				m, err := getMigrator()
 				if err != nil {
@@ -74,40 +62,34 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 			},
 		},
 		{
-			Name:       "Initialize kubeconfig for target cluster",
-			Args:       []string{"plural", "wkspace", "kube-init"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Initialize kubeconfig for target cluster",
+			Args:    []string{"plural", "wkspace", "kube-init"},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Create bootstrap namespace in target cluster",
-			Args:       []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Create bootstrap namespace in target cluster",
+			Args:    []string{"plural", "bootstrap", "namespace", "create", "bootstrap"},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Bootstrap CRDs in target cluster",
-			Args:       []string{"plural", "wkspace", "crds", "bootstrap"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Bootstrap CRDs in target cluster",
+			Args:    []string{"plural", "wkspace", "crds", "bootstrap"},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Install Cluster API operators in target cluster",
-			Args:       append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Install Cluster API operators in target cluster",
+			Args:    append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Execute: runPlural,
 		},
 		{
-			Name:       "Move resources from local to target cluster",
-			Args:       []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", kubeconfigPath},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Move resources from local to target cluster",
+			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", kubeconfigPath},
+			Execute: runPlural,
 		},
 		{
-			Name:       "Destroy local cluster",
-			Args:       []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
-			Execute:    runPlural,
-			TargetPath: bootstrapPath,
+			Name:    "Destroy local cluster",
+			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
+			Execute: runPlural,
 		},
 	}, nil
 }

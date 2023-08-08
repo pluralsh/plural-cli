@@ -61,11 +61,27 @@ func getBootstrapPath() (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
 }
 
+// getStepPath returns path from which step will be executed.
+func getStepPath(step *Step, defaultPath string) string {
+	if step != nil && step.TargetPath != "" {
+		return step.TargetPath
+	}
+
+	return defaultPath
+}
+
+// executeSteps of a bootstrap, migration or destroy process.
 func executeSteps(steps []*Step) error {
+	defaultPath, err := getBootstrapPath()
+	if err != nil {
+		return err
+	}
+
 	for i, step := range steps {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 
-		err := os.Chdir(step.TargetPath)
+		path := getStepPath(step, defaultPath)
+		err := os.Chdir(path)
 		if err != nil {
 			return err
 		}
