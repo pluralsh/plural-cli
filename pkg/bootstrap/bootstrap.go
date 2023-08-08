@@ -51,7 +51,7 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: runPlural,
 		},
 		{
-			Name: "Post install  resources",
+			Name: "Post install resources",
 			Execute: func(_ []string) error {
 				m, err := getMigrator()
 				if err != nil {
