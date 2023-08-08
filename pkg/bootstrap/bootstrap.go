@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"os"
-
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 )
@@ -123,18 +121,9 @@ func BootstrapCluster(runPlural ActionFunc) error {
 		return err
 	}
 
-	for i, step := range steps {
-		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
-
-		err := os.Chdir(step.TargetPath)
-		if err != nil {
-			return err
-		}
-
-		err = step.Execute(step.Args)
-		if err != nil {
-			return err
-		}
+	err = executeSteps(steps)
+	if err != nil {
+		return err
 	}
 
 	utils.Success("Cluster bootstrapped successfully!\n")

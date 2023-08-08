@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
@@ -58,4 +59,22 @@ func getBootstrapPath() (string, error) {
 	}
 
 	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
+}
+
+func executeSteps(steps []*Step) error {
+	for i, step := range steps {
+		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
+
+		err := os.Chdir(step.TargetPath)
+		if err != nil {
+			return err
+		}
+
+		err = step.Execute(step.Args)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

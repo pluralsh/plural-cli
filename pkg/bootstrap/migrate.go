@@ -340,7 +340,6 @@ func MigrateCluster(runPlural ActionFunc) error {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 
 		err := os.Chdir(step.TargetPath)
-
 		if err != nil {
 			return err
 		}
