@@ -139,8 +139,8 @@ func generateValuesFile() error {
 	return nil
 }
 
-// getProviderTags returns list of tags to set on provider resources during migration.
-func getProviderTags(provider, cluster string) []string {
+// GetProviderTags returns list of tags to set on provider resources during migration.
+func GetProviderTags(provider, cluster string) []string {
 	switch provider {
 	case "aws":
 		return []string{
@@ -157,6 +157,21 @@ func getProviderTags(provider, cluster string) []string {
 	}
 }
 
+// GetProviderTagsMap returns map of tags to set on provider resources during migration.
+func GetProviderTagsMap(arguments []string) (map[string]string, error) {
+	tags := map[string]string{}
+	for _, arg := range arguments {
+		split := strings.Split(arg, "=")
+		if len(split) == 2 {
+			tags[split[0]] = split[1]
+		} else {
+			return nil, fmt.Errorf("invalid tag format")
+		}
+	}
+
+	return tags, nil
+}
+
 // tagResources adds Cluster API tags on provider resources.
 func tagResources(arguments []string) error {
 	m, err := getMigrator()
@@ -164,12 +179,9 @@ func tagResources(arguments []string) error {
 		return err
 	}
 
-	tags := map[string]string{}
-	for _, arg := range arguments {
-		split := strings.Split(arg, "=")
-		if len(split) == 2 {
-			tags[split[0]] = split[1]
-		}
+	tags, err := GetProviderTagsMap(arguments)
+	if err != nil {
+		return err
 	}
 
 	return m.AddTags(tags)
@@ -220,7 +232,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	bootstrapPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
 	terraformPath := filepath.Join(bootstrapPath, "terraform")
-	tags := getProviderTags(projectManifest.Provider, projectManifest.Cluster)
+	tags := GetProviderTags(projectManifest.Provider, projectManifest.Cluster)
 	flags := getMigrationFlags(projectManifest.Provider)
 
 	var steps []*Step
