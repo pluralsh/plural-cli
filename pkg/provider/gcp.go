@@ -361,7 +361,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	proj, err := gcp.getProject()
 	if err != nil {
 		utils.LogError().Println(err)
-		return errEnabled
+		return fmt.Errorf("Could not find gcp project %s.  Was your authentication misconfigured?", gcp.Proj)
 	}
 
 	services := algorithms.Map([]string{
@@ -377,7 +377,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
 		utils.LogError().Println(err)
-		return errEnabled
+		return fmt.Errorf("Could not fetch services information for project %s, does your service account have appropriate permissions?", gcp.Proj)
 	}
 
 	missing := algorithms.Filter(resp.Services, func(svc *serviceusagepb.Service) bool {
