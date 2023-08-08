@@ -475,6 +475,7 @@ func (gcp *GCPProvider) validatePermissions() error {
 		provUtils.WarnRole(perm)
 	}
 
+	utils.Highlight("Checking for minimal required permissions")
 	missing, err = checker.MissingPermissions()
 	if err != nil {
 		return err
