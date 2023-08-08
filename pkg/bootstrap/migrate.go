@@ -100,6 +100,45 @@ func getMigrator() (api.Migrator, error) {
 	return migrator.NewMigrator(clusterProvider, configuration)
 }
 
+// generateValuesFile generates values.yaml file based on current cluster configuration that will be used by Cluster API.
+func generateValuesFile() error {
+	utils.Highlight("Generating values.yaml file based on current cluster configuration...\n")
+
+	m, err := getMigrator()
+	if err != nil {
+		return err
+	}
+
+	values, err := m.Convert()
+	if err != nil {
+		return err
+	}
+
+	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
+	if err != nil {
+		return err
+	}
+
+	gitRootDir, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
+	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
+	if utils.Exists(valuesFile) {
+		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("can't save %s file", valuesFile)
+	}
+
+	utils.Success("values.yaml saved successfully!\n")
+
+	return nil
+}
+
 // getProviderTags returns list of tags to set on provider resources during migration.
 func getProviderTags(provider, cluster string) []string {
 	switch provider {
@@ -291,37 +330,12 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 // MigrateCluster migrates existing clusters to Cluster API.
 func MigrateCluster(runPlural ActionFunc) error {
-	m, err := getMigrator()
-	if err != nil {
-		return err
-	}
-
-	values, err := m.Convert()
-	if err != nil {
-		return err
-	}
-
-	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
-	if err != nil {
-		return err
-	}
-
-	gitRootDir, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
-	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
-	if utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("can't save %s file", valuesFile)
-	}
-
 	utils.Highlight("Migrating cluster to Cluster API...\n")
+
+	err := generateValuesFile()
+	if err != nil {
+		return err
+	}
 
 	steps, err := getMigrationSteps(runPlural)
 	if err != nil {
