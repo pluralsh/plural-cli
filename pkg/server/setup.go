@@ -174,7 +174,7 @@ func runPreflights(prov provider.Provider) error {
 	preflights := []*provider.Preflight{}
 	if prov.Name() == provider.GCP {
 		preflights = algorithms.Filter(prov.Preflights(), func(pre *provider.Preflight) bool {
-			return pre.Name == "Enabled Services"
+			return pre.Name == string(provider.PreflightCheckEnabledServices)
 		})
 	}
 

@@ -357,10 +357,17 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	return utilerr.ErrorWrap(err, "failed to delete instance")
 }
 
+type PreflightCheck string
+
+const (
+	PreflightCheckEnabledServices           = PreflightCheck("[User] Enabled Services")
+	PreflightCheckServiceAccountPermissions = PreflightCheck("[Service Account] Test Permissions")
+)
+
 func (gcp *GCPProvider) Preflights() []*Preflight {
 	return []*Preflight{
-		{Name: "Enabled Services", Callback: gcp.validateEnabled},
-		{Name: "Test IAM Permissions", Callback: gcp.validatePermissions},
+		{Name: string(PreflightCheckEnabledServices), Callback: gcp.validateEnabled},
+		{Name: string(PreflightCheckServiceAccountPermissions), Callback: gcp.validatePermissions},
 	}
 }
 
@@ -378,7 +385,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	proj, err := gcp.getProject()
 	if err != nil {
 		utils.LogError().Println(err)
-		return errEnabled
+		return fmt.Errorf("Could not find gcp project %s. Was your authentication misconfigured?", gcp.Proj)
 	}
 
 	services := algorithms.Map([]string{
@@ -394,7 +401,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
 		utils.LogError().Println(err)
-		return errEnabled
+		return fmt.Errorf("Could not fetch services information for project %s, does your service account have appropriate permissions?", gcp.Proj)
 	}
 
 	missing := algorithms.Filter(resp.Services, func(svc *serviceusagepb.Service) bool {
@@ -432,19 +439,29 @@ func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
 		return nil, err
 	}
 
-	return permissions.NewGcpChecker(context.Background(), proj.ProjectId)
+	credentials, err := base64.StdEncoding.DecodeString(utils.ToString(gcp.Context()["Credentials"]))
+	if err != nil {
+		return nil, err
+	}
+
+	return permissions.NewGcpChecker(context.Background(), proj.ProjectId, credentials)
 }
 
 func (gcp *GCPProvider) validatePermissions() error {
-	utils.LogInfo().Println("Validate GCP permissions")
+	utils.LogInfo().Println("Validate GCP service account roles/permissions")
 	ctx := context.Background()
 	proj, err := gcp.getProject()
 	if err != nil {
 		return err
 	}
 
-	checker, _ := permissions.NewGcpChecker(ctx, proj.ProjectId)
-	missing, err := checker.MissingPermissions()
+	credentials, err := base64.StdEncoding.DecodeString(utils.ToString(gcp.Context()["Credentials"]))
+	if err != nil {
+		return err
+	}
+
+	checker, _ := permissions.NewGcpChecker(ctx, proj.ProjectId, credentials)
+	missing, err := checker.MissingRoles()
 	if err != nil {
 		return err
 	}
@@ -454,11 +471,27 @@ func (gcp *GCPProvider) validatePermissions() error {
 	}
 
 	for _, perm := range missing {
-		utils.LogError().Printf("Required GCP permission %s \n", perm)
+		utils.LogError().Printf("Recommended GCP service account roles %s \n", perm)
+		provUtils.WarnRole(perm)
+	}
+
+	missing, err = checker.MissingPermissions()
+	if err != nil {
+		return err
+	}
+
+	if len(missing) == 0 {
+		utils.Success("\nMinimal permission check succeeded\n")
+		utils.Note("It is recommended to grant missing roles as minimal permission check only guarantees basic cluster operations to work\n")
+		return nil
+	}
+
+	for _, perm := range missing {
+		utils.LogError().Printf("Recommended GCP service account permissions %s \n", perm)
 		provUtils.FailedPermission(perm)
 	}
 
-	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(missing, ", "))
+	return fmt.Errorf("Your gcp service account is missing permissions for project %s: %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
