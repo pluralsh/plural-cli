@@ -51,8 +51,8 @@ func getKubeconfigPath() (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(homeDir, ".kube", "config")), nil
 }
 
-// getBootstrapPath returns bootstrap repository path.
-func getBootstrapPath() (string, error) {
+// GetBootstrapPath returns bootstrap repository path.
+func GetBootstrapPath() (string, error) {
 	gitRootPath, err := git.Root()
 	if err != nil {
 		return "", err
@@ -61,8 +61,8 @@ func getBootstrapPath() (string, error) {
 	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
 }
 
-// getStepPath returns path from which step will be executed.
-func getStepPath(step *Step, defaultPath string) string {
+// GetStepPath returns path from which step will be executed.
+func GetStepPath(step *Step, defaultPath string) string {
 	if step != nil && step.TargetPath != "" {
 		return step.TargetPath
 	}
@@ -70,9 +70,9 @@ func getStepPath(step *Step, defaultPath string) string {
 	return defaultPath
 }
 
-// executeSteps of a bootstrap, migration or destroy process.
-func executeSteps(steps []*Step) error {
-	defaultPath, err := getBootstrapPath()
+// ExecuteSteps of a bootstrap, migration or destroy process.
+func ExecuteSteps(steps []*Step) error {
+	defaultPath, err := GetBootstrapPath()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func executeSteps(steps []*Step) error {
 	for i, step := range steps {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 
-		path := getStepPath(step, defaultPath)
+		path := GetStepPath(step, defaultPath)
 		err := os.Chdir(path)
 		if err != nil {
 			return err

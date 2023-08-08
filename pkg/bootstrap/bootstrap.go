@@ -103,7 +103,7 @@ func BootstrapCluster(runPlural ActionFunc) error {
 		return err
 	}
 
-	err = executeSteps(steps)
+	err = ExecuteSteps(steps)
 	if err != nil {
 		return err
 	}
