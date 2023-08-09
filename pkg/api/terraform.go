@@ -27,6 +27,20 @@ func (client *client) GetTerraforma(repoId string) ([]*Terraform, error) {
 	return terraform, err
 }
 
+func (client *client) GetTerraformVersions(id string) ([]*Version, error) {
+	resp, err := client.pluralClient.GetTerraformVersions(client.ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	versions := make([]*Version, 0)
+	for _, version := range resp.Versions.Edges {
+		versions = append(versions, convertVersion(version.Node))
+	}
+
+	return versions, nil
+}
+
 func (client *client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
 	resp, err := client.pluralClient.GetTerraformInstallations(client.ctx, repoId)
 	if err != nil {
