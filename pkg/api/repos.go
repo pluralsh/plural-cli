@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -207,6 +208,17 @@ func (client *client) ListRepositories(query string) ([]*Repository, error) {
 	}
 
 	return res, err
+}
+
+func (client *client) InstallVersion(tp, repo, name, vsn string) error {
+	tp = strings.ToUpper(tp)
+	dt := gqlclient.DependencyType(tp)
+	if !dt.IsValid() {
+		return fmt.Errorf("invalid package type %s", tp)
+	}
+
+	_, err := client.pluralClient.InstallVersion(context.Background(), dt, repo, name, vsn)
+	return err
 }
 
 func (client *client) Release(name string, tags []string) error {

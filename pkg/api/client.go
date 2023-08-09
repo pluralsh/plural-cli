@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	rawclient "github.com/Yamashou/gqlgenc/client"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/samber/lo"
 )
 
 type authedTransport struct {
@@ -51,6 +53,7 @@ type Client interface {
 	UpdateVersion(spec *VersionSpec, tags []string) error
 	GetCharts(repoId string) ([]*Chart, error)
 	GetVersions(chartId string) ([]*Version, error)
+	GetTerraformVersions(id string) ([]*Version, error)
 	GetChartInstallations(repoId string) ([]*ChartInstallation, error)
 	GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error)
 	CreateCrd(repo string, chart string, file string) error
@@ -89,6 +92,7 @@ type Client interface {
 	TransferOwnership(name, email string) error
 	Release(name string, tags []string) error
 	Chat(history []*ChatMessage) (*ChatMessage, error)
+	InstallVersion(tp, repo, pkg, vsn string) error
 }
 
 type client struct {
@@ -142,4 +146,40 @@ func GetErrorResponse(err error, methodName string) error {
 	}
 
 	return errList
+}
+
+func FindChart(client Client, repo, name string) (*Chart, error) {
+	r, err := client.GetRepository(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	charts, err := client.GetCharts(r.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	chart, ok := lo.Find(charts, func(c *Chart) bool { return c.Name == name })
+	if !ok {
+		return nil, fmt.Errorf("No chart found for repo %s and name %s", repo, name)
+	}
+	return chart, nil
+}
+
+func FindTerraform(client Client, repo, name string) (*Terraform, error) {
+	r, err := client.GetRepository(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	tfs, err := client.GetTerraforma(r.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	tf, ok := lo.Find(tfs, func(c *Terraform) bool { return c.Name == name })
+	if !ok {
+		return nil, fmt.Errorf("No terraform module found for repo %s and name %s", repo, name)
+	}
+	return tf, nil
 }
