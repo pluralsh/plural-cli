@@ -78,6 +78,13 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider api.Cluster
 			},
 		}
 		return config, nil
+	case api.ClusterProviderKind:
+		return &api.Configuration{
+			KindConfiguration: &api.KindConfiguration{
+				ClusterName: cliProvider.Cluster(),
+			},
+		}, nil
+
 	}
 
 	return nil, fmt.Errorf("unknown provider, no configuration found")
