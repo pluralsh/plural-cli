@@ -1,0 +1,7 @@
+message: updating cloud shell image to $GITHUB_REF_NAME
+type: CONFIG
+config:
+  paths:
+  - path: .plural.secrets.cloud_shell_img
+    value: ghcr.io/pluralsh/plural-cli-cloud:${REF_NAME}
+    type: STRING
