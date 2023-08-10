@@ -40,6 +40,10 @@ ENV TERRAFORM_VERSION=v1.2.9
 # renovate: datasource=github-tags depName=kubernetes/kubernetes
 ENV KUBECTL_VERSION=v1.25.5
 
+ENV DOCKER_VERSION=""
+
+ENV KIND_VERSION=v0.20.0
+
 RUN apk add --update --no-cache curl ca-certificates unzip wget openssl build-base && \
     curl -L https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARGETARCH}.tar.gz | tar xvz && \
     mv linux-${TARGETARCH}/helm /usr/local/bin/helm && \
@@ -110,6 +114,18 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
       google-cloud-sdk-gke-gcloud-auth-plugin && \
       gcloud --help
 
+RUN useradd -ms /bin/bash plural
+# install Docker
+#RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \
+RUN curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && usermod -a -G docker plural
+ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
+
+# install kind
+# K8s.io KinD
+RUN curl -Lo ./kind https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64 \
+    && chmod +x ./kind \
+    && mv ./kind /usr/bin/kind
+
 WORKDIR /root
 
 ENV TERM=xterm-256color
@@ -120,7 +136,7 @@ RUN git clone https://github.com/powerline/fonts.git --depth=1 && \
       rm -rf fonts
 
 WORKDIR $GOPATH/src/plural/
-RUN useradd -ms /bin/bash plural
+
 
 COPY start-session.sh /usr/local/bin/start-session.sh
 COPY boot.sh /home/plural/boot.sh
