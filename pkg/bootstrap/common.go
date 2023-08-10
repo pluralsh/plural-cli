@@ -10,6 +10,15 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+// getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
+func getEnvVar(name, defaultValue string) string {
+	if v, ok := os.LookupEnv(name); ok {
+		return v
+	}
+
+	return defaultValue
+}
+
 // runTerraform executes terraform command with provided arguments, i.e. "terraform init".
 func runTerraform(arguments []string) error {
 	cmd := exec.Command("terraform", arguments...)

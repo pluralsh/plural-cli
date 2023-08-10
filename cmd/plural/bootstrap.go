@@ -172,13 +172,12 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	}); err != nil {
 		return err
 	}
-	fmt.Println()
 	if err := client.Delete(context.Background(), &clusterapi.Cluster{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "bootstrap"},
 	}); err != nil {
 		return err
 	}
-	utils.Warn("Deleting cluster ")
+	utils.Warn("\nDeleting cluster")
 	return WaitFor(40*time.Minute, 10*time.Second, func() (bool, error) {
 		if err := client.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: name, Namespace: "bootstrap"}, &clusterapi.Cluster{}); err != nil {
 			if !apierrors.IsNotFound(err) {

@@ -23,10 +23,14 @@ import (
 
 var settings = cli.New()
 
+const (
+	CiliumRepoName = "cilium"
+	CiliumRepoUrl  = "https://helm.cilium.io/"
+)
+
 func InstallCilium(cluster string) error {
 	namespace := "kube-system"
-	cmd := exec.Command(
-		"kind", "export", "kubeconfig", "--name", cluster)
+	cmd := exec.Command("kind", "export", "kubeconfig", "--name", cluster)
 	if err := utils.Execute(cmd); err != nil {
 		return err
 	}
@@ -39,12 +43,13 @@ func InstallCilium(cluster string) error {
 	if err != nil {
 		return nil
 	}
-	instClient := action.NewInstall(helmConfig)
 
+	instClient := action.NewInstall(helmConfig)
 	cp, err := instClient.ChartPathOptions.LocateChart("cilium/cilium", settings)
 	if err != nil {
 		return err
 	}
+
 	chart, err := loader.Load(cp)
 	if err != nil {
 		return err
@@ -60,16 +65,13 @@ func InstallCilium(cluster string) error {
 }
 
 func addCiliumRepo() error {
-	name := "cilium"
-	url := "https://helm.cilium.io/"
-	repoFile := envOr("HELM_REPOSITORY_CONFIG", helmpath.ConfigPath("repositories.yaml"))
-
+	repoFile := getEnvVar("HELM_REPOSITORY_CONFIG", helmpath.ConfigPath("repositories.yaml"))
 	err := os.MkdirAll(filepath.Dir(repoFile), os.ModePerm)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
 
-	// Acquire a file lock for process synchronization
+	// Acquire a file lock for process synchronization.
 	repoFileExt := filepath.Ext(repoFile)
 	var lockPath string
 	if len(repoFileExt) > 0 && len(repoFileExt) < len(repoFile) {
@@ -99,15 +101,15 @@ func addCiliumRepo() error {
 	}
 
 	c := repo.Entry{
-		Name:                  name,
-		URL:                   url,
+		Name:                  CiliumRepoName,
+		URL:                   CiliumRepoUrl,
 		InsecureSkipTLSverify: true,
 	}
 
 	// If the repo exists do one of two things:
-	// 1. If the configuration for the name is the same continue without error
-	// 2. When the config is different require --force-update
-	if f.Has(name) {
+	// 1. If the configuration for the name is the same continue without error.
+	// 2. When the config is different require --force-update.
+	if f.Has(CiliumRepoName) {
 		return nil
 	}
 
@@ -117,21 +119,10 @@ func addCiliumRepo() error {
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		return fmt.Errorf("looks like %q is not a valid chart repository or cannot be reached", url)
+		return fmt.Errorf("looks like %q is not a valid chart repository or cannot be reached", CiliumRepoUrl)
 	}
 
 	f.Update(&c)
 
-	if err := f.WriteFile(repoFile, 0644); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func envOr(name, def string) string {
-	if v, ok := os.LookupEnv(name); ok {
-		return v
-	}
-	return def
+	return f.WriteFile(repoFile, 0644)
 }
