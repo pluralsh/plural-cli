@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   server:
-    image: gcr.io/pluralsh/plural-cli-cloud:0.6.2
+    image: gcr.io/pluralsh/plural-cli-cloud:0.6.28
     restart: always
     pull_policy: always
     platform: linux/amd64
