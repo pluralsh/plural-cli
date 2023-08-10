@@ -179,7 +179,7 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		return err
 	}
 	utils.Warn("Deleting cluster ")
-	return WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
+	return WaitFor(40*time.Minute, 10*time.Second, func() (bool, error) {
 		if err := client.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: name, Namespace: "bootstrap"}, &clusterapi.Cluster{}); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return false, fmt.Errorf("failed to get Cluster: %w", err)
