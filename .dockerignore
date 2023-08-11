@@ -15,4 +15,5 @@ packer/
 hack/
 Makefile
 Dockerfile
-dockerfiles/Dockerfile.cloud
+dockerfiles
+!dockerfiles/s6-rc.d

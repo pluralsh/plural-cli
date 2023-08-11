@@ -115,11 +115,14 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 RUN useradd -ms /bin/bash plural
 
 # install s6
+# notes: https://github.com/just-containers/s6-overlay/blob/master/MOVING-TO-V3.md
 ENV S6_OVERLAY_VERSION=3.1.5.0
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+COPY dockerfiles/s6-rc.d /etc/s6-overlay/s6-rc.d
+
 
 ENV DOCKER_VERSION=24.0.0
 #RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \

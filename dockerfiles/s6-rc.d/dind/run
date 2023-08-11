@@ -1,0 +1,2 @@
+#!/command/with-contenv sh
+exec dockerd --log-level error
