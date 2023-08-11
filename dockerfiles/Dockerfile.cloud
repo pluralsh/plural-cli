@@ -75,6 +75,7 @@ RUN apt-get -yq update \
      less \
      lsb-release \
      openssh-client \
+     xz-utils \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -113,7 +114,13 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 
 RUN useradd -ms /bin/bash plural
 
-# install Docker
+# install s6
+ENV S6_OVERLAY_VERSION=3.1.5.0
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+
 ENV DOCKER_VERSION=24.0.0
 #RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \
 RUN curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh --version ${DOCKER_VERSION} && usermod -a -G docker plural
@@ -156,4 +163,6 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
+
+ENTRYPOINT [ "/init" ]
 CMD eval $(ssh-agent -s); plural serve
