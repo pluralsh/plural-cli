@@ -26,9 +26,8 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 	}
 
 	clusterKubeContext := prov.KubeContext()
-	var steps []*Step
 
-	steps = append(steps, []*Step{
+	return []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -60,18 +59,6 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
 		},
-	}...)
-	if projectManifest.Provider == "kind" {
-		steps = append(steps, []*Step{
-			{
-				Name: "Install Network",
-				Execute: func(_ []string) error {
-					return InstallCilium(projectManifest.Cluster)
-				},
-			},
-		}...)
-	}
-	steps = append(steps, []*Step{
 		{
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
@@ -98,8 +85,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
-	}...)
-	return steps, nil
+	}, nil
 }
 
 // DestroyCluster destroys cluster managed by Cluster API.
