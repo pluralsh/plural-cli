@@ -245,6 +245,11 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
 		},
 		{
+			Name:        "auth",
+			Usage:       "Handles authentication to the plural api",
+			Subcommands: p.authCommands(),
+		},
+		{
 			Name:  "init",
 			Usage: "initializes plural within a git repo",
 			Flags: []cli.Flag{
