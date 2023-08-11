@@ -1,6 +1,12 @@
 package bootstrap
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+
+	"github.com/pluralsh/plural/pkg/kubernetes"
+
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 )
@@ -53,6 +59,44 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 				Name: "Install Network",
 				Execute: func(_ []string) error {
 					return InstallCilium(projectManifest.Cluster)
+				},
+			},
+			{
+				Name: "Install StorageClass",
+				Execute: func(_ []string) error {
+					kube, err := kubernetes.Kubernetes()
+					if err != nil {
+						return err
+					}
+					f, err := os.CreateTemp("", "storageClass")
+					if err != nil {
+						return err
+					}
+					defer os.Remove(f.Name())
+					_, err = f.WriteString(storageClassManifest)
+					if err != nil {
+						return err
+					}
+					if err := kube.Apply(f.Name(), true); err != nil {
+						return err
+					}
+
+					return nil
+				},
+			},
+			{
+				Name: "Save kubeconfig",
+				Execute: func(_ []string) error {
+					bootstrapPath, err := GetBootstrapPath()
+					if err != nil {
+						return err
+					}
+					cmd := exec.Command("kind", "export", "kubeconfig", "--name", projectManifest.Cluster, "--kubeconfig", filepath.Join(bootstrapPath, "terraform", "kube_config_cluster.yaml"))
+					if err := utils.Execute(cmd); err != nil {
+						return err
+					}
+
+					return nil
 				},
 			},
 		}...)
