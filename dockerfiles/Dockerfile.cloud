@@ -159,7 +159,7 @@ WORKDIR /home/plural
 USER plural
 
 # setup nonroot docker
-RUN dockerd-rootless-setuptool.sh instal
+RUN dockerd-rootless-setuptool.sh install
 
 COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
