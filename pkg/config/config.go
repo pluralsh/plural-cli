@@ -69,6 +69,10 @@ func Read() Config {
 	if config != nil {
 		return *config
 	}
+	if os.Getenv("PLURAL_ACCESS_TOKEN") != "" {
+		return Config{Token: os.Getenv("PLURAL_ACCESS_TOKEN")}
+	}
+
 	return Import(configFile())
 }
 
