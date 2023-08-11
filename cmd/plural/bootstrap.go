@@ -155,7 +155,11 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 	utils.Warn("Waiting for the operator ")
 	if err := WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
 		pods := &corev1.PodList{}
-		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(api.NormalizeProvider(pm.Provider)))
+		providerName := pm.Provider
+		if providerName == "kind" {
+			providerName = "docker"
+		}
+		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(api.NormalizeProvider(providerName)))
 		if err := client.List(context.Background(), pods, ctrlruntimeclient.MatchingLabels{"cluster.x-k8s.io/provider": selector}); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return false, fmt.Errorf("failed to get pods: %w", err)
