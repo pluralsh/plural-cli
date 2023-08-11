@@ -31,9 +31,10 @@ type LoginMethod struct {
 }
 
 type Me struct {
-	Id      string
-	Email   string
-	Demoing bool
+	Id                 string
+	Email              string
+	Demoing            bool
+	TrustRelationships []*gqlclient.OidcTrustRelationshipFragment
 }
 
 func (client *client) Me() (*Me, error) {
@@ -42,9 +43,10 @@ func (client *client) Me() (*Me, error) {
 		return nil, err
 	}
 	return &Me{
-		Id:      resp.Me.ID,
-		Email:   resp.Me.Email,
-		Demoing: lo.FromPtr(resp.Me.Demoing),
+		Id:                 resp.Me.ID,
+		Email:              resp.Me.Email,
+		Demoing:            lo.FromPtr(resp.Me.Demoing),
+		TrustRelationships: resp.Me.TrustRelationships,
 	}, nil
 }
 
@@ -261,6 +263,29 @@ func (client *client) GetKeyBackup(name string) (*KeyBackup, error) {
 		Repositories: frag.Repositories,
 		Value:        frag.Value,
 	}, nil
+}
+
+func (client *client) CreateTrust(issuer, trust string) error {
+	_, err := client.pluralClient.CreateTrust(client.ctx, gqlclient.TrustRelationshipAttributes{
+		Issuer: issuer,
+		Trust:  trust,
+	})
+
+	return err
+}
+
+func (client *client) DeleteTrust(id string) error {
+	_, err := client.pluralClient.DeleteTrust(client.ctx, id)
+	return err
+}
+
+func (client *client) OidcToken(provider gqlclient.ExternalOidcProvider, token, email string) (string, error) {
+	resp, err := client.pluralClient.OidcToken(client.ctx, provider, token, email)
+	if err != nil {
+		return "", err
+	}
+
+	return *resp.OidcToken, err
 }
 
 func convertKeyBackup(fragment *gqlclient.KeyBackupFragment) *KeyBackup {
