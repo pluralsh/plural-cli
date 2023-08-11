@@ -15,4 +15,4 @@ packer/
 hack/
 Makefile
 Dockerfile
-dockerfiles/
+dockerfiles/Dockerfile.cloud
