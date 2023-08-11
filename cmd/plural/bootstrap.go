@@ -278,6 +278,15 @@ func handleCreateCluster(c *cli.Context) error {
 		cluster.CreateWithRetain(false),
 		cluster.CreateWithDisplayUsage(true),
 		cluster.CreateWithDisplaySalutation(true),
+		cluster.CreateWithRawConfig([]byte(`
+kind: Cluster
+apiVersion: kind.sigs.k8s.io/v1alpha3
+nodes:
+  - role: control-plane
+    extraMounts:
+      - hostPath: /var/run/docker.sock
+        containerPath: /var/run/docker.sock
+`)),
 	); err != nil {
 		return errors.Wrap(err, "failed to create cluster")
 	}
