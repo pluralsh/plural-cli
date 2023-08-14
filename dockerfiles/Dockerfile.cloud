@@ -78,6 +78,7 @@ RUN apt-get -yq update \
      xz-utils \
      uidmap \
      dbus-user-session \
+     iptables \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -158,8 +159,8 @@ RUN chmod +x /usr/local/bin/start-session.sh && \
 WORKDIR /home/plural
 USER plural
 
-# setup nonroot docker
-RUN dockerd-rootless-setuptool.sh install
+# setup rootless docker
+RUN dockerd-rootless-setuptool.sh install --skip-iptables
 
 COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
