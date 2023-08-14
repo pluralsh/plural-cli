@@ -93,6 +93,9 @@ type Client interface {
 	Release(name string, tags []string) error
 	Chat(history []*ChatMessage) (*ChatMessage, error)
 	InstallVersion(tp, repo, pkg, vsn string) error
+	CreateTrust(issuer, trust string) error
+	DeleteTrust(id string) error
+	OidcToken(provider gqlclient.ExternalOidcProvider, token, email string) (string, error)
 }
 
 type client struct {

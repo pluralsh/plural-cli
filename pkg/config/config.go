@@ -69,6 +69,7 @@ func Read() Config {
 	if config != nil {
 		return *config
 	}
+
 	return Import(configFile())
 }
 
