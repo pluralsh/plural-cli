@@ -1,0 +1,3 @@
+if { mkdir -p /var/log/dind }
+if { chown nobody:nogroup /var/log/dind }
+chmod 02755 /var/log/dind

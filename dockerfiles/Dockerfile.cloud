@@ -168,7 +168,7 @@ USER plural
 ENV SKIP_IPTABLES=1
 RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh && DOCKER
 ENV PATH "$PATH:/sbin"
-ENV PATH "$PATH:/home/plural/bin:$PATH"
+ENV PATH "$PATH:/home/plural/bin"
 ENV DOCKER_HOST "unix:///${XDG_RUNTIME_DIR}/docker.sock"
 #&& usermod -a -G docker plural
 ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh

@@ -1,4 +1,4 @@
 #!/command/execlineb -P
 with-contenv
 s6-setuidgid plural
-dockerd-rootless.sh --experimental
+eval $(ssh-agent -s)
