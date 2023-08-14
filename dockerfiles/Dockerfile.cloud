@@ -80,6 +80,7 @@ RUN apt-get -yq update \
      dbus-user-session \
      iptables \
      kmod \
+     fuse-overlayfs \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -159,8 +160,8 @@ WORKDIR /home/plural
 ENV XDG_RUNTIME_DIR=/home/plural/.docker
 RUN mkdir -p $XDG_RUNTIME_DIR && \
       chown 1000:0 $XDG_RUNTIME_DIR && \
-      echo 1 > /proc/sys/kernel/unprivileged_userns_clone
-      #echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf
+      echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && \
+      sysctl --system
 
 USER plural
 #ENV DOCKER_VERSION=24.0.0
