@@ -159,7 +159,8 @@ WORKDIR /home/plural
 ENV XDG_RUNTIME_DIR=/home/plural/.docker
 RUN mkdir -p $XDG_RUNTIME_DIR && \
       chown 1000:0 $XDG_RUNTIME_DIR && \
-      echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf
+      echo 1 > /proc/sys/kernel/unprivileged_userns_clone
+      #echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf
 
 USER plural
 #ENV DOCKER_VERSION=24.0.0
@@ -181,7 +182,9 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
       cat tmux/.zshrc.local >> /home/plural/.zshrc && \
       helm plugin install https://github.com/databus23/helm-diff
 
-RUN echo "export PATH=\$PATH:/sbin" >> /home/plural/.zhsrc && echo "export PATH=\$PATH:/home/plural/bin" >> /home/plural/.zhsrc && echo "export DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
+RUN   printf "\nexport PATH=$PATH:/sbin" >> /home/plural/.zshrc && \
+      printf "\nexport PATH=$PATH:/home/plural/bin" >> /home/plural/.zshrc && \
+      printf "\nexport DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
