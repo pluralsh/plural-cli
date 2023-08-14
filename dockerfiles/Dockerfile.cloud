@@ -166,7 +166,7 @@ USER plural
 #RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \
 #RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh --version ${DOCKER_VERSION} && usermod -a -G docker plural
 ENV SKIP_IPTABLES=1
-RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh && DOCKER
+RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh 
 ENV PATH "$PATH:/sbin"
 ENV PATH "$PATH:/home/plural/bin"
 ENV DOCKER_HOST "unix:///${XDG_RUNTIME_DIR}/docker.sock"
