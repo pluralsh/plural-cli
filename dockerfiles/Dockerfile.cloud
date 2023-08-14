@@ -167,22 +167,21 @@ USER plural
 #RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh --version ${DOCKER_VERSION} && usermod -a -G docker plural
 ENV SKIP_IPTABLES=1
 RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh 
-ENV PATH "$PATH:/sbin"
-ENV PATH "$PATH:/home/plural/bin"
-ENV DOCKER_HOST "unix:///${XDG_RUNTIME_DIR}/docker.sock"
 #&& usermod -a -G docker plural
 ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
 
 # setup rootless docker
 #RUN dockerd-rootless-setuptool.sh install --skip-iptables
 
-COPY tmux /home/plural/tmuxd 
+COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
 COPY .screenrc /home/plural/.screenrc
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
       cat tmux/.zshrc.local >> /home/plural/.zshrc && \
       helm plugin install https://github.com/databus23/helm-diff
+
+RUN echo "export PATH=\$PATH:/sbin" >> /home/plural/.zhsrc && echo "export PATH=\$PATH:/home/plural/bin" >> /home/plural/.zhsrc && echo "export DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
