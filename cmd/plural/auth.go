@@ -81,8 +81,16 @@ func (p *Plural) handleListTrusts(c *cli.Context) error {
 }
 
 func (p *Plural) handleCreateTrust(c *cli.Context) error {
+	trustShortcuts := map[string]string{
+		"github_actions": "https://token.actions.githubusercontent.com",
+	}
+
 	p.InitPluralClient()
 	issuer, trust := c.String("issuer"), c.String("trust")
+	if val, ok := trustShortcuts[issuer]; ok {
+		issuer = val
+	}
+
 	return p.Client.CreateTrust(issuer, trust)
 }
 
