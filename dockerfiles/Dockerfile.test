@@ -25,11 +25,12 @@ RUN apt-get -yq update \
      iptables \
      kmod \
      fuse-overlayfs \
+     iproute2 \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 RUN cat /etc/passwd
-RUN useradd -u 1001 -ms /bin/bash plural
+RUN useradd -u 1001 -ms /bin/bash plural && echo "plural:plural" | chpasswd && adduser admin sudo
 
 WORKDIR /home/plural
 ENV XDG_RUNTIME_DIR=/home/plural/.docker
@@ -56,15 +57,10 @@ ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/con
 #    && usermod -a -G docker admin
 #ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
 #
-## Install Sshd
-#RUN apt-get update && apt-get install --no-install-recommends -y openssh-server \
-#    && rm -rf /var/lib/apt/lists/* \
-#    && mkdir /home/admin/.ssh \
-#    && chown admin:admin /home/admin/.ssh
 
-EXPOSE 22
 
 USER root
 
+EXPOSE 22
 # Set systemd as entrypoint.
 ENTRYPOINT [ "/sbin/init", "--log-level=err" ]
