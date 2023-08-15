@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: plural-cloud-unpriv
+  namespace: sysbox
+  #annotations:
+  #  io.kubernetes.cri-o.userns-mode: "auto:size=65536"
+spec:
+  #runtimeClassName: sysbox-runc
+  containers:
+  - name: plural-cloud-unpriv
+    image: ghcr.io/pluralsh/plural-cli-cloud:sha-fcf2725
+    #command: ["/sbin/init", "--log-level=err"]
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "1m"
+    securityContext:
+      privileged: false
+  tolerations:
+  - key: plural.sh/sysbox
+    operator: Exists
+  - key: plural.sh/capacityType
+    operator: Exists
+  restartPolicy: Never
