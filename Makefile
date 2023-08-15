@@ -103,7 +103,7 @@ build-cloud: ## build the cloud docker image
 
 .PHONY: build-test
 build-test: ## build the cloud docker image
-	docker build --build-arg APP_NAME=$(APP_NAME) \
+	docker build --progress=plain --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
 		--build-arg APP_COMMIT=$(BUILD) \
