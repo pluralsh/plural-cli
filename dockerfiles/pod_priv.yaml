@@ -9,7 +9,8 @@ spec:
   #runtimeClassName: sysbox-runc
   containers:
   - name: plural-cloud-priv
-    image: ghcr.io/pluralsh/plural-cli-cloud:sha-fcf2725
+    #image: ghcr.io/pluralsh/plural-cli-cloud:sha-fcf2725
+    image: ghcr.io/pluralsh/plural-cli-cloud:sha-791720e
     #command: ["/sbin/init", "--log-level=err"]
     resources:
       requests:
