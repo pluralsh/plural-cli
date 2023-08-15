@@ -101,6 +101,16 @@ build-cloud: ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
+.PHONY: build-test
+build-test: ## build the cloud docker image
+	docker build --build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
+		-t $(APP_NAME)-test:$(APP_VSN) \
+		-t $(APP_NAME)-test:latest \
+		-t $(DKR_HOST)/plural/$(APP_NAME)-test:$(APP_VSN) -f dockerfiles/Dockerfile.test  .
+
 .PHONY: push
 push: ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
