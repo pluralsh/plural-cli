@@ -1,10 +1,7 @@
 build {
   name = "install-plural"
   sources = [
-    "source.amazon-ebs.us-east-1",
-    "source.amazon-ebs.us-east-2",
-    "source.amazon-ebs.us-west-2",
-    "source.amazon-ebs.ap-southeast-2",
+    "source.amazon-ebs.main",
   ]
 
   provisioner "shell" {
