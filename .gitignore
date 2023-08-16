@@ -24,3 +24,6 @@ __debug_bin
 *.out
 forge*.o
 plural*.o
+
+# Vendored dependencies
+vendor/
