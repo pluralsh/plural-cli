@@ -129,7 +129,8 @@ func AllWaiter(kubeConf *rest.Config, namespace string, clusterName string, time
 
 	go func() {
 		if err := waitClient.app.SetRoot(waitClient.table, true).SetFocus(waitClient.table).Run(); err != nil {
-			utils.Warn("%s\n", err)
+			utils.Error("%s\n", err)
+			panic(err)
 		}
 	}()
 
