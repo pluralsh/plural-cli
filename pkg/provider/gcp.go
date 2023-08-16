@@ -581,7 +581,7 @@ func listInstanceGroupManagers(ctx context.Context, c *compute.InstanceGroupMana
 	return instances, nil
 }
 
-type credentials struct {
+type GCPCredentials struct {
 	Email string          `json:"client_email"`
 	ID    string          `json:"client_id"`
 	Type  credentialsType `json:"type"`
@@ -600,7 +600,7 @@ func validServiceAccountCredentials(val interface{}) error {
 		return err
 	}
 
-	creds := new(credentials)
+	creds := new(GCPCredentials)
 	if err = json.Unmarshal(bytes, creds); err != nil {
 		return err
 	}
@@ -608,8 +608,6 @@ func validServiceAccountCredentials(val interface{}) error {
 	if creds.Type != ServiceAccountType || len(creds.Email) == 0 || len(creds.ID) == 0 {
 		return fmt.Errorf("provided credentials file is not a valid service account. Must have type 'service_account' and both 'client_id' and 'client_email' set")
 	}
-
-	// TODO: required permission validation?
 
 	return nil
 }

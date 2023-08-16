@@ -1,11 +1,12 @@
 package permissions
 
 import (
-	"context"
-	"fmt"
-
 	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/polly/containers"
 	"google.golang.org/api/option"
 )
@@ -83,6 +84,11 @@ func (g *GcpChecker) recommendedRoles() []string {
 }
 
 func (g *GcpChecker) MissingRoles() (result []string, err error) {
+	credentials := new(provider.GCPCredentials)
+	if err = json.Unmarshal(g.credentials, credentials); err != nil {
+		return
+	}
+
 	svc, err := resourcemanager.NewProjectsClient(g.ctx)
 	if err != nil {
 		return
@@ -97,10 +103,9 @@ func (g *GcpChecker) MissingRoles() (result []string, err error) {
 		return
 	}
 
-	saEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", g.project, "capi-test-sa")
 	has := make([]string, 0)
 	for _, binding := range res.GetBindings() {
-		if g.HasServiceAccount(binding, saEmail) {
+		if g.HasServiceAccount(binding, credentials.Email) {
 			has = append(has, binding.GetRole())
 		}
 	}
