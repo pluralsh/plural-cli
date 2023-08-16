@@ -112,3 +112,5 @@ data:
     host: "localhost:${reg_port}"
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
+
+kubectl create namespace bootstrap

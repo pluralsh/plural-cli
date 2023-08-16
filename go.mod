@@ -33,6 +33,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/gofrs/flock v0.8.1
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-retryablehttp v0.7.1
@@ -154,7 +155,6 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobuffalo/flect v1.0.2 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
-	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/cel-go v0.12.6 // indirect
 	github.com/google/certificate-transparency-go v1.1.2-0.20210511102531-373a877eec92 // indirect

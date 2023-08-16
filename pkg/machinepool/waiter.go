@@ -3,6 +3,7 @@ package machinepool
 import (
 	"context"
 	"fmt"
+	"github.com/pluralsh/plural/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"time"
@@ -128,7 +129,7 @@ func AllWaiter(kubeConf *rest.Config, namespace string, clusterName string, time
 
 	go func() {
 		if err := waitClient.app.SetRoot(waitClient.table, true).SetFocus(waitClient.table).Run(); err != nil {
-			panic(err)
+			utils.Warn("%s\n", err)
 		}
 	}()
 
