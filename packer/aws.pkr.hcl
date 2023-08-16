@@ -1,5 +1,5 @@
 source "amazon-ebs" "us-east-1" {
-  ami_name      = var.img_name
+  ami_name      = "${var.img_name}/${var.cli_version}"
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami_filter {
@@ -11,6 +11,18 @@ source "amazon-ebs" "us-east-1" {
     most_recent = true
     owners      = ["099720109477"]
   }
+  run_tags = {
+    Creator = "Packer"
+  }
+  run_volume_tags = {
+    Creator = "Packer"
+  }
+  snapshot_tags = {
+    Creator = "Packer"
+  }
+  tags = {
+    Creator = "Packer"
+  }
   ssh_username = "ubuntu"
   ami_groups = ["all"]
   force_deregister = true
@@ -18,7 +30,7 @@ source "amazon-ebs" "us-east-1" {
 }
 
 source "amazon-ebs" "us-east-2" {
-  ami_name      = var.img_name
+  ami_name      = "${var.img_name}/${var.cli_version}"
   instance_type = "t2.micro"
   region        = "us-east-2"
   source_ami_filter {
@@ -30,6 +42,18 @@ source "amazon-ebs" "us-east-2" {
     most_recent = true
     owners      = ["099720109477"]
   }
+  run_tags = {
+    Creator = "Packer"
+  }
+  run_volume_tags = {
+    Creator = "Packer"
+  }
+  snapshot_tags = {
+    Creator = "Packer"
+  }
+  tags = {
+    Creator = "Packer"
+  }
   ssh_username = "ubuntu"
   ami_groups = ["all"]
   force_deregister = true
@@ -37,7 +61,7 @@ source "amazon-ebs" "us-east-2" {
 }
 
 source "amazon-ebs" "us-west-2" {
-  ami_name      = var.img_name
+  ami_name      = "${var.img_name}/${var.cli_version}"
   instance_type = "t2.micro"
   region        = "us-west-2"
   source_ami_filter {
@@ -49,6 +73,18 @@ source "amazon-ebs" "us-west-2" {
     most_recent = true
     owners      = ["099720109477"]
   }
+  run_tags = {
+    Creator = "Packer"
+  }
+  run_volume_tags = {
+    Creator = "Packer"
+  }
+  snapshot_tags = {
+    Creator = "Packer"
+  }
+  tags = {
+    Creator = "Packer"
+  }
   ssh_username = "ubuntu"
   ami_groups = ["all"]
   force_deregister = true
@@ -56,7 +92,7 @@ source "amazon-ebs" "us-west-2" {
 }
 
 source "amazon-ebs" "ap-southeast-2" {
-  ami_name      = var.img_name
+  ami_name      = "${var.img_name}/${var.cli_version}"
   instance_type = "t2.micro"
   region        = "ap-southeast-2"
   source_ami_filter {
@@ -67,6 +103,18 @@ source "amazon-ebs" "ap-southeast-2" {
     }
     most_recent = true
     owners      = ["099720109477"]
+  }
+  run_tags = {
+    Creator = "Packer"
+  }
+  run_volume_tags = {
+    Creator = "Packer"
+  }
+  snapshot_tags = {
+    Creator = "Packer"
+  }
+  tags = {
+    Creator = "Packer"
   }
   ssh_username = "ubuntu"
   ami_groups = ["all"]

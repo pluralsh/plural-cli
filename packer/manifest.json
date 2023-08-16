@@ -285,7 +285,84 @@
       "custom_data": {
         "image_name": "plural/ubuntu/v0.6.0"
       }
+    },
+    {
+      "name": "us-east-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673531571,
+      "files": null,
+      "artifact_id": "us-east-2:ami-087d27204ccece153",
+      "packer_run_uuid": "95315ef8-4153-9eec-f100-de482b3e51f6",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "us-east-1",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673531592,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0e08be37543a20569",
+      "packer_run_uuid": "95315ef8-4153-9eec-f100-de482b3e51f6",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "ap-southeast-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673531726,
+      "files": null,
+      "artifact_id": "ap-southeast-2:ami-08f65fc074d47f3e9",
+      "packer_run_uuid": "95315ef8-4153-9eec-f100-de482b3e51f6",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "us-west-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673531842,
+      "files": null,
+      "artifact_id": "us-west-2:ami-060864150692cd109",
+      "packer_run_uuid": "95315ef8-4153-9eec-f100-de482b3e51f6",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "us-east-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673532419,
+      "files": null,
+      "artifact_id": "us-east-2:ami-06ae15fdd6787fb08",
+      "packer_run_uuid": "df5be0e0-88f6-137a-3ae0-33d3aded6776",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "us-east-1",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673532428,
+      "files": null,
+      "artifact_id": "us-east-1:ami-04a6db53a9dcf56c3",
+      "packer_run_uuid": "df5be0e0-88f6-137a-3ae0-33d3aded6776",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
+    },
+    {
+      "name": "us-west-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673532455,
+      "files": null,
+      "artifact_id": "us-west-2:ami-035e6f0167aa4e68a",
+      "packer_run_uuid": "df5be0e0-88f6-137a-3ae0-33d3aded6776",
+      "custom_data": {
+        "image_name": "plural/ubuntu-22.04/v0.6.1"
+      }
     }
   ],
-  "last_run_uuid": "a9c65c2b-1893-9ce5-1852-16c63895a56b"
+  "last_run_uuid": "df5be0e0-88f6-137a-3ae0-33d3aded6776"
 }
