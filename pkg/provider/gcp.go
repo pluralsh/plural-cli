@@ -581,7 +581,7 @@ func listInstanceGroupManagers(ctx context.Context, c *compute.InstanceGroupMana
 	return instances, nil
 }
 
-type GCPCredentials struct {
+type credentials struct {
 	Email string          `json:"client_email"`
 	ID    string          `json:"client_id"`
 	Type  credentialsType `json:"type"`
@@ -600,7 +600,7 @@ func validServiceAccountCredentials(val interface{}) error {
 		return err
 	}
 
-	creds := new(GCPCredentials)
+	creds := new(credentials)
 	if err = json.Unmarshal(bytes, creds); err != nil {
 		return err
 	}

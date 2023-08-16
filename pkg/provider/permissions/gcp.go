@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/polly/containers"
 	"google.golang.org/api/option"
 )
@@ -83,8 +82,12 @@ func (g *GcpChecker) recommendedRoles() []string {
 	}
 }
 
+type credentials struct {
+	Email string `json:"client_email"`
+}
+
 func (g *GcpChecker) MissingRoles() (result []string, err error) {
-	credentials := new(provider.GCPCredentials)
+	credentials := new(credentials)
 	if err = json.Unmarshal(g.credentials, credentials); err != nil {
 		return
 	}
