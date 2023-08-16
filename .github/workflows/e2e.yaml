@@ -22,6 +22,7 @@ jobs:
           GOBIN="$HOME"/bin make build-cli
           chmod 755 plural.o
           mv plural.o /usr/local/bin/plural
+      - run: hack/e2e/kind-install-for-capd.sh
       - run: hack/e2e/setup-plural.sh
         env:
           CLI_E2E_CONF: ${{ secrets.CLI_E2E_CONF }}

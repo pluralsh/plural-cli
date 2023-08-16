@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-./kind-install-for-capd.sh
-
 PLURALDIR=$(dirname $0)/../..
 
 cd "$PLURALDIR"
