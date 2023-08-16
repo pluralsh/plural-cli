@@ -86,7 +86,17 @@ func (p *Plural) clusterCommands() []cli.Command {
 	}
 }
 
-func handleMigration(c *cli.Context) error {
+func handleMigration(_ *cli.Context) error {
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	if project.ClusterAPI {
+		utils.Success("Cluster already migrated.\n")
+		return nil
+	}
+
 	return bootstrap.MigrateCluster(RunPlural)
 }
 
