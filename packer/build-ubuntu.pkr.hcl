@@ -66,12 +66,4 @@ build {
       "az --help",
     ]
   }
-
-  post-processor "manifest" {
-    output     = "manifest.json"
-    strip_path = true
-    custom_data = {
-      image_name = "${var.img_name}/${var.cli_version}"
-    }
-  }
 }
