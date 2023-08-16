@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+./kind-install-for-capd.sh
+
 PLURALDIR=$(dirname $0)/../..
 
 cd "$PLURALDIR"
@@ -66,6 +68,7 @@ metadata:
   name: testcli
 spec:
   cluster: testcli
+  clusterapi: true
   bucket: testcli-tf-state
   project: ""
   provider: kind
