@@ -9,9 +9,9 @@ build {
 
   provisioner "shell" {
     inline = [
-      "curl -L -o plural.o 'https://app.plural.sh/artifacts/plural/plural?platform=linux&arch=amd64'",
-      "chmod +x plural.o",
-      "sudo mv plural.o /usr/local/bin/plural",
+      "curl -L https://github.com/pluralsh/plural-cli/releases/download/${var.cli_version}/plural-cli_${local.cli_version_clean}_Linux_amd64.tar.gz | tar xvz plural",
+      "chmod +x plural",
+      "sudo mv plural /usr/local/bin/plural",
       "plural --help",
     ]
   }
@@ -71,10 +71,10 @@ build {
   }
 
   post-processor "manifest" {
-    output = "manifest.json"
+    output     = "manifest.json"
     strip_path = true
     custom_data = {
-      image_name = var.img_name
+      image_name = "${var.img_name}/${var.cli_version}"
     }
   }
 }

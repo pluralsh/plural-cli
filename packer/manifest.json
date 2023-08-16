@@ -274,7 +274,18 @@
       "custom_data": {
         "image_name": "plural/ubuntu/525f8c2"
       }
+    },
+    {
+      "name": "us-east-2",
+      "builder_type": "amazon-ebs",
+      "build_time": 1673529418,
+      "files": null,
+      "artifact_id": "us-east-2:ami-0151723fe21d2bbd7",
+      "packer_run_uuid": "a9c65c2b-1893-9ce5-1852-16c63895a56b",
+      "custom_data": {
+        "image_name": "plural/ubuntu/v0.6.0"
+      }
     }
   ],
-  "last_run_uuid": "fbc25005-a971-ce39-6341-690352c478c5"
+  "last_run_uuid": "a9c65c2b-1893-9ce5-1852-16c63895a56b"
 }
