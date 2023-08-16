@@ -385,7 +385,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	proj, err := gcp.getProject()
 	if err != nil {
 		utils.LogError().Println(err)
-		return fmt.Errorf("Could not find gcp project %s. Was your authentication misconfigured?", gcp.Proj)
+		return fmt.Errorf("Could not find gcp project %s.  Was your authentication misconfigured?", gcp.Proj)
 	}
 
 	services := algorithms.Map([]string{

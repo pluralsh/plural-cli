@@ -56,6 +56,7 @@ type Version struct {
 	TemplateType   gqlclient.TemplateType
 	Crds           []Crd
 	Dependencies   *Dependencies
+	InsertedAt     string
 }
 
 type Terraform struct {

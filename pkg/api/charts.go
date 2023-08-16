@@ -157,13 +157,15 @@ func convertVersion(version *gqlclient.VersionFragment) *Version {
 	if version.TemplateType != nil {
 		v.TemplateType = *version.TemplateType
 	}
+	if version.InsertedAt != nil {
+		v.InsertedAt = *version.InsertedAt
+	}
 
 	v.Crds = make([]Crd, 0)
 	for _, crd := range version.Crds {
 		v.Crds = append(v.Crds, convertCrd(crd))
 	}
 	v.Dependencies = convertDependencies(version.Dependencies)
-
 	return v
 }
 
