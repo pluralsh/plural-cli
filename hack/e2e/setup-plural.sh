@@ -108,9 +108,9 @@ export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
 
 plural init
 plural repos reset
-plural bundle install console console-kind
+plural bundle install bootstrap docker-cluster-api-simple-test
 plural build --force
-retry 3 plural deploy --commit=""
+plural deploy --commit=""
 
 
 
