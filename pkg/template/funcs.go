@@ -160,6 +160,28 @@ func importValue(tool, path string) string {
 	return fmt.Sprintf(`"{{ .Import.%s.%s }}"`, tool, path)
 }
 
+func chartInstalled(name, repoName string) (bool, error) {
+	client := api.NewClient()
+
+	repo, err := client.GetRepository(repoName)
+	if err != nil {
+		return false, err
+	}
+
+	chartInstallations, err := client.GetChartInstallations(repo.Id)
+	if err != nil {
+		return false, err
+	}
+
+	for _, chartInstallation := range chartInstallations {
+		if chartInstallation.Chart.Name == name {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func toYaml(val interface{}) (string, error) {
 	res, err := yaml.Marshal(val)
 	return string(res), err
