@@ -144,10 +144,8 @@ RUN setcap cap_setgid+ep /usr/bin/newgidmap
 RUN chmod 0755 /usr/bin/newuidmap
 RUN chmod 0755 /usr/bin/newgidmap
 
-#RUN echo "plural:100000:65536" > /etc/subuid
-#RUN echo "plural:100000:65536" > /etc/subgid
-RUN printf "plural:1:999\nplural:1001:64535" > /etc/subuid
-RUN printf "plural:1:999\nplural:1001:64535" > /etc/subgid
+RUN echo "plural:100000:65536" > /etc/subuid
+RUN echo "plural:100000:65536" > /etc/subgid
 #RUN echo "plural ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
 
 # setup dirs
