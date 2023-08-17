@@ -153,7 +153,7 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		return err
 	}
 	utils.Warn("Waiting for the operator ")
-	if err := WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
+	if err := utils.WaitFor(20*time.Minute, 10*time.Second, func() (bool, error) {
 		pods := &corev1.PodList{}
 		providerName := pm.Provider
 		if providerName == "kind" {
@@ -182,7 +182,7 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		return err
 	}
 	utils.Warn("\nDeleting cluster")
-	return WaitFor(40*time.Minute, 10*time.Second, func() (bool, error) {
+	return utils.WaitFor(40*time.Minute, 10*time.Second, func() (bool, error) {
 		if err := client.Get(context.Background(), ctrlruntimeclient.ObjectKey{Name: name, Namespace: "bootstrap"}, &clusterapi.Cluster{}); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return false, fmt.Errorf("failed to get Cluster: %w", err)
@@ -370,26 +370,4 @@ func getRestConfig(cfg *clientcmdapi.Config) (*rest.Config, error) {
 	clientConfig.Burst = 50
 
 	return clientConfig, nil
-}
-
-func WaitFor(timeout, interval time.Duration, f func() (bool, error)) error {
-	var lastErr string
-	timeup := time.After(timeout)
-	for {
-		select {
-		case <-timeup:
-			return fmt.Errorf("Time limit exceeded. Last error: %s", lastErr)
-		default:
-		}
-
-		stop, err := f()
-		if stop {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		time.Sleep(interval)
-	}
 }

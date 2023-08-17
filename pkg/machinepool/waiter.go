@@ -3,16 +3,17 @@ package machinepool
 import (
 	"context"
 	"fmt"
-	"github.com/pluralsh/plural/pkg/utils"
-	corev1 "k8s.io/api/core/v1"
-	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"time"
 
+	tm "github.com/buger/goterm"
 	"github.com/gdamore/tcell/v2"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/rivo/tview"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	clusterapiExp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
@@ -237,7 +238,54 @@ func Wait(kubeConf *rest.Config, namespace string, name string) error {
 	}, timeout)
 }
 
+func NoTableAllWaiter(kubeConf *rest.Config, namespace string, clusterName string) error {
+	conf := config.Read()
+	ctx := context.Background()
+	mps, err := NewForConfig(kubeConf)
+	if err != nil {
+		return err
+	}
+
+	label := &metav1.LabelSelector{MatchLabels: map[string]string{"cluster.x-k8s.io/cluster-name": clusterName}}
+
+	client := mps.MachinePools(conf.Namespace(namespace))
+	pools, err := client.List(ctx, metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(label)})
+	if err != nil {
+		return err
+	}
+	if len(pools.Items) == 0 {
+		return fmt.Errorf("No machine pools found for cluster %s", clusterName)
+	}
+	condition := map[string]clusterapi.Condition{}
+
+	if err := utils.WaitFor(20*time.Minute, 5*time.Second, func() (bool, error) {
+		pools, err := client.List(ctx, metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(label)})
+		if err != nil {
+			return false, err
+		}
+		for y, mp := range pools.Items {
+			tm.MoveCursor(1, y+1)
+			Ready(&mp)
+			Flush()
+			condition[mp.Name] = findCondition(&mp)
+			if areAllConditionsTrue(condition) {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func WaitAll(kubeConf *rest.Config, namespace string, clusterName string) error {
+	value, ok := utils.GetEnvBoolValue("PLURAL_DISABLE_MP_TABLE_VIEW")
+	if ok && value {
+		return NoTableAllWaiter(kubeConf, namespace, clusterName)
+	}
 	timeout := func() error {
 		return fmt.Errorf("Failed to become ready after 40 minutes, try running `plural cluster mpwait %s %s` to get an idea where to debug", namespace, clusterName)
 	}
