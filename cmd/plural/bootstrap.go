@@ -6,11 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
-
-	"github.com/pkg/errors"
-	bv1alpha1 "github.com/pluralsh/bootstrap-operator/apis/bootstrap/v1alpha1"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -36,7 +34,6 @@ var runtimescheme = runtime.NewScheme()
 
 func init() {
 	utilruntime.Must(corev1.AddToScheme(runtimescheme))
-	utilruntime.Must(bv1alpha1.AddToScheme(runtimescheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(runtimescheme))
 	utilruntime.Must(clusterapi.AddToScheme(runtimescheme))
 	utilruntime.Must(clusterapioperator.AddToScheme(runtimescheme))
