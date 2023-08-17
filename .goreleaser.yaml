@@ -55,6 +55,8 @@ builds:
       - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
       - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     tags: [linux]
+    env:
+      - CGO_ENABLED=0
     binary: plural
 
 archives:
