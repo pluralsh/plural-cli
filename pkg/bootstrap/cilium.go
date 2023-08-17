@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
+	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/utils"
 	"helm.sh/helm/v3/pkg/action"
@@ -18,6 +19,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	"sigs.k8s.io/yaml"
 )
 
@@ -44,8 +46,7 @@ func InstallCilium(cluster string) error {
 		return nil
 	}
 
-	instClient := action.NewInstall(helmConfig)
-	cp, err := instClient.ChartPathOptions.LocateChart("cilium/cilium", settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart("cilium/cilium", settings)
 	if err != nil {
 		return err
 	}
@@ -54,12 +55,21 @@ func InstallCilium(cluster string) error {
 	if err != nil {
 		return err
 	}
+	histClient := action.NewHistory(helmConfig)
+	histClient.Max = 5
+	if _, err := histClient.Run("cilium"); errors.Is(err, driver.ErrReleaseNotFound) {
+		instClient := action.NewInstall(helmConfig)
+		instClient.Namespace = namespace
+		instClient.ReleaseName = "cilium"
+		instClient.Timeout = time.Minute * 10
 
-	instClient.Namespace = namespace
-	instClient.ReleaseName = "cilium"
-	instClient.Timeout = time.Minute * 10
-
-	_, err = instClient.Run(chart, map[string]interface{}{})
+		_, err = instClient.Run(chart, map[string]interface{}{})
+		return err
+	}
+	client := action.NewUpgrade(helmConfig)
+	client.Namespace = namespace
+	client.Timeout = time.Minute * 10
+	_, err = client.Run("cilium", chart, map[string]interface{}{})
 
 	return err
 }
