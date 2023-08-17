@@ -80,7 +80,7 @@ RUN apt-get -yq update \
      dbus-user-session \
      iptables \
      kmod \
-     fuse-overlayfs \
+     #fuse-overlayfs \
      iproute2 \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
@@ -130,6 +130,46 @@ RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 COPY dockerfiles/s6-rc.d /etc/s6-overlay/s6-rc.d
 
 
+# install podman
+RUN apt-get -yq update \
+  && apt-get -yq install --no-install-recommends \
+     podman \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN setcap cap_setuid+ep /usr/bin/newuidmap
+RUN setcap cap_setgid+ep /usr/bin/newgidmap
+RUN chmod 0755 /usr/bin/newuidmap
+RUN chmod 0755 /usr/bin/newgidmap
+
+RUN echo "plural:100000:65536" > /etc/subuid
+RUN echo "plural:100000:65536" > /etc/subgid
+#RUN echo "plural ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+
+COPY dockerfiles/podman-conf/containers.conf /etc/containers/containers.conf
+COPY dockerfiles/podman-conf/storage.conf /etc/containers/storage.conf
+RUN chmod 644 /etc/containers/containers.conf && \
+    chmod 644 /etc/containers/storage.conf
+
+RUN mkdir -p /home/plural/.local/share/containers && \
+    chown plural:plural -R /home/plural
+
+#RUN mkdir -p /var/lib/shared/overlay-images \
+#             /var/lib/shared/overlay-layers \
+#             /var/lib/shared/vfs-images \
+#             /var/lib/shared/vfs-layers && \
+#    touch /var/lib/shared/overlay-images/images.lock && \
+#    touch /var/lib/shared/overlay-layers/layers.lock && \
+#    touch /var/lib/shared/vfs-images/images.lock && \
+#    touch /var/lib/shared/vfs-layers/layers.lock
+
+#ENV _CONTAINERS_USERNS_CONFIGURED=""
+
+# Alias "docker" to "podman"
+RUN ln -s /usr/bin/podman /usr/bin/docker
+
+#RUN chsh -s /bin/bash podman
+
 # install kind
 # K8s.io KinD
 ENV KIND_VERSION=v0.20.0
@@ -158,20 +198,20 @@ RUN chmod +x /usr/local/bin/start-session.sh && \
 #ENV XDG_RUNTIME_DIR=/run/user/1000 
 
 WORKDIR /home/plural
-ENV XDG_RUNTIME_DIR=/home/plural/.docker
-RUN mkdir -p $XDG_RUNTIME_DIR && \
-      chown 1000:0 $XDG_RUNTIME_DIR && \
-      echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && \
-      sysctl --system
+#ENV XDG_RUNTIME_DIR=/home/plural/.docker
+#RUN mkdir -p $XDG_RUNTIME_DIR && \
+#      chown 1000:0 $XDG_RUNTIME_DIR && \
+#      echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && \
+#      sysctl --system
 
 USER plural
 #ENV DOCKER_VERSION=24.0.0
 #RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \
 #RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh --version ${DOCKER_VERSION} && usermod -a -G docker plural
-ENV SKIP_IPTABLES=1
-RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh 
+#ENV SKIP_IPTABLES=1
+#RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh 
 #&& usermod -a -G docker plural
-ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
+#ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
 
 # setup rootless docker
 #RUN dockerd-rootless-setuptool.sh install --skip-iptables
