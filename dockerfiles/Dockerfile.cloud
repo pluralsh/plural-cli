@@ -148,8 +148,6 @@ RUN printf "plural:1:999\nplural:1001:64535" > /etc/subuid
 RUN printf "plural:1:999\nplural:1001:64535" > /etc/subgid
 #RUN echo "plural ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
 
-VOLUME /var/lib/containers
-VOLUME /home/plural/.local/share/containers
 
 COPY dockerfiles/podman-conf/containers.conf /etc/containers/containers.conf
 COPY dockerfiles/podman-conf/storage.conf /etc/containers/storage.conf
@@ -158,6 +156,9 @@ RUN chmod 644 /etc/containers/containers.conf && \
 
 RUN mkdir -p /home/plural/.local/share/containers && \
     chown plural:plural -R /home/plural
+
+VOLUME /var/lib/containers
+VOLUME /home/plural/.local/share/containers
 
 ENV _CONTAINERS_USERNS_CONFIGURED=""
 
