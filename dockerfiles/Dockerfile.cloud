@@ -118,7 +118,8 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
       google-cloud-sdk-gke-gcloud-auth-plugin && \
       gcloud --help
 
-RUN useradd -ms /bin/bash plural
+# create plural user
+RUN useradd -u 1000 -ms /bin/bash plural
 
 # install s6
 # notes: https://github.com/just-containers/s6-overlay/blob/master/MOVING-TO-V3.md
@@ -137,6 +138,7 @@ RUN apt-get -yq update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+
 RUN setcap cap_setuid+ep /usr/bin/newuidmap
 RUN setcap cap_setgid+ep /usr/bin/newgidmap
 RUN chmod 0755 /usr/bin/newuidmap
@@ -148,14 +150,22 @@ RUN printf "plural:1:999\nplural:1001:64535" > /etc/subuid
 RUN printf "plural:1:999\nplural:1001:64535" > /etc/subgid
 #RUN echo "plural ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
 
+# setup dirs
+RUN mkdir -p /home/plural/.local/share/containers && \
+    mkdir -p /home/plural/.config/containers
 
+# for rootfull podman
 COPY dockerfiles/podman-conf/containers.conf /etc/containers/containers.conf
 COPY dockerfiles/podman-conf/storage.conf /etc/containers/storage.conf
+# for rootless podman
+COPY dockerfiles/podman-conf/containers.conf /home/plural/.config/containers/containers.conf
+COPY dockerfiles/podman-conf/storage.conf /home/plural/.config/containers/storage.conf
+# rootless podman still needs to read these
 RUN chmod 644 /etc/containers/containers.conf && \
     chmod 644 /etc/containers/storage.conf
 
-RUN mkdir -p /home/plural/.local/share/containers && \
-    chown plural:plural -R /home/plural
+# own it
+RUN chown plural:plural -R /home/plural
 
 VOLUME /var/lib/containers
 VOLUME /home/plural/.local/share/containers
