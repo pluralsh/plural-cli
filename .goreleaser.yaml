@@ -36,17 +36,19 @@ builds:
     overrides:
       - goos: linux
         goarch: arm64
-        tags: [linux]
+        tags: [ linux ]
         env:
           - CGO_ENABLED=0
       - goos: windows
         goarch: arm64
-        tags: [windows]
+        tags: [ windows ]
         env:
           - CGO_ENABLED=0
   # Build CLI binary without embedded UI for linux. Required by our Console.
   - id: plural-cli-console
-    targets: [linux_amd64]
+    targets:
+      - linux_amd64
+      - linux_arm64
     ldflags:
       - -s
       - -w
@@ -54,21 +56,21 @@ builds:
       - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
       - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
       - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-    tags: [linux]
+    tags: [ linux ]
     env:
       - CGO_ENABLED=0
     binary: plural
 
 archives:
   - id: plural-cli
-    builds: [plural-cli]
+    builds: [ plural-cli ]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
   - id: plural-cli-console
-    builds: [plural-cli-console]
+    builds: [ plural-cli-console ]
     name_template: >-
       {{ .ProjectName }}_console_{{ .Version }}_
       {{- title .Os }}_
@@ -98,7 +100,7 @@ release:
 
 brews:
   - name: plural
-    ids: [plural-cli]
+    ids: [ plural-cli ]
     tap:
       owner: pluralsh
       name: homebrew-plural
