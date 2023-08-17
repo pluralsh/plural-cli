@@ -6,7 +6,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "curl -L https://github.com/pluralsh/plural-cli/releases/download/${var.cli_version}/plural-cli_${local.cli_version_clean}_Linux_amd64.tar.gz | tar xvz plural",
+      "curl -L https://github.com/pluralsh/plural-cli/releases/download/${var.cli_version}/plural-cli_console_${local.cli_version_clean}_Linux_amd64.tar.gz | tar xvz plural",
       "chmod +x plural",
       "sudo mv plural /usr/local/bin/plural",
       "plural --help",
