@@ -57,10 +57,10 @@ func InstallCilium(cluster string) error {
 	}
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
-	if _, err := histClient.Run("cilium"); errors.Is(err, driver.ErrReleaseNotFound) {
+	if _, err := histClient.Run(CiliumRepoName); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
-		instClient.ReleaseName = "cilium"
+		instClient.ReleaseName = CiliumRepoName
 		instClient.Timeout = time.Minute * 10
 
 		_, err = instClient.Run(chart, map[string]interface{}{})
@@ -69,7 +69,7 @@ func InstallCilium(cluster string) error {
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 10
-	_, err = client.Run("cilium", chart, map[string]interface{}{})
+	_, err = client.Run(CiliumRepoName, chart, map[string]interface{}{})
 
 	return err
 }
