@@ -94,7 +94,9 @@ func addCiliumRepo() error {
 	defer cancel()
 	locked, err := fileLock.TryLockContext(lockCtx, time.Second)
 	if err == nil && locked {
-		defer fileLock.Unlock()
+		defer func(fileLock *flock.Flock) {
+			_ = fileLock.Unlock()
+		}(fileLock)
 	}
 	if err != nil {
 		return err

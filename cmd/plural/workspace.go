@@ -73,7 +73,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 	}
 }
 
-func kubeInit(c *cli.Context) error {
+func kubeInit(_ *cli.Context) error {
 	_, found := utils.ProjectRoot()
 	if !found {
 		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
@@ -103,9 +103,7 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 	}
 	setArgs := []string{}
 	if c.IsSet("set") {
-		for _, setArg := range c.StringSlice("set") {
-			setArgs = append(setArgs, setArg)
-		}
+		setArgs = append(setArgs, c.StringSlice("set")...)
 	}
 
 	return minimal.BounceHelm(c.IsSet("wait"), skipArgs, setArgs)
@@ -131,7 +129,7 @@ func (p *Plural) diffTerraform(c *cli.Context) error {
 	return minimal.DiffTerraform()
 }
 
-func (p *Plural) createCrds(c *cli.Context) error {
+func (p *Plural) createCrds(_ *cli.Context) error {
 	err := p.InitKube()
 	if err != nil {
 		return err

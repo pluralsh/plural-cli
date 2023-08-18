@@ -25,6 +25,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const Bootstrap = "bootstrap"
+
 func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {
 	p.InitPluralClient()
 	installations, err := p.GetInstallations()
@@ -200,12 +202,12 @@ func (p *Plural) deploy(c *cli.Context) error {
 
 	ignoreConsole := c.Bool("ignore-console")
 	for _, repo := range sorted {
-		if ignoreConsole && (repo == "console" || repo == "bootstrap") {
+		if ignoreConsole && (repo == "console" || repo == Bootstrap) {
 			continue
 		}
 
-		if repo == "bootstrap" && project.ClusterAPI {
-			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, "bootstrap")
+		if repo == Bootstrap && project.ClusterAPI {
+			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, Bootstrap)
 
 			// Stop if cluster exists, but it is not ready yet.
 			if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
@@ -464,7 +466,7 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if repo == "bootstrap" && clusterAPI {
+	if repo == Bootstrap && clusterAPI {
 		if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
 			return err
 		}

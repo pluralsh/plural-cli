@@ -30,7 +30,7 @@ func runTerraform(arguments []string) error {
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
 func getBootstrapFlags(provider string) []string {
 	switch provider {
-	case "aws":
+	case aws:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
 			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",

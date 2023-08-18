@@ -1,11 +1,12 @@
 package permissions
 
 import (
-	"cloud.google.com/go/iam/apiv1/iampb"
-	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"cloud.google.com/go/iam/apiv1/iampb"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"github.com/pluralsh/polly/containers"
 	"google.golang.org/api/option"
 )

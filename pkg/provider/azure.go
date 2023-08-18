@@ -12,10 +12,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -291,7 +290,7 @@ func (az *AzureProvider) KubeConfig() error {
 }
 
 func (az *AzureProvider) KubeContext() string {
-	return fmt.Sprintf("%s", az.cluster)
+	return az.cluster
 }
 
 func (az *AzureProvider) Name() string {

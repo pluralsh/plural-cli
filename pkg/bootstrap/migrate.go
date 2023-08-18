@@ -149,7 +149,7 @@ func generateValuesFile() error {
 // GetProviderTags returns list of tags to set on provider resources during migration.
 func GetProviderTags(provider, cluster string) []string {
 	switch provider {
-	case "aws":
+	case aws:
 		return []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
 			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
@@ -216,7 +216,7 @@ func delinkTerraformState(args []string) error {
 // getMigrationFlags returns list of provider-specific flags used during cluster migration.
 func getMigrationFlags(provider string) []string {
 	switch provider {
-	case "aws":
+	case aws:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
@@ -254,7 +254,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		steps = append(steps, []*Step{
 			{
 				Name:       "Uninstall azure-identity package",
-				Args:       append([]string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"}),
+				Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
 				TargetPath: gitRootDir,
 				Execute:    runPlural,
 			},
