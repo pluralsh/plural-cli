@@ -57,6 +57,7 @@ git -c core.sshCommand="ssh -i ~/.ssh/id_sharing" clone git@github.com:pluralsh/
 git config --global user.email cli-e2e@pluraldev.sh
 git config --global user.name cli-e2e
 
+USE_CLUSTER_API=${USE_CLUSTER_API:-"false"}
 
 echodate "Creating workspace.yaml ..."
 cat << EOF > "$TESTDIR"/workspace.yaml
@@ -66,7 +67,7 @@ metadata:
   name: testcli
 spec:
   cluster: testcli
-  clusterapi: true
+  clusterapi: "$USE_CLUSTER_API"
   bucket: testcli-tf-state
   project: ""
   provider: kind

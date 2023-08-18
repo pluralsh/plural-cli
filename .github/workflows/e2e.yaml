@@ -70,6 +70,7 @@ jobs:
           CLI_E2E_PRIVATE_KEY: ${{ secrets.CLI_E2E_PRIVATE_KEY }}
           CLI_E2E_SHARING_PRIVATE_KEY: ${{ secrets.CLI_E2E_SHARING_PRIVATE_KEY }}
           CLI_E2E_SHARING_PUBLIC_KEY: ${{ secrets.CLI_E2E_SHARING_PUBLIC_KEY }}
+          USE_CLUSTER_API: true
       - run: go test -v -race ./pkg/test/e2e/... -tags="e2e-cluster-api"
       - run: |
           cd $HOME/test
