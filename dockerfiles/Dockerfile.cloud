@@ -141,8 +141,8 @@ RUN apt-get -yq update \
 
 RUN setcap cap_setuid+ep /usr/bin/newuidmap
 RUN setcap cap_setgid+ep /usr/bin/newgidmap
-RUN chmod 0755 /usr/bin/newuidmap
-RUN chmod 0755 /usr/bin/newgidmap
+RUN chmod 0777 /usr/bin/newuidmap
+RUN chmod 0777 /usr/bin/newgidmap
 
 #RUN echo "plural:100000:65536" > /etc/subuid
 #RUN echo "plural:100000:65536" > /etc/subgid
@@ -155,11 +155,11 @@ RUN mkdir -p /home/plural/.local/share/containers && \
     mkdir -p /home/plural/.config/containers
 
 # for rootfull podman
-COPY dockerfiles/podman-conf/containers.conf /etc/containers/containers.conf
-COPY dockerfiles/podman-conf/storage.conf /etc/containers/storage.conf
+COPY dockerfiles/podman-conf/rootfull/containers.conf /etc/containers/containers.conf
+COPY dockerfiles/podman-conf/rootfull/storage.conf /etc/containers/storage.conf
 # for rootless podman
-COPY dockerfiles/podman-conf/containers.conf /home/plural/.config/containers/containers.conf
-COPY dockerfiles/podman-conf/storage.conf /home/plural/.config/containers/storage.conf
+COPY --chown=1000:1000 dockerfiles/podman-conf/rootless/containers.conf /home/plural/.config/containers/containers.conf
+COPY --chown=1000:1000 dockerfiles/podman-conf/rootless/storage.conf /home/plural/.config/containers/storage.conf
 # rootless podman still needs to read these
 RUN chmod 644 /etc/containers/containers.conf && \
     chmod 644 /etc/containers/storage.conf
@@ -167,6 +167,7 @@ RUN chmod 644 /etc/containers/containers.conf && \
 # own it
 RUN chown plural:plural -R /home/plural
 
+# circumvent overlayfs req?
 VOLUME /var/lib/containers
 VOLUME /home/plural/.local/share/containers
 
@@ -205,21 +206,18 @@ RUN git clone https://github.com/powerline/fonts.git --depth=1 && \
 
 WORKDIR $GOPATH/src/plural/
 
-
 COPY start-session.sh /usr/local/bin/start-session.sh
 COPY boot.sh /home/plural/boot.sh
 RUN chmod +x /usr/local/bin/start-session.sh && \
       chmod +x /home/plural/boot.sh
 
-# prepare rootless docker
-#ENV XDG_RUNTIME_DIR=/run/user/1000 
+ENV XDG_RUNTIME_DIR=/run/user/1000 
 
 WORKDIR /home/plural
 #ENV XDG_RUNTIME_DIR=/home/plural/.docker
 #RUN mkdir -p $XDG_RUNTIME_DIR && \
 #      chown 1000:0 $XDG_RUNTIME_DIR && \
-RUN      echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && \
-      sysctl --system
+RUN echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && sysctl --system
 
 USER plural
 #ENV DOCKER_VERSION=24.0.0
@@ -242,11 +240,13 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
       helm plugin install https://github.com/databus23/helm-diff
 
 RUN   printf "\nexport PATH=$PATH:/sbin" >> /home/plural/.zshrc && \
-      printf "\nexport PATH=$PATH:/home/plural/bin" >> /home/plural/.zshrc && \
-      printf "\nexport DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
+      printf "\nexport PATH=$PATH:/home/plural/bin" >> /home/plural/.zshrc
+      #&& \
+#      printf "\nexport DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
 
 USER root
-ENTRYPOINT [ "/init" ]
+#ENTRYPOINT [ "/init" ]
+ENTRYPOINT [ "/bin/bash" ]
