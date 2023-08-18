@@ -152,7 +152,8 @@ RUN printf "plural:1:999\nplural:1001:64535" > /etc/subgid
 
 # setup dirs
 RUN mkdir -p /home/plural/.local/share/containers && \
-    mkdir -p /home/plural/.config/containers
+    mkdir -p /home/plural/.config/containers && \
+    mkdir -p /var/lib/containers
 
 # for rootfull podman
 COPY dockerfiles/podman-conf/rootfull/containers.conf /etc/containers/containers.conf
@@ -164,10 +165,9 @@ COPY --chown=1000:1000 dockerfiles/podman-conf/rootless/storage.conf /home/plura
 RUN chmod 644 /etc/containers/containers.conf && \
     chmod 644 /etc/containers/storage.conf
 
-# own it
-RUN chown plural:plural -R /home/plural
-
 # circumvent overlayfs req?
+RUN chown plural:plural -R /home/plural && chown root:root /var/lib/containers && chmod g+s /var/lib/containers
+
 VOLUME /var/lib/containers
 VOLUME /home/plural/.local/share/containers
 
