@@ -41,6 +41,7 @@ jobs:
         env:
           PLURAL_DESTROY_CONFIRM: true
           PLURAL_DESTROY_AFFIRM_UNINSTALL_APPS: true
+          PLURAL_DISABLE_MP_TABLE_VIEW: true
   create-cluster:
     if: false
     name: Create cluster
