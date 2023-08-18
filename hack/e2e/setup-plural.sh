@@ -108,9 +108,12 @@ export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
 
 export PLURAL_DISABLE_MP_TABLE_VIEW=true
 
+INSTALL_APP=${INSTALL_APP:-"bootstrap"}
+INSTALL_RECIPE=${INSTALL_RECIPE:-"docker-cluster-api-simple-test"}
+
 plural init
 plural repos reset
-plural bundle install bootstrap docker-cluster-api-simple-test
+plural bundle install "$INSTALL_APP" "$INSTALL_RECIPE"
 plural build --force
 retry 3 plural deploy --commit=""
 
