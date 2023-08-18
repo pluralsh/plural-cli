@@ -9,7 +9,7 @@ spec:
   runtimeClassName: sysbox-runc
   containers:
   - name: plural-cloud-sysbox
-    image: ghcr.io/pluralsh/plural-cli-cloud:sha-9414233
+    image: ghcr.io/pluralsh/plural-cli-cloud:sha-04eebbd
     command: ["sh", "-c", "while true; do sleep 3600; done"]
     resources:
       requests:
