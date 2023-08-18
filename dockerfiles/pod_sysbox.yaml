@@ -3,13 +3,14 @@ kind: Pod
 metadata:
   name: plural-cloud-sysbox
   namespace: sysbox
-  #annotations:
-  #  io.kubernetes.cri-o.userns-mode: "auto:size=65536"
+  annotations:
+    io.kubernetes.cri-o.userns-mode: "auto:size=65536"
 spec:
   runtimeClassName: sysbox-runc
   containers:
   - name: plural-cloud-sysbox
-    image: ghcr.io/pluralsh/plural-cli-cloud:sha-0ea2f1a
+    image: ghcr.io/pluralsh/plural-cli-cloud:sha-9414233
+    command: ["sh", "-c", "while true; do sleep 3600; done"]
     resources:
       requests:
         memory: "256Mi"
@@ -19,7 +20,7 @@ spec:
       capabilities:
         add:
           - "SYS_ADMIN"
-          #- "MKNOD"
+          - "MKNOD"
           - "SYS_CHROOT"
           - "SETFCAP"
       #allowPrivilegeEscalation: false
