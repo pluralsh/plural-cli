@@ -67,7 +67,7 @@ metadata:
   name: testcli
 spec:
   cluster: testcli
-  clusterapi: false
+  clusterapi: __USE_CLUSTER_API__
   bucket: testcli-tf-state
   project: ""
   provider: kind
@@ -80,28 +80,10 @@ spec:
   bucketPrefix: test
   context: {}
 EOF
-if [ "USE_CLUSTER_API" == "true" ]; then
-cat << EOF > "$TESTDIR"/workspace.yaml
-apiVersion: plural.sh/v1alpha1
-kind: ProjectManifest
-metadata:
-  name: testcli
-spec:
-  cluster: testcli
-  clusterapi: true
-  bucket: testcli-tf-state
-  project: ""
-  provider: kind
-  region: us-east-1
-  owner:
-    email: cli-e2e@pluraldev.sh
-  network:
-    subdomain: clie2e.onplural.sh
-    pluraldns: true
-  bucketPrefix: test
-  context: {}
-EOF
-fi
+
+sed -i "s;__USE_CLUSTER_API__;$USE_CLUSTER_API;g" "$TESTDIR"/workspace.yaml
+
+cat "$TESTDIR"/workspace.yaml
 
 echodate "Entering to work directory ..."
 cd "$TESTDIR"
