@@ -211,8 +211,6 @@ COPY boot.sh /home/plural/boot.sh
 RUN chmod +x /usr/local/bin/start-session.sh && \
       chmod +x /home/plural/boot.sh
 
-ENV XDG_RUNTIME_DIR=/run/user/1000 
-
 WORKDIR /home/plural
 #ENV XDG_RUNTIME_DIR=/home/plural/.docker
 #RUN mkdir -p $XDG_RUNTIME_DIR && \
