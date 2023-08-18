@@ -5,6 +5,7 @@ on:
       - main
 jobs:
   create-cluster:
+    if: false
     name: Create cluster
     runs-on: ubuntu-latest
     steps:
