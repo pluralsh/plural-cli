@@ -138,6 +138,7 @@ COPY dockerfiles/s6-rc.d /etc/s6-overlay/s6-rc.d
 #  && apt-get clean \
 #  && rm -rf /var/lib/apt/lists/*
 
+
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/Release.key" \
   | gpg --dearmor \
