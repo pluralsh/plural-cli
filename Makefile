@@ -117,7 +117,7 @@ generate:
 
 .PHONY: bake-ami
 bake-ami:
-	cd packer && packer build -var "img_name=plural/ubuntu/$(BUILD)" .
+	cd packer && packer build -var "cli_version=$(APP_VSN)" .
 	@echo "baked ami for all regions"
 
 .PHONY: up
@@ -155,7 +155,7 @@ format: # formats all go code to prep for linting
 
 .PHONY: genmock
 genmock: # generates mocks before running tests
-	hack/gen-client-mocks.sh	
+	hack/gen-client-mocks.sh
 
 .PHONY: lint
 lint:
