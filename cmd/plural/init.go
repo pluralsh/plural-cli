@@ -119,12 +119,13 @@ func handleLogin(c *cli.Context) error {
 	conf.Token = ""
 	conf.Endpoint = c.String("endpoint")
 	client := api.FromConfig(conf)
+	persist := c.Command.Name == "login"
 
 	if config.Exists() {
 		conf := config.Read()
 		if affirm(fmt.Sprintf("It looks like your current Plural user is %s, use this profile?", conf.Email), "PLURAL_LOGIN_AFFIRM_CURRENT_USER") {
 			client = api.FromConfig(&conf)
-			return postLogin(&conf, client, c)
+			return postLogin(&conf, client, c, persist)
 		}
 	}
 
@@ -152,7 +153,7 @@ func handleLogin(c *cli.Context) error {
 	conf.Token = jwt
 	conf.ReportErrors = affirm("Would you be willing to report any errors to Plural to help with debugging?", "PLURAL_LOGIN_AFFIRM_REPORT_ERRORS")
 	client = api.FromConfig(conf)
-	return postLogin(conf, client, c)
+	return postLogin(conf, client, c, persist)
 }
 
 func handleClone(c *cli.Context) error {
@@ -182,7 +183,7 @@ func downloadReadme(c *cli.Context) error {
 	return wkspace.DownloadReadme()
 }
 
-func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
+func postLogin(conf *config.Config, client api.Client, c *cli.Context, persist bool) error {
 	me, err := client.Me()
 	if err != nil {
 		return api.GetErrorResponse(err, "Me")
@@ -203,6 +204,9 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context) error {
 		fmt.Printf("Assumed service account %s\n", saEmail)
 		config.SetConfig(conf)
 		client = api.FromConfig(conf)
+		if !persist {
+			return nil
+		}
 	}
 
 	accessToken, err := client.GrabAccessToken()
