@@ -233,3 +233,37 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
+  packer:
+    name: Build EKS AMI
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::654897662046:role/github-actions/plural-cli-amis-packer
+          role-session-name: CLIAmisPacker
+      - name: Setup `packer`
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+          version: 1.9.2
+      - name: Run `packer init`
+        id: init
+        run: "packer init ./packer/"
+      - name: Run `packer validate`
+        id: validate
+        run: "packer validate ./packer/"
+      - name: Run `packer build`
+        id: build
+        # always is used here to ensure the builds can't get cancelled and leave dangling resources
+        if: always()
+        env:
+          PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
+        run: "packer build ./packer/"
