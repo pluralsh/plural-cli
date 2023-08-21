@@ -40,7 +40,6 @@ ENV TERRAFORM_VERSION=v1.2.9
 # renovate: datasource=github-tags depName=kubernetes/kubernetes
 ENV KUBECTL_VERSION=v1.25.5
 
-
 RUN apk add --update --no-cache curl ca-certificates unzip wget openssl build-base && \
     curl -L https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARGETARCH}.tar.gz | tar xvz && \
     mv linux-${TARGETARCH}/helm /usr/local/bin/helm && \
@@ -145,7 +144,6 @@ RUN chmod +x /usr/local/bin/start-session.sh && \
       chmod +x /home/plural/boot.sh
 
 WORKDIR /home/plural
-
 USER plural
 
 COPY tmux /home/plural/tmux 
@@ -158,5 +156,4 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
 
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
-
 CMD eval $(ssh-agent -s); plural serve

@@ -16,9 +16,4 @@ hack/
 Makefile
 Dockerfile
 dockerfiles
-dockerfiles/s6-rc.d/user/contents.d/dockerd
-dockerfiles/s6-rc.d/user/contents.d/plural
-dockerfiles/s6-rc.d/user/contents.d/ssh
 !dockerfiles/dind-config
-!dockerfiles/s6-rc.d
-!dockerfiles/podman-conf
