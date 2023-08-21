@@ -47,6 +47,13 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 			Name:    "Move resources from target to local cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", "kind-bootstrap"},
 			Execute: runPlural,
+			Skip: func() bool {
+				if _, err := CheckClusterReadiness(projectManifest.Cluster, "bootstrap"); err != nil {
+					return true
+				}
+
+				return false
+			},
 		},
 		{
 			Name: "Destroy bootstrap on target cluster",
