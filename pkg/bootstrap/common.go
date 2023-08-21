@@ -89,6 +89,10 @@ func ExecuteSteps(steps []*Step) error {
 	for i, step := range steps {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
 
+		if step.Skip != nil && step.Skip() {
+			continue
+		}
+
 		path := GetStepPath(step, defaultPath)
 		err := os.Chdir(path)
 		if err != nil {
