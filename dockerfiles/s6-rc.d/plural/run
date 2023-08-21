@@ -1,4 +1,0 @@
-#!/command/execlineb -P
-with-contenv
-s6-setuidgid plural
-eval $(ssh-agent -s)
