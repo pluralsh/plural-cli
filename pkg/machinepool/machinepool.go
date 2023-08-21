@@ -15,6 +15,7 @@ type MachinePoolInterface interface {
 	Get(ctx context.Context, name string, options metav1.GetOptions) (*clusterapiExp.MachinePool, error)
 	Create(ctx context.Context, mp *clusterapiExp.MachinePool) (*clusterapiExp.MachinePool, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
+	Update(ctx context.Context, mp *clusterapiExp.MachinePool) (*clusterapiExp.MachinePool, error)
 	// ...
 }
 
@@ -44,6 +45,20 @@ func (c *machinepoolClient) Get(ctx context.Context, name string, opts metav1.Ge
 		Resource("machinepools").
 		Name(name).
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Do(ctx).
+		Into(&result)
+
+	return &result, err
+}
+
+func (c *machinepoolClient) Update(ctx context.Context, mp *clusterapiExp.MachinePool) (*clusterapiExp.MachinePool, error) {
+	result := clusterapiExp.MachinePool{}
+	err := c.restClient.
+		Put().
+		Namespace(c.ns).
+		Resource("machinepools").
+		Name(mp.Name).
+		Body(mp).
 		Do(ctx).
 		Into(&result)
 
