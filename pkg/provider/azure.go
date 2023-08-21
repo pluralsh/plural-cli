@@ -383,14 +383,14 @@ func (az *AzureProvider) getStorageAccount(account string) (*armstorage.Account,
 	for pager.More() {
 		nextResult, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to advance page: %v", err)
+			return nil, fmt.Errorf("failed to advance page: %w", err)
 		}
 
 		for _, sa := range nextResult.Value {
 			if *sa.Name == account {
 				err, resourceGroup := getPathElement(*sa.ID, "resourceGroups")
 				if err != nil {
-					return nil, fmt.Errorf("failed to read Storage Account's Resource Group: %v", err)
+					return nil, fmt.Errorf("failed to read Storage Account's Resource Group: %w", err)
 				}
 
 				if resourceGroup != az.resourceGroup {

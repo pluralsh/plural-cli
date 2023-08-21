@@ -1,6 +1,3 @@
-//go:build go1.18
-// +build go1.18
-
 package provider_test
 
 import (
@@ -133,7 +130,6 @@ func (c *fakeGroupsClient) CreateOrUpdate(_ context.Context, _ string, parameter
 }
 
 func (c *fakeGroupsClient) Get(_ context.Context, resourceGroupName string, _ *armresources.ResourceGroupsClientGetOptions) (armresources.ResourceGroupsClientGetResponse, error) {
-
 	if c.Group != nil && c.Group.Name != nil && resourceGroupName == *c.Group.Name {
 		return armresources.ResourceGroupsClientGetResponse{
 			ResourceGroup: *c.Group,
@@ -143,5 +139,4 @@ func (c *fakeGroupsClient) Get(_ context.Context, resourceGroupName string, _ *a
 	return armresources.ResourceGroupsClientGetResponse{}, &azcore.ResponseError{
 		StatusCode: http.StatusNotFound,
 	}
-
 }
