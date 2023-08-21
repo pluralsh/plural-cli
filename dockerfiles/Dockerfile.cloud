@@ -80,7 +80,6 @@ RUN apt-get -yq update \
      dbus-user-session \
      iptables \
      kmod \
-     #fuse-overlayfs \
      iproute2 \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
@@ -121,77 +120,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 # create plural user
 RUN useradd -u 1000 -ms /bin/bash plural
 
-# install s6
-# notes: https://github.com/just-containers/s6-overlay/blob/master/MOVING-TO-V3.md
-ENV S6_OVERLAY_VERSION=3.1.5.0
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
-COPY dockerfiles/s6-rc.d /etc/s6-overlay/s6-rc.d
-
-#################################
-######## install podman #########
-#################################
-
-#RUN mkdir -p /etc/apt/keyrings
-#RUN curl -fsSL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/Release.key" \
-#  | gpg --dearmor \
-#  | tee /etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg > /dev/null
-#RUN echo \
-#  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/devel_kubic_libcontainers_unstable.gpg]\
-#    https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_$(lsb_release -rs)/ /" \
-#  | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list > /dev/null
-#RUN apt-get update -qq
-#RUN apt-get -qq -y install podman
-#
-#
-#RUN setcap cap_setuid+ep /usr/bin/newuidmap
-#RUN setcap cap_setgid+ep /usr/bin/newgidmap
-#RUN chmod 0777 /usr/bin/newuidmap
-#RUN chmod 0777 /usr/bin/newgidmap
-#
-#RUN printf "plural:1:999\nplural:1001:64535" > /etc/subuid
-#RUN printf "plural:1:999\nplural:1001:64535" > /etc/subgid
-#
-## setup dirs
-#RUN mkdir -p /home/plural/.local/share/containers && \
-#    mkdir -p /home/plural/.config/containers && \
-#    mkdir -p /var/lib/containers
-#
-## for rootfull podman
-#COPY dockerfiles/podman-conf/rootfull/containers.conf /etc/containers/containers.conf
-#COPY dockerfiles/podman-conf/rootfull/storage.conf /etc/containers/storage.conf
-## for rootless podman
-#COPY --chown=1000:1000 dockerfiles/podman-conf/rootless/containers.conf /home/plural/.config/containers/containers.conf
-#COPY --chown=1000:1000 dockerfiles/podman-conf/rootless/storage.conf /home/plural/.config/containers/storage.conf
-## rootless podman still needs to read these
-#RUN chmod 644 /etc/containers/containers.conf && \
-#    chmod 644 /etc/containers/storage.conf
-#
-## circumvent overlayfs req?
-#RUN chown plural:plural -R /home/plural && chown root:root /var/lib/containers && chmod g+s /var/lib/containers
-#
-#VOLUME /var/lib/containers
-#VOLUME /home/plural/.local/share/containers
-#
-#ENV _CONTAINERS_USERNS_CONFIGURED=""
-#
-#RUN mkdir -p /var/lib/shared/overlay-images \
-#             /var/lib/shared/overlay-layers \
-#             /var/lib/shared/vfs-images \
-#             /var/lib/shared/vfs-layers && \
-#    touch /var/lib/shared/overlay-images/images.lock && \
-#    touch /var/lib/shared/overlay-layers/layers.lock && \
-#    touch /var/lib/shared/vfs-images/images.lock && \
-#    touch /var/lib/shared/vfs-layers/layers.lock
-#
-#
-## Alias "docker" to "podman"
-#RUN ln -s /usr/bin/podman /usr/bin/docker
-#
-##RUN chsh -s /bin/bash podman
-
 # install kind
 # K8s.io KinD
 ENV KIND_VERSION=v0.20.0
@@ -216,32 +144,15 @@ RUN chmod +x /usr/local/bin/start-session.sh && \
       chmod +x /home/plural/boot.sh
 
 WORKDIR /home/plural
-#ENV XDG_RUNTIME_DIR=/home/plural/.docker
-#RUN mkdir -p $XDG_RUNTIME_DIR && \
-#      chown 1000:0 $XDG_RUNTIME_DIR && \
-#RUN echo "kernel.unprivileged_userns_clone=1" >> /etc/sysctl.conf && sysctl --system
-
 
 # install docker cli
 RUN install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  
-RUN apt-get -yq update && apt-get -yq install docker-ce-cli
-
+    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get -yq update && apt-get -yq install docker-ce-cli
 
 USER plural
-#ENV DOCKER_VERSION=24.0.0
-#RUN apt-get -yq update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \    && curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh \
-#RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh --version ${DOCKER_VERSION} && usermod -a -G docker plural
-#ENV SKIP_IPTABLES=1
-#RUN curl -fsSL https://get.docker.com/rootless -o get-docker.sh && sh get-docker.sh 
-#&& usermod -a -G docker plural
-#ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker /etc/bash_completion.d/docker.sh
-
-# setup rootless docker
-#RUN dockerd-rootless-setuptool.sh install --skip-iptables
 
 COPY tmux /home/plural/tmux 
 COPY welcome.txt /home/plural/welcome.txt
@@ -251,15 +162,7 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
       cat tmux/.zshrc.local >> /home/plural/.zshrc && \
       helm plugin install https://github.com/databus23/helm-diff
 
-RUN   printf "\nexport PATH=$PATH:/sbin" >> /home/plural/.zshrc && \
-      printf "\nexport PATH=$PATH:/home/plural/bin" >> /home/plural/.zshrc
-      #&& \
-#      printf "\nexport DOCKER_HOST=unix:///${XDG_RUNTIME_DIR}/docker.sock" >> /home/plural/.zshrc
-
 ENV GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 ENV GOOGLE_APPLICATION_CREDENTIALS=/home/plural/gcp.json
 
-#USER plural
-USER root
-#ENTRYPOINT [ "/init" ]
-ENTRYPOINT [ "/bin/bash" ]
+CMD eval $(ssh-agent -s); plural serve
