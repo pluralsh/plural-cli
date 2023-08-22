@@ -15,4 +15,5 @@ packer/
 hack/
 Makefile
 Dockerfile
-dockerfiles/
+dockerfiles
+!dockerfiles/dind-config
