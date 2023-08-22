@@ -134,7 +134,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: us-east-2
           role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
