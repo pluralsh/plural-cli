@@ -13,8 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pluralsh/plural/pkg/provider"
 )
 
@@ -87,9 +85,7 @@ func (a *fakeAccountsClient) GetProperties(_ context.Context, _, name string, _ 
 		return armstorage.AccountsClientGetPropertiesResponse{Account: *a.Account}, nil
 	}
 
-	return armstorage.AccountsClientGetPropertiesResponse{}, &azure.RequestError{
-		DetailedError: autorest.DetailedError{StatusCode: http.StatusNotFound},
-	}
+	return armstorage.AccountsClientGetPropertiesResponse{}, &azcore.ResponseError{StatusCode: http.StatusNotFound}
 }
 
 func (a *fakeAccountsClient) NewListPager(_ *armstorage.AccountsClientListOptions) *runtime.Pager[armstorage.AccountsClientListResponse] {
