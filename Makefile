@@ -101,6 +101,17 @@ build-cloud: ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
+.PHONY: build-dind
+build-dind: ## build the dind docker image
+	docker build --build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
+		-t $(APP_NAME)-cloud:$(APP_VSN) \
+		-t $(APP_NAME)-cloud:latest \
+		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
+		-t $(DKR_HOST)/plural/$(APP_NAME)-dind:$(APP_VSN) -f dockerfiles/Dockerfile.dind  .
+
 .PHONY: push
 push: ## push to gcr
 	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
