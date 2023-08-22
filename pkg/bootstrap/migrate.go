@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -34,15 +33,8 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider api.Cluster
 			log.Fatalln(err)
 		}
 
-		context := cliProvider.Context()
-		credentials, err := base64.StdEncoding.DecodeString(utils.ToString(context["Credentials"]))
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		return &api.Configuration{
 			GCPConfiguration: &api.GCPConfiguration{
-				Credentials:    string(credentials),
 				Project:        cliProvider.Project(),
 				Region:         cliProvider.Region(),
 				Name:           cliProvider.Cluster(),

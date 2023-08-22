@@ -2,19 +2,16 @@ package permissions
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"cloud.google.com/go/iam/apiv1/iampb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"github.com/pluralsh/polly/containers"
-	"google.golang.org/api/option"
 )
 
 type GcpChecker struct {
-	project     string
-	ctx         context.Context
-	credentials []byte
+	project string
+	ctx     context.Context
 }
 
 func (g *GcpChecker) requiredPermissions() []string {
@@ -49,12 +46,12 @@ func (g *GcpChecker) requiredPermissions() []string {
 	}
 }
 
-func NewGcpChecker(ctx context.Context, project string, credentials []byte) (*GcpChecker, error) {
-	return &GcpChecker{project, ctx, credentials}, nil
+func NewGcpChecker(ctx context.Context, project string) (*GcpChecker, error) {
+	return &GcpChecker{project, ctx}, nil
 }
 
 func (g *GcpChecker) MissingPermissions() (result []string, err error) {
-	svc, err := resourcemanager.NewProjectsClient(g.ctx, option.WithCredentialsJSON(g.credentials))
+	svc, err := resourcemanager.NewProjectsClient(g.ctx)
 	if err != nil {
 		return
 	}
@@ -72,56 +69,4 @@ func (g *GcpChecker) MissingPermissions() (result []string, err error) {
 	has := containers.ToSet(res.Permissions)
 	result = containers.ToSet(g.requiredPermissions()).Difference(has).List()
 	return
-}
-
-func (g *GcpChecker) recommendedRoles() []string {
-	return []string{
-		"roles/iam.serviceAccountUser",
-		"roles/iam.workloadIdentityUser",
-		"roles/recommender.computeAdmin",
-		"roles/container.admin",
-	}
-}
-
-type credentials struct {
-	Email string `json:"client_email"`
-}
-
-func (g *GcpChecker) MissingRoles() (result []string, err error) {
-	credentials := new(credentials)
-	if err = json.Unmarshal(g.credentials, credentials); err != nil {
-		return
-	}
-
-	svc, err := resourcemanager.NewProjectsClient(g.ctx)
-	if err != nil {
-		return
-	}
-
-	defer svc.Close()
-
-	res, err := svc.GetIamPolicy(g.ctx, &iampb.GetIamPolicyRequest{
-		Resource: fmt.Sprintf("projects/%s", g.project),
-	})
-	if err != nil {
-		return
-	}
-
-	has := make([]string, 0)
-	for _, binding := range res.GetBindings() {
-		if g.HasServiceAccount(binding, credentials.Email) {
-			has = append(has, binding.GetRole())
-		}
-	}
-
-	result = containers.ToSet(g.recommendedRoles()).Difference(containers.ToSet(has)).List()
-	return
-}
-
-func (g *GcpChecker) HasServiceAccount(binding *iampb.Binding, serviceAccountEmail string) bool {
-	for _, m := range binding.GetMembers() {
-		return m == fmt.Sprintf("serviceAccount:%s", serviceAccountEmail)
-	}
-
-	return false
 }
