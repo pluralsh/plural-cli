@@ -173,8 +173,8 @@ func BootstrapCluster(runPlural ActionFunc) error {
 
 func deleteBootstrapCluster(runPlural ActionFunc) {
 	if err := ExecuteSteps([]*Step{{
-		Name:    "Delete local bootstrap cluster",
-		Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
+		Name:    "Destroy local cluster",
+		Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 		Execute: runPlural,
 	}}); err != nil {
 		utils.Error("%s", err)
