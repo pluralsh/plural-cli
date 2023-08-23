@@ -107,12 +107,18 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider.project = account
 	provider.storageClient = client
 
+	azones, err := getAvailabilityZones(ctx, provider.Region())
+	if err != nil {
+		return
+	}
+
 	projectManifest := manifest.ProjectManifest{
-		Cluster:  provider.Cluster(),
-		Project:  provider.Project(),
-		Provider: AWS,
-		Region:   provider.Region(),
-		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		Cluster:           provider.Cluster(),
+		Project:           provider.Project(),
+		Provider:          AWS,
+		Region:            provider.Region(),
+		AvailabilityZones: azones,
+		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
 	provider.writer = projectManifest.Configure()
@@ -154,6 +160,53 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 
 	cfg.Region = region
 	return s3.NewFromConfig(cfg), nil
+}
+
+func getEC2Client(context context.Context) (*ec2.Client, error) {
+	cfg, err := getAwsConfig(context)
+	if err != nil {
+		return nil, err
+	}
+	return ec2.NewFromConfig(cfg), nil
+}
+
+func getAvailabilityZones(context context.Context, region string) (*manifest.Zones, error) {
+	ec2Client, err := getEC2Client(context)
+	if err != nil {
+		return nil, err
+	}
+	allAvailabilityZones := true
+	dryRun := false
+	regionName := "region-name"
+	azones, err := ec2Client.DescribeAvailabilityZones(context, &ec2.DescribeAvailabilityZonesInput{
+		AllAvailabilityZones: &allAvailabilityZones,
+		DryRun:               &dryRun,
+		Filters: []ec2Types.Filter{
+			{
+				Name:   &regionName,
+				Values: []string{region},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := &manifest.Zones{}
+	for _, az := range azones.AvailabilityZones {
+		if az.ParentZoneId == nil {
+			if strings.HasSuffix(*az.ZoneName, "a") {
+				result.ZoneA = *az.ZoneName
+			}
+			if strings.HasSuffix(*az.ZoneName, "b") {
+				result.ZoneB = *az.ZoneName
+			}
+			if strings.HasSuffix(*az.ZoneName, "c") {
+				result.ZoneC = *az.ZoneName
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func getAwsConfig(ctx context.Context) (aws.Config, error) {

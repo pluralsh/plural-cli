@@ -182,6 +182,10 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		"Applications":  apps,
 	}
 
+	if proj.AvailabilityZones != nil {
+		vals["AvailabilityZones"] = proj.AvailabilityZones
+	}
+
 	if w.Context.SMTP != nil {
 		vals["SMTP"] = w.Context.SMTP.Configuration()
 	}
