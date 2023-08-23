@@ -236,6 +236,10 @@ func (p *Plural) deploy(c *cli.Context) error {
 		if err := scaffold.Notes(installation); err != nil {
 			return err
 		}
+
+		if err := p.Client.MarkSynced(repo); err != nil {
+			utils.Warn("failed to mark %s as synced, this is not a critical error but might drift state in our api, you can run `plural repos synced %s` to mark it manually", repo, repo)
+		}
 	}
 
 	utils.Highlight("\n==> Commit and push your changes to record your deployment\n\n")
