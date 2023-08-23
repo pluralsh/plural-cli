@@ -58,7 +58,7 @@ type ClientSet struct {
 func GetClientSet(subscriptionId string) (*ClientSet, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return nil, pluralerr.ErrorWrap(err, "getting resource group client failed with")
+		return nil, err
 	}
 
 	resourceGroupClient, err := armresources.NewResourceGroupsClient(subscriptionId, cred, nil)
@@ -135,26 +135,14 @@ var azureSurvey = []*survey.Question{
 		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
 		Validate: utils.ValidateResourceGroupName,
 	},
-	{
-		Name:     "clientId",
-		Prompt:   &survey.Input{Message: "Enter client ID of service principal to use for authentication: "},
-		Validate: survey.Required,
-	},
-	{
-		Name:     "clientSecret",
-		Prompt:   &survey.Input{Message: "Enter client secret of service principal to use for authentication: "},
-		Validate: survey.Required,
-	},
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	var resp struct {
-		Cluster      string
-		Storage      string
-		Region       string
-		Resource     string
-		ClientId     string
-		ClientSecret string
+		Cluster  string
+		Storage  string
+		Region   string
+		Resource string
 	}
 	err = survey.Ask(azureSurvey, &resp)
 	if err != nil {
@@ -165,10 +153,22 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	if err != nil {
 		return
 	}
+
 	clients, err := GetClientSet(subId)
 	if err != nil {
 		return
 	}
+
+	ags, err := GetAzureGraphService()
+	if err != nil {
+		return
+	}
+
+	clientId, clientSecret, err := ags.SetupServicePrincipal(fmt.Sprintf("%s-app", resp.Cluster))
+	if err != nil {
+		return
+	}
+
 	prov = &AzureProvider{
 		resp.Cluster,
 		resp.Resource,
@@ -178,8 +178,8 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 			"SubscriptionId": subId,
 			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
-			"ClientId":       resp.ClientId,
-			"ClientSecret":   resp.ClientSecret,
+			"ClientId":       clientId,
+			"ClientSecret":   clientSecret,
 		},
 		nil,
 		clients,
