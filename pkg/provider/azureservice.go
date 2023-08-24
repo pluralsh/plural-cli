@@ -44,15 +44,12 @@ func GetAzureService(subscriptionID string) (*AzureService, error) {
 	}, nil
 }
 
-func (as *AzureService) AddServicePrincipalPassword(name, servicePrincipalId string) (models.PasswordCredentialable, error) {
-	passwordCredential := models.NewPasswordCredential()
-	passwordCredential.SetDisplayName(&name)
-
-	body := serviceprincipals.NewItemAddPasswordPostRequestBody()
-	body.SetPasswordCredential(passwordCredential)
+func (as *AzureService) AddServicePrincipalPassword(servicePrincipalId string) (models.PasswordCredentialable, error) {
+	pwd := serviceprincipals.NewItemAddPasswordPostRequestBody()
+	pwd.SetPasswordCredential(models.NewPasswordCredential())
 
 	return as.msgraphClient.ServicePrincipalsById(servicePrincipalId).AddPassword().
-		Post(as.context, body, nil)
+		Post(as.context, pwd, nil)
 }
 
 func (as *AzureService) SetupServicePrincipal(name string) (clientId string, clientSecret string, err error) {
@@ -76,11 +73,11 @@ func (as *AzureService) SetupServicePrincipal(name string) (clientId string, cli
 	}
 	utils.Success("Assigned %s role to %s service principal\n", role, *sp.GetDisplayName())
 
-	pwd, err := as.AddServicePrincipalPassword(name, *sp.GetId())
+	pwd, err := as.AddServicePrincipalPassword(*sp.GetId())
 	if err != nil {
 		return
 	}
-	utils.Success("Created password for %s service principal\n", *sp.GetDisplayName())
+	utils.Success("Added password for %s service principal\n", *sp.GetDisplayName())
 
 	clientId = pwd.GetKeyId().String()
 	clientSecret = *pwd.GetSecretText()
