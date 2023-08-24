@@ -16,6 +16,7 @@ type GcpChecker struct {
 
 func (g *GcpChecker) requiredPermissions() []string {
 	return []string{
+		// Compute service permissions
 		"compute.globalOperations.get",
 		"compute.instanceGroupManagers.get",
 		"compute.networks.create",
@@ -32,6 +33,7 @@ func (g *GcpChecker) requiredPermissions() []string {
 		"compute.subnetworks.get",
 		"compute.subnetworks.list",
 		"compute.zones.list",
+		// Container service permissions
 		"container.clusters.create",
 		"container.clusters.delete",
 		"container.clusters.get",
@@ -41,8 +43,14 @@ func (g *GcpChecker) requiredPermissions() []string {
 		"container.nodes.list",
 		"container.nodes.update",
 		"container.pods.get",
+		// IAM service permissions
 		"iam.serviceAccounts.actAs",
 		"iam.serviceAccounts.getAccessToken",
+		"iam.serviceAccounts.create",
+		"iam.serviceAccounts.setIamPolicy",
+		// Storage service permissions
+		"storage.buckets.create",
+		"storage.buckets.setIamPolicy",
 	}
 }
 
