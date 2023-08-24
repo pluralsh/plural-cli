@@ -162,16 +162,17 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 	return s3.NewFromConfig(cfg), nil
 }
 
-func getEC2Client(context context.Context) (*ec2.Client, error) {
-	cfg, err := getAwsConfig(context)
+func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
+	cfg, err := awsConfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
 	}
+	cfg.Region = region
 	return ec2.NewFromConfig(cfg), nil
 }
 
 func getAvailabilityZones(context context.Context, region string) (*manifest.Zones, error) {
-	ec2Client, err := getEC2Client(context)
+	ec2Client, err := getEC2Client(context, region)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +201,7 @@ func getAvailabilityZones(context context.Context, region string) (*manifest.Zon
 			if strings.HasSuffix(*az.ZoneName, "b") {
 				result.ZoneB = *az.ZoneName
 			}
-			if strings.HasSuffix(*az.ZoneName, "c") {
+			if strings.HasSuffix(*az.ZoneName, "c") || strings.HasSuffix(*az.ZoneName, "d") || strings.HasSuffix(*az.ZoneName, "a") {
 				result.ZoneC = *az.ZoneName
 			}
 		}
