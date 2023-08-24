@@ -212,6 +212,10 @@ func getMigrationFlags(provider string) []string {
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
+	case "google":
+		return []string{
+			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
+		}
 	default:
 		return []string{}
 	}
@@ -325,16 +329,10 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: delinkTerraformState,
 		},
 		{
-			Name:       "Run Terraform init",
-			Args:       []string{"init", "-upgrade"},
-			TargetPath: terraformPath,
-			Execute:    runTerraform,
-		},
-		{
-			Name:       "Run Terraform apply",
-			Args:       []string{"apply", "-auto-approve"},
-			TargetPath: terraformPath,
-			Execute:    runTerraform,
+			Name:       "Run Deploy",
+			Args:       []string{"plural", "deploy", "--from", "bootstrap", "--silence"},
+			TargetPath: gitRootDir,
+			Execute:    runPlural,
 		},
 	}...), nil
 }
