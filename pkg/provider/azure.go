@@ -159,12 +159,12 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	ags, err := GetAzureGraphService()
+	as, err := GetAzureService(subId)
 	if err != nil {
 		return
 	}
 
-	clientId, clientSecret, err := ags.SetupServicePrincipal(fmt.Sprintf("%s-app", resp.Cluster))
+	clientId, clientSecret, err := as.SetupServicePrincipal(fmt.Sprintf("%s-app", resp.Cluster))
 	if err != nil {
 		return
 	}
