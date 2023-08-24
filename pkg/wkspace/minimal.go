@@ -3,7 +3,6 @@ package wkspace
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"io"
 	"os"
 	"os/exec"
@@ -14,6 +13,7 @@ import (
 
 	helmdiff "github.com/databus23/helm-diff/v3/diff"
 	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
+	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/config"
