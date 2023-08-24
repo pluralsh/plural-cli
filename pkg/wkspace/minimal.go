@@ -3,10 +3,12 @@ package wkspace
 import (
 	"bytes"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -345,7 +347,19 @@ func templateTerraformInputs(name, vals string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+
+	templatedData := buf.String()
+
+	// This is a workaround for https://github.com/golang/go/issues/24963
+	// In case terraform outputs are not there it will print '<no value>' and break helm templating
+	sanitized := strings.ReplaceAll(templatedData, "<no value>", "")
+
+	if len(templatedData) != len(sanitized) {
+		msg := "Replaced '<no value>' with empty string to sanitize helm values:\n%s"
+		utils.Warn(msg, cmp.Diff(templatedData, sanitized))
+	}
+
+	return []byte(sanitized), nil
 }
 
 func getHelmPath(name string) (string, error) {
