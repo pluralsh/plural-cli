@@ -96,6 +96,7 @@ type Client interface {
 	CreateTrust(issuer, trust string) error
 	DeleteTrust(id string) error
 	OidcToken(provider gqlclient.ExternalOidcProvider, token, email string) (string, error)
+	MarkSynced(repo string) error
 }
 
 type client struct {
