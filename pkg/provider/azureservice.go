@@ -79,7 +79,7 @@ func (as *AzureService) SetupServicePrincipal(name string) (clientId string, cli
 	}
 	utils.Success("Added password for %s service principal\n", *sp.GetDisplayName())
 
-	clientId = pwd.GetKeyId().String()
+	clientId = *sp.GetAppId()
 	clientSecret = *pwd.GetSecretText()
 
 	return
