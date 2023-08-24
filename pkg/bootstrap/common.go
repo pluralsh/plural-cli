@@ -44,6 +44,7 @@ func getBootstrapFlags(provider string) []string {
 	case "google":
 		return []string{
 			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
+			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
 		}
 	default:
 		return []string{}
