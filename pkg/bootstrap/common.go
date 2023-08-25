@@ -48,7 +48,7 @@ func getBootstrapFlags(provider string) []string {
 		}
 	case "azure":
 		return []string{
-			"--set", "cluster-api-cluser.cluster.azure.clusterIdentity.bootstrapMode=true",
+			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
 		}
 	default:
 		return []string{}
