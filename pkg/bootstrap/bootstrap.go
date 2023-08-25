@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/kubernetes"
-
 	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -53,7 +53,8 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: runPlural,
 		},
 	}...)
-	if projectManifest.Provider == "kind" {
+
+	if projectManifest.Provider == provider.KIND {
 		steps = append(steps, []*Step{
 			{
 				Name: "Install Network",
@@ -101,12 +102,35 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 			},
 		}...)
 	}
+
 	steps = append(steps, []*Step{
 		{
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
 		},
+	}...)
+
+	// TODO:
+	//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
+	//  will be done we can use it and remove this step.
+	if projectManifest.Provider == provider.AZURE {
+		steps = append(steps, []*Step{
+			{
+				Name: "Enable OIDC issuer",
+				Execute: func(_ []string) error {
+					cmd := exec.Command("az", "aks", "update", "-g", projectManifest.Project, "-n", projectManifest.Cluster, "--enable-oidc-issuer")
+					if err := utils.Execute(cmd); err != nil {
+						return err
+					}
+
+					return nil
+				},
+			},
+		}...)
+	}
+
+	steps = append(steps, []*Step{
 		{
 			Name: "Post install resources",
 			Execute: func(_ []string) error {
