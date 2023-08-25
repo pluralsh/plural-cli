@@ -214,7 +214,7 @@ func getMigrationFlags(provider string) []string {
 		}
 	case "google":
 		return []string{
-			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
+			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=false",
 		}
 	default:
 		return []string{}
@@ -329,7 +329,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: delinkTerraformState,
 		},
 		{
-			Name:       "Run Deploy",
+			Name:       "Run deploy",
 			Args:       []string{"plural", "deploy", "--from", "bootstrap", "--silence"},
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
