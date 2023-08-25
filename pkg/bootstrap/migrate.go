@@ -330,7 +330,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		},
 		{
 			Name:       "Run deploy",
-			Args:       []string{"plural", "deploy", "--from", "bootstrap", "--silence"},
+			Args:       []string{"plural", "deploy", "--from", "bootstrap", "--silence", "--commit", "migrate to cluster api"},
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
 		},
