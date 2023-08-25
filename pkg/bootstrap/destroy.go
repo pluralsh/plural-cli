@@ -72,7 +72,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 			Execute: runPlural,
 		},
 		{
-			Name: "Cleanup cluster resources",
+			Name: "Cleanup cluster resources", // TODO: what does this do exactly and why is it needed?
 			Execute: func(_ []string) error {
 				m, err := getMigrator()
 				if err != nil {
