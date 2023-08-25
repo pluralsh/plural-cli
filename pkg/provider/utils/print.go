@@ -5,11 +5,6 @@ import (
 )
 
 func FailedPermission(perm string) {
-	utils.Highlight("Required permission %s: ", perm)
+	utils.Highlight("\nRequired permission %s: ", perm)
 	utils.Error("failed\n")
-}
-
-func WarnRole(role string) {
-	utils.Highlight("Recommended role %s: ", role)
-	utils.Warn("missing\n")
 }

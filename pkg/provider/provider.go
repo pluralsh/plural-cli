@@ -38,13 +38,13 @@ type Preflight struct {
 }
 
 func (pf *Preflight) Validate() error {
-	utils.Highlight("Executing preflight check :: %s\n", pf.Name)
+	utils.Highlight("Executing preflight check :: %s ", pf.Name)
 	if err := pf.Callback(); err != nil {
 		fmt.Println("\nFound error:")
 		return err
 	}
 
-	utils.Success("%s \u2713\n", pf.Name)
+	utils.Success("\u2713\n")
 	return nil
 }
 

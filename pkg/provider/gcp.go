@@ -445,17 +445,16 @@ func (gcp *GCPProvider) validatePermissions() error {
 	}
 
 	checker, _ := permissions.NewGcpChecker(ctx, proj.ProjectId)
-	utils.Highlight("Checking for minimal required permissions")
 	missing, err := checker.MissingPermissions()
 	if err != nil {
 		return err
 	}
 
 	if len(missing) == 0 {
-		utils.Success("\nMinimal permission check succeeded\n")
 		return nil
 	}
 
+	utils.Error("\u2700\n")
 	for _, perm := range missing {
 		utils.LogError().Printf("Recommended GCP service account permissions %s \n", perm)
 		provUtils.FailedPermission(perm)
