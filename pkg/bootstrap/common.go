@@ -117,7 +117,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 
 	switch man.Provider {
 	case provider.AZURE:
-		acs, err := GetAzureCredentialsService()
+		acs, err := GetAzureCredentialsService(utils.ToString(man.Context["SubscriptionId"]))
 		if err != nil {
 			return err
 		}

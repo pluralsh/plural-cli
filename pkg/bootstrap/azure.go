@@ -10,7 +10,6 @@ import (
 	msgraph "github.com/microsoftgraph/msgraph-sdk-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -25,14 +24,7 @@ type AzureCredentialsService struct {
 	sp  models.ServicePrincipalable
 }
 
-func GetAzureCredentialsService() (*AzureCredentialsService, error) {
-	man, err := manifest.FetchProject()
-	if err != nil {
-		return nil, err
-	}
-
-	subscriptionID := utils.ToString(man.Context["SubscriptionId"])
-
+func GetAzureCredentialsService(subscriptionID string) (*AzureCredentialsService, error) {
 	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, err
