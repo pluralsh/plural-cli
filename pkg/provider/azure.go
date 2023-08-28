@@ -159,16 +159,6 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	as, err := GetAzureService(subId)
-	if err != nil {
-		return
-	}
-
-	clientId, clientSecret, err := as.SetupServicePrincipal(fmt.Sprintf("%s-app", resp.Cluster))
-	if err != nil {
-		return
-	}
-
 	prov = &AzureProvider{
 		resp.Cluster,
 		resp.Resource,
@@ -178,8 +168,6 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 			"SubscriptionId": subId,
 			"TenantId":       tenID,
 			"StorageAccount": resp.Storage,
-			"ClientId":       clientId,
-			"ClientSecret":   clientSecret,
 		},
 		nil,
 		clients,
