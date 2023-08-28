@@ -56,6 +56,11 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			},
 		},
 		{
+			Name:    "Reinstall Helm charts to update configuration",
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
+			Execute: runPlural,
+		},
+		{
 			Name: "Destroy bootstrap on target cluster",
 			Execute: func(_ []string) error {
 				return destroy()
