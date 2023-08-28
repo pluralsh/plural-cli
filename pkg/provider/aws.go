@@ -171,6 +171,7 @@ func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
 	return ec2.NewFromConfig(cfg), nil
 }
 
+// TODO: during Plural init we should ask the user to choose which AZs they want to use (first 3, random, manual, look at how CAPA does that). There should be a minimum limit of 3.
 func getAvailabilityZones(context context.Context, region string) (*manifest.Zones, error) {
 	ec2Client, err := getEC2Client(context, region)
 	if err != nil {
@@ -195,6 +196,7 @@ func getAvailabilityZones(context context.Context, region string) (*manifest.Zon
 	result := &manifest.Zones{}
 	for _, az := range azones.AvailabilityZones {
 		if az.ParentZoneId == nil {
+			// TODO: we should likely just use an array of strings instead of a struct since the mapping of the suffix to that our struct is not 1:1
 			if strings.HasSuffix(*az.ZoneName, "a") {
 				result.ZoneA = *az.ZoneName
 			}
