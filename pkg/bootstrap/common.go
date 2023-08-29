@@ -1,10 +1,12 @@
 package bootstrap
 
 import (
+	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
@@ -17,14 +19,6 @@ func getEnvVar(name, defaultValue string) string {
 	}
 
 	return defaultValue
-}
-
-// runTerraform executes terraform command with provided arguments, i.e. "terraform init".
-func runTerraform(arguments []string) error {
-	cmd := exec.Command("terraform", arguments...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
@@ -111,4 +105,41 @@ func ExecuteSteps(steps []*Step) error {
 	}
 
 	return nil
+}
+
+func RunWithTempCredentials(function ActionFunc) error {
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	var flags []string
+
+	switch man.Provider {
+	case provider.AZURE:
+		acs, err := GetAzureCredentialsService(utils.ToString(man.Context["SubscriptionId"]))
+		if err != nil {
+			return err
+		}
+
+		clientId, clientSecret, err := acs.Setup(man.Cluster)
+		if err != nil {
+			return err
+		}
+
+		pathPrefix := "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapCredentials"
+		flags = []string{
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientID", clientId),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientSecret", clientSecret),
+		}
+
+		defer func(acs *AzureCredentialsService) {
+			err := acs.Cleanup()
+			if err != nil {
+				utils.Error("%s", err)
+			}
+		}(acs)
+	}
+
+	return function(flags)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // getDestroySteps returns list of steps to run during cluster destroy.
-func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error) {
+func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
 	projectManifest, err := manifest.FetchProject()
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 		return nil, err
 	}
 
-	flags := getBootstrapFlags(projectManifest.Provider)
+	flags := append(getBootstrapFlags(projectManifest.Provider), additionalFlags...)
 
 	prov, err := provider.GetProvider()
 	if err != nil {
@@ -54,6 +54,11 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 
 				return false
 			},
+		},
+		{
+			Name:    "Reinstall Helm charts to update configuration",
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
+			Execute: runPlural,
 		},
 		{
 			Name: "Destroy bootstrap on target cluster",
@@ -99,13 +104,19 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc) ([]*Step, error
 func DestroyCluster(destroy func() error, runPlural ActionFunc) error {
 	utils.Highlight("Destroying Cluster API cluster...\n")
 
-	steps, err := getDestroySteps(destroy, runPlural)
-	if err != nil {
-		return err
-	}
+	if err := RunWithTempCredentials(func(flags []string) error {
+		steps, err := getDestroySteps(destroy, runPlural, flags)
+		if err != nil {
+			return err
+		}
 
-	err = ExecuteSteps(steps)
-	if err != nil {
+		err = ExecuteSteps(steps)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return err
 	}
 

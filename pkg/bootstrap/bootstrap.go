@@ -12,7 +12,7 @@ import (
 )
 
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
-func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
+func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
 	projectManifest, err := manifest.FetchProject()
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 		return nil, err
 	}
 
-	flags := getBootstrapFlags(projectManifest.Provider)
+	flags := append(getBootstrapFlags(projectManifest.Provider), additionalFlags...)
 
 	return []*Step{
 		{
@@ -182,14 +182,20 @@ func getBootstrapSteps(runPlural ActionFunc) ([]*Step, error) {
 func BootstrapCluster(runPlural ActionFunc) error {
 	utils.Highlight("Bootstrapping cluster with Cluster API...\n")
 
-	steps, err := getBootstrapSteps(runPlural)
-	if err != nil {
-		return err
-	}
+	if err := RunWithTempCredentials(func(flags []string) error {
+		steps, err := getBootstrapSteps(runPlural, flags)
+		if err != nil {
+			return err
+		}
 
-	err = ExecuteSteps(steps)
-	if err != nil {
-		deleteBootstrapCluster(runPlural)
+		err = ExecuteSteps(steps)
+		if err != nil {
+			deleteBootstrapCluster(runPlural)
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return err
 	}
 
