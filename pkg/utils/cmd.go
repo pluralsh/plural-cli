@@ -24,7 +24,7 @@ func Exec(program string, args ...string) error {
 func Execute(cmd *exec.Cmd) error {
 	res, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Command %s failed with output:\n\n%s\n%s", cmd.String(), res, err)
+		return fmt.Errorf("Command %s failed with output:\n\n%s\n%w", cmd.String(), res, err)
 	}
 
 	return nil
