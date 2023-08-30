@@ -154,6 +154,11 @@ func (client *client) ResetInstallations() (int, error) {
 	return int(*resp.ResetInstallations), err
 }
 
+func (client *client) MarkSynced(repo string) error {
+	_, err := client.pluralClient.MarkSynced(client.ctx, repo)
+	return err
+}
+
 func convertRedirectUris(uris []string) []*string {
 	res := make([]*string, len(uris))
 	for i := range uris {

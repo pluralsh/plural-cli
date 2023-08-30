@@ -51,6 +51,11 @@ func (p *Plural) reposCommands() []cli.Command {
 			Action: latestVersion(p.handleResetInstallations),
 		},
 		{
+			Name:   "synced",
+			Usage:  "marks installations in this repo as being synced",
+			Action: p.handleMarkSynced,
+		},
+		{
 			Name:      "uninstall",
 			Usage:     "uninstall an app from the plural api",
 			ArgsUsage: "APP",
@@ -160,6 +165,11 @@ func (p *Plural) handleReinstall(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func (p *Plural) handleMarkSynced(c *cli.Context) error {
+	p.InitPluralClient()
+	return p.MarkSynced(c.Args().Get(0))
 }
 
 func (p *Plural) handleResetInstallations(c *cli.Context) error {
