@@ -67,6 +67,16 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			},
 		},
 		{
+			Name:    "Remove Helm secrets",
+			Args:    []string{"kind-bootstrap"},
+			Execute: removeHelmSecrets,
+		},
+		{
+			Name:    "Move Helm secrets",
+			Args:    []string{clusterKubeContext, "kind-bootstrap"},
+			Execute: moveHelmSecrets,
+		},
+		{
 			Name:    "Reinstall Helm charts to update configuration",
 			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
 			Execute: runPlural,
@@ -88,7 +98,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Execute: runPlural,
 		},
 		{
-			Name: "Cleanup cluster resources", // TODO: what does this do exactly and why is it needed?
+			Name: "Cleanup cluster resources",
 			Execute: func(_ []string) error {
 				m, err := getMigrator()
 				if err != nil {

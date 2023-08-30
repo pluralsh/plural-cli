@@ -48,6 +48,8 @@ func InKubernetes() bool {
 
 type Kube interface {
 	Secret(namespace string, name string) (*v1.Secret, error)
+	SecretList(namespace string, options metav1.ListOptions) (*v1.SecretList, error)
+	SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error)
 	Node(name string) (*v1.Node, error)
 	Nodes() (*v1.NodeList, error)
 	FinalizeNamespace(namespace string) error
@@ -102,6 +104,28 @@ func Kubernetes() (Kube, error) {
 	return buildKubeFromConfig(conf)
 }
 
+func KubernetesWithContext(context string) (Kube, error) {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	kubeconfigPath := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
+
+	conf, err := buildConfigFromFlags(context, kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildKubeFromConfig(conf)
+}
+
+func buildConfigFromFlags(context, kubeconfigPath string) (*rest.Config, error) {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{CurrentContext: context}).ClientConfig()
+}
+
 func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -142,6 +166,14 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 
 func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {
 	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
+}
+
+func (k *kube) SecretList(namespace string, options metav1.ListOptions) (*v1.SecretList, error) {
+	return k.Kube.CoreV1().Secrets(namespace).List(context.Background(), options)
+}
+
+func (k *kube) SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error) {
+	return k.Kube.CoreV1().Secrets(namespace).Create(context.Background(), secret, metav1.CreateOptions{})
 }
 
 func (k *kube) Node(name string) (*v1.Node, error) {

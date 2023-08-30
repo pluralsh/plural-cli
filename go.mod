@@ -54,8 +54,8 @@ require (
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.8
-	github.com/pluralsh/gqlclient v1.9.0
-	github.com/pluralsh/plural-operator v0.5.5
+	github.com/pluralsh/gqlclient v1.10.0
+	github.com/pluralsh/plural-operator v0.5.3
 	github.com/pluralsh/polly v0.1.1
 	github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247
 	github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69
@@ -81,6 +81,7 @@ require (
 	sigs.k8s.io/application v0.8.3
 	sigs.k8s.io/cluster-api v1.4.3
 	sigs.k8s.io/cluster-api-operator v0.2.0
+	sigs.k8s.io/cluster-api-provider-aws/v2 v2.1.4
 	sigs.k8s.io/kind v0.18.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -100,6 +101,7 @@ require (
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
+	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -280,7 +282,6 @@ require (
 	k8s.io/kube-aggregator v0.25.2 // indirect
 	k8s.io/kubelet v0.25.2 // indirect
 	monis.app/mlog v0.0.4 // indirect
-	sigs.k8s.io/cluster-api-provider-aws/v2 v2.1.4 // indirect
 	sigs.k8s.io/gateway-api v0.5.0 // indirect
 )
 

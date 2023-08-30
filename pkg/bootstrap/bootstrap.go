@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -75,53 +74,6 @@ func enableAzureOIDCIssuer(_ []string) error {
 	return utils.Execute(cmd)
 }
 
-func removeHelmSecrets(_ []string) error {
-	cmd := exec.Command("kubectl", "delete", "secret", "-n", "bootstrap", "-l", "owner=helm")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd.Run()
-}
-
-func moveHelmSecrets(_ []string) error {
-	getCmd := exec.Command("kubectl", "get", "secret", "-n", "bootstrap", "-l", "owner=helm", "-o", "yaml", "--context", "kind-bootstrap")
-	createCmd := exec.Command("kubectl", "create", "-f", "-")
-
-	r, w := io.Pipe()
-	getCmd.Stdout = w
-	getCmd.Stderr = os.Stderr
-	createCmd.Stdin = r
-	createCmd.Stdout = os.Stdout
-	createCmd.Stderr = os.Stderr
-
-	err := getCmd.Start()
-	if err != nil {
-		return err
-	}
-
-	err = createCmd.Start()
-	if err != nil {
-		return err
-	}
-
-	err = getCmd.Wait()
-	if err != nil {
-		return err
-	}
-
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-
-	err = createCmd.Wait()
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
 func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
 	man, err := manifest.FetchProject()
@@ -135,6 +87,11 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 	}
 
 	flags := append(getBootstrapFlags(man.Provider), additionalFlags...)
+
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return nil, err
+	}
 
 	var steps []*Step
 	steps = append(steps, []*Step{
@@ -243,10 +200,12 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		},
 		{
 			Name:    "Remove Helm secrets",
+			Args:    []string{prov.KubeContext()},
 			Execute: removeHelmSecrets,
 		},
 		{
 			Name:    "Move Helm secrets",
+			Args:    []string{"kind-bootstrap", prov.KubeContext()},
 			Execute: moveHelmSecrets,
 		},
 		{

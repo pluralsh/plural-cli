@@ -300,6 +300,10 @@ func (p *Plural) deploy(c *cli.Context) error {
 			return fmt.Errorf("The %s was unistalled, run `plural bundle install %s <bundle-name>` ", repo, repo)
 		}
 
+		if err := p.Client.MarkSynced(repo); err != nil {
+			utils.Warn("failed to mark %s as synced, this is not a critical error but might drift state in our api, you can run `plural repos synced %s` to mark it manually", repo, repo)
+		}
+
 		if c.Bool("silence") {
 			continue
 		}

@@ -2,7 +2,9 @@ package bootstrap
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -11,6 +13,68 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
+
+// removeHelmSecrets removes secrets owned by Helm from cluster bootstrap namespace.
+func removeHelmSecrets(arguments []string) error {
+	if len(arguments) != 1 {
+		return fmt.Errorf("expected one context name in arguments, got %v instead", len(arguments))
+	}
+
+	context := arguments[0]
+
+	cmd := exec.Command("kubectl", "delete", "secret", "-n", "bootstrap", "-l", "owner=helm", "--context", context)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
+// moveHelmSecrets moves secrets owned by Helm from one cluster to another.
+func moveHelmSecrets(arguments []string) error {
+	if len(arguments) != 2 {
+		return fmt.Errorf("expected two context names in arguments, got %v instead", len(arguments))
+	}
+
+	sourceContext := arguments[0]
+	targetContext := arguments[1]
+
+	getCmd := exec.Command("kubectl", "--context", sourceContext, "get", "secret", "-n", "bootstrap", "-l", "owner=helm", "-o", "yaml")
+	createCmd := exec.Command("kubectl", "--context", targetContext, "create", "-f", "-")
+
+	r, w := io.Pipe()
+	getCmd.Stdout = w
+	getCmd.Stderr = os.Stderr
+	createCmd.Stdin = r
+	createCmd.Stdout = os.Stdout
+	createCmd.Stderr = os.Stderr
+
+	err := getCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	err = createCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	err = getCmd.Wait()
+	if err != nil {
+		return err
+	}
+
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+
+	err = createCmd.Wait()
+	if err != nil {
+		return err
+	}
+
+	return err
+}
 
 // getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
 func getEnvVar(name, defaultValue string) string {
