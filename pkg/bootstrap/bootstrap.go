@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -169,6 +170,57 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Move resources from local to target cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", kubeconfigPath},
 			Execute: runPlural,
+		},
+		{
+			Name: "Remove Helm secrets",
+			Execute: func(arguments []string) error {
+				cmd := exec.Command("kubectl", "delete", "secret", "-n", "bootstrap", "-l", "owner=helm")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+
+				return cmd.Run()
+			},
+		},
+		{
+			Name: "Copy Helm secrets",
+			Execute: func(arguments []string) error {
+				getCmd := exec.Command("kubectl", "get", "secret", "-n", "bootstrap", "-l", "owner=helm", "-o", "yaml", "--context", "kind-bootstrap")
+				createCmd := exec.Command("kubectl", "create", "-f", "-")
+
+				r, w := io.Pipe()
+				getCmd.Stdout = w
+				getCmd.Stderr = os.Stderr
+				createCmd.Stdin = r
+				createCmd.Stdout = os.Stdout
+				createCmd.Stderr = os.Stderr
+
+				err := getCmd.Start()
+				if err != nil {
+					return err
+				}
+
+				err = createCmd.Start()
+				if err != nil {
+					return err
+				}
+
+				err = getCmd.Wait()
+				if err != nil {
+					return err
+				}
+
+				err = w.Close()
+				if err != nil {
+					return err
+				}
+
+				err = createCmd.Wait()
+				if err != nil {
+					return err
+				}
+
+				return err
+			},
 		},
 		{
 			Name:    "Destroy local cluster",
