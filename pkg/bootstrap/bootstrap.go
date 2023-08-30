@@ -26,7 +26,8 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 
 	flags := append(getBootstrapFlags(projectManifest.Provider), additionalFlags...)
 
-	return []*Step{
+	var steps []*Step
+	steps = append(steps, []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -52,89 +53,85 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
 		},
+	}...)
 
-		/* ====== START - KIND STEPS ====== */
-		{
-			Name: "Install Network",
-			Execute: func(_ []string) error {
-				return InstallCilium(projectManifest.Cluster)
+	if projectManifest.Provider == provider.KIND {
+		steps = append(steps, []*Step{
+			{
+				Name: "Install Network",
+				Execute: func(_ []string) error {
+					return InstallCilium(projectManifest.Cluster)
+				},
 			},
-			Skip: func() bool {
-				return projectManifest.Provider != provider.KIND
-			},
-		},
-		{
-			Name: "Install StorageClass",
-			Execute: func(_ []string) error {
-				kube, err := kubernetes.Kubernetes()
-				if err != nil {
-					return err
-				}
-				f, err := os.CreateTemp("", "storageClass")
-				if err != nil {
-					return err
-				}
-				defer os.Remove(f.Name())
-				_, err = f.WriteString(storageClassManifest)
-				if err != nil {
-					return err
-				}
-				if err := kube.Apply(f.Name(), true); err != nil {
-					return err
-				}
+			{
+				Name: "Install StorageClass",
+				Execute: func(_ []string) error {
+					kube, err := kubernetes.Kubernetes()
+					if err != nil {
+						return err
+					}
+					f, err := os.CreateTemp("", "storageClass")
+					if err != nil {
+						return err
+					}
+					defer os.Remove(f.Name())
+					_, err = f.WriteString(storageClassManifest)
+					if err != nil {
+						return err
+					}
+					if err := kube.Apply(f.Name(), true); err != nil {
+						return err
+					}
 
-				return nil
+					return nil
+				},
 			},
-			Skip: func() bool {
-				return projectManifest.Provider != provider.KIND
-			},
-		},
-		{
-			Name: "Save kubeconfig",
-			Execute: func(_ []string) error {
-				bootstrapPath, err := GetBootstrapPath()
-				if err != nil {
-					return err
-				}
-				cmd := exec.Command("kind", "export", "kubeconfig", "--name", projectManifest.Cluster, "--kubeconfig", filepath.Join(bootstrapPath, "terraform", "kube_config_cluster.yaml"))
-				if err := utils.Execute(cmd); err != nil {
-					return err
-				}
+			{
+				Name: "Save kubeconfig",
+				Execute: func(_ []string) error {
+					bootstrapPath, err := GetBootstrapPath()
+					if err != nil {
+						return err
+					}
+					cmd := exec.Command("kind", "export", "kubeconfig", "--name", projectManifest.Cluster, "--kubeconfig", filepath.Join(bootstrapPath, "terraform", "kube_config_cluster.yaml"))
+					if err := utils.Execute(cmd); err != nil {
+						return err
+					}
 
-				return nil
+					return nil
+				},
 			},
-			Skip: func() bool {
-				return projectManifest.Provider != provider.KIND
-			},
-		},
-		/* ====== END - KIND STEPS ====== */
+		}...)
+	}
 
+	steps = append(steps, []*Step{
 		{
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
 		},
+	}...)
 
-		/* ====== START - AZURE STEPS ====== */
-		// TODO:
-		//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
-		//  will be done we can use it and remove this step.
-		{
-			Name: "Enable OIDC issuer",
-			Execute: func(_ []string) error {
-				cmd := exec.Command("az", "aks", "update", "-g", projectManifest.Project, "-n", projectManifest.Cluster, "--enable-oidc-issuer")
-				if err := utils.Execute(cmd); err != nil {
-					return err
-				}
+	// TODO:
+	//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
+	//  will be done we can use it and remove this step.
+	if projectManifest.Provider == provider.AZURE {
+		steps = append(steps, []*Step{
+			{
+				Name: "Enable OIDC issuer",
+				Execute: func(_ []string) error {
+					cmd := exec.Command("az", "aks", "update", "-g", projectManifest.Project, "-n", projectManifest.Cluster, "--enable-oidc-issuer")
+					if err := utils.Execute(cmd); err != nil {
+						return err
+					}
 
-				return nil
+					return nil
+				},
 			},
-			Skip: func() bool {
-				return projectManifest.Provider != provider.AZURE
-			},
-		},
-		/* ====== END - AZURE STEPS ====== */
+		}...)
+	}
 
+	steps = append(steps, []*Step{
 		{
 			Name: "Post install resources",
 			Execute: func(_ []string) error {
@@ -227,7 +224,8 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
-	}, nil
+	}...)
+	return steps, nil
 }
 
 // BootstrapCluster bootstraps cluster with Cluster API.
