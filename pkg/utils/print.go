@@ -53,7 +53,7 @@ func ReadPwd(prompt string) (string, error) {
 }
 
 func Warn(line string, args ...interface{}) {
-	color.New(color.FgYellow, color.Bold).Fprintf(os.Stderr, line, args...)
+	color.New(color.FgYellow, color.Bold).Fprintf(color.Error, line, args...)
 }
 
 func Success(line string, args ...interface{}) {

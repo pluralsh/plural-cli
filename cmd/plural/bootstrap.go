@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -24,6 +22,9 @@ import (
 	apiclient "sigs.k8s.io/cluster-api/cmd/clusterctl/client"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kind/pkg/cluster"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/manifest"
 
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -255,7 +256,7 @@ func (p *Plural) handleCreateNamespace(c *cli.Context) error {
 func handleDeleteCluster(c *cli.Context) error {
 	name := c.Args().Get(0)
 	provider := cluster.NewProvider()
-	fmt.Printf("Deleting cluster %s ...\n", name)
+	utils.Highlight("Deleting cluster %s ...\n", name)
 	return provider.Delete(name, "")
 }
 
@@ -264,13 +265,13 @@ func handleCreateCluster(c *cli.Context) error {
 	imageFlag := c.String("image")
 	skipCreation := c.Bool("skip-if-exists")
 	provider := cluster.NewProvider()
-	fmt.Printf("Creating cluster %s ...\n", name)
+	utils.Highlight("Creating cluster %s ...\n", name)
 	n, err := provider.ListNodes(name)
 	if err != nil {
 		return err
 	}
 	if len(n) != 0 && skipCreation {
-		fmt.Printf("Cluster %s already exists \n", name)
+		utils.Highlight("Cluster %s already exists \n", name)
 		return nil
 	}
 	if err := provider.Create(
