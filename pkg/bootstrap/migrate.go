@@ -18,7 +18,7 @@ import (
 	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
 
 	api2 "github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/bootstrap/aws"
+	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -241,12 +241,12 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	var steps []*Step
 
-	if projectManifest.Provider == "aws" {
+	if projectManifest.Provider == aws {
 		steps = append(steps, &Step{
 			Name: "ensure capi iam role has access",
 			Execute: func(_ []string) error {
 				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", projectManifest.Project, projectManifest.Cluster)
-				return aws.AddRole(roleArn)
+				return bootstrapaws.AddRole(roleArn)
 			},
 		})
 	}
