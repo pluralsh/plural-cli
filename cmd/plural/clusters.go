@@ -3,15 +3,17 @@ package plural
 import (
 	"fmt"
 
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/exp"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/machinepool"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -82,6 +84,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Usage:    "migrate to Cluster API",
 			Action:   latestVersion(rooted(initKubeconfig(handleMigration))),
 			Category: "Publishing",
+			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural/pkg/exp"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -475,6 +476,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:       "Commands for bootstrapping cluster",
 			Subcommands: p.bootstrapCommands(),
 			Category:    "Bootstrap",
+			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 		p.uiCommands(),
 	}
@@ -504,6 +506,7 @@ func globalFlags() []cli.Flag {
 			Name:        "bootstrap",
 			Usage:       "enable bootstrap mode",
 			Destination: &bootstrapMode,
+			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 	}
 }

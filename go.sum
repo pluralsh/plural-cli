@@ -1401,6 +1401,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
+github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69 h1:01dHVodha5BzrMtVmcpPeA4VYbZEsTXQ6m4123zQXJk=
+github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69/go.mod h1:migYMxlAqcnQy+3eN8mcL0b2tpKy6R+8Zc0lxwk4dKM=
 github.com/poy/onpar v0.0.0-20200406201722-06f95a1c68e8/go.mod h1:nSbFQvMj97ZyhFRSJYtut+msi4sOY6zJDGCdSc+/rZU=
 github.com/poy/onpar v1.1.2 h1:QaNrNiZx0+Nar5dLgTVp5mXkyoVFIbepjyEoGSnhbAY=
 github.com/poy/onpar v1.1.2/go.mod h1:6X8FLNoxyr9kkmnlqpK6LSoiOtrO6MICtWwEuWkLjzg=

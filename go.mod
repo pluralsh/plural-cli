@@ -58,6 +58,7 @@ require (
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.1.1
 	github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247
+	github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69
 	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.38.1

@@ -61,7 +61,7 @@ func Success(line string, args ...interface{}) {
 }
 
 func Error(line string, args ...interface{}) {
-	color.New(color.FgRed, color.Bold).Printf(line, args...)
+	color.New(color.FgRed, color.Bold).Fprintf(color.Error, line, args...)
 }
 
 func Highlight(line string, args ...interface{}) {
