@@ -50,6 +50,14 @@ func (s *Scaffold) handleHelm(wk *wkspace.Workspace) error {
 	return nil
 }
 
+func (s *Scaffold) handleHelmValues(wk *wkspace.Workspace) error {
+	if err := s.buildChartValues(wk); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Scaffold) chartDependencies(w *wkspace.Workspace) []dependency {
 	dependencies := make([]dependency, len(w.Charts))
 	repo := w.Installation.Repository
@@ -211,7 +219,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			vals[k] = v
 		}
 	}
-
 	defaultValues, err := scftmpl.BuildValuesFromTemplate(vals, w)
 	if err != nil {
 		return err
