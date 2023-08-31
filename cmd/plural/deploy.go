@@ -119,63 +119,6 @@ func (p *Plural) build(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) buildValues(c *cli.Context) error {
-	p.InitPluralClient()
-	if err := CheckGitCrypt(c); err != nil {
-		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
-	}
-
-	repo := c.Args().Get(0)
-	installation, err := p.GetInstallation(repo)
-	if err != nil {
-		return api.GetErrorResponse(err, "GetInstallation")
-	} else if installation == nil {
-		return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
-	}
-
-	return p.doBuildValues(installation)
-
-}
-
-func (p *Plural) doBuildValues(installation *api.Installation) error {
-	repoName := installation.Repository.Name
-	fmt.Printf("Building helm values for %s\n", repoName)
-
-	if !wkspace.Configured(repoName) {
-		fmt.Printf("You have not locally configured %s but have it registered as an installation in our api, ", repoName)
-		fmt.Printf("either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`\n", repoName, repoName)
-		return nil
-	}
-
-	workspace, err := wkspace.New(p.Client, installation)
-	if err != nil {
-		return err
-	}
-
-	vsn, ok := workspace.RequiredCliVsn()
-	if ok && !versionValid(vsn) {
-		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
-	}
-
-	if err := workspace.Prepare(); err != nil {
-		return err
-	}
-
-	build, err := scaffold.Scaffolds(workspace)
-	if err != nil {
-		return err
-	}
-
-	err = build.ExecuteHelm(workspace)
-	if err == nil {
-		utils.Success("Finished building %s\n\n", repoName)
-	}
-
-	workspace.PrintLinks()
-
-	return err
-}
-
 func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	repoName := installation.Repository.Name
 	fmt.Printf("Building workspace for %s\n", repoName)

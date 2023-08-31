@@ -100,13 +100,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
 		{
-			Name:      "build-values",
-			Aliases:   []string{"bld-vls"},
-			Usage:     "builds helm values",
-			ArgsUsage: "REPO",
-			Action:    tracked(rooted(latestVersion(owned(upstreamSynced(requireArgs(p.buildValues, []string{"REPO"}))))), "cli.build"),
-		},
-		{
 			Name:      "info",
 			Usage:     "Get information for your installation of APP",
 			ArgsUsage: "APP",

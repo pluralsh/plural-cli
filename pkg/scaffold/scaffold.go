@@ -164,24 +164,3 @@ func (b *Build) Execute(wk *wkspace.Workspace, force bool) error {
 
 	return b.Flush(root)
 }
-
-func (b *Build) ExecuteHelm(wk *wkspace.Workspace) error {
-	root, err := git.Root()
-	if err != nil {
-		return err
-	}
-	var scaff *Scaffold
-	for _, s := range b.Scaffolds {
-		if s.Type == HELM {
-			scaff = s
-		}
-	}
-	path := pathing.SanitizeFilepath(filepath.Join(root, b.Metadata.Name, scaff.Path))
-	scaff.Root = path
-	if err := scaff.handleHelmValues(wk); err != nil {
-		b.Flush(root)
-		return err
-	}
-
-	return b.Flush(root)
-}

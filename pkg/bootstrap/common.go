@@ -2,31 +2,59 @@ package bootstrap
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	v1 "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// removeHelmSecrets removes secrets owned by Helm from cluster bootstrap namespace.
-func removeHelmSecrets(arguments []string) error {
-	if len(arguments) != 1 {
-		return fmt.Errorf("expected one context name in arguments, got %v instead", len(arguments))
+func deleteSecrets(context, namespace string, labelSelector string) error {
+	k, err := kubernetes.KubernetesWithContext(context)
+	if err != nil {
+		return err
 	}
 
-	context := arguments[0]
+	return k.SecretDeleteCollection(namespace, meta.DeleteOptions{}, meta.ListOptions{LabelSelector: labelSelector})
+}
 
-	cmd := exec.Command("kubectl", "delete", "secret", "-n", "bootstrap", "-l", "owner=helm", "--context", context)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+func getSecrets(context, namespace, labelSelector string) (*v1.SecretList, error) {
+	k, err := kubernetes.KubernetesWithContext(context)
+	if err != nil {
+		return nil, err
+	}
 
-	return cmd.Run()
+	return k.SecretList(namespace, meta.ListOptions{LabelSelector: labelSelector})
+}
+
+func createSecrets(context string, secrets []v1.Secret) error {
+	k, err := kubernetes.KubernetesWithContext(context)
+	if err != nil {
+		return err
+	}
+
+	for _, secret := range secrets {
+		_, err := k.SecretCreate(secret.Namespace, prepareSecret(secret))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func prepareSecret(secret v1.Secret) *v1.Secret {
+	secret.UID = ""
+	secret.ResourceVersion = ""
+	secret.Generation = 0
+	secret.CreationTimestamp = meta.Time{}
+	return &secret
 }
 
 // moveHelmSecrets moves secrets owned by Helm from one cluster to another.
@@ -34,46 +62,20 @@ func moveHelmSecrets(arguments []string) error {
 	if len(arguments) != 2 {
 		return fmt.Errorf("expected two context names in arguments, got %v instead", len(arguments))
 	}
-
 	sourceContext := arguments[0]
 	targetContext := arguments[1]
 
-	getCmd := exec.Command("kubectl", "--context", sourceContext, "get", "secret", "-n", "bootstrap", "-l", "owner=helm", "-o", "yaml")
-	createCmd := exec.Command("kubectl", "--context", targetContext, "create", "-f", "-")
-
-	r, w := io.Pipe()
-	getCmd.Stdout = w
-	getCmd.Stderr = os.Stderr
-	createCmd.Stdin = r
-	createCmd.Stdout = os.Stdout
-	createCmd.Stderr = os.Stderr
-
-	err := getCmd.Start()
+	err := deleteSecrets(targetContext, "bootstrap", "owner=helm")
 	if err != nil {
 		return err
 	}
 
-	err = createCmd.Start()
+	secrets, err := getSecrets(sourceContext, "bootstrap", "owner=helm")
 	if err != nil {
 		return err
 	}
 
-	err = getCmd.Wait()
-	if err != nil {
-		return err
-	}
-
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-
-	err = createCmd.Wait()
-	if err != nil {
-		return err
-	}
-
-	return err
+	return createSecrets(targetContext, secrets.Items)
 }
 
 // getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
@@ -183,7 +185,10 @@ func RunWithTempCredentials(function ActionFunc) error {
 	}
 
 	var flags []string
-
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
 	switch man.Provider {
 	case provider.AZURE:
 		acs, err := GetAzureCredentialsService(utils.ToString(man.Context["SubscriptionId"]))
@@ -208,6 +213,14 @@ func RunWithTempCredentials(function ActionFunc) error {
 				utils.Error("%s", err)
 			}
 		}(acs)
+	case aws:
+		pathPrefix := "cluster-api-provider-aws.cluster-api-provider-aws.managerBootstrapCredentials"
+		flags = []string{
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", prov.Context()["AccessKey"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SECRET_ACCESS_KEY", prov.Context()["SecretAccessKey"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SESSION_TOKEN", prov.Context()["SessionToken"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_REGION", man.Region),
+		}
 	case provider.GCP:
 		credentials := prov.Context()["Credentials"]
 		flags = []string{
