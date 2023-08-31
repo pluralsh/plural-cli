@@ -199,11 +199,6 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Execute: runPlural,
 		},
 		{
-			Name:    "Remove Helm secrets",
-			Args:    []string{prov.KubeContext()},
-			Execute: removeHelmSecrets,
-		},
-		{
 			Name:    "Move Helm secrets",
 			Args:    []string{"kind-bootstrap", prov.KubeContext()},
 			Execute: moveHelmSecrets,

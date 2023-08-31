@@ -67,11 +67,6 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			},
 		},
 		{
-			Name:    "Remove Helm secrets",
-			Args:    []string{"kind-bootstrap"},
-			Execute: removeHelmSecrets,
-		},
-		{
 			Name:    "Move Helm secrets",
 			Args:    []string{clusterKubeContext, "kind-bootstrap"},
 			Execute: moveHelmSecrets,
