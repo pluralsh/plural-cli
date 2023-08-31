@@ -180,7 +180,10 @@ func RunWithTempCredentials(function ActionFunc) error {
 	}
 
 	var flags []string
-
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
 	switch man.Provider {
 	case provider.AZURE:
 		acs, err := GetAzureCredentialsService(utils.ToString(man.Context["SubscriptionId"]))
@@ -205,6 +208,14 @@ func RunWithTempCredentials(function ActionFunc) error {
 				utils.Error("%s", err)
 			}
 		}(acs)
+	case aws:
+		pathPrefix := "cluster-api-provider-aws.cluster-api-provider-aws.managerBootstrapCredentials"
+		flags = []string{
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", prov.Context()["AccessKey"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SECRET_ACCESS_KEY", prov.Context()["SecretAccessKey"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SESSION_TOKEN", prov.Context()["SessionToken"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_REGION", man.Region),
+		}
 	}
 
 	return function(flags)
