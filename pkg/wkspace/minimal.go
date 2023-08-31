@@ -16,6 +16,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	relutil "helm.sh/helm/v3/pkg/releaseutil"
+	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/strvals"
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/helm"
@@ -25,12 +32,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	relutil "helm.sh/helm/v3/pkg/releaseutil"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"helm.sh/helm/v3/pkg/strvals"
-	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -73,7 +74,7 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	return
 }
 
-func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs, setArgs []string) error {
+func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs, setArgs, setJSONArgs []string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
@@ -90,6 +91,11 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs, setArgs []string) err
 	}
 	for _, arg := range setArgs {
 		if err := strvals.ParseInto(arg, defaultVals); err != nil {
+			return err
+		}
+	}
+	for _, arg := range setJSONArgs {
+		if err := strvals.ParseJSON(arg, defaultVals); err != nil {
 			return err
 		}
 	}

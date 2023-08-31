@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) workspaceCommands() []cli.Command {
@@ -32,6 +33,10 @@ func (p *Plural) workspaceCommands() []cli.Command {
 				cli.StringSliceFlag{
 					Name:  "set",
 					Usage: "helm value to set. can be passed multiple times",
+				},
+				cli.StringSliceFlag{
+					Name:  "setJSON",
+					Usage: "JSON helm value to set. can be passed multiple times",
 				},
 				cli.BoolFlag{
 					Name:  "wait",
@@ -94,19 +99,24 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 		return err
 	}
 
-	skipArgs := []string{}
+	var skipArgs []string
 	if c.IsSet("skip") {
 		for _, skipChart := range c.StringSlice("skip") {
 			skipString := fmt.Sprintf("%s.enabled=false", skipChart)
 			skipArgs = append(skipArgs, skipString)
 		}
 	}
-	setArgs := []string{}
+	var setArgs []string
 	if c.IsSet("set") {
 		setArgs = append(setArgs, c.StringSlice("set")...)
 	}
 
-	return minimal.BounceHelm(c.IsSet("wait"), skipArgs, setArgs)
+	var setJSONArgs []string
+	if c.IsSet("setJSON") {
+		setJSONArgs = append(setJSONArgs, c.StringSlice("setJSON")...)
+	}
+
+	return minimal.BounceHelm(c.IsSet("wait"), skipArgs, setArgs, setJSONArgs)
 }
 
 func (p *Plural) diffHelm(c *cli.Context) error {

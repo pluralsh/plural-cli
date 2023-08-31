@@ -177,6 +177,11 @@ func RunWithTempCredentials(function ActionFunc) error {
 		return err
 	}
 
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
+
 	var flags []string
 
 	switch man.Provider {
@@ -203,6 +208,11 @@ func RunWithTempCredentials(function ActionFunc) error {
 				utils.Error("%s", err)
 			}
 		}(acs)
+	case provider.GCP:
+		credentials := prov.Context()["Credentials"]
+		flags = []string{
+			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, credentials),
+		}
 	}
 
 	return function(flags)
