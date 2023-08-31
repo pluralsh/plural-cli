@@ -7,4 +7,4 @@ if [ -f /home/plural/.env ]; then
   source /home/plural/.env
 fi
 
-dtach -A $session -Ez /home/plural/boot.sh
+dtach -A $session -r winch -Ez /home/plural/boot.sh
