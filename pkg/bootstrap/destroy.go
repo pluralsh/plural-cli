@@ -4,7 +4,6 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
 )
 
 // getDestroySteps returns list of steps to run during cluster destroy.
@@ -27,22 +26,12 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 	}
 
 	clusterKubeContext := prov.KubeContext()
-	gitRootDir, err := git.Root()
-	if err != nil {
-		return nil, err
-	}
 
 	return []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
 			Execute: runPlural,
-		},
-		{
-			Name:       "Rebuild values file",
-			Args:       []string{"plural", "build-values", "bootstrap"},
-			TargetPath: gitRootDir,
-			Execute:    runPlural,
 		},
 		{
 			Name:    "Bootstrap CRDs in local cluster",
