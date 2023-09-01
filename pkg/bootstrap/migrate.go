@@ -279,6 +279,20 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	return append(steps, []*Step{
 		{
+			Name:       "Set Cluster API flag",
+			TargetPath: gitRootDir,
+			Execute: func(_ []string) error {
+				path := manifest.ProjectManifestPath()
+				project, err := manifest.ReadProject(path)
+				if err != nil {
+					return err
+				}
+
+				project.ClusterAPI = true
+				return project.Write(path)
+			},
+		},
+		{
 			Name:       "Build values",
 			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
 			TargetPath: gitRootDir,
@@ -313,20 +327,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
-		},
-		{
-			Name:       "Mark cluster as migrated to Cluster API",
-			TargetPath: gitRootDir,
-			Execute: func(_ []string) error {
-				path := manifest.ProjectManifestPath()
-				project, err := manifest.ReadProject(path)
-				if err != nil {
-					return err
-				}
-
-				project.ClusterAPI = true
-				return project.Write(path)
-			},
 		},
 		{
 			Name:       "Build values",
