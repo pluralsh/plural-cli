@@ -26,8 +26,8 @@ import (
 var settings = cli.New()
 
 const (
-	CiliumRepoName = "cilium"
-	CiliumRepoUrl  = "https://helm.cilium.io/"
+	ciliumRepoName = "cilium"
+	ciliumRepoUrl  = "https://helm.cilium.io/"
 )
 
 func InstallCilium(cluster string) error {
@@ -57,10 +57,10 @@ func InstallCilium(cluster string) error {
 	}
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
-	if _, err := histClient.Run(CiliumRepoName); errors.Is(err, driver.ErrReleaseNotFound) {
+	if _, err := histClient.Run(ciliumRepoName); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
-		instClient.ReleaseName = CiliumRepoName
+		instClient.ReleaseName = ciliumRepoName
 		instClient.Timeout = time.Minute * 10
 
 		_, err = instClient.Run(chart, map[string]interface{}{})
@@ -69,7 +69,7 @@ func InstallCilium(cluster string) error {
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 10
-	_, err = client.Run(CiliumRepoName, chart, map[string]interface{}{})
+	_, err = client.Run(ciliumRepoName, chart, map[string]interface{}{})
 
 	return err
 }
@@ -113,15 +113,15 @@ func addCiliumRepo() error {
 	}
 
 	c := repo.Entry{
-		Name:                  CiliumRepoName,
-		URL:                   CiliumRepoUrl,
+		Name:                  ciliumRepoName,
+		URL:                   ciliumRepoUrl,
 		InsecureSkipTLSverify: true,
 	}
 
 	// If the repo exists do one of two things:
 	// 1. If the configuration for the name is the same continue without error.
 	// 2. When the config is different require --force-update.
-	if f.Has(CiliumRepoName) {
+	if f.Has(ciliumRepoName) {
 		return nil
 	}
 
@@ -131,7 +131,7 @@ func addCiliumRepo() error {
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		return fmt.Errorf("looks like %q is not a valid chart repository or cannot be reached", CiliumRepoUrl)
+		return fmt.Errorf("looks like %q is not a valid chart repository or cannot be reached", ciliumRepoUrl)
 	}
 
 	f.Update(&c)

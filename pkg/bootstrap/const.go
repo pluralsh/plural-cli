@@ -130,4 +130,3 @@ data:
         image: busybox
         imagePullPolicy: IfNotPresent
 `
-const aws = "aws"
