@@ -5,43 +5,46 @@ import (
 	"os"
 	"path/filepath"
 
-	v1 "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"github.com/pluralsh/plural/pkg/bootstrap/azure"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	v1 "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func deleteSecrets(context, namespace string, labelSelector string) error {
-	k, err := kubernetes.KubernetesWithContext(context)
+// deleteSecrets deletes secrets matching label selector from given namespace in given context.
+func deleteSecrets(context, namespace, labelSelector string) error {
+	kubernetesClient, err := kubernetes.KubernetesWithContext(context)
 	if err != nil {
 		return err
 	}
 
-	return k.SecretDeleteCollection(namespace, meta.DeleteOptions{}, meta.ListOptions{LabelSelector: labelSelector})
+	return kubernetesClient.SecretDeleteCollection(namespace, meta.DeleteOptions{}, meta.ListOptions{LabelSelector: labelSelector})
 }
 
+// getSecrets returns secrets matching label selector from given namespace in given context.
 func getSecrets(context, namespace, labelSelector string) (*v1.SecretList, error) {
-	k, err := kubernetes.KubernetesWithContext(context)
+	kubernetesClient, err := kubernetes.KubernetesWithContext(context)
 	if err != nil {
 		return nil, err
 	}
 
-	return k.SecretList(namespace, meta.ListOptions{LabelSelector: labelSelector})
+	return kubernetesClient.SecretList(namespace, meta.ListOptions{LabelSelector: labelSelector})
 }
 
+// createSecrets creates secrets in given context.
 func createSecrets(context string, secrets []v1.Secret) error {
-	k, err := kubernetes.KubernetesWithContext(context)
+	kubernetesClient, err := kubernetes.KubernetesWithContext(context)
 	if err != nil {
 		return err
 	}
 
 	for _, secret := range secrets {
-		_, err := k.SecretCreate(secret.Namespace, prepareSecret(secret))
+		_, err := kubernetesClient.SecretCreate(secret.Namespace, prepareSecret(secret))
 		if err != nil {
 			return err
 		}
@@ -50,6 +53,7 @@ func createSecrets(context string, secrets []v1.Secret) error {
 	return nil
 }
 
+// prepareSecret unsets read-only secret fields to prepare it for creation.
 func prepareSecret(secret v1.Secret) *v1.Secret {
 	secret.UID = ""
 	secret.ResourceVersion = ""
@@ -59,6 +63,7 @@ func prepareSecret(secret v1.Secret) *v1.Secret {
 }
 
 // moveHelmSecrets moves secrets owned by Helm from one cluster to another.
+// It requires source and target contexts in its arguments.
 func moveHelmSecrets(arguments []string) error {
 	if len(arguments) != 2 {
 		return fmt.Errorf("expected two context names in arguments, got %v instead", len(arguments))
@@ -89,9 +94,9 @@ func getEnvVar(name, defaultValue string) string {
 }
 
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
-func getBootstrapFlags(provider string) []string {
-	switch provider {
-	case aws:
+func getBootstrapFlags(prov string) []string {
+	switch prov {
+	case provider.AWS:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
 			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",
@@ -102,14 +107,14 @@ func getBootstrapFlags(provider string) []string {
 			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
 			"--set", "bootstrap.tigera-operator.enabled=false",
 		}
-	case "google":
+	case provider.AZURE:
+		return []string{
+			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
+		}
+	case provider.GCP:
 		return []string{
 			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
-		}
-	case "azure":
-		return []string{
-			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
 		}
 	default:
 		return []string{}
@@ -174,6 +179,8 @@ func ExecuteSteps(steps []*Step) error {
 	return nil
 }
 
+// RunWithTempCredentials is a function wrapper that provides provider-specific flags with credentials
+// that are used during bootstrap and destroy.
 func RunWithTempCredentials(function ActionFunc) error {
 	man, err := manifest.FetchProject()
 	if err != nil {
@@ -186,18 +193,14 @@ func RunWithTempCredentials(function ActionFunc) error {
 	}
 
 	var flags []string
-	prov, err = provider.GetProvider()
-	if err != nil {
-		return err
-	}
 	switch man.Provider {
 	case provider.AZURE:
-		acs, err := GetAzureCredentialsService(utils.ToString(man.Context["SubscriptionId"]))
+		as, err := azure.GetAuthService(utils.ToString(man.Context["SubscriptionId"]))
 		if err != nil {
 			return err
 		}
 
-		clientId, clientSecret, err := acs.Setup(man.Cluster)
+		clientId, clientSecret, err := as.Setup(man.Cluster)
 		if err != nil {
 			return err
 		}
@@ -208,13 +211,13 @@ func RunWithTempCredentials(function ActionFunc) error {
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientSecret", clientSecret),
 		}
 
-		defer func(acs *AzureCredentialsService) {
-			err := acs.Cleanup()
+		defer func(as *azure.AuthService) {
+			err := as.Cleanup()
 			if err != nil {
 				utils.Error("%s", err)
 			}
-		}(acs)
-	case aws:
+		}(as)
+	case provider.AWS:
 		pathPrefix := "cluster-api-provider-aws.cluster-api-provider-aws.managerBootstrapCredentials"
 		flags = []string{
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", prov.Context()["AccessKey"]),

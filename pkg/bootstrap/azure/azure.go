@@ -1,4 +1,4 @@
-package bootstrap
+package azure
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-type AzureCredentialsService struct {
+type AuthService struct {
 	subscriptionID string
 
 	azwiClient    *azwi.AzureClient
@@ -24,7 +24,7 @@ type AzureCredentialsService struct {
 	sp  models.ServicePrincipalable
 }
 
-func GetAzureCredentialsService(subscriptionID string) (*AzureCredentialsService, error) {
+func GetAuthService(subscriptionID string) (*AuthService, error) {
 	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func GetAzureCredentialsService(subscriptionID string) (*AzureCredentialsService
 		return nil, err
 	}
 
-	return &AzureCredentialsService{
+	return &AuthService{
 		subscriptionID: subscriptionID,
 		msgraphClient:  msgraphClient,
 		azwiClient:     azwiClient,
@@ -48,38 +48,38 @@ func GetAzureCredentialsService(subscriptionID string) (*AzureCredentialsService
 	}, nil
 }
 
-func (acs *AzureCredentialsService) addServicePrincipalPassword(servicePrincipalId string) (models.PasswordCredentialable, error) {
+func (as *AuthService) addServicePrincipalPassword(servicePrincipalId string) (models.PasswordCredentialable, error) {
 	pwd := serviceprincipals.NewItemAddPasswordPostRequestBody()
 	pwd.SetPasswordCredential(models.NewPasswordCredential())
 
-	return acs.msgraphClient.ServicePrincipalsById(servicePrincipalId).AddPassword().
-		Post(acs.context, pwd, nil)
+	return as.msgraphClient.ServicePrincipalsById(servicePrincipalId).AddPassword().
+		Post(as.context, pwd, nil)
 }
 
-func (acs *AzureCredentialsService) Setup(name string) (clientId string, clientSecret string, err error) {
-	app, err := acs.azwiClient.CreateApplication(acs.context, name)
+func (as *AuthService) Setup(name string) (clientId string, clientSecret string, err error) {
+	app, err := as.azwiClient.CreateApplication(as.context, name)
 	if err != nil {
 		return
 	}
-	acs.app = app
+	as.app = app
 	utils.Success("Created %s application\n", *app.GetDisplayName())
 
-	sp, err := acs.azwiClient.CreateServicePrincipal(acs.context, *app.GetAppId(), nil)
+	sp, err := as.azwiClient.CreateServicePrincipal(as.context, *app.GetAppId(), nil)
 	if err != nil {
 		return
 	}
-	acs.sp = sp
+	as.sp = sp
 	utils.Success("Created %s service principal\n", *sp.GetDisplayName())
 
 	role := "Contributor"
-	scope := fmt.Sprintf("/subscriptions/%s/", acs.subscriptionID)
-	_, err = acs.azwiClient.CreateRoleAssignment(acs.context, scope, role, *sp.GetId())
+	scope := fmt.Sprintf("/subscriptions/%s/", as.subscriptionID)
+	_, err = as.azwiClient.CreateRoleAssignment(as.context, scope, role, *sp.GetId())
 	if err != nil {
 		return
 	}
 	utils.Success("Assigned %s role to %s service principal\n", role, *sp.GetDisplayName())
 
-	pwd, err := acs.addServicePrincipalPassword(*sp.GetId())
+	pwd, err := as.addServicePrincipalPassword(*sp.GetId())
 	if err != nil {
 		return
 	}
@@ -91,21 +91,21 @@ func (acs *AzureCredentialsService) Setup(name string) (clientId string, clientS
 	return
 }
 
-func (acs *AzureCredentialsService) Cleanup() error {
-	if acs.sp != nil {
-		err := acs.azwiClient.DeleteServicePrincipal(acs.context, *acs.sp.GetId())
+func (as *AuthService) Cleanup() error {
+	if as.sp != nil {
+		err := as.azwiClient.DeleteServicePrincipal(as.context, *as.sp.GetId())
 		if err != nil {
 			return err
 		}
-		utils.Success("Deleted %s service principal\n", *acs.sp.GetDisplayName())
+		utils.Success("Deleted %s service principal\n", *as.sp.GetDisplayName())
 	}
 
-	if acs.app != nil {
-		err := acs.azwiClient.DeleteApplication(acs.context, *acs.app.GetId())
+	if as.app != nil {
+		err := as.azwiClient.DeleteApplication(as.context, *as.app.GetId())
 		if err != nil {
 			return err
 		}
-		utils.Success("Deleted %s application\n", *acs.app.GetDisplayName())
+		utils.Success("Deleted %s application\n", *as.app.GetDisplayName())
 	}
 
 	return nil

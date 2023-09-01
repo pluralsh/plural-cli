@@ -140,14 +140,14 @@ func generateValuesFile() error {
 }
 
 // GetProviderTags returns list of tags to set on provider resources during migration.
-func GetProviderTags(provider, cluster string) []string {
-	switch provider {
-	case aws:
+func GetProviderTags(prov, cluster string) []string {
+	switch prov {
+	case provider.AWS:
 		return []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
 			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
 		}
-	case "azure":
+	case provider.AZURE:
 		return []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
@@ -207,13 +207,13 @@ func delinkTerraformState(args []string) error {
 }
 
 // getMigrationFlags returns list of provider-specific flags used during cluster migration.
-func getMigrationFlags(provider string) []string {
-	switch provider {
-	case aws:
+func getMigrationFlags(prov string) []string {
+	switch prov {
+	case provider.AWS:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
-	case "google":
+	case provider.GCP:
 		return []string{
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=false",
 		}
@@ -241,7 +241,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	var steps []*Step
 
-	if projectManifest.Provider == aws {
+	if projectManifest.Provider == provider.AWS {
 		steps = append(steps, &Step{
 			Name: "ensure capi iam role has access",
 			Execute: func(_ []string) error {
@@ -251,7 +251,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		})
 	}
 
-	if projectManifest.Provider == "azure" {
+	if projectManifest.Provider == provider.AZURE {
 		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
 		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		if err != nil {

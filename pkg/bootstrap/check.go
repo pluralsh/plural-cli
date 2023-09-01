@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	ClusterNotReadyError = "cluster exists but it is not ready yet"
+	clusterNotReadyError = "cluster exists but it is not ready yet"
 )
 
 // getCluster returns Cluster resource.
@@ -65,7 +65,7 @@ func CheckClusterReadiness(name, namespace string) (bool, error) {
 			}
 		}
 
-		return true, fmt.Errorf(ClusterNotReadyError)
+		return true, fmt.Errorf(clusterNotReadyError)
 	})
 
 	utils.Highlight("\n")
