@@ -10,6 +10,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
+	api2 "github.com/pluralsh/plural/pkg/api"
 	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -246,6 +247,32 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 				return bootstrapaws.AddRole(roleArn)
 			},
 		})
+	}
+
+	if projectManifest.Provider == provider.AZURE {
+		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
+		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
+		if err != nil {
+			return nil, err
+		}
+
+		steps = append(steps, []*Step{
+			{
+				Name:       "Uninstall azure-identity package",
+				Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
+				TargetPath: gitRootDir,
+				Execute:    runPlural,
+			},
+			{
+				Name:       "Clear package cache",
+				TargetPath: gitRootDir,
+				Execute: func(_ []string) error {
+					api2.ClearPackageCache()
+
+					return nil
+				},
+			},
+		}...)
 	}
 
 	return append(steps, []*Step{
