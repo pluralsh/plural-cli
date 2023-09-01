@@ -10,20 +10,17 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
-	"sigs.k8s.io/yaml"
-
-	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
-	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
-	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
-	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
-
-	api2 "github.com/pluralsh/plural/pkg/api"
 	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+	"sigs.k8s.io/yaml"
 )
 
 func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
@@ -251,32 +248,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		})
 	}
 
-	if projectManifest.Provider == provider.AZURE {
-		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
-		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
-		if err != nil {
-			return nil, err
-		}
-
-		steps = append(steps, []*Step{
-			{
-				Name:       "Uninstall azure-identity package",
-				Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
-				TargetPath: gitRootDir,
-				Execute:    runPlural,
-			},
-			{
-				Name:       "Clear package cache",
-				TargetPath: gitRootDir,
-				Execute: func(_ []string) error {
-					api2.ClearPackageCache()
-
-					return nil
-				},
-			},
-		}...)
-	}
-
 	return append(steps, []*Step{
 		{
 			Name:       "Set Cluster API flag",
@@ -327,12 +298,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
-		},
-		{
-			Name:       "Build values",
-			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
-			TargetPath: gitRootDir,
-			Execute:    runPlural,
 		},
 		{
 			Name:    "Delink resources managed by Cluster API from Terraform state",
