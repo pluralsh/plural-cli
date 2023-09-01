@@ -1,4 +1,5 @@
 #!/bin/bash
+tput rmcup
 
 if [ -f /home/plural/.env ]; then
   source /home/plural/.env
