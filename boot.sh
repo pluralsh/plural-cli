@@ -6,4 +6,5 @@ fi
 
 cd ~/workspace || echo "could not check out workspace repo, ensure it exists and git permissions are correct"
 
+tput rmcup
 zsh
