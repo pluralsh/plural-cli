@@ -355,7 +355,7 @@ type PreflightCheck string
 
 const (
 	PreflightCheckEnabledServices           = PreflightCheck("[User] Enabled Services")
-	PreflightCheckServiceAccountPermissions = PreflightCheck("[Service Account] Test Permissions")
+	PreflightCheckServiceAccountPermissions = PreflightCheck("[User] Test Permissions")
 )
 
 func (gcp *GCPProvider) Preflights() []*Preflight {
