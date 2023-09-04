@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -172,7 +173,39 @@ func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
 }
 
 // TODO: during Plural init we should ask the user to choose which AZs they want to use (first 3, random, manual, look at how CAPA does that). There should be a minimum limit of 3.
-func getAvailabilityZones(context context.Context, region string) (*manifest.Zones, error) {
+func getAvailabilityZones(ctx context.Context, region string) ([]string, error) {
+	first3 := "first three"
+	random := "random"
+	manual := "manual"
+	choice := ""
+	prompt := &survey.Select{
+		Message: "Which availability zones you would like to use:",
+		Options: []string{first3, random, manual},
+	}
+	survey.AskOne(prompt, &choice)
+
+	switch choice {
+	case first3:
+		return fetchAZ(ctx, region, true)
+	case random:
+		return fetchAZ(ctx, region, false)
+	case manual:
+		text := ""
+		prompt := &survey.Multiline{
+			Message: "Enter at least three availability zones ",
+		}
+		survey.AskOne(prompt, &text)
+		res := strings.Split(text, "\n")
+		if len(res) < 3 {
+			return nil, fmt.Errorf("expected at least three availability zones")
+		}
+		return res, nil
+	}
+
+	return nil, nil
+}
+
+func fetchAZ(context context.Context, region string, sorted bool) ([]string, error) {
 	ec2Client, err := getEC2Client(context, region)
 	if err != nil {
 		return nil, err
@@ -193,22 +226,19 @@ func getAvailabilityZones(context context.Context, region string) (*manifest.Zon
 	if err != nil {
 		return nil, err
 	}
-	result := &manifest.Zones{}
+	result := []string{}
 	for _, az := range azones.AvailabilityZones {
 		if az.ParentZoneId == nil {
-			// TODO: we should likely just use an array of strings instead of a struct since the mapping of the suffix to that our struct is not 1:1
-			if strings.HasSuffix(*az.ZoneName, "a") {
-				result.ZoneA = *az.ZoneName
-			}
-			if strings.HasSuffix(*az.ZoneName, "b") {
-				result.ZoneB = *az.ZoneName
-			}
-			if strings.HasSuffix(*az.ZoneName, "c") || strings.HasSuffix(*az.ZoneName, "d") || strings.HasSuffix(*az.ZoneName, "a") {
-				result.ZoneC = *az.ZoneName
-			}
+			result = append(result, *az.ZoneName)
 		}
 	}
-
+	// append when there are fewer zones than 3
+	for i := 0; (3 - len(result)) > 0; i++ {
+		result = append(result, result[i])
+	}
+	if sorted {
+		sort.Strings(result)
+	}
 	return result, nil
 }
 

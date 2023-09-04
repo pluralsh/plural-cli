@@ -50,12 +50,6 @@ type NetworkConfig struct {
 	PluralDns bool   `json:"pluralDns"`
 }
 
-type Zones struct {
-	ZoneA string `json:"zoneA"`
-	ZoneB string `json:"zoneB"`
-	ZoneC string `json:"zoneC"`
-}
-
 type ProjectManifest struct {
 	ClusterAPI        bool
 	Cluster           string
@@ -65,7 +59,7 @@ type ProjectManifest struct {
 	Region            string
 	Owner             *Owner
 	Network           *NetworkConfig
-	AvailabilityZones *Zones
+	AvailabilityZones []string
 	BucketPrefix      string `yaml:"bucketPrefix"`
 	Context           map[string]interface{}
 }
@@ -81,7 +75,7 @@ func (this *ProjectManifest) MarshalJSON() ([]byte, error) {
 		Region            string                 `json:"region"`
 		Owner             *Owner                 `json:"owner"`
 		Network           *NetworkConfig         `json:"network"`
-		AvailabilityZones *Zones                 `json:"availabilityZones"`
+		AvailabilityZones []string               `json:"availabilityZones"`
 		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
 		Context           map[string]interface{} `json:"context"`
 	}{
