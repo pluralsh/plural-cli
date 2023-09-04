@@ -10,13 +10,6 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
-	"sigs.k8s.io/yaml"
-
-	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
-	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
-	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
-	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
-
 	api2 "github.com/pluralsh/plural/pkg/api"
 	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -24,6 +17,11 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+	"sigs.k8s.io/yaml"
 )
 
 func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
@@ -327,12 +325,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
 			Execute: runPlural,
-		},
-		{
-			Name:       "Build values",
-			Args:       []string{"plural", "build", "--only", "bootstrap", "--force"},
-			TargetPath: gitRootDir,
-			Execute:    runPlural,
 		},
 		{
 			Name:    "Delink resources managed by Cluster API from Terraform state",
