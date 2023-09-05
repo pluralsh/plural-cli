@@ -23,6 +23,7 @@ import (
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -153,7 +154,7 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
 		Project:  provider.Project(),
-		Provider: GCP,
+		Provider: api.ProviderGCP,
 		Region:   provider.Region(),
 		Context:  provider.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -268,7 +269,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[str
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("GCP", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderGCP), version)
 	if err != nil {
 		return "", err
 	}
@@ -294,7 +295,7 @@ func (gcp *GCPProvider) clusterLocation() (string, string) {
 }
 
 func (gcp *GCPProvider) Name() string {
-	return GCP
+	return api.ProviderGCP
 }
 
 func (gcp *GCPProvider) Cluster() string {

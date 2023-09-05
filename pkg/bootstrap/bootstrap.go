@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -122,7 +123,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		},
 	}...)
 
-	if man.Provider == provider.KIND {
+	if man.Provider == api.ProviderKind {
 		steps = append(steps, []*Step{
 			{
 				Name: "Install Network",
@@ -152,7 +153,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 	// TODO:
 	//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
 	//  will be done we can use it and remove this step.
-	if man.Provider == provider.AZURE {
+	if man.Provider == api.ProviderAzure {
 		steps = append(steps, []*Step{
 			{
 				Name:    "Enable OIDC issuer",

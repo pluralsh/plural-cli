@@ -23,7 +23,6 @@ import (
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kind/pkg/cluster"
 
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -157,7 +156,7 @@ func (p *Plural) handleDestroyClusterAPI(c *cli.Context) error {
 		if providerName == "kind" {
 			providerName = "docker"
 		}
-		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(api.NormalizeProvider(providerName)))
+		selector := fmt.Sprintf("infrastructure-%s", strings.ToLower(providerName))
 		if err := client.List(context.Background(), pods, ctrlruntimeclient.MatchingLabels{"cluster.x-k8s.io/provider": selector}); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return false, fmt.Errorf("failed to get pods: %w", err)

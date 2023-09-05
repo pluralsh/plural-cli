@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -172,7 +173,7 @@ func setupCli(c *gin.Context) error {
 func runPreflights(prov provider.Provider) error {
 	// run only relevant preflights
 	preflights := []*provider.Preflight{}
-	if prov.Name() == provider.GCP {
+	if prov.Name() == api.ProviderGCP {
 		preflights = algorithms.Filter(prov.Preflights(), func(pre *provider.Preflight) bool {
 			return pre.Name == string(provider.PreflightCheckEnabledServices)
 		})

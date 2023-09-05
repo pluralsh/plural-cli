@@ -10,6 +10,12 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
+	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
+	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
+	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
+	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+	"sigs.k8s.io/yaml"
+
 	api2 "github.com/pluralsh/plural/pkg/api"
 	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -17,11 +23,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
-	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
-	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
-	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
-	"sigs.k8s.io/yaml"
 )
 
 func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
@@ -140,12 +141,12 @@ func generateValuesFile() error {
 // GetProviderTags returns list of tags to set on provider resources during migration.
 func GetProviderTags(prov, cluster string) []string {
 	switch prov {
-	case provider.AWS:
+	case api2.ProviderAWS:
 		return []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
 			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
 		}
-	case provider.AZURE:
+	case api2.ProviderAzure:
 		return []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
@@ -207,11 +208,11 @@ func delinkTerraformState(args []string) error {
 // getMigrationFlags returns list of provider-specific flags used during cluster migration.
 func getMigrationFlags(prov string) []string {
 	switch prov {
-	case provider.AWS:
+	case api2.ProviderAWS:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
-	case provider.GCP:
+	case api2.ProviderGCP:
 		return []string{
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=false",
 		}
@@ -239,9 +240,9 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	var steps []*Step
 
-	if projectManifest.Provider == provider.AWS {
+	if projectManifest.Provider == api2.ProviderAWS {
 		steps = append(steps, &Step{
-			Name: "ensure capi iam role has access",
+			Name: "Ensure capi IAM role has access",
 			Execute: func(_ []string) error {
 				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", projectManifest.Project, projectManifest.Cluster)
 				return bootstrapaws.AddRole(roleArn)
@@ -249,7 +250,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		})
 	}
 
-	if projectManifest.Provider == provider.AZURE {
+	if projectManifest.Provider == api2.ProviderAzure {
 		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
 		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		if err != nil {
@@ -273,6 +274,22 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 				},
 			},
 		}...)
+	}
+
+	if projectManifest.Provider == api2.ProviderGCP {
+		steps = append(steps, &Step{
+			Name: "Normalize GCP provider value",
+			Execute: func(_ []string) error {
+				path := manifest.ProjectManifestPath()
+				project, err := manifest.ReadProject(path)
+				if err != nil {
+					return err
+				}
+
+				project.Provider = api2.ProviderGCP
+				return project.Write(path)
+			},
+		})
 	}
 
 	return append(steps, []*Step{

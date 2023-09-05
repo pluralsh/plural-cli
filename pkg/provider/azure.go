@@ -20,6 +20,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -27,7 +30,6 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	pluralerr "github.com/pluralsh/plural/pkg/utils/errors"
-	v1 "k8s.io/api/core/v1"
 )
 
 // ResourceGroupClient is the subset of functions we need from armresources.VirtualResourceGroupsClient;
@@ -176,7 +178,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  prov.Cluster(),
 		Project:  prov.Project(),
-		Provider: AZURE,
+		Provider: api.ProviderAzure,
 		Region:   prov.Region(),
 		Context:  prov.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -221,7 +223,7 @@ func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[st
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, az.Cluster())
 	}
 
-	scaffold, err := GetProviderScaffold("AZURE", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAzure), version)
 	if err != nil {
 		return "", err
 	}
@@ -276,7 +278,7 @@ func (az *AzureProvider) KubeContext() string {
 }
 
 func (az *AzureProvider) Name() string {
-	return AZURE
+	return api.ProviderAzure
 }
 
 func (az *AzureProvider) Cluster() string {

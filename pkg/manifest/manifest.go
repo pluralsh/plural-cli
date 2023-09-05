@@ -81,6 +81,8 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 		man.ClusterAPI = false
 	}
 
+	man.Provider = api.NormalizeProvider(man.Provider)
+
 	return
 }
 

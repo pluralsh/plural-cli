@@ -7,16 +7,17 @@ import (
 	"path/filepath"
 
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/pluralsh/plural/pkg/bootstrap/azure"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/provider"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"golang.org/x/oauth2/google"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bootstrap/azure"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
 // deleteSecrets deletes secrets matching label selector from given namespace in given context.
@@ -99,7 +100,7 @@ func getEnvVar(name, defaultValue string) string {
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
 func getBootstrapFlags(prov string) []string {
 	switch prov {
-	case provider.AWS:
+	case api.ProviderAWS:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
 			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",
@@ -110,11 +111,11 @@ func getBootstrapFlags(prov string) []string {
 			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
 			"--set", "bootstrap.tigera-operator.enabled=false",
 		}
-	case provider.AZURE:
+	case api.ProviderAzure:
 		return []string{
 			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
 		}
-	case provider.GCP:
+	case api.ProviderGCP:
 		return []string{
 			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
@@ -192,7 +193,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 
 	var flags []string
 	switch man.Provider {
-	case provider.AZURE:
+	case api.ProviderAzure:
 		as, err := azure.GetAuthService(utils.ToString(man.Context["SubscriptionId"]))
 		if err != nil {
 			return err
@@ -215,7 +216,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 				utils.Error("%s", err)
 			}
 		}(as)
-	case provider.AWS:
+	case api.ProviderAWS:
 		ctx := context.Background()
 		cfg, err := awsConfig.LoadDefaultConfig(ctx)
 		if err != nil {
@@ -232,7 +233,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SESSION_TOKEN", cred.SessionToken),
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_REGION", man.Region),
 		}
-	case provider.GCP:
+	case api.ProviderGCP:
 		credentials, err := google.FindDefaultCredentials(context.Background())
 		if err != nil {
 			return err

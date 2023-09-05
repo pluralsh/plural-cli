@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -116,7 +117,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:           provider.Cluster(),
 		Project:           provider.Project(),
-		Provider:          AWS,
+		Provider:          api.ProviderAWS,
 		Region:            provider.Region(),
 		AvailabilityZones: azones,
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -248,7 +249,7 @@ func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[str
 	if _, ok := ctx["Cluster"]; !ok {
 		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("AWS", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAWS), version)
 	if err != nil {
 		return "", err
 	}
@@ -293,7 +294,7 @@ func (p *AWSProvider) mkBucket(name string) error {
 }
 
 func (aws *AWSProvider) Name() string {
-	return AWS
+	return api.ProviderAWS
 }
 
 func (aws *AWSProvider) Cluster() string {

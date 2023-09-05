@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/bootstrap"
-	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 )
 
 func TestGetProviderTags(t *testing.T) {
-	providers := []string{provider.AWS, provider.AZURE, provider.GCP}
+	providers := []string{api.ProviderAWS, api.ProviderAzure, api.ProviderGCP}
 
 	for _, p := range providers {
 		t.Run(fmt.Sprintf("test %s tags", p), func(t *testing.T) {

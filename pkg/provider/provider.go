@@ -97,17 +97,17 @@ func GetProvider() (Provider, error) {
 
 func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 	switch man.Provider {
-	case GCP:
+	case api.ProviderGCP:
 		return gcpFromManifest(man)
-	case AWS:
+	case api.ProviderAWS:
 		return awsFromManifest(man)
-	case AZURE:
+	case api.ProviderAzure:
 		return AzureFromManifest(man, nil)
-	case EQUINIX:
+	case api.ProviderEquinix:
 		return equinixFromManifest(man)
-	case KIND:
+	case api.ProviderKind:
 		return kindFromManifest(man)
-	case TEST:
+	case api.TEST:
 		return testFromManifest(man)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", man.Provider)
@@ -117,15 +117,15 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 func New(provider string) (Provider, error) {
 	conf := config.Read()
 	switch provider {
-	case GCP:
+	case api.ProviderGCP:
 		return mkGCP(conf)
-	case AWS:
+	case api.ProviderAWS:
 		return mkAWS(conf)
-	case AZURE:
+	case api.ProviderAzure:
 		return mkAzure(conf)
-	case EQUINIX:
+	case api.ProviderEquinix:
 		return mkEquinix(conf)
-	case KIND:
+	case api.ProviderKind:
 		return mkKind(conf)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)

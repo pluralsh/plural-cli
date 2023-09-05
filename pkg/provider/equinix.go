@@ -14,13 +14,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	"github.com/AlecAivazis/survey/v2"
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/imdario/mergo"
 	metal "github.com/packethost/packngo"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider/permissions"
@@ -29,12 +37,6 @@ import (
 	pluralErrors "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
-	"sigs.k8s.io/yaml"
 )
 
 type EQUINIXProvider struct {
@@ -100,7 +102,7 @@ func mkEquinix(conf config.Config) (provider *EQUINIXProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
 		Project:  provider.Project(),
-		Provider: EQUINIX,
+		Provider: api.ProviderEquinix,
 		Region:   provider.Region(),
 		Context:  provider.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -135,7 +137,7 @@ func (equinix *EQUINIXProvider) CreateBackend(prefix string, version string, ctx
 	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
 		return "", err
 	}
-	scaffold, err := GetProviderScaffold("EQUINIX", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderEquinix), version)
 	if err != nil {
 		return "", err
 	}
@@ -232,7 +234,7 @@ func (equinix *EQUINIXProvider) KubeContext() string {
 }
 
 func (equinix *EQUINIXProvider) Name() string {
-	return EQUINIX
+	return api.ProviderEquinix
 }
 
 func (equinix *EQUINIXProvider) Cluster() string {
