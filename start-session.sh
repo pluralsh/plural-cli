@@ -7,4 +7,4 @@ if [ -f /home/plural/.env ]; then
   source /home/plural/.env
 fi
 
-screen -xR -S $session /home/plural/boot.sh
+abduco -A $session /home/plural/boot.sh

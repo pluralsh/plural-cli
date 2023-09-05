@@ -74,6 +74,8 @@ RUN apt-get -yq update \
      less \
      lsb-release \
      openssh-client \
+     dtach \
+     build-essential \
   && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -127,6 +129,10 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
 
 
 WORKDIR /root
+
+RUN git clone https://github.com/pluralsh/abduco.git \
+      && cd abduco && git checkout screen-buffer \
+      && ./configure && make && make install
 
 ENV TERM=xterm-256color
 ENV LC_ALL=en_US.UTF-8
