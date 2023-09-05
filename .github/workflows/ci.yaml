@@ -106,6 +106,13 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        if: always()
+        with:
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+          role-session-name: PluralCLI
   cloud:
     name: Build cloud image
     runs-on: ubuntu-latest
@@ -206,6 +213,13 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        if: always()
+        with:
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+          role-session-name: PluralCLI
   dind:
     name: Build dind image
     runs-on: ubuntu-latest
@@ -306,7 +320,13 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        if: always()
+        with:
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
+          role-session-name: PluralCLI
   trivy-scan:
     name: Trivy fs scan
     runs-on: ubuntu-latest
