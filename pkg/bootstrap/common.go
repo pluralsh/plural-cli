@@ -1,10 +1,12 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/pluralsh/plural/pkg/bootstrap/azure"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -12,6 +14,7 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"golang.org/x/oauth2/google"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -187,11 +190,6 @@ func RunWithTempCredentials(function ActionFunc) error {
 		return err
 	}
 
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return err
-	}
-
 	var flags []string
 	switch man.Provider {
 	case provider.AZURE:
@@ -218,17 +216,29 @@ func RunWithTempCredentials(function ActionFunc) error {
 			}
 		}(as)
 	case provider.AWS:
+		ctx := context.Background()
+		cfg, err := awsConfig.LoadDefaultConfig(ctx)
+		if err != nil {
+			return err
+		}
+		cred, err := cfg.Credentials.Retrieve(ctx)
+		if err != nil {
+			return err
+		}
 		pathPrefix := "cluster-api-provider-aws.cluster-api-provider-aws.managerBootstrapCredentials"
 		flags = []string{
-			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", prov.Context()["AccessKey"]),
-			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SECRET_ACCESS_KEY", prov.Context()["SecretAccessKey"]),
-			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SESSION_TOKEN", prov.Context()["SessionToken"]),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", cred.AccessKeyID),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SECRET_ACCESS_KEY", cred.SecretAccessKey),
+			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_SESSION_TOKEN", cred.SessionToken),
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_REGION", man.Region),
 		}
 	case provider.GCP:
-		credentials := prov.Context()["Credentials"]
+		credentials, err := google.FindDefaultCredentials(context.Background())
+		if err != nil {
+			return err
+		}
 		flags = []string{
-			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, credentials),
+			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, string(credentials.JSON)),
 		}
 	}
 

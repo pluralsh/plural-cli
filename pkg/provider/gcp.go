@@ -221,12 +221,6 @@ func gcpFromManifest(man *manifest.ProjectManifest) (*GCPProvider, error) {
 		}
 	}
 
-	credentials, err := google.FindDefaultCredentials(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	man.Context["Credentials"] = string(credentials.JSON)
-
 	return &GCPProvider{man.Cluster, man.Project, man.Bucket, man.Region, client, man.Context, nil, nil}, nil
 }
 

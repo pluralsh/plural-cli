@@ -129,14 +129,6 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 
 func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	ctx := context.Background()
-	cfg, err := getAwsConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-	cred, err := cfg.Credentials.Retrieve(ctx)
-	if err != nil {
-		return nil, err
-	}
 	client, err := getClient(man.Region, ctx)
 	if err != nil {
 		return nil, err
@@ -146,9 +138,6 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 		return nil, err
 	}
 	providerCtx := map[string]interface{}{}
-	providerCtx["AccessKey"] = cred.AccessKeyID
-	providerCtx["SecretAccessKey"] = cred.SecretAccessKey
-	providerCtx["SessionToken"] = cred.SessionToken
 	providerCtx["AWSAccountID"] = accountId
 	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
 }
