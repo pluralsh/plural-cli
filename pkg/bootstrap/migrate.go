@@ -26,7 +26,7 @@ import (
 
 func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
 	switch clusterProvider {
-	case api.ClusterProviderGoogle:
+	case api.ClusterProviderGCP:
 		kubeconfigPath, err := getKubeconfigPath()
 		if err != nil {
 			log.Fatalln(err)
