@@ -972,6 +972,8 @@ github.com/hashicorp/terraform-plugin-log v0.7.0 h1:SDxJUyT8TwN4l5b5/VkiTIaQgY6R
 github.com/hashicorp/terraform-plugin-log v0.7.0/go.mod h1:p4R1jWBXRTvL4odmEkFfDdhUjHf9zcs/BCoNHAc7IK4=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1 h1:zHcMbxY0+rFO9gY99elV/XC/UnQVg7FhRCbj1i5b7vM=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1/go.mod h1:+tNlb0wkfdsDJ7JEiERLz4HzM19HyiuIoGzTsM7rPpw=
+github.com/helm/helm-mapkubeapis v0.4.1 h1:Xu03dMzVv/zqp+Vw1+2ZHufnDQRqoGa8Ml4N/GBgqME=
+github.com/helm/helm-mapkubeapis v0.4.1/go.mod h1:o2qnBCfz2cbUod9QlbPjjXtsQI/X7QQjwU/rk7m1T2M=
 github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec h1:qv2VnGeEQHchGaZ/u7lxST/RaJw+cv273q79D81Xbog=
 github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec/go.mod h1:Q48J4R4DvxnHolD5P8pOtXigYlRuPLGl6moFx3ulM68=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
