@@ -60,7 +60,7 @@ func (e *Execution) Execute(actionName string, verbose bool) error {
 		return err
 	}
 
-	fmt.Printf("actionName %s.  This may take a while, so hold on to your butts\n", e.Metadata.Path)
+	fmt.Printf("%s %s.  This may take a while, so hold on to your butts\n", actionName, e.Metadata.Path)
 	for i, step := range e.Steps {
 		prev := step.Verbose
 		if verbose {
