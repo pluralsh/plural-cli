@@ -118,8 +118,7 @@ func generateValuesFile() error {
 		return err
 	}
 
-	s := strings.ReplaceAll(string(data), "\x00", "null")
-
+	s := strings.ReplaceAll(string(data), "null", "\"null\"")
 	gitRootDir, err := git.Root()
 	if err != nil {
 		return err
