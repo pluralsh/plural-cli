@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
-	"github.com/pluralsh/cluster-api-migration/pkg/api"
+	migratorapi "github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
 	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
 	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
@@ -16,7 +16,7 @@ import (
 	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
 	"sigs.k8s.io/yaml"
 
-	api2 "github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/api"
 	bootstrapaws "github.com/pluralsh/plural/pkg/bootstrap/aws"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
@@ -25,27 +25,27 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
-func newConfiguration(cliProvider provider.Provider, clusterProvider api.ClusterProvider) (*api.Configuration, error) {
+func newConfiguration(cliProvider provider.Provider, clusterProvider migratorapi.ClusterProvider) (*migratorapi.Configuration, error) {
 	switch clusterProvider {
-	case api.ClusterProviderGCP:
+	case migratorapi.ClusterProviderGCP:
 		kubeconfigPath, err := getKubeconfigPath()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		return &api.Configuration{
-			GCPConfiguration: &api.GCPConfiguration{
+		return &migratorapi.Configuration{
+			GCPConfiguration: &migratorapi.GCPConfiguration{
 				Project:        cliProvider.Project(),
 				Region:         cliProvider.Region(),
 				Name:           cliProvider.Cluster(),
 				KubeconfigPath: kubeconfigPath,
 			},
 		}, nil
-	case api.ClusterProviderAzure:
+	case migratorapi.ClusterProviderAzure:
 		context := cliProvider.Context()
 
-		config := api.Configuration{
-			AzureConfiguration: &api.AzureConfiguration{
+		config := migratorapi.Configuration{
+			AzureConfiguration: &migratorapi.AzureConfiguration{
 				SubscriptionID: utils.ToString(context["SubscriptionId"]),
 				ResourceGroup:  cliProvider.Project(),
 				Name:           cliProvider.Cluster(),
@@ -57,22 +57,22 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider api.Cluster
 		}
 
 		return &config, nil
-	case api.ClusterProviderAWS:
+	case migratorapi.ClusterProviderAWS:
 		err := os.Setenv("AWS_REGION", cliProvider.Region())
 		if err != nil {
 			return nil, err
 		}
 
-		config := &api.Configuration{
-			AWSConfiguration: &api.AWSConfiguration{
+		config := &migratorapi.Configuration{
+			AWSConfiguration: &migratorapi.AWSConfiguration{
 				ClusterName: cliProvider.Cluster(),
 				Region:      cliProvider.Region(),
 			},
 		}
 		return config, nil
-	case api.ClusterProviderKind:
-		return &api.Configuration{
-			KindConfiguration: &api.KindConfiguration{
+	case migratorapi.ClusterProviderKind:
+		return &migratorapi.Configuration{
+			KindConfiguration: &migratorapi.KindConfiguration{
 				ClusterName: cliProvider.Cluster(),
 			},
 		}, nil
@@ -83,13 +83,13 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider api.Cluster
 }
 
 // getMigrator returns configured migrator for current provider.
-func getMigrator() (api.Migrator, error) {
+func getMigrator() (migratorapi.Migrator, error) {
 	prov, err := provider.GetProvider()
 	if err != nil {
 		return nil, err
 	}
 
-	clusterProvider := api.ClusterProvider(prov.Name())
+	clusterProvider := migratorapi.ClusterProvider(prov.Name())
 
 	configuration, err := newConfiguration(prov, clusterProvider)
 	if err != nil {
@@ -141,12 +141,12 @@ func generateValuesFile() error {
 // GetProviderTags returns list of tags to set on provider resources during migration.
 func GetProviderTags(prov, cluster string) []string {
 	switch prov {
-	case api2.ProviderAWS:
+	case api.ProviderAWS:
 		return []string{
 			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
 			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
 		}
-	case api2.ProviderAzure:
+	case api.ProviderAzure:
 		return []string{
 			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", cluster),
 			"sigs.k8s.io_cluster-api-provider-azure_role=common",
@@ -208,11 +208,11 @@ func delinkTerraformState(args []string) error {
 // getMigrationFlags returns list of provider-specific flags used during cluster migration.
 func getMigrationFlags(prov string) []string {
 	switch prov {
-	case api2.ProviderAWS:
+	case api.ProviderAWS:
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
-	case api2.ProviderGCP:
+	case api.ProviderGCP:
 		return []string{
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=false",
 		}
@@ -240,7 +240,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	var steps []*Step
 
-	if projectManifest.Provider == api2.ProviderAWS {
+	if projectManifest.Provider == api.ProviderAWS {
 		steps = append(steps, &Step{
 			Name: "Ensure capi IAM role has access",
 			Execute: func(_ []string) error {
@@ -250,7 +250,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		})
 	}
 
-	if projectManifest.Provider == api2.ProviderAzure {
+	if projectManifest.Provider == api.ProviderAzure {
 		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
 		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		if err != nil {
@@ -268,7 +268,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 				Name:       "Clear package cache",
 				TargetPath: gitRootDir,
 				Execute: func(_ []string) error {
-					api2.ClearPackageCache()
+					api.ClearPackageCache()
 
 					return nil
 				},
@@ -276,7 +276,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		}...)
 	}
 
-	if projectManifest.Provider == api2.ProviderGCP {
+	if projectManifest.Provider == api.ProviderGCP {
 		steps = append(steps, &Step{
 			Name: "Normalize GCP provider value",
 			Execute: func(_ []string) error {
@@ -286,7 +286,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 					return err
 				}
 
-				project.Provider = api2.ProviderGCP
+				project.Provider = api.ProviderGCP
 				return project.Write(path)
 			},
 		})
