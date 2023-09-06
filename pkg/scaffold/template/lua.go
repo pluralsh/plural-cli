@@ -42,7 +42,7 @@ func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interfac
 }
 
 func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
-	var subVals = map[string]interface{}{}
+	var subVals map[string]interface{}
 	subVals, err := ExecuteLua(vals, tplate)
 	if err != nil {
 		return err
