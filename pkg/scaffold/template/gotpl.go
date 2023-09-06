@@ -24,9 +24,12 @@ func FromGoTemplate(vals map[string]interface{}, globals map[string]interface{},
 	}
 
 	var subVals = map[string]interface{}{}
-	subVals["enabled"] = true
 	if err := yaml.Unmarshal(buf.Bytes(), &subVals); err != nil {
 		return err
+	}
+
+	if _, exists := subVals["enabled"]; !exists {
+		subVals["enabled"] = true
 	}
 
 	// need to handle globals in a dedicated way

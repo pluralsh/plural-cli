@@ -43,10 +43,13 @@ func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interfac
 
 func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
 	var subVals = map[string]interface{}{}
-	subVals["enabled"] = true
 	subVals, err := ExecuteLua(vals, tplate)
 	if err != nil {
 		return err
+	}
+
+	if _, exists := subVals["enabled"]; !exists {
+		subVals["enabled"] = true
 	}
 
 	// need to handle globals in a dedicated way
