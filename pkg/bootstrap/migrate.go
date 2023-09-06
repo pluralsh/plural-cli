@@ -118,7 +118,6 @@ func generateValuesFile() error {
 		return err
 	}
 
-	s := strings.ReplaceAll(string(data), "null", "\"null\"")
 	gitRootDir, err := git.Root()
 	if err != nil {
 		return err
@@ -127,7 +126,7 @@ func generateValuesFile() error {
 	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
 	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
 	if utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, []byte(s), 0644); err != nil {
+		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
 			return err
 		}
 	} else {

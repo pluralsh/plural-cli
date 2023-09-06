@@ -221,22 +221,23 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		return err
 	}
 
-	mapValues, err := getValues(valuesFile)
-	if err != nil {
-		return err
-	}
-	patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
-	if err != nil {
-		return err
-	}
-
-	values, err := yaml.Marshal(patchValues)
-	if err != nil {
-		return err
-	}
-	if err := utils.WriteFile(valuesFile, values); err != nil {
-		return err
-	}
+	// TODO: Remove this after testing. It is deprecated as values.yaml migration should not longer be required.
+	//mapValues, err := getValues(valuesFile)
+	//if err != nil {
+	//	return err
+	//}
+	//patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//values, err := yaml.Marshal(patchValues)
+	//if err != nil {
+	//	return err
+	//}
+	//if err := utils.WriteFile(valuesFile, values); err != nil {
+	//	return err
+	//}
 
 	return utils.WriteFile(defaultValuesFile, io)
 }
