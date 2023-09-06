@@ -20,6 +20,35 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+func applyManifest(arguments []string) error {
+	if len(arguments) != 1 {
+		return fmt.Errorf("expected one argument with manifest, got %v instead", len(arguments))
+	}
+
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	f, err := os.CreateTemp("", "manifest")
+	if err != nil {
+		return err
+	}
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			utils.Error("%s", err)
+		}
+	}(f.Name())
+
+	_, err = f.WriteString(arguments[0])
+	if err != nil {
+		return err
+	}
+
+	return kube.Apply(f.Name(), true)
+}
+
 // deleteSecrets deletes secrets matching label selector from given namespace in given context.
 func deleteSecrets(context, namespace, labelSelector string) error {
 	kubernetesClient, err := kubernetes.KubernetesWithContext(context)

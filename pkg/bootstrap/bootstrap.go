@@ -1,12 +1,10 @@
 package bootstrap
 
 import (
-	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -21,31 +19,6 @@ func deleteBootstrapCluster(runPlural ActionFunc) {
 	}}); err != nil {
 		utils.Error("%s", err)
 	}
-}
-
-func installStorageClass(_ []string) error {
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	f, err := os.CreateTemp("", "storageClass")
-	if err != nil {
-		return err
-	}
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			utils.Error("%s", err)
-		}
-	}(f.Name())
-
-	_, err = f.WriteString(storageClassManifest)
-	if err != nil {
-		return err
-	}
-
-	return kube.Apply(f.Name(), true)
 }
 
 // saveKindKubeconfig exports kind kubeconfig to file.
@@ -133,7 +106,8 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			},
 			{
 				Name:    "Install StorageClass",
-				Execute: installStorageClass,
+				Args:    []string{storageClassManifest},
+				Execute: applyManifest,
 			},
 			{
 				Name:    "Save kubeconfig",
@@ -162,7 +136,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		}...)
 	}
 
-	steps = append(steps, []*Step{
+	return append(steps, []*Step{
 		{
 			Name: "Post install resources",
 			Execute: func(_ []string) error {
@@ -209,8 +183,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
-	}...)
-	return steps, nil
+	}...), nil
 }
 
 // BootstrapCluster bootstraps cluster with Cluster API.
