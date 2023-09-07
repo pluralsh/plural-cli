@@ -67,8 +67,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		return nil, err
 	}
 
-	var steps []*Step
-	steps = append(steps, []*Step{
+	return []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -94,49 +93,36 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
-	}...)
-
-	if man.Provider == api.ProviderKind {
-		steps = append(steps, []*Step{
-			{
-				Name: "Install Network",
-				Execute: func(_ []string) error {
-					return InstallCilium(man.Cluster)
-				},
+		{
+			Name: "Install Network",
+			Execute: func(_ []string) error {
+				return InstallCilium(man.Cluster)
 			},
-			{
-				Name:    "Install StorageClass",
-				Args:    []string{storageClassManifest},
-				Execute: applyManifest,
-			},
-			{
-				Name:    "Save kubeconfig",
-				Execute: saveKindKubeconfig,
-			},
-		}...)
-	}
-
-	steps = append(steps, []*Step{
+			Provider: api.ProviderKind,
+		},
+		{
+			Name:     "Install StorageClass",
+			Args:     []string{storageClassManifest},
+			Execute:  applyManifest,
+			Provider: api.ProviderKind,
+		},
+		{
+			Name:     "Save kubeconfig",
+			Execute:  saveKindKubeconfig,
+			Provider: api.ProviderKind,
+		},
 		{
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
-	}...)
-
-	// TODO:
-	//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
-	//  will be done we can use it and remove this step.
-	if man.Provider == api.ProviderAzure {
-		steps = append(steps, []*Step{
-			{
-				Name:    "Enable OIDC issuer",
-				Execute: enableAzureOIDCIssuer,
-			},
-		}...)
-	}
-
-	return append(steps, []*Step{
+		{
+			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
+			//  will be done we can use it and remove this step.
+			Name:     "Enable OIDC issuer",
+			Execute:  enableAzureOIDCIssuer,
+			Provider: api.ProviderAzure,
+		},
 		{
 			Name: "Post install resources",
 			Execute: func(_ []string) error {
@@ -183,7 +169,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
-	}...), nil
+	}, nil
 }
 
 // BootstrapCluster bootstraps cluster with Cluster API.

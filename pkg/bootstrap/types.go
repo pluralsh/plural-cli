@@ -10,12 +10,14 @@ type ConditionFunc func() bool
 
 // Step is a representation of a single step in a process of bootstrap, migrate and destroy.
 type Step struct {
-	Name             string
-	Args             []string
-	TargetPath       string
-	BootstrapCommand bool
-	Execute          ActionFunc
-	Skip             ConditionFunc
+	Name       string
+	Args       []string
+	TargetPath string
+	Execute    ActionFunc
+	Skip       ConditionFunc
+
+	// Provider non-empty marks step as provider-specific. These steps will be executed only if provider name matches.
+	Provider string
 }
 
 // Bootstrap is a representation of existing cluster to be migrated to Cluster API.

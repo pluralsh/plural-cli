@@ -238,46 +238,41 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 	tags := GetProviderTags(projectManifest.Provider, projectManifest.Cluster)
 	flags := getMigrationFlags(projectManifest.Provider)
 
-	var steps []*Step
-
-	if projectManifest.Provider == api.ProviderAWS {
-		steps = append(steps, &Step{
-			Name: "Ensure capi IAM role has access",
-			Execute: func(_ []string) error {
-				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", projectManifest.Project, projectManifest.Cluster)
-				return bootstrapaws.AddRole(roleArn)
-			},
-		})
-	}
-
 	if projectManifest.Provider == api.ProviderAzure {
 		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
 		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		if err != nil {
 			return nil, err
 		}
-
-		steps = append(steps, []*Step{
-			{
-				Name:       "Uninstall azure-identity package",
-				Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
-				TargetPath: gitRootDir,
-				Execute:    runPlural,
-			},
-			{
-				Name:       "Clear package cache",
-				TargetPath: gitRootDir,
-				Execute: func(_ []string) error {
-					api.ClearPackageCache()
-
-					return nil
-				},
-			},
-		}...)
 	}
 
-	if projectManifest.Provider == api.ProviderGCP {
-		steps = append(steps, &Step{
+	return []*Step{
+		{
+			Name: "Ensure Cluster API IAM role has access",
+			Execute: func(_ []string) error {
+				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", projectManifest.Project, projectManifest.Cluster)
+				return bootstrapaws.AddRole(roleArn)
+			},
+			Provider: api.ProviderAWS,
+		},
+		{
+			Name:       "Uninstall azure-identity package",
+			Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
+			TargetPath: gitRootDir,
+			Execute:    runPlural,
+			Provider:   api.ProviderAzure,
+		},
+		{
+			Name:       "Clear package cache",
+			TargetPath: gitRootDir,
+			Execute: func(_ []string) error {
+				api.ClearPackageCache()
+
+				return nil
+			},
+			Provider: api.ProviderAzure,
+		},
+		{
 			Name: "Normalize GCP provider value",
 			Execute: func(_ []string) error {
 				path := manifest.ProjectManifestPath()
@@ -289,10 +284,8 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 				project.Provider = api.ProviderGCP
 				return project.Write(path)
 			},
-		})
-	}
-
-	return append(steps, []*Step{
+			Provider: api.ProviderGCP,
+		},
 		{
 			Name:       "Set Cluster API flag",
 			TargetPath: gitRootDir,
@@ -354,7 +347,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
 		},
-	}...), nil
+	}, nil
 }
 
 // MigrateCluster migrates existing clusters to Cluster API.
