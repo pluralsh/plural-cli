@@ -20,6 +20,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
+
 func applyManifest(arguments []string) error {
 	if len(arguments) != 1 {
 		return fmt.Errorf("expected one argument with manifest, got %v instead", len(arguments))

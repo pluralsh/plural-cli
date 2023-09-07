@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -40,14 +39,8 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Execute: runPlural,
 		},
 		{
-			Name:     "Install Azure identity CRDs",
-			Args:     []string{azureIdentityManifest},
-			Execute:  applyManifest,
-			Provider: api.ProviderAzure,
-		},
-		{
 			Name:    "Install Cluster API operators in local cluster",
-			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, append(flags, disableAzurePodIdentityFlag...)...),
 			Execute: runPlural,
 		},
 		{
