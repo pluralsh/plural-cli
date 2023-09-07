@@ -124,17 +124,6 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Provider: api.ProviderAzure,
 		},
 		{
-			Name: "Post install resources",
-			Execute: func(_ []string) error {
-				m, err := getMigrator()
-				if err != nil {
-					return err
-				}
-
-				return m.PostInstall()
-			},
-		},
-		{
 			Name:    "Initialize kubeconfig for target cluster",
 			Args:    []string{"plural", "wkspace", "kube-init"},
 			Execute: runPlural,

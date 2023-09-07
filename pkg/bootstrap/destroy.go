@@ -82,17 +82,6 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Execute: runPlural,
 		},
 		{
-			Name: "Cleanup cluster resources",
-			Execute: func(_ []string) error {
-				m, err := getMigrator()
-				if err != nil {
-					return err
-				}
-
-				return m.Destroy()
-			},
-		},
-		{
 			Name:    "Destroy cluster API",
 			Args:    []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", man.Cluster},
 			Execute: runPlural,
