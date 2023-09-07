@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/posthog/posthog-go"
 )
@@ -17,6 +18,7 @@ const (
 type posthogClient struct {
 	config      Config
 	contentType string
+	client      http.Client
 }
 
 func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, error) {
@@ -32,7 +34,7 @@ func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, e
 		return false, err
 	}
 
-	resp, err := http.Post(this.decideEndpoint(), this.contentType, bytes.NewBuffer(data))
+	resp, err := this.client.Post(this.decideEndpoint(), this.contentType, bytes.NewBuffer(data))
 	if err != nil {
 		return false, err
 	}
@@ -70,5 +72,8 @@ func New() Client {
 			Endpoint: endpoint,
 		},
 		contentType: "application/json",
+		client: http.Client{
+			Timeout: 5 * time.Second,
+		},
 	}
 }

@@ -3,7 +3,6 @@ package exp
 import (
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/exp/posthog"
-	"github.com/pluralsh/plural/pkg/utils"
 )
 
 // PostHogProvider implements Provider interface
@@ -24,10 +23,12 @@ func (this *PostHogProvider) IsFeatureEnabled(feature FeatureFlag) bool {
 	})
 
 	if err != nil {
-		utils.Warn("%s", err)
+		// We can cache it for the CLI to avoid retries
+		this.cache[feature] = false
 		return false
 	}
 
+	this.cache[feature] = isEnabled
 	return isEnabled
 }
 
