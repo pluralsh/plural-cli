@@ -8,7 +8,7 @@ import (
 
 // getDestroySteps returns list of steps to run during cluster destroy.
 func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
-	projectManifest, err := manifest.FetchProject()
+	man, err := manifest.FetchProject()
 	if err != nil {
 		return nil, err
 	}
@@ -18,7 +18,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		return nil, err
 	}
 
-	flags := append(getBootstrapFlags(projectManifest.Provider), additionalFlags...)
+	flags := append(getBootstrapFlags(man.Provider), additionalFlags...)
 
 	prov, err := provider.GetProvider()
 	if err != nil {
@@ -40,7 +40,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		},
 		{
 			Name:    "Install Cluster API operators in local cluster",
-			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, append(flags, disableAzurePodIdentityFlag...)...),
 			Execute: runPlural,
 		},
 		{
@@ -48,7 +48,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", "kind-bootstrap"},
 			Execute: runPlural,
 			Skip: func() bool {
-				if _, err := CheckClusterReadiness(projectManifest.Cluster, "bootstrap"); err != nil {
+				if _, err := CheckClusterReadiness(man.Cluster, "bootstrap"); err != nil {
 					return true
 				}
 
@@ -73,12 +73,12 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		},
 		{
 			Name:    "Wait for cluster",
-			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", projectManifest.Cluster},
+			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
 		{
 			Name:    "Wait for machine pools",
-			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
+			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
 		{
@@ -94,7 +94,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		},
 		{
 			Name:    "Destroy cluster API",
-			Args:    []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", projectManifest.Cluster},
+			Args:    []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", man.Cluster},
 			Execute: runPlural,
 		},
 		{

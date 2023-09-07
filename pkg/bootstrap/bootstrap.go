@@ -1,12 +1,10 @@
 package bootstrap
 
 import (
-	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -21,31 +19,6 @@ func deleteBootstrapCluster(runPlural ActionFunc) {
 	}}); err != nil {
 		utils.Error("%s", err)
 	}
-}
-
-func installStorageClass(_ []string) error {
-	kube, err := kubernetes.Kubernetes()
-	if err != nil {
-		return err
-	}
-
-	f, err := os.CreateTemp("", "storageClass")
-	if err != nil {
-		return err
-	}
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			utils.Error("%s", err)
-		}
-	}(f.Name())
-
-	_, err = f.WriteString(storageClassManifest)
-	if err != nil {
-		return err
-	}
-
-	return kube.Apply(f.Name(), true)
 }
 
 // saveKindKubeconfig exports kind kubeconfig to file.
@@ -94,8 +67,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		return nil, err
 	}
 
-	var steps []*Step
-	steps = append(steps, []*Step{
+	return []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -108,7 +80,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		},
 		{
 			Name:    "Install Cluster API operators in local cluster",
-			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, append(flags, disableAzurePodIdentityFlag...)...),
 			Execute: runPlural,
 		},
 		{
@@ -121,48 +93,36 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "clusters", "wait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
-	}...)
-
-	if man.Provider == api.ProviderKind {
-		steps = append(steps, []*Step{
-			{
-				Name: "Install Network",
-				Execute: func(_ []string) error {
-					return InstallCilium(man.Cluster)
-				},
+		{
+			Name: "Install Network",
+			Execute: func(_ []string) error {
+				return InstallCilium(man.Cluster)
 			},
-			{
-				Name:    "Install StorageClass",
-				Execute: installStorageClass,
-			},
-			{
-				Name:    "Save kubeconfig",
-				Execute: saveKindKubeconfig,
-			},
-		}...)
-	}
-
-	steps = append(steps, []*Step{
+			Provider: api.ProviderKind,
+		},
+		{
+			Name:     "Install StorageClass",
+			Args:     []string{storageClassManifest},
+			Execute:  applyManifest,
+			Provider: api.ProviderKind,
+		},
+		{
+			Name:     "Save kubeconfig",
+			Execute:  saveKindKubeconfig,
+			Provider: api.ProviderKind,
+		},
 		{
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
-	}...)
-
-	// TODO:
-	//  Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
-	//  will be done we can use it and remove this step.
-	if man.Provider == api.ProviderAzure {
-		steps = append(steps, []*Step{
-			{
-				Name:    "Enable OIDC issuer",
-				Execute: enableAzureOIDCIssuer,
-			},
-		}...)
-	}
-
-	steps = append(steps, []*Step{
+		{
+			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
+			//  will be done we can use it and remove this step.
+			Name:     "Enable OIDC issuer",
+			Execute:  enableAzureOIDCIssuer,
+			Provider: api.ProviderAzure,
+		},
 		{
 			Name: "Post install resources",
 			Execute: func(_ []string) error {
@@ -191,7 +151,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		},
 		{
 			Name:    "Install Cluster API operators in target cluster",
-			Args:    append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, flags...),
+			Args:    append([]string{"plural", "wkspace", "helm", "bootstrap", "--skip", "cluster-api-cluster"}, append(flags, disableAzurePodIdentityFlag...)...),
 			Execute: runPlural,
 		},
 		{
@@ -209,8 +169,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
-	}...)
-	return steps, nil
+	}, nil
 }
 
 // BootstrapCluster bootstraps cluster with Cluster API.

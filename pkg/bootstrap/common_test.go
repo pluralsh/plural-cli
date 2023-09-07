@@ -1,12 +1,17 @@
 package bootstrap_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
+
+func doNothing(_ []string) error {
+	return nil
+}
 
 func TestGetStepPath(t *testing.T) {
 	tests := []struct {
@@ -21,9 +26,7 @@ func TestGetStepPath(t *testing.T) {
 				Name:       "Test",
 				Args:       []string{},
 				TargetPath: "/test/path",
-				Execute: func(_ []string) error {
-					return nil
-				},
+				Execute:    doNothing,
 			},
 			defaultPath:  "/default/path",
 			expectedPath: "/test/path",
@@ -31,11 +34,9 @@ func TestGetStepPath(t *testing.T) {
 		{
 			name: `step path should be defaulted if not set`,
 			step: &bootstrap.Step{
-				Name: "Test",
-				Args: []string{},
-				Execute: func(_ []string) error {
-					return nil
-				},
+				Name:    "Test",
+				Args:    []string{},
+				Execute: doNothing,
 			},
 			defaultPath:  "/default/path",
 			expectedPath: "/default/path",
@@ -49,83 +50,74 @@ func TestGetStepPath(t *testing.T) {
 	}
 }
 
-func TestExecuteSteps(t *testing.T) {
+func TestFilterSteps(t *testing.T) {
 	tests := []struct {
-		name        string
-		steps       []*bootstrap.Step
-		expectError bool
+		name          string
+		steps         []*bootstrap.Step
+		provider      string
+		expectedSteps []*bootstrap.Step
 	}{
 		{
-			name: `steps should be executed successfully`,
+			name: `common steps should not be filtered`,
 			steps: []*bootstrap.Step{
 				{
-					Name:       "Test 1",
-					Args:       []string{},
-					TargetPath: ".",
-					Execute: func(_ []string) error {
-						return nil
-					},
-				},
-				{
-					Name:       "Test 2",
-					Args:       []string{},
-					TargetPath: ".",
-					Execute: func(_ []string) error {
-						return nil
-					},
+					Name:    "Test",
+					Execute: doNothing,
 				},
 			},
-			expectError: false,
+			provider: api.ProviderAzure,
+			expectedSteps: []*bootstrap.Step{
+				{
+					Name:    "Test",
+					Execute: doNothing,
+				},
+			},
 		},
 		{
-			name: `steps should be executed successfully if args are not set`,
+			name: `steps for different providers should be filtered`,
 			steps: []*bootstrap.Step{
 				{
-					Name:       "Test",
-					TargetPath: ".",
-					Execute: func(_ []string) error {
-						return nil
-					},
+					Name:    "Test",
+					Execute: doNothing,
 				},
-			},
-			expectError: false,
-		},
-		{
-			name: `steps execution should fail on invalid path`,
-			steps: []*bootstrap.Step{
 				{
-					Name:       "Test",
-					TargetPath: "invalid-path",
-					Execute: func(_ []string) error {
-						return nil
-					},
+					Name:     "Test AWS",
+					Execute:  doNothing,
+					Provider: api.ProviderAWS,
 				},
-			},
-			expectError: true,
-		},
-		{
-			name: `steps execution should fail on execution error`,
-			steps: []*bootstrap.Step{
 				{
-					Name:       "Test",
-					TargetPath: ".",
-					Execute: func(_ []string) error {
-						return fmt.Errorf("error")
-					},
+					Name:     "Test Azure",
+					Execute:  doNothing,
+					Provider: api.ProviderAzure,
+				},
+				{
+					Name:     "Test GCP",
+					Execute:  doNothing,
+					Provider: api.ProviderGCP,
 				},
 			},
-			expectError: true,
+			provider: api.ProviderAzure,
+			expectedSteps: []*bootstrap.Step{
+				{
+					Name:    "Test",
+					Execute: doNothing,
+				},
+				{
+					Name:     "Test Azure",
+					Execute:  doNothing,
+					Provider: api.ProviderAzure,
+				},
+			},
 		},
 	}
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := bootstrap.ExecuteSteps(test.steps)
-			if test.expectError {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
+			filteredSteps := bootstrap.FilterSteps(test.steps, test.provider)
+			assert.Equal(t, len(filteredSteps), len(test.expectedSteps))
+			assert.True(t, slices.EqualFunc(filteredSteps, test.expectedSteps,
+				func(a *bootstrap.Step, b *bootstrap.Step) bool {
+					return a.Name == b.Name && a.Provider == b.Provider
+				}))
 		})
 	}
 }

@@ -20,6 +20,37 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
+
+func applyManifest(arguments []string) error {
+	if len(arguments) != 1 {
+		return fmt.Errorf("expected one argument with manifest, got %v instead", len(arguments))
+	}
+
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	f, err := os.CreateTemp("", "manifest")
+	if err != nil {
+		return err
+	}
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			utils.Error("%s", err)
+		}
+	}(f.Name())
+
+	_, err = f.WriteString(arguments[0])
+	if err != nil {
+		return err
+	}
+
+	return kube.Apply(f.Name(), true)
+}
+
 // deleteSecrets deletes secrets matching label selector from given namespace in given context.
 func deleteSecrets(context, namespace, labelSelector string) error {
 	kubernetesClient, err := kubernetes.KubernetesWithContext(context)
@@ -154,6 +185,17 @@ func GetStepPath(step *Step, defaultPath string) string {
 	return defaultPath
 }
 
+func FilterSteps(steps []*Step, provider string) []*Step {
+	filteredSteps := make([]*Step, 0, len(steps))
+	for _, step := range steps {
+		if step.Provider == "" || step.Provider == provider {
+			filteredSteps = append(filteredSteps, step)
+		}
+	}
+
+	return filteredSteps
+}
+
 // ExecuteSteps of a bootstrap, migration or destroy process.
 func ExecuteSteps(steps []*Step) error {
 	defaultPath, err := GetBootstrapPath()
@@ -161,10 +203,17 @@ func ExecuteSteps(steps []*Step) error {
 		return err
 	}
 
-	for i, step := range steps {
-		utils.Highlight("[%d/%d] %s \n", i+1, len(steps), step.Name)
+	man, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	filteredSteps := FilterSteps(steps, man.Provider)
+	for i, step := range filteredSteps {
+		utils.Highlight("[%d/%d] %s \n", i+1, len(filteredSteps), step.Name)
 
 		if step.Skip != nil && step.Skip() {
+			utils.Highlight("Skipping step [%d/%d]", i+1, len(filteredSteps))
 			continue
 		}
 
