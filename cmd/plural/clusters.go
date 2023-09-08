@@ -9,6 +9,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/bootstrap/aws"
+	"github.com/pluralsh/plural/pkg/bootstrap/validation"
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/exp"
@@ -84,7 +85,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 		{
 			Name:     "migrate",
 			Usage:    "migrate to Cluster API",
-			Action:   latestVersion(rooted(initKubeconfig(handleMigration))),
+			Action:   latestVersion(rooted(initKubeconfig(p.handleMigration))),
 			Category: "Publishing",
 			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
@@ -96,7 +97,12 @@ func (p *Plural) clusterCommands() []cli.Command {
 	}
 }
 
-func handleMigration(_ *cli.Context) error {
+func (p *Plural) handleMigration(_ *cli.Context) error {
+	p.InitPluralClient()
+	if err := validation.ValidateMigration(p); err != nil {
+		return err
+	}
+
 	project, err := manifest.FetchProject()
 	if err != nil {
 		return err

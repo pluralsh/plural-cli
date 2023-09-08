@@ -17,6 +17,7 @@ require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/Azure/azure-workload-identity v1.1.0
 	github.com/Azure/go-autorest/autorest v0.11.29
+	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Yamashou/gqlgenc v0.14.0
 	github.com/aws/aws-sdk-go-v2 v1.18.0
