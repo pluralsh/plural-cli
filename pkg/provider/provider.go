@@ -142,9 +142,6 @@ func getAvailableProviders() error {
 
 		available = containers.ToSet(available).Difference(filterProviders).List()
 		providers.AvailableProviders = algorithms.Map(available, func(p string) string {
-			if p == "GCP" {
-				return "google"
-			}
 			return strings.ToLower(p)
 		})
 	}
