@@ -432,7 +432,7 @@ func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
 }
 
 func (gcp *GCPProvider) validatePermissions() error {
-	utils.LogInfo().Println("Validate GCP service account roles/permissions")
+	utils.LogInfo().Println("Validate GCP roles/permissions")
 	ctx := context.Background()
 	proj, err := gcp.getProject()
 	if err != nil {
@@ -451,11 +451,11 @@ func (gcp *GCPProvider) validatePermissions() error {
 
 	utils.Error("\u2700\n")
 	for _, perm := range missing {
-		utils.LogError().Printf("Recommended GCP service account permissions %s \n", perm)
+		utils.LogError().Printf("Recommended GCP permissions %s \n", perm)
 		provUtils.FailedPermission(perm)
 	}
 
-	return fmt.Errorf("Your gcp service account is missing permissions for project %s: %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
+	return fmt.Errorf("Your GCP user is missing permissions for project %s: %s\nIf you aren't comfortable granting these permissions, consider creating a separate GCP project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {
