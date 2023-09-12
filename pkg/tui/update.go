@@ -6,13 +6,13 @@ import (
 )
 
 func (this *TerminalUI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
+	switch v := msg.(type) {
 	case tea.KeyMsg:
 		return this, tea.Quit
 	case spinner.TickMsg:
-		return this, this.handleSpinnerUpdate(msg.(spinner.TickMsg))
+		return this, this.handleSpinnerUpdate(v)
 	case Event:
-		return this, this.handleEventUpdate(msg.(Event))
+		return this, this.handleEventUpdate(v)
 	}
 
 	return this, nil

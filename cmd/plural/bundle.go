@@ -135,6 +135,9 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 
 func (p *Plural) listRecipes(repo string) (res []*api.Recipe, err error) {
 	man, err := manifest.FetchProject()
+	if err != nil {
+		return
+	}
 	res, err = p.ListRecipes(repo, man.Provider)
 	return
 }
