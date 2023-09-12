@@ -103,6 +103,7 @@ func handleHelmTemplate(c *cli.Context) error {
 		_ = os.Remove(name)
 	}(f.Name())
 
+	name := "default"
 	namespace := "default"
 	actionConfig, err := helm.GetActionConfig(namespace)
 	if err != nil {
@@ -112,7 +113,7 @@ func handleHelmTemplate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	res, err := helm.Template(actionConfig, c.Args().Get(0), namespace, "./", false, false, values)
+	res, err := helm.Template(actionConfig, name, namespace, c.Args().Get(0), false, false, values)
 	if err != nil {
 		return err
 	}
