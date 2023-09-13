@@ -273,6 +273,8 @@ jobs:
         run: "packer init ./packer/"
       - name: Run `packer validate`
         id: validate
+        env:
+          PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
         run: "packer validate ./packer/"
       - name: Run `packer build`
         id: build
