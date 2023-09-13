@@ -141,6 +141,8 @@ func getBootstrapFlags(prov string) []string {
 			"--set", "bootstrap.snapshot-controller.enabled=false",
 			"--set", "bootstrap.snapshot-validation-webhook.enabled=false",
 			"--set", "bootstrap.tigera-operator.enabled=false",
+			"--set", "bootstrap.external-dns.enabled=false",
+			"--set", "bootstrap.plural-certmanager-webhook.enabled=false",
 		}
 	case api.ProviderAzure:
 		return []string{
