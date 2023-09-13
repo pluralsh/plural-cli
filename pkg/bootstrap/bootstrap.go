@@ -10,17 +10,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-// deleteBootstrapCluster executes single step to destroy local cluster.
-func deleteBootstrapCluster(runPlural ActionFunc) {
-	if err := ExecuteSteps([]*Step{{
-		Name:    "Destroy local cluster",
-		Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
-		Execute: runPlural,
-	}}); err != nil {
-		utils.Error("%s", err)
-	}
-}
-
 // saveKindKubeconfig exports kind kubeconfig to file.
 func saveKindKubeconfig(_ []string) error {
 	man, err := manifest.FetchProject()
@@ -173,10 +162,9 @@ func BootstrapCluster(runPlural ActionFunc) error {
 
 		err = ExecuteSteps(steps)
 		if err != nil {
-			deleteBootstrapCluster(runPlural)
+			utils.Error("Cluster bootstrapping failed\n")
 			return err
 		}
-
 		return nil
 	}); err != nil {
 		return err
