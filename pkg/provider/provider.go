@@ -141,9 +141,7 @@ func getAvailableProviders() error {
 		}
 
 		available = containers.ToSet(available).Difference(filterProviders).List()
-		providers.AvailableProviders = algorithms.Map(available, func(p string) string {
-			return strings.ToLower(p)
-		})
+		providers.AvailableProviders = algorithms.Map(available, strings.ToLower)
 	}
 	return nil
 }

@@ -13,9 +13,9 @@ import (
 
 	helmdiff "github.com/databus23/helm-diff/v3/diff"
 	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
+	"github.com/google/go-cmp/cmp"
 	"github.com/helm/helm-mapkubeapis/pkg/common"
 	release "github.com/helm/helm-mapkubeapis/pkg/v3"
-	"github.com/google/go-cmp/cmp"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"

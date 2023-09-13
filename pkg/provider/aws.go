@@ -134,12 +134,8 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	accountId, err := GetAwsAccount(ctx)
-	if err != nil {
-		return nil, err
-	}
 	providerCtx := map[string]interface{}{}
-	providerCtx["AWSAccountID"] = accountId
+
 	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
 }
 
@@ -172,7 +168,9 @@ func getAvailabilityZones(ctx context.Context, region string) ([]string, error) 
 		Message: "Which availability zones you would like to use:",
 		Options: []string{first3, random, manual},
 	}
-	survey.AskOne(prompt, &choice)
+	if err := survey.AskOne(prompt, &choice); err != nil {
+		return nil, err
+	}
 
 	switch choice {
 	case first3:
@@ -184,7 +182,9 @@ func getAvailabilityZones(ctx context.Context, region string) ([]string, error) 
 		prompt := &survey.Multiline{
 			Message: "Enter at least three availability zones ",
 		}
-		survey.AskOne(prompt, &text)
+		if err := survey.AskOne(prompt, &text); err != nil {
+			return nil, err
+		}
 		res := strings.Split(text, "\n")
 		if len(res) < 3 {
 			return nil, fmt.Errorf("expected at least three availability zones")

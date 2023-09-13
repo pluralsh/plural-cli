@@ -134,7 +134,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-2
           role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
@@ -156,8 +156,9 @@ jobs:
             type=semver,pattern={{version}}
       - name: Set up Docker Buildx
         id: builder
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         with:
+          cleanup: true
           driver: kubernetes
           platforms: linux/amd64
           driver-opts: |
@@ -234,12 +235,18 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         if: always()
         with:
           aws-region: us-east-2
           role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
           role-session-name: PluralCLI
+      - name: Manually cleanup buildx
+        if: always()
+        run: |
+          docker buildx stop ${{ steps.builder.outputs.name }}
+          sleep 10
+          docker buildx rm ${{ steps.builder.outputs.name }}
   packer:
     name: Build EKS AMI
     runs-on: ubuntu-latest
@@ -251,7 +258,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-2
           role-to-assume: arn:aws:iam::654897662046:role/github-actions/plural-cli-amis-packer

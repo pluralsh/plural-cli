@@ -49,13 +49,13 @@ func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, e
 
 	enabled := decide.FeatureFlags[payload.Key]
 
-	switch enabled.(type) {
+	switch v := enabled.(type) {
 	case nil:
 		return false, nil
 	case bool:
-		return enabled.(bool), nil
+		return v, nil
 	case string:
-		return enabled.(string) == "true", nil
+		return v == "true", nil
 	default:
 		return true, nil
 	}

@@ -242,6 +242,7 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	return utils.WriteFile(defaultValuesFile, io)
 }
 
+//nolint:golint,unused
 func getValues(path string) (map[string]map[string]interface{}, error) {
 	values := map[string]map[string]interface{}{}
 	valuesFromFile, err := os.ReadFile(path)
