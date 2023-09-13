@@ -14,6 +14,8 @@ import (
 	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
 	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
 	delinkerplan "github.com/pluralsh/terraform-delinker/api/plan/v1alpha1"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -99,34 +101,79 @@ func getMigrator() (migratorapi.Migrator, error) {
 	return migrator.NewMigrator(clusterProvider, configuration)
 }
 
+func isDesiredKubernetesVersion(key string, value, diffValue any) bool {
+	if key != "kubernetesVersion" {
+		return false
+	}
+
+	defaultKubernetesVersion, _ := diffValue.(string)
+	currentKubernetesVersion, _ := value.(string)
+
+	defaultKubernetesVersion = strings.TrimPrefix(defaultKubernetesVersion, "v")
+	currentKubernetesVersion = strings.TrimPrefix(currentKubernetesVersion, "v")
+
+	return len(defaultKubernetesVersion) > 0 && strings.HasPrefix(currentKubernetesVersion, defaultKubernetesVersion)
+}
+
 // generateValuesFile generates values.yaml file based on current cluster configuration that will be used by Cluster API.
 func generateValuesFile() error {
 	utils.Highlight("Generating values.yaml file based on current cluster configuration...\n")
-
-	m, err := getMigrator()
-	if err != nil {
-		return err
-	}
-
-	values, err := m.Convert()
-	if err != nil {
-		return err
-	}
-
-	data, err := yaml.Marshal(Bootstrap{ClusterAPICluster: values})
-	if err != nil {
-		return err
-	}
 
 	gitRootDir, err := git.Root()
 	if err != nil {
 		return err
 	}
 
-	bootstrapRepo := filepath.Join(gitRootDir, "bootstrap")
-	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapRepo, "helm", "bootstrap", "values.yaml"))
+	bootstrapHelmDir := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap", "helm", "bootstrap"))
+	valuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapHelmDir, "values.yaml"))
+	defaultValuesFile := pathing.SanitizeFilepath(filepath.Join(bootstrapHelmDir, "default-values.yaml"))
+
+	m, err := getMigrator()
+	if err != nil {
+		return err
+	}
+
+	migratorValues, err := m.Convert()
+	if err != nil {
+		return err
+	}
+
+	chart, err := loader.Load(bootstrapHelmDir)
+	if err != nil {
+		return err
+	}
+
+	defaultValues, err := chartutil.ReadValuesFile(defaultValuesFile)
+	if err != nil {
+		return err
+	}
+
+	// Nullify main values.yaml as we only use it to generate migration values
+	chart.Values = nil
+	chartValues, err := chartutil.CoalesceValues(chart, defaultValues)
+	if err != nil {
+		return err
+	}
+
+	migrationYamlData, err := yaml.Marshal(Bootstrap{ClusterAPICluster: migratorValues})
+	if err != nil {
+		return err
+	}
+
+	migrationValues, err := chartutil.ReadValues(migrationYamlData)
+	if err != nil {
+		return err
+	}
+
+	values := utils.DiffMap(migrationValues, chartValues, isDesiredKubernetesVersion)
+
+	valuesYamlData, err := yaml.Marshal(values)
+	if err != nil {
+		return err
+	}
+
 	if utils.Exists(valuesFile) {
-		if err := os.WriteFile(valuesFile, data, 0644); err != nil {
+		if err := os.WriteFile(valuesFile, valuesYamlData, 0644); err != nil {
 			return err
 		}
 	} else {

@@ -1386,8 +1386,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
 github.com/pkg/sftp v1.13.1/go.mod h1:3HaPG6Dq1ILlpPZRO0HVMrsydcdLt6HRDccSgb87qRg=
-github.com/pluralsh/cluster-api-migration v0.2.12 h1:klgq+uWrubBv9v1SL5yNNeGQyC5GVtpwrn8ktMJgCnU=
-github.com/pluralsh/cluster-api-migration v0.2.12/go.mod h1:J6lEvC/70KouikX16mE331cxc3y3sBwtmfHGwZqu06w=
+github.com/pluralsh/cluster-api-migration v0.2.15 h1:TIfusD+wnhZTGmwNfIlKlKJOT2dE3rUaZawDJw98GjY=
+github.com/pluralsh/cluster-api-migration v0.2.15/go.mod h1:J6lEvC/70KouikX16mE331cxc3y3sBwtmfHGwZqu06w=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
 github.com/pluralsh/gqlclient v1.10.0 h1:ccYB+A0JbPYkEeVzdfajd29l65N6x/buSKPMMxM8OIA=
@@ -1398,8 +1398,8 @@ github.com/pluralsh/plural-operator v0.5.5 h1:57GxniNjUa3hpHgvFr9oDonFgvDUC8XDD5
 github.com/pluralsh/plural-operator v0.5.5/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
 github.com/pluralsh/polly v0.1.1 h1:VtbS83re2YuDgscvaFgfzEDZs9uXRV84fCdvKCgIRE4=
 github.com/pluralsh/polly v0.1.1/go.mod h1:Yo1/jcW+4xwhWG+ZJikZy4J4HJkMNPZ7sq5auL2c/tY=
-github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247 h1:LkTrxXrkPq7ocaTDbLW12KyeMl1qvnWOct8fIWiTNso=
-github.com/pluralsh/terraform-delinker v0.0.0-20230706080637-43d3844cf247/go.mod h1:mU4F5OtfAIG5Xobbk+3uiU++AWKyfZPyyMmVZd23bV4=
+github.com/pluralsh/terraform-delinker v0.0.1 h1:I0cnf5IqY94qJWzFwPaRsrFp0s3gR+YnYKodYfUSMvA=
+github.com/pluralsh/terraform-delinker v0.0.1/go.mod h1:mU4F5OtfAIG5Xobbk+3uiU++AWKyfZPyyMmVZd23bV4=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
