@@ -147,12 +147,14 @@ func getBootstrapFlags(prov string) []string {
 	case api.ProviderAzure:
 		return []string{
 			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
+			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
 		}
 	case api.ProviderGCP:
 		return []string{
 			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
+			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
 		}
 	default:
