@@ -165,12 +165,14 @@ func chartInstalled(name, repoName string) (bool, error) {
 
 	repo, err := client.GetRepository(repoName)
 	if err != nil {
-		return false, err
+		fmt.Printf("error: %s\n", err)
+		return false, nil
 	}
 
 	chartInstallations, err := client.GetChartInstallations(repo.Id)
 	if err != nil {
-		return false, err
+		fmt.Printf("error: %s\n", err)
+		return false, nil
 	}
 
 	for _, chartInstallation := range chartInstallations {
