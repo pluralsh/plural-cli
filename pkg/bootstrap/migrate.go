@@ -10,6 +10,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	migratorapi "github.com/pluralsh/cluster-api-migration/pkg/api"
 	"github.com/pluralsh/cluster-api-migration/pkg/migrator"
+	"github.com/pluralsh/polly/containers"
 	delinkeranalyze "github.com/pluralsh/terraform-delinker/api/analyze/v1alpha1"
 	delinkerdelink "github.com/pluralsh/terraform-delinker/api/delink/v1alpha1"
 	delinkerexec "github.com/pluralsh/terraform-delinker/api/exec/v1alpha1"
@@ -136,6 +137,26 @@ func generateValuesFile() error {
 	migratorValues, err := m.Convert()
 	if err != nil {
 		return err
+	}
+
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	if prov.Name() == api.ProviderAWS {
+		availabilityZoneSet := containers.NewSet[string]()
+		for _, subnet := range migratorValues.Cluster.AWSCloudSpec.NetworkSpec.Subnets {
+			availabilityZoneSet.Add(subnet.AvailabilityZone)
+		}
+		projectManifest, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+		projectManifest.AvailabilityZones = availabilityZoneSet.List()
+		if err := projectManifest.Flush(); err != nil {
+			return err
+		}
 	}
 
 	chart, err := loader.Load(bootstrapHelmDir)
