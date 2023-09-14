@@ -148,12 +148,12 @@ func generateValuesFile() error {
 		for _, subnet := range migratorValues.Cluster.AWSCloudSpec.NetworkSpec.Subnets {
 			availabilityZoneSet.Add(subnet.AvailabilityZone)
 		}
-		projectManifest, err := manifest.FetchProject()
+		man, err := manifest.FetchProject()
 		if err != nil {
 			return err
 		}
-		projectManifest.AvailabilityZones = availabilityZoneSet.List()
-		if err := projectManifest.Flush(); err != nil {
+		man.AvailabilityZones = availabilityZoneSet.List()
+		if err := man.Flush(); err != nil {
 			return err
 		}
 	}
@@ -297,7 +297,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	bootstrapPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
 	terraformPath := filepath.Join(bootstrapPath, "terraform")
-	tags := GetProviderTags(man.Provider, man.Cluster)
 	flags := getMigrationFlags(man.Provider)
 
 	if man.Provider == api.ProviderAzure {
@@ -380,9 +379,10 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: runPlural,
 		},
 		{
-			Name:    "Add Cluster API tags for provider resources",
-			Args:    tags,
-			Execute: tagResources,
+			Name: "Add Cluster API tags for provider resources",
+			Execute: func(_ []string) error {
+				return tagResources(GetProviderTags(man.Provider, man.Cluster))
+			},
 		},
 		{
 			Name:    "Deploy cluster",

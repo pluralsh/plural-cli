@@ -20,6 +20,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+const localClusterContext = "kind-bootstrap"
+
 var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
 
 func applyManifest(manifest string) error {
