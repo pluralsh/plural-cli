@@ -53,6 +53,7 @@ const Gitignore = `/**/.terraform
 *.swo
 .DS_STORE
 .vscode
+/bootstrap/capi/
 `
 
 // IMPORTANT

@@ -8,6 +8,8 @@ type ActionFunc func(arguments []string) error
 // ConditionFunc is a condition function that is checks if step should be executed or skipped.
 type ConditionFunc func() bool
 
+type HookFunc func()
+
 // Step is a representation of a single step in a process of bootstrap, migrate and destroy.
 type Step struct {
 	Name       string
@@ -17,6 +19,8 @@ type Step struct {
 	Skip       bool
 	SkipFunc   ConditionFunc
 	Retries    int
+	OnError    HookFunc
+	OnAfter    HookFunc
 }
 
 // Bootstrap is a representation of existing cluster to be migrated to Cluster API.

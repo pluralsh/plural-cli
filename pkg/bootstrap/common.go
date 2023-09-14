@@ -219,11 +219,19 @@ func ExecuteSteps(steps []*Step) error {
 			}
 			err = step.Execute(step.Args)
 			if err == nil {
+				if step.OnAfter != nil {
+					step.OnAfter()
+				}
+
 				break
 			}
 			utils.Error("[%d/%d] %s failed: %s\n", i+1, len(filteredSteps), step.Name, err)
 		}
 		if err != nil {
+			if step.OnError != nil {
+				step.OnError()
+			}
+
 			return err
 		}
 	}
