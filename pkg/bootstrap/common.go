@@ -200,10 +200,10 @@ func ExecuteSteps(steps []*Step) error {
 
 	filteredSteps := FilterSteps(steps)
 	for i, step := range filteredSteps {
-		utils.Highlight("[%d/%d] %s \n", i+1, len(filteredSteps), step.Name)
+		utils.Highlight("[%d/%d] %s\n", i+1, len(filteredSteps), step.Name)
 
 		if step.SkipFunc != nil && step.SkipFunc() {
-			utils.Highlight("Skipping step [%d/%d]", i+1, len(filteredSteps))
+			utils.Highlight("Skipping step [%d/%d]\n", i+1, len(filteredSteps))
 			continue
 		}
 
@@ -213,7 +213,16 @@ func ExecuteSteps(steps []*Step) error {
 			return err
 		}
 
-		err = step.Execute(step.Args)
+		for i := 0; i <= step.Retries; i++ {
+			if i > 0 {
+				utils.Highlight("Retrying, attempt %d of %d...\n", i, step.Retries)
+			}
+			err = step.Execute(step.Args)
+			if err == nil {
+				break
+			}
+			utils.Error("[%d/%d] %s failed: %s\n", i+1, len(filteredSteps), step.Name, err)
+		}
 		if err != nil {
 			return err
 		}

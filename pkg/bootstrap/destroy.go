@@ -51,12 +51,14 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 				_, err := CheckClusterReadiness(man.Cluster, "bootstrap")
 				return err != nil
 			},
+			Retries: 2,
 		},
 		{
 			Name: "Move Helm secrets",
 			Execute: func(_ []string) error {
 				return moveHelmSecrets(clusterKubeContext, "kind-bootstrap")
 			},
+			Retries: 2,
 		},
 		{
 			Name:    "Reinstall Helm charts to update configuration",

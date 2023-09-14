@@ -137,12 +137,14 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Move resources from local to target cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", kubeconfigPath},
 			Execute: runPlural,
+			Retries: 2,
 		},
 		{
 			Name: "Move Helm secrets",
 			Execute: func(_ []string) error {
 				return moveHelmSecrets("kind-bootstrap", prov.KubeContext())
 			},
+			Retries: 2,
 		},
 		{
 			Name:    "Destroy local cluster",

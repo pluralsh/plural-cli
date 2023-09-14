@@ -323,6 +323,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
 			Skip:       man.Provider != api.ProviderAzure,
+			Retries:    2,
 		},
 		{
 			Name:       "Clear package cache",
@@ -403,6 +404,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: func(_ []string) error {
 				return delinkTerraformState(terraformPath)
 			},
+			Retries: 2,
 		},
 		{
 			Name:       "Run deploy",
