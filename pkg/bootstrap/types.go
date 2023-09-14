@@ -21,6 +21,7 @@ type Step struct {
 	Retries    int
 	OnError    HookFunc
 	OnAfter    HookFunc
+	Confirm    string
 }
 
 // Bootstrap is a representation of existing cluster to be migrated to Cluster API.

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/AlecAivazis/survey/v2"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"golang.org/x/oauth2/google"
 	v1 "k8s.io/api/core/v1"
@@ -202,6 +203,14 @@ func ExecuteSteps(steps []*Step) error {
 
 	filteredSteps := FilterSteps(steps)
 	for i, step := range filteredSteps {
+		if len(step.Confirm) > 0 {
+			res := true
+			prompt := &survey.Confirm{Message: step.Confirm}
+			if err := survey.AskOne(prompt, &res, survey.WithValidator(survey.Required)); err != nil || !res {
+				continue
+			}
+		}
+
 		utils.Highlight("[%d/%d] %s\n", i+1, len(filteredSteps), step.Name)
 
 		if step.SkipFunc != nil && step.SkipFunc() {
