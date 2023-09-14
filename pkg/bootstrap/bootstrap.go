@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -116,7 +115,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 
 				err := capi.SaveMoveBackup(options)
 				if err != nil {
-					capi.RemoveStateBackup()
+					_ = capi.RemoveStateBackup()
 					utils.Error("error during saving state backup: %s", err)
 				}
 			},
@@ -124,12 +123,9 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		{
 			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
 			//  will be done we can use it and remove this step.
-			Name: "Enable OIDC issuer",
+			Name: "ź",
 			Execute: func(_ []string) error {
-				cmd := exec.Command("az", "aks", "update", "-g", man.Project, "-n", man.Cluster, "--enable-oidc-issuer")
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				return utils.Execute(cmd)
+				return utils.Exec("az", "aks", "update", "-g", man.Project, "-n", man.Cluster, "--enable-oidc-issuer")
 			},
 			Skip: man.Provider != api.ProviderAzure,
 		},
