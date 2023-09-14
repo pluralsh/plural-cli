@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -10,33 +11,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
-// saveKindKubeconfig exports kind kubeconfig to file.
-func saveKindKubeconfig(_ []string) error {
-	man, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
-	bootstrapPath, err := GetBootstrapPath()
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command("kind", "export", "kubeconfig", "--name", man.Cluster,
-		"--kubeconfig", filepath.Join(bootstrapPath, "terraform", "kube_config_cluster.yaml"))
-	return utils.Execute(cmd)
-}
-
-func enableAzureOIDCIssuer(_ []string) error {
-	man, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command("az", "aks", "update", "-g", man.Project, "-n", man.Cluster, "--enable-oidc-issuer")
-	return utils.Execute(cmd)
-}
-
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
 func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
 	man, err := manifest.FetchProject()
@@ -45,6 +19,11 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 	}
 
 	kubeconfigPath, err := getKubeconfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	bootstrapPath, err := GetBootstrapPath()
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +76,13 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Skip: man.Provider != api.ProviderKind,
 		},
 		{
-			Name:    "Save kubeconfig",
-			Execute: saveKindKubeconfig,
-			Skip:    man.Provider != api.ProviderKind,
+			Name: "Save kubeconfig",
+			Execute: func(_ []string) error {
+				cmd := exec.Command("kind", "export", "kubeconfig", "--name", man.Cluster,
+					"--kubeconfig", filepath.Join(bootstrapPath, "terraform", "kube_config_cluster.yaml"))
+				return utils.Execute(cmd)
+			},
+			Skip: man.Provider != api.ProviderKind,
 		},
 		{
 			Name:    "Wait for machine pools",
@@ -109,9 +92,14 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		{
 			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
 			//  will be done we can use it and remove this step.
-			Name:    "Enable OIDC issuer",
-			Execute: enableAzureOIDCIssuer,
-			Skip:    man.Provider != api.ProviderAzure,
+			Name: "Enable OIDC issuer",
+			Execute: func(_ []string) error {
+				cmd := exec.Command("az", "aks", "update", "-g", man.Project, "-n", man.Cluster, "--enable-oidc-issuer")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				return utils.Execute(cmd)
+			},
+			Skip: man.Provider != api.ProviderAzure,
 		},
 		{
 			Name:    "Initialize kubeconfig for target cluster",
