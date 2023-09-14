@@ -11,7 +11,7 @@ import (
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/capi"
+	"github.com/pluralsh/plural/pkg/utils/backup"
 )
 
 func bootstrapClusterExists() bool {
@@ -44,6 +44,8 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 	if err != nil {
 		return nil, err
 	}
+
+	clusterBackup := backup.NewCAPIBackup(man.Cluster)
 
 	return []*Step{
 		{
@@ -81,7 +83,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Deploy cluster",
 			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
 			Execute: runPlural,
-			Skip:    capi.MoveBackupExists(),
+			Skip:    clusterBackup.Exists(),
 		},
 		{
 			Name: "Restore cluster",
@@ -93,9 +95,9 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 					},
 				}
 
-				return capi.RestoreMoveBackup(options)
+				return clusterBackup.Restore(options)
 			},
-			Skip: !capi.MoveBackupExists(),
+			Skip: !clusterBackup.Exists(),
 		},
 		{
 			Name:    "Wait for cluster",
@@ -137,9 +139,9 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 					},
 				}
 
-				err := capi.SaveMoveBackup(options)
+				err := clusterBackup.Save(options)
 				if err != nil {
-					_ = capi.RemoveStateBackup()
+					_ = clusterBackup.Remove()
 					utils.Error("error during saving state backup: %s", err)
 				}
 			},
@@ -191,7 +193,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 			OnAfter: func() {
-				err := capi.RemoveStateBackup()
+				err := clusterBackup.Remove()
 				if err != nil {
 					utils.Error("error during removing state backup: %s", err)
 				}
