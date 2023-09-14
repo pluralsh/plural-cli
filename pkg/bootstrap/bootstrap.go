@@ -123,7 +123,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		{
 			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
 			//  will be done we can use it and remove this step.
-			Name: "ź",
+			Name: "Enable OIDC issuer",
 			Execute: func(_ []string) error {
 				return utils.Exec("az", "aks", "update", "-g", man.Project, "-n", man.Cluster, "--enable-oidc-issuer")
 			},
