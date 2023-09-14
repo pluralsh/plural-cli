@@ -5,10 +5,13 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"sigs.k8s.io/cluster-api/cmd/clusterctl/client"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/capi"
 )
 
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
@@ -55,6 +58,21 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Deploy cluster",
 			Args:    append([]string{"plural", "--bootstrap", "wkspace", "helm", "bootstrap"}, flags...),
 			Execute: runPlural,
+			Skip:    capi.MoveBackupExists(),
+		},
+		{
+			Name: "Restore cluster",
+			Execute: func(_ []string) error {
+				options := client.MoveOptions{
+					ToKubeconfig: client.Kubeconfig{
+						Path:    kubeconfigPath,
+						Context: "kind-bootstrap",
+					},
+				}
+
+				return capi.RestoreMoveBackup(options)
+			},
+			Skip: !capi.MoveBackupExists(),
 		},
 		{
 			Name:    "Wait for cluster",
@@ -88,6 +106,20 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Wait for machine pools",
 			Args:    []string{"plural", "--bootstrap", "clusters", "mpwait", "bootstrap", man.Cluster},
 			Execute: runPlural,
+			OnAfter: func() {
+				options := client.MoveOptions{
+					FromKubeconfig: client.Kubeconfig{
+						Path:    kubeconfigPath,
+						Context: "kind-bootstrap",
+					},
+				}
+
+				err := capi.SaveMoveBackup(options)
+				if err != nil {
+					capi.RemoveStateBackup()
+					utils.Error("error during saving state backup: %s", err)
+				}
+			},
 		},
 		{
 			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
@@ -138,6 +170,12 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Name:    "Destroy local cluster",
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
+			OnAfter: func() {
+				err := capi.RemoveStateBackup()
+				if err != nil {
+					utils.Error("error during removing state backup: %s", err)
+				}
+			},
 		},
 	}, nil
 }
