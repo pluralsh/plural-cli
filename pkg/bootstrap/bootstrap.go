@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"sigs.k8s.io/cluster-api/cmd/clusterctl/client"
+	"sigs.k8s.io/kind/pkg/cluster"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -40,6 +41,13 @@ func enableAzureOIDCIssuer(_ []string) error {
 	return utils.Execute(cmd)
 }
 
+func bootstrapClusterExists() bool {
+	clusterName := "bootstrap"
+	p := cluster.NewProvider()
+	n, _ := p.ListNodes(clusterName)
+	return len(n) > 0
+}
+
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
 func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step, error) {
 	man, err := manifest.FetchProject()
@@ -60,6 +68,22 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 	}
 
 	return []*Step{
+		{
+			Name: "Destroy provider cluster",
+			Execute: func(_ []string) error {
+				return nil
+			},
+			Confirm: "Existing cluster found. Would you like to try and destroy the provider cluster?", // TODO: improve message
+			Skip: true, // TODO add check if bootstrap cluster exists and contains cluster CRD in non-deleting state
+		},
+		{
+			Name: "Destroy local bootstrap cluster",
+			Execute: func(_ []string) error {
+				return nil
+			},
+			Confirm: "Existing bootstrap cluster found. Would you like to destroy it first?", // TODO: improve message
+			Skip: true, // TODO add check if bootstrap cluster exists and cluster CRD is in deleting state
+		},
 		{
 			Name:    "Create local bootstrap cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "create", "bootstrap", "--skip-if-exists"},
@@ -179,7 +203,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Retries: 2,
 		},
 		{
-			Name:    "Destroy local cluster",
+			Name:    "Destroy local bootstrap cluster",
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 			OnAfter: func() {
