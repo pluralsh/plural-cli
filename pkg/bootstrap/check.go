@@ -51,7 +51,7 @@ func getCluster(name, namespace string) (*capi.Cluster, error) {
 func CheckClusterReadiness(name, namespace string) (bool, error) {
 	utils.Highlight("Checking cluster status")
 
-	err := util.WaitFor(10*time.Second, 2*time.Second, func() (bool, error) {
+	err := util.WaitFor(10*time.Second, time.Second, func() (bool, error) {
 		utils.Highlight(".")
 
 		c, err := getCluster(name, namespace)

@@ -47,18 +47,16 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Name:    "Move resources from target to local cluster",
 			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", "kind-bootstrap"},
 			Execute: runPlural,
-			Skip: func() bool {
-				if _, err := CheckClusterReadiness(man.Cluster, "bootstrap"); err != nil {
-					return true
-				}
-
-				return false
+			SkipFunc: func() bool {
+				_, err := CheckClusterReadiness(man.Cluster, "bootstrap")
+				return err != nil
 			},
 		},
 		{
-			Name:    "Move Helm secrets",
-			Args:    []string{clusterKubeContext, "kind-bootstrap"},
-			Execute: moveHelmSecrets,
+			Name: "Move Helm secrets",
+			Execute: func(_ []string) error {
+				return moveHelmSecrets(clusterKubeContext, "kind-bootstrap")
+			},
 		},
 		{
 			Name:    "Reinstall Helm charts to update configuration",

@@ -87,18 +87,19 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Execute: func(_ []string) error {
 				return InstallCilium(man.Cluster)
 			},
-			Provider: api.ProviderKind,
+			Skip: man.Provider != api.ProviderKind,
 		},
 		{
-			Name:     "Install StorageClass",
-			Args:     []string{storageClassManifest},
-			Execute:  applyManifest,
-			Provider: api.ProviderKind,
+			Name: "Install StorageClass",
+			Execute: func(_ []string) error {
+				return applyManifest(storageClassManifest)
+			},
+			Skip: man.Provider != api.ProviderKind,
 		},
 		{
-			Name:     "Save kubeconfig",
-			Execute:  saveKindKubeconfig,
-			Provider: api.ProviderKind,
+			Name:    "Save kubeconfig",
+			Execute: saveKindKubeconfig,
+			Skip:    man.Provider != api.ProviderKind,
 		},
 		{
 			Name:    "Wait for machine pools",
@@ -108,9 +109,9 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		{
 			// TODO: Once https://github.com/kubernetes-sigs/cluster-api-provider-azure/issues/2498
 			//  will be done we can use it and remove this step.
-			Name:     "Enable OIDC issuer",
-			Execute:  enableAzureOIDCIssuer,
-			Provider: api.ProviderAzure,
+			Name:    "Enable OIDC issuer",
+			Execute: enableAzureOIDCIssuer,
+			Skip:    man.Provider != api.ProviderAzure,
 		},
 		{
 			Name:    "Initialize kubeconfig for target cluster",
@@ -138,9 +139,10 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 			Execute: runPlural,
 		},
 		{
-			Name:    "Move Helm secrets",
-			Args:    []string{"kind-bootstrap", prov.KubeContext()},
-			Execute: moveHelmSecrets,
+			Name: "Move Helm secrets",
+			Execute: func(_ []string) error {
+				return moveHelmSecrets("kind-bootstrap", prov.KubeContext())
+			},
 		},
 		{
 			Name:    "Destroy local cluster",

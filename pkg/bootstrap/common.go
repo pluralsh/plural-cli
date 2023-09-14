@@ -22,11 +22,7 @@ import (
 
 var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
 
-func applyManifest(arguments []string) error {
-	if len(arguments) != 1 {
-		return fmt.Errorf("expected one argument with manifest, got %v instead", len(arguments))
-	}
-
+func applyManifest(manifest string) error {
 	kube, err := kubernetes.Kubernetes()
 	if err != nil {
 		return err
@@ -43,7 +39,7 @@ func applyManifest(arguments []string) error {
 		}
 	}(f.Name())
 
-	_, err = f.WriteString(arguments[0])
+	_, err = f.WriteString(manifest)
 	if err != nil {
 		return err
 	}
@@ -98,14 +94,7 @@ func prepareSecret(secret v1.Secret) *v1.Secret {
 }
 
 // moveHelmSecrets moves secrets owned by Helm from one cluster to another.
-// It requires source and target contexts in its arguments.
-func moveHelmSecrets(arguments []string) error {
-	if len(arguments) != 2 {
-		return fmt.Errorf("expected two context names in arguments, got %v instead", len(arguments))
-	}
-	sourceContext := arguments[0]
-	targetContext := arguments[1]
-
+func moveHelmSecrets(sourceContext, targetContext string) error {
 	err := deleteSecrets(targetContext, "bootstrap", "owner=helm")
 	if err != nil {
 		return err
@@ -187,10 +176,10 @@ func GetStepPath(step *Step, defaultPath string) string {
 	return defaultPath
 }
 
-func FilterSteps(steps []*Step, provider string) []*Step {
+func FilterSteps(steps []*Step) []*Step {
 	filteredSteps := make([]*Step, 0, len(steps))
 	for _, step := range steps {
-		if step.Provider == "" || step.Provider == provider {
+		if !step.Skip {
 			filteredSteps = append(filteredSteps, step)
 		}
 	}
@@ -205,16 +194,11 @@ func ExecuteSteps(steps []*Step) error {
 		return err
 	}
 
-	man, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
-	filteredSteps := FilterSteps(steps, man.Provider)
+	filteredSteps := FilterSteps(steps)
 	for i, step := range filteredSteps {
 		utils.Highlight("[%d/%d] %s \n", i+1, len(filteredSteps), step.Name)
 
-		if step.Skip != nil && step.Skip() {
+		if step.SkipFunc != nil && step.SkipFunc() {
 			utils.Highlight("Skipping step [%d/%d]", i+1, len(filteredSteps))
 			continue
 		}
@@ -273,10 +257,12 @@ func RunWithTempCredentials(function ActionFunc) error {
 		if err != nil {
 			return err
 		}
+
 		cred, err := cfg.Credentials.Retrieve(ctx)
 		if err != nil {
 			return err
 		}
+
 		pathPrefix := "cluster-api-provider-aws.cluster-api-provider-aws.managerBootstrapCredentials"
 		flags = []string{
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "AWS_ACCESS_KEY_ID", cred.AccessKeyID),
@@ -289,6 +275,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 		if err != nil {
 			return err
 		}
+
 		flags = []string{
 			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, string(credentials.JSON)),
 		}

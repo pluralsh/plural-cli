@@ -46,7 +46,6 @@ func newConfiguration(cliProvider provider.Provider, clusterProvider migratorapi
 		}, nil
 	case migratorapi.ClusterProviderAzure:
 		context := cliProvider.Context()
-
 		config := migratorapi.Configuration{
 			AzureConfiguration: &migratorapi.AzureConfiguration{
 				SubscriptionID: utils.ToString(context["SubscriptionId"]),
@@ -255,12 +254,7 @@ func tagResources(arguments []string) error {
 }
 
 // delinkTerraformState delinks resources managed by Cluster API from Terraform state.
-func delinkTerraformState(args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("path argument is missing")
-	}
-
-	path := args[0]
+func delinkTerraformState(path string) error {
 	planner := delinkerplan.NewPlanner(delinkerplan.WithTerraform(delinkerexec.WithDir(path)))
 
 	plan, err := planner.Plan()
@@ -291,7 +285,7 @@ func getMigrationFlags(prov string) []string {
 
 // getMigrationSteps returns list of steps to run during cluster migration.
 func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
-	projectManifest, err := manifest.FetchProject()
+	man, err := manifest.FetchProject()
 	if err != nil {
 		return nil, err
 	}
@@ -303,10 +297,10 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	bootstrapPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
 	terraformPath := filepath.Join(bootstrapPath, "terraform")
-	tags := GetProviderTags(projectManifest.Provider, projectManifest.Cluster)
-	flags := getMigrationFlags(projectManifest.Provider)
+	tags := GetProviderTags(man.Provider, man.Cluster)
+	flags := getMigrationFlags(man.Provider)
 
-	if projectManifest.Provider == api.ProviderAzure {
+	if man.Provider == api.ProviderAzure {
 		// Setting PLURAL_PACKAGES_UNINSTALL variable to avoid confirmation prompt on package uninstall.
 		err := os.Setenv("PLURAL_PACKAGES_UNINSTALL", "true")
 		if err != nil {
@@ -318,17 +312,17 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		{
 			Name: "Ensure Cluster API IAM role has access",
 			Execute: func(_ []string) error {
-				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", projectManifest.Project, projectManifest.Cluster)
+				roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s-capa-controller", man.Project, man.Cluster)
 				return bootstrapaws.AddRole(roleArn)
 			},
-			Provider: api.ProviderAWS,
+			Skip: man.Provider != api.ProviderAWS,
 		},
 		{
 			Name:       "Uninstall azure-identity package",
 			Args:       []string{"plural", "packages", "uninstall", "helm", "bootstrap", "azure-identity"},
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
-			Provider:   api.ProviderAzure,
+			Skip:       man.Provider != api.ProviderAzure,
 		},
 		{
 			Name:       "Clear package cache",
@@ -338,7 +332,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 				return nil
 			},
-			Provider: api.ProviderAzure,
+			Skip: man.Provider != api.ProviderAzure,
 		},
 		{
 			Name: "Normalize GCP provider value",
@@ -352,7 +346,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 				project.Provider = api.ProviderGCP
 				return project.Write(path)
 			},
-			Provider: api.ProviderGCP,
+			Skip: man.Provider != api.ProviderGCP,
 		},
 		{
 			Name:       "Set Cluster API flag",
@@ -396,18 +390,19 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		},
 		{
 			Name:    "Wait for cluster",
-			Args:    []string{"plural", "clusters", "wait", "bootstrap", projectManifest.Cluster},
+			Args:    []string{"plural", "clusters", "wait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
 		{
 			Name:    "Wait for machine pools",
-			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", projectManifest.Cluster},
+			Args:    []string{"plural", "clusters", "mpwait", "bootstrap", man.Cluster},
 			Execute: runPlural,
 		},
 		{
-			Name:    "Delink resources managed by Cluster API from Terraform state",
-			Args:    []string{terraformPath},
-			Execute: delinkTerraformState,
+			Name: "Delink resources managed by Cluster API from Terraform state",
+			Execute: func(_ []string) error {
+				return delinkTerraformState(terraformPath)
+			},
 		},
 		{
 			Name:       "Run deploy",

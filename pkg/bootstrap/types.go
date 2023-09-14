@@ -14,10 +14,9 @@ type Step struct {
 	Args       []string
 	TargetPath string
 	Execute    ActionFunc
-	Skip       ConditionFunc
-
-	// Provider non-empty marks step as provider-specific. These steps will be executed only if provider name matches.
-	Provider string
+	Skip       bool
+	SkipFunc   ConditionFunc
+	Retries    int
 }
 
 // Bootstrap is a representation of existing cluster to be migrated to Cluster API.
