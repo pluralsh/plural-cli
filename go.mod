@@ -303,4 +303,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
 
-replace github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914142946-d9737a94f38e
+replace github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914190909-3fe18acd95d7
