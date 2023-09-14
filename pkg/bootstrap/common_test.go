@@ -3,7 +3,6 @@ package bootstrap_test
 import (
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
@@ -54,18 +53,16 @@ func TestFilterSteps(t *testing.T) {
 	tests := []struct {
 		name          string
 		steps         []*bootstrap.Step
-		provider      string
 		expectedSteps []*bootstrap.Step
 	}{
 		{
-			name: `common steps should not be filtered`,
+			name: `steps without skip flag should not be filtered`,
 			steps: []*bootstrap.Step{
 				{
 					Name:    "Test",
 					Execute: doNothing,
 				},
 			},
-			provider: api.ProviderAzure,
 			expectedSteps: []*bootstrap.Step{
 				{
 					Name:    "Test",
@@ -74,49 +71,48 @@ func TestFilterSteps(t *testing.T) {
 			},
 		},
 		{
-			name: `steps for different providers should be filtered`,
+			name: `steps with skip flag should be filtered`,
 			steps: []*bootstrap.Step{
 				{
 					Name:    "Test",
 					Execute: doNothing,
 				},
 				{
-					Name:     "Test AWS",
-					Execute:  doNothing,
-					Provider: api.ProviderAWS,
+					Name:    "Test AWS",
+					Execute: doNothing,
+					Skip:    true,
 				},
 				{
-					Name:     "Test Azure",
-					Execute:  doNothing,
-					Provider: api.ProviderAzure,
+					Name:    "Test Azure",
+					Execute: doNothing,
+					Skip:    false,
 				},
 				{
-					Name:     "Test GCP",
-					Execute:  doNothing,
-					Provider: api.ProviderGCP,
+					Name:    "Test GCP",
+					Execute: doNothing,
+					Skip:    true,
 				},
 			},
-			provider: api.ProviderAzure,
 			expectedSteps: []*bootstrap.Step{
 				{
 					Name:    "Test",
 					Execute: doNothing,
 				},
 				{
-					Name:     "Test Azure",
-					Execute:  doNothing,
-					Provider: api.ProviderAzure,
+					Name:    "Test Azure",
+					Execute: doNothing,
+					Skip:    false,
 				},
 			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			filteredSteps := bootstrap.FilterSteps(test.steps, test.provider)
+			filteredSteps := bootstrap.FilterSteps(test.steps)
 			assert.Equal(t, len(filteredSteps), len(test.expectedSteps))
 			assert.True(t, slices.EqualFunc(filteredSteps, test.expectedSteps,
 				func(a *bootstrap.Step, b *bootstrap.Step) bool {
-					return a.Name == b.Name && a.Provider == b.Provider
+					return a.Name == b.Name && a.Skip == b.Skip
 				}))
 		})
 	}
