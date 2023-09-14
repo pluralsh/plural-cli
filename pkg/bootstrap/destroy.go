@@ -25,8 +25,6 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		return nil, err
 	}
 
-	clusterKubeContext := prov.KubeContext()
-
 	return []*Step{
 		{
 			Name:    "Create local bootstrap cluster",
@@ -45,7 +43,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		},
 		{
 			Name:    "Move resources from target to local cluster",
-			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", clusterKubeContext, "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", "kind-bootstrap"},
+			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", prov.KubeContext(), "--to-kubeconfig", kubeconfigPath, "--to-kubeconfig-context", localClusterContext},
 			Execute: runPlural,
 			SkipFunc: func() bool {
 				_, err := CheckClusterReadiness(man.Cluster, "bootstrap")
@@ -56,7 +54,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 		{
 			Name: "Move Helm secrets",
 			Execute: func(_ []string) error {
-				return moveHelmSecrets(clusterKubeContext, "kind-bootstrap")
+				return moveHelmSecrets(prov.KubeContext(), localClusterContext)
 			},
 			Retries: 2,
 		},

@@ -20,6 +20,8 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 )
 
+const localClusterContext = "kind-bootstrap"
+
 var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
 
 func applyManifest(manifest string) error {
@@ -213,9 +215,9 @@ func ExecuteSteps(steps []*Step) error {
 			return err
 		}
 
-		for i := 0; i <= step.Retries; i++ {
-			if i > 0 {
-				utils.Highlight("Retrying, attempt %d of %d...\n", i, step.Retries)
+		for j := 0; j <= step.Retries; j++ {
+			if j > 0 {
+				utils.Highlight("Retrying, attempt %d of %d...\n", j, step.Retries)
 			}
 			err = step.Execute(step.Args)
 			if err == nil {

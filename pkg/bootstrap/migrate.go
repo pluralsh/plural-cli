@@ -148,12 +148,12 @@ func generateValuesFile() error {
 		for _, subnet := range migratorValues.Cluster.AWSCloudSpec.NetworkSpec.Subnets {
 			availabilityZoneSet.Add(subnet.AvailabilityZone)
 		}
-		projectManifest, err := manifest.FetchProject()
+		man, err := manifest.FetchProject()
 		if err != nil {
 			return err
 		}
-		projectManifest.AvailabilityZones = availabilityZoneSet.List()
-		if err := projectManifest.Flush(); err != nil {
+		man.AvailabilityZones = availabilityZoneSet.List()
+		if err := man.Flush(); err != nil {
 			return err
 		}
 	}
@@ -201,56 +201,25 @@ func generateValuesFile() error {
 	}
 
 	utils.Success("values.yaml saved successfully!\n")
-
 	return nil
 }
 
-// GetProviderTags returns list of tags to set on provider resources during migration.
-func GetProviderTags(prov, cluster string) []string {
+// GetProviderTags returns map of tags to set on provider resources during migration.
+func GetProviderTags(prov, cluster string) map[string]string {
 	switch prov {
 	case api.ProviderAWS:
-		return []string{
-			fmt.Sprintf("kubernetes.io/cluster/%s=owned", cluster),
-			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s=owned", cluster),
+		return map[string]string{
+			fmt.Sprintf("kubernetes.io/cluster/%s", cluster):                        "owned",
+			fmt.Sprintf("sigs.k8s.io/cluster-api-provider-aws/cluster/%s", cluster): "owned",
 		}
 	case api.ProviderAzure:
-		return []string{
-			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s=owned", cluster),
-			"sigs.k8s.io_cluster-api-provider-azure_role=common",
+		return map[string]string{
+			fmt.Sprintf("sigs.k8s.io_cluster-api-provider-azure_cluster_%s", cluster): "owned",
+			"sigs.k8s.io_cluster-api-provider-azure_role":                             "common",
 		}
 	default:
-		return []string{}
+		return map[string]string{}
 	}
-}
-
-// GetProviderTagsMap returns map of tags to set on provider resources during migration.
-func GetProviderTagsMap(arguments []string) (map[string]string, error) {
-	tags := map[string]string{}
-	for _, arg := range arguments {
-		split := strings.Split(arg, "=")
-		if len(split) == 2 {
-			tags[split[0]] = split[1]
-		} else {
-			return nil, fmt.Errorf("invalid tag format")
-		}
-	}
-
-	return tags, nil
-}
-
-// tagResources adds Cluster API tags on provider resources.
-func tagResources(arguments []string) error {
-	m, err := getMigrator()
-	if err != nil {
-		return err
-	}
-
-	tags, err := GetProviderTagsMap(arguments)
-	if err != nil {
-		return err
-	}
-
-	return m.AddTags(tags)
 }
 
 // delinkTerraformState delinks resources managed by Cluster API from Terraform state.
@@ -297,7 +266,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 
 	bootstrapPath := pathing.SanitizeFilepath(filepath.Join(gitRootDir, "bootstrap"))
 	terraformPath := filepath.Join(bootstrapPath, "terraform")
-	tags := GetProviderTags(man.Provider, man.Cluster)
 	flags := getMigrationFlags(man.Provider)
 
 	if man.Provider == api.ProviderAzure {
@@ -330,7 +298,6 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			TargetPath: gitRootDir,
 			Execute: func(_ []string) error {
 				api.ClearPackageCache()
-
 				return nil
 			},
 			Skip: man.Provider != api.ProviderAzure,
@@ -380,9 +347,15 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Execute: runPlural,
 		},
 		{
-			Name:    "Add Cluster API tags for provider resources",
-			Args:    tags,
-			Execute: tagResources,
+			Name: "Add Cluster API tags for provider resources",
+			Execute: func(_ []string) error {
+				m, err := getMigrator()
+				if err != nil {
+					return err
+				}
+
+				return m.AddTags(GetProviderTags(man.Provider, man.Cluster))
+			},
 		},
 		{
 			Name:    "Deploy cluster",

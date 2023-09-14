@@ -103,7 +103,7 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		{
 			Name: "Install Network",
 			Execute: func(_ []string) error {
-				return InstallCilium(man.Cluster)
+				return installCilium(man.Cluster)
 			},
 			Skip: man.Provider != api.ProviderKind,
 		},
@@ -167,14 +167,14 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 		},
 		{
 			Name:    "Move resources from local to target cluster",
-			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", "kind-bootstrap", "--to-kubeconfig", kubeconfigPath},
+			Args:    []string{"plural", "bootstrap", "cluster", "move", "--kubeconfig-context", localClusterContext, "--to-kubeconfig", kubeconfigPath},
 			Execute: runPlural,
 			Retries: 2,
 		},
 		{
 			Name: "Move Helm secrets",
 			Execute: func(_ []string) error {
-				return moveHelmSecrets("kind-bootstrap", prov.KubeContext())
+				return moveHelmSecrets(localClusterContext, prov.KubeContext())
 			},
 			Retries: 2,
 		},

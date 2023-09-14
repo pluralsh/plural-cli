@@ -30,7 +30,7 @@ const (
 	ciliumRepoUrl  = "https://helm.cilium.io/"
 )
 
-func InstallCilium(cluster string) error {
+func installCilium(cluster string) error {
 	namespace := "kube-system"
 	cmd := exec.Command("kind", "export", "kubeconfig", "--name", cluster)
 	if err := utils.Execute(cmd); err != nil {
@@ -55,6 +55,7 @@ func InstallCilium(cluster string) error {
 	if err != nil {
 		return err
 	}
+
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
 	if _, err := histClient.Run(ciliumRepoName); errors.Is(err, driver.ErrReleaseNotFound) {
@@ -135,6 +136,5 @@ func addCiliumRepo() error {
 	}
 
 	f.Update(&c)
-
 	return f.WriteFile(repoFile, 0644)
 }
