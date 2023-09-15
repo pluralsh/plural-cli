@@ -8,6 +8,7 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"helm.sh/helm/v3/pkg/chartutil"
 )
 
 var categories = []string{
@@ -77,7 +78,7 @@ func ApplicationScaffold(client api.Client) error {
 		return err
 	}
 
-	if err := utils.Exec("helm", "create", app); err != nil {
+	if err := createHelm(app); err != nil {
 		return err
 	}
 
@@ -92,4 +93,10 @@ func ApplicationScaffold(client api.Client) error {
 	}
 
 	return nil
+}
+
+func createHelm(name string) error {
+	chartname := filepath.Base(name)
+	_, err := chartutil.Create(chartname, filepath.Dir(name))
+	return err
 }
