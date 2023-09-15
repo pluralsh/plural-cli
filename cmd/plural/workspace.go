@@ -8,7 +8,9 @@ import (
 
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
 	"github.com/urfave/cli"
 )
@@ -19,6 +21,18 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Name:   "kube-init",
 			Usage:  "generates kubernetes credentials for this subworkspace",
 			Action: latestVersion(kubeInit),
+		},
+		{
+			Name:      "readme",
+			Usage:     "generate chart readme for an app",
+			ArgsUsage: "NAME",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "dry-run",
+					Usage: "output to stdout instead of to a file",
+				},
+			},
+			Action: latestVersion(func(c *cli.Context) error { return appReadme(c.Args().Get(0), c.Bool("dry-run")) }),
 		},
 		{
 			Name:      "helm",
@@ -185,4 +199,14 @@ func (p *Plural) mapkubeapis(c *cli.Context) error {
 	}
 
 	return minimal.MapKubeApis()
+}
+
+func appReadme(name string, dryRun bool) error {
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Join(repoRoot, name, "helm", name)
+	return scaffold.Readme(dir, dryRun)
 }
