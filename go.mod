@@ -43,6 +43,7 @@ require (
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -51,6 +52,7 @@ require (
 	github.com/pluralsh/polly v0.1.1
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.33.0
+	github.com/spf13/viper v1.8.1
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.10
 	github.com/wailsapp/wails/v2 v2.4.1
@@ -97,6 +99,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
@@ -112,10 +115,15 @@ require (
 	github.com/leaanthony/go-ansi-parser v1.0.1 // indirect
 	github.com/leaanthony/gosod v1.0.3 // indirect
 	github.com/leaanthony/slicer v1.5.0 // indirect
+	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pluralsh/controller-reconcile-helper v0.0.4 // indirect
+	github.com/spf13/afero v1.8.0 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tkrajina/go-reflector v0.5.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
@@ -123,6 +131,7 @@ require (
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
+	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -251,7 +260,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.8.6 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -293,3 +302,5 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
+
+replace github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914190909-3fe18acd95d7
