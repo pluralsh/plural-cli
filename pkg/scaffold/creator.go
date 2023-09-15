@@ -98,8 +98,5 @@ func ApplicationScaffold(client api.Client) error {
 func createHelm(name string) error {
 	chartname := filepath.Base(name)
 	_, err := chartutil.Create(chartname, filepath.Dir(name))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
