@@ -6,13 +6,15 @@ import (
 	"time"
 
 	"github.com/cert-manager/cert-manager/pkg/issuer/acme/dns/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
+
 	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 const (
@@ -20,7 +22,7 @@ const (
 )
 
 // getCluster returns Cluster resource.
-func getCluster(name, namespace string) (*capi.Cluster, error) {
+func getCluster(kubeContext, name, namespace string) (*capi.Cluster, error) {
 	prov, err := provider.GetProvider()
 	if err != nil {
 		return nil, err
@@ -31,7 +33,13 @@ func getCluster(name, namespace string) (*capi.Cluster, error) {
 		return nil, err
 	}
 
-	kubeConf, err := kubernetes.KubeConfig()
+	var kubeConf *rest.Config
+	if len(kubeContext) > 0 {
+		kubeConf, err = kubernetes.KubeConfigWithContext(kubeContext)
+	} else {
+		kubeConf, err = kubernetes.KubeConfig()
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +55,16 @@ func getCluster(name, namespace string) (*capi.Cluster, error) {
 	return client.Get(ctx, name, metav1.GetOptions{})
 }
 
+func IsClusterPhase(context, name, namespace string, phase capi.ClusterPhase) (bool, error) {
+	c, err := getCluster(context, name, namespace)
+	if err != nil {
+		return false, err
+	}
+
+	return c.Status.GetTypedPhase() == phase, nil
+}
+
+
 // CheckClusterReadiness checks if Cluster API cluster is in ready state.
 func CheckClusterReadiness(name, namespace string) (bool, error) {
 	utils.Highlight("Checking cluster status")
@@ -54,7 +72,7 @@ func CheckClusterReadiness(name, namespace string) (bool, error) {
 	err := util.WaitFor(10*time.Second, time.Second, func() (bool, error) {
 		utils.Highlight(".")
 
-		c, err := getCluster(name, namespace)
+		c, err := getCluster("", name, namespace)
 		if err != nil {
 			return false, err
 		}

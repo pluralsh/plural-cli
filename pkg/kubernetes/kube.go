@@ -87,12 +87,21 @@ func (k *kube) GetRestClient() *restclient.RESTClient {
 }
 
 func KubeConfig() (*rest.Config, error) {
+	return KubeConfigWithContext("")
+}
+
+func KubeConfigWithContext(context string) (*rest.Config, error) {
 	if InKubernetes() {
 		return rest.InClusterConfig()
 	}
 
 	homedir, _ := os.UserHomeDir()
 	conf := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
+
+	if len(context) > 0 {
+		return buildConfigFromFlags(context, conf)
+	}
+
 	return clientcmd.BuildConfigFromFlags("", conf)
 }
 

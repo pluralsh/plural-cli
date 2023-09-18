@@ -4,8 +4,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/cmd/clusterctl/client"
-	"sigs.k8s.io/kind/pkg/cluster"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -14,11 +14,26 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/backup"
 )
 
-func bootstrapClusterExists() bool {
-	clusterName := "bootstrap"
-	p := cluster.NewProvider()
-	n, _ := p.ListNodes(clusterName)
-	return len(n) > 0
+func shouldDeleteProviderCluster(cluster, namespace string) bool {
+	clusterExists := bootstrapClusterExists()
+	deleting, err := IsClusterPhase(localClusterContext, cluster, namespace, capi.ClusterPhaseDeleting)
+
+	if err != nil {
+		return false
+	}
+
+	return clusterExists && !deleting
+}
+
+func shouldDeleteBootstrapCluster(cluster, namespace string) bool {
+	clusterExists := bootstrapClusterExists()
+	deleting, err := IsClusterPhase(localClusterContext, cluster, namespace, capi.ClusterPhaseDeleting)
+
+	if err != nil {
+		return false
+	}
+
+	return clusterExists && deleting
 }
 
 // getBootstrapSteps returns list of steps to run during cluster bootstrap.
@@ -49,20 +64,18 @@ func getBootstrapSteps(runPlural ActionFunc, additionalFlags []string) ([]*Step,
 
 	return []*Step{
 		{
-			Name: "Destroy provider cluster",
-			Execute: func(_ []string) error {
-				return nil
-			},
-			Confirm: "Existing cluster found. Would you like to try and destroy the provider cluster?", // TODO: improve message
-			Skip: true, // TODO add check if bootstrap cluster exists and contains cluster CRD in non-deleting state
+			Name:    "Destroy cluster API",
+			Args:    []string{"plural", "bootstrap", "cluster", "destroy-cluster-api", man.Cluster},
+			Execute: runPlural,
+			Confirm: "It looks like your existing bootstrap cluster has a provider cluster configuration. All resources at your provider should be removed before continuing. Would you like to try and remove it automatically?",
+			Skip:    !shouldDeleteProviderCluster(man.Cluster, "bootstrap"),
 		},
 		{
-			Name: "Destroy local bootstrap cluster",
-			Execute: func(_ []string) error {
-				return nil
-			},
-			Confirm: "Existing bootstrap cluster found. Would you like to destroy it first?", // TODO: improve message
-			Skip: true, // TODO add check if bootstrap cluster exists and cluster CRD is in deleting state
+			Name:    "Destroy local bootstrap cluster",
+			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
+			Execute: runPlural,
+			Confirm: "It looks like your existing bootstrap cluster has a provider cluster configuration in a non-recoverable state. Please make sure to manually delete all existing cluster resources at your provider before continuing. Would you like to destroy the bootstrap cluster?",
+			Skip:    !shouldDeleteBootstrapCluster(man.Cluster, "bootstrap"),
 		},
 		{
 			Name:    "Create local bootstrap cluster",

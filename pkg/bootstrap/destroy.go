@@ -85,7 +85,7 @@ func getDestroySteps(destroy func() error, runPlural ActionFunc, additionalFlags
 			Execute: runPlural,
 		},
 		{
-			Name:    "Destroy local cluster",
+			Name:    "Destroy local bootstrap cluster",
 			Args:    []string{"plural", "--bootstrap", "bootstrap", "cluster", "delete", "bootstrap"},
 			Execute: runPlural,
 		},
