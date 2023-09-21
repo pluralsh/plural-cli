@@ -5,12 +5,13 @@ import (
 	"path"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/scaffold/template"
 	pluraltest "github.com/pluralsh/plural/pkg/test"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 )
 
 func TestFromLuaTemplateComplex(t *testing.T) {
@@ -417,6 +418,41 @@ test:
       CYPRESS_BASE_URL: https://console.onplural.sh/
       CYPRESS_EMAIL: test@plural.sh
       CYPRESS_PASSWORD: xyz
+`,
+		},
+		{
+			name: `test enabled flag set to false`,
+			vals: map[string]interface{}{
+				"enabled": false,
+			},
+			script: `output={
+				enabled=Var.enabled
+			}`,
+			expectedResponse: `global: {}
+test:
+  enabled: false
+`,
+		},
+		{
+			name:   `test enabled flag defaulting`,
+			vals:   map[string]interface{}{},
+			script: `output={}`,
+			expectedResponse: `global: {}
+test:
+  enabled: true
+`,
+		},
+		{
+			name: `test enabled flag set to true`,
+			vals: map[string]interface{}{
+				"enabled": true,
+			},
+			script: `output={
+				enabled=Var.enabled
+			}`,
+			expectedResponse: `global: {}
+test:
+  enabled: true
 `,
 		},
 	}

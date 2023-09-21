@@ -5,10 +5,11 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/imdario/mergo"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
+
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interface{}, error) {
@@ -41,11 +42,15 @@ func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interfac
 }
 
 func FromLuaTemplate(vals map[string]interface{}, globals map[string]interface{}, output map[string]map[string]interface{}, chartName, tplate string) error {
+	var subVals map[string]interface{}
 	subVals, err := ExecuteLua(vals, tplate)
 	if err != nil {
 		return err
 	}
-	subVals["enabled"] = true
+
+	if _, exists := subVals["enabled"]; !exists {
+		subVals["enabled"] = true
+	}
 
 	// need to handle globals in a dedicated way
 	if glob, ok := subVals["global"]; ok {
