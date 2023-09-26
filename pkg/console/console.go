@@ -14,6 +14,7 @@ type consoleClient struct {
 
 type ConsoleClient interface {
 	ListClusters() ([]Cluster, error)
+	ListClusterServices() ([]ServiceDeployment, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
