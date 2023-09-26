@@ -93,8 +93,19 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 }
 
 func (p *Plural) handleListCDRepositories(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	repos, err := p.ConsoleClient.ListRepositories()
+	if err != nil {
+		return err
+	}
 
-	return nil
+	headers := []string{"ID", "URL"}
+	return utils.PrintTable(repos, headers, func(r console.GitRepository) ([]string, error) {
+		return []string{r.Id, r.URL}, nil
+	})
+
 }
 
 func (p *Plural) handleListClusterServices(c *cli.Context) error {

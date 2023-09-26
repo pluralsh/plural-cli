@@ -20,3 +20,18 @@ func (c *consoleClient) CreateRepository(url string, privateKey, passphrase, use
 
 	return convertGitRepository(result.CreateGitRepository), nil
 }
+
+func (c *consoleClient) ListRepositories() ([]GitRepository, error) {
+	result, err := c.pluralClient.ListGitRepositories(c.ctx, nil, nil, nil)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "CreateGitRepository")
+	}
+
+	var output []GitRepository
+	for _, repo := range result.GitRepositories.Edges {
+		r := convertGitRepository(repo.Node)
+		output = append(output, *r)
+	}
+
+	return output, nil
+}
