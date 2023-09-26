@@ -44,7 +44,14 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 		{
 			Name:   "create",
 			Action: latestVersion(p.handleCreateCDRepository),
-			Usage:  "create repository",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "url", Usage: "git repo url"},
+				cli.StringFlag{Name: "privateKey", Usage: "git repo private key"},
+				cli.StringFlag{Name: "passphrase", Usage: "git repo passphrase"},
+				cli.StringFlag{Name: "username", Usage: "git repo username"},
+				cli.StringFlag{Name: "password", Usage: "git repo password"},
+			},
+			Usage: "create repository",
 		},
 	}
 }
@@ -52,10 +59,9 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 func (p *Plural) cdServiceCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:      "list",
-			ArgsUsage: "CLUSTER_ID",
-			Action:    latestVersion(requireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
-			Usage:     "list cluster services",
+			Name:   "list",
+			Action: latestVersion(p.handleListClusterServices),
+			Usage:  "list cluster services",
 		},
 	}
 }
@@ -71,8 +77,19 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 }
 
 func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	repo, err := p.ConsoleClient.CreateRepository(c.String("url"), getFlag(c.String("privateKey")),
+		getFlag(c.String("passphrase")), getFlag(c.String("username")), getFlag(c.String("password")))
+	if err != nil {
+		return err
+	}
 
-	return nil
+	headers := []string{"ID", "URL"}
+	return utils.PrintTable([]console.GitRepository{*repo}, headers, func(r console.GitRepository) ([]string, error) {
+		return []string{r.Id, r.URL}, nil
+	})
 }
 
 func (p *Plural) handleListCDRepositories(c *cli.Context) error {
@@ -93,8 +110,6 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	return utils.PrintTable(sd, headers, func(sd console.ServiceDeployment) ([]string, error) {
 		return []string{sd.Id, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder}, nil
 	})
-
-	return nil
 }
 
 func (p *Plural) handleListClusters(c *cli.Context) error {
@@ -113,4 +128,11 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 	})
 
 	return nil
+}
+
+func getFlag(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
