@@ -3,16 +3,16 @@ package plural
 import (
 	"os"
 
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
-
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/exp"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -23,6 +23,7 @@ const ApplicationName = "plural"
 
 type Plural struct {
 	api.Client
+	ConsoleClient console.ConsoleClient
 	kubernetes.Kube
 	HelmConfiguration *action.Configuration
 }
@@ -34,6 +35,17 @@ func (p *Plural) InitKube() error {
 			return err
 		}
 		p.Kube = kube
+	}
+	return nil
+}
+
+func (p *Plural) InitConsoleClient(token, url string) error {
+	if p.ConsoleClient == nil {
+		consoleClient, err := console.NewConsoleClient(token, url)
+		if err != nil {
+			return err
+		}
+		p.ConsoleClient = consoleClient
 	}
 	return nil
 }
@@ -438,6 +450,26 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:    "utilize openai to get help with your setup",
 			Action:   p.aiHelp,
 			Category: "Debugging",
+		},
+		{
+			Name:        "deployments",
+			Usage:       "view and manage plural deployments",
+			Subcommands: p.cdCommands(),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "token",
+					Usage:       "console token",
+					EnvVar:      "PLURAL_CONSOLE_TOKEN",
+					Destination: &consoleToken,
+				},
+				cli.StringFlag{
+					Name:        "url",
+					Usage:       "console url address",
+					EnvVar:      "PLURAL_CONSOLE_URL",
+					Destination: &consoleURL,
+				},
+			},
+			Category: "CD",
 		},
 		{
 			Name:    "template",
