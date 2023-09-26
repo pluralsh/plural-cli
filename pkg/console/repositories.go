@@ -24,7 +24,7 @@ func (c *consoleClient) CreateRepository(url string, privateKey, passphrase, use
 func (c *consoleClient) ListRepositories() ([]GitRepository, error) {
 	result, err := c.pluralClient.ListGitRepositories(c.ctx, nil, nil, nil)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "CreateGitRepository")
+		return nil, api.GetErrorResponse(err, "ListRepositories")
 	}
 
 	var output []GitRepository

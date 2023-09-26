@@ -4,7 +4,7 @@ import "github.com/pluralsh/plural/pkg/api"
 
 func (c *consoleClient) ListClusterServices() ([]ServiceDeployment, error) {
 	output := []ServiceDeployment{}
-	result, err := c.pluralClient.ListClusterServices(c.ctx)
+	result, err := c.pluralClient.ListServiceDeployment(c.ctx)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "ListClusterServices")
 	}
