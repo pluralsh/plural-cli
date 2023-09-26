@@ -3,8 +3,9 @@ package console
 import (
 	"context"
 	"fmt"
-	consoleclient "github.com/pluralsh/console-client-go"
 	"net/http"
+
+	consoleclient "github.com/pluralsh/console-client-go"
 )
 
 type consoleClient struct {
@@ -18,11 +19,10 @@ type ConsoleClient interface {
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
-	authHeader := func(req *http.Request) {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
 	return &consoleClient{
-		pluralClient: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), authHeader),
-		ctx:          context.Background(),
+		pluralClient: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
+			req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
+		}),
+		ctx: context.Background(),
 	}, nil
 }
