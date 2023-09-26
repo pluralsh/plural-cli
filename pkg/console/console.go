@@ -15,7 +15,7 @@ type consoleClient struct {
 
 type ConsoleClient interface {
 	ListClusters() ([]Cluster, error)
-	ListClusterServices() ([]ServiceDeployment, error)
+	ListClusterServices(clusterId string) ([]ServiceDeployment, error)
 	CreateRepository(url string, privateKey, passphrase, username, password *string) (*GitRepository, error)
 	ListRepositories() ([]GitRepository, error)
 }
