@@ -7,24 +7,22 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"os/exec"
 	"regexp"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/go-autorest/autorest/to"
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -32,7 +30,6 @@ import (
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	pluralerr "github.com/pluralsh/plural/pkg/utils/errors"
-	v1 "k8s.io/api/core/v1"
 )
 
 // ResourceGroupClient is the subset of functions we need from armresources.VirtualResourceGroupsClient;
@@ -43,10 +40,10 @@ type ResourceGroupClient interface {
 }
 
 type AccountsClient interface {
-	GetProperties(ctx context.Context, resourceGroupName string, accountName string, expand storage.AccountExpand) (result storage.Account, err error)
-	Create(ctx context.Context, resourceGroupName string, accountName string, parameters storage.AccountCreateParameters) (result storage.AccountsCreateFuture, err error)
-	ListKeys(ctx context.Context, resourceGroupName string, accountName string, expand storage.ListKeyExpand) (result storage.AccountListKeysResult, err error)
-	List(ctx context.Context) (result storage.AccountListResultPage, err error)
+	GetProperties(ctx context.Context, resourceGroupName string, accountName string, options *armstorage.AccountsClientGetPropertiesOptions) (armstorage.AccountsClientGetPropertiesResponse, error)
+	BeginCreate(ctx context.Context, resourceGroupName string, accountName string, parameters armstorage.AccountCreateParameters, options *armstorage.AccountsClientBeginCreateOptions) (*runtime.Poller[armstorage.AccountsClientCreateResponse], error)
+	NewListPager(options *armstorage.AccountsClientListOptions) *runtime.Pager[armstorage.AccountsClientListResponse]
+	ListKeys(ctx context.Context, resourceGroupName string, accountName string, options *armstorage.AccountsClientListKeysOptions) (armstorage.AccountsClientListKeysResponse, error)
 }
 
 type ContainerClient interface {
@@ -55,29 +52,30 @@ type ContainerClient interface {
 }
 
 type ClientSet struct {
-	Groups         ResourceGroupClient
-	Accounts       AccountsClient
-	Containers     ContainerClient
-	AutorestClient autorest.Client
-	AccountClient  storage.AccountsClient
+	Groups     ResourceGroupClient
+	Accounts   AccountsClient
+	Containers ContainerClient
 }
 
 func GetClientSet(subscriptionId string) (*ClientSet, error) {
-	resourceGroupClient, err := getResourceGroupClient(subscriptionId)
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, err
 	}
 
-	storageAccountsClient, err := getStorageAccountsClient(subscriptionId)
+	resourceGroupClient, err := armresources.NewResourceGroupsClient(subscriptionId, cred, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	storageAccountsClient, err := armstorage.NewAccountsClient(subscriptionId, cred, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ClientSet{
-		Groups:         resourceGroupClient,
-		Accounts:       storageAccountsClient,
-		AutorestClient: storageAccountsClient.Client,
-		AccountClient:  storageAccountsClient,
+		Groups:   resourceGroupClient,
+		Accounts: storageAccountsClient,
 	}, nil
 }
 
@@ -127,7 +125,7 @@ var azureSurvey = []*survey.Question{
 	{
 		Name:     "storage",
 		Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
-		Validate: utils.ValidateAlphaNumeric,
+		Validate: utils.ValidateStorageAccountName,
 	},
 	{
 		Name:     "region",
@@ -137,7 +135,7 @@ var azureSurvey = []*survey.Question{
 	{
 		Name:     "resource",
 		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
-		Validate: utils.ValidateAlphaNumExtended,
+		Validate: utils.ValidateResourceGroupName,
 	},
 }
 
@@ -157,10 +155,12 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	if err != nil {
 		return
 	}
+
 	clients, err := GetClientSet(subId)
 	if err != nil {
 		return
 	}
+
 	prov = &AzureProvider{
 		resp.Cluster,
 		resp.Resource,
@@ -178,7 +178,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  prov.Cluster(),
 		Project:  prov.Project(),
-		Provider: AZURE,
+		Provider: api.ProviderAzure,
 		Region:   prov.Region(),
 		Context:  prov.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -201,29 +201,29 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil, clients}, nil
 }
 
-func (azure *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := azure.CreateResourceGroup(azure.Project()); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", azure.Project()))
+func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
+	if err := az.CreateResourceGroup(az.Project()); err != nil {
+		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", az.Project()))
 	}
 
-	if err := azure.CreateBucket(azure.bucket); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", azure.bucket))
+	if err := az.CreateBucket(az.bucket); err != nil {
+		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", az.bucket))
 	}
 
-	ctx["Region"] = azure.Region()
-	ctx["Bucket"] = azure.Bucket()
+	ctx["Region"] = az.Region()
+	ctx["Bucket"] = az.Bucket()
 	ctx["Prefix"] = prefix
-	ctx["ResourceGroup"] = azure.Project()
-	ctx["__CLUSTER__"] = azure.Cluster()
-	ctx["Context"] = azure.Context()
+	ctx["ResourceGroup"] = az.Project()
+	ctx["__CLUSTER__"] = az.Cluster()
+	ctx["Context"] = az.Context()
 	if cluster, ok := ctx["cluster"]; ok {
 		ctx["Cluster"] = cluster
 		ctx["ClusterCreated"] = true
 	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, azure.Cluster())
+		ctx["Cluster"] = fmt.Sprintf(`"%s"`, az.Cluster())
 	}
 
-	scaffold, err := GetProviderScaffold("AZURE", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAzure), version)
 	if err != nil {
 		return "", err
 	}
@@ -236,7 +236,7 @@ func (az *AzureProvider) CreateBucket(bucket string) (err error) {
 		return
 	}
 
-	err = az.upsertStorageContainer(acc, bucket)
+	err = az.upsertStorageContainer(*acc, bucket)
 	if err != nil {
 		return
 	}
@@ -252,10 +252,7 @@ func (az *AzureProvider) CreateResourceGroup(resourceGroup string) error {
 
 	if isNotFoundResourceGroup(err) {
 		utils.LogInfo().Printf("The resource group %s is not found, creating ...", resourceGroup)
-		param := armresources.ResourceGroup{
-			Location: to.StringPtr(az.region),
-		}
-
+		param := armresources.ResourceGroup{Location: to.Ptr(az.region)}
 		_, err := az.clients.Groups.CreateOrUpdate(ctx, resourceGroup, param, nil)
 		if err != nil {
 			return err
@@ -266,18 +263,22 @@ func (az *AzureProvider) CreateResourceGroup(resourceGroup string) error {
 	return nil
 }
 
-func (azure *AzureProvider) KubeConfig() error {
+func (az *AzureProvider) KubeConfig() error {
 	if kubernetes.InKubernetes() {
 		return nil
 	}
 
 	cmd := exec.Command(
-		"az", "aks", "get-credentials", "--overwrite-existing", "--name", azure.cluster, "--resource-group", azure.resourceGroup)
+		"az", "aks", "get-credentials", "--overwrite-existing", "--name", az.cluster, "--resource-group", az.resourceGroup)
 	return utils.Execute(cmd)
 }
 
+func (az *AzureProvider) KubeContext() string {
+	return az.cluster
+}
+
 func (az *AzureProvider) Name() string {
-	return AZURE
+	return api.ProviderAzure
 }
 
 func (az *AzureProvider) Cluster() string {
@@ -308,11 +309,11 @@ func (*AzureProvider) Permissions() (permissions.Checker, error) {
 	return permissions.NullChecker(), nil
 }
 
-func (azure *AzureProvider) Flush() error {
-	if azure.writer == nil {
+func (az *AzureProvider) Flush() error {
+	if az.writer == nil {
 		return nil
 	}
-	return azure.writer()
+	return az.writer()
 }
 
 func (az *AzureProvider) Decommision(node *v1.Node) error {
@@ -343,101 +344,101 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 	// This method scale down the virtualMachineScaleSet otherwise the VM will be recreated
 	pollerDeallocate, err := client.BeginDeallocate(ctx, resourceGroup, virtualMachineScaleSet, &armcompute.VirtualMachineScaleSetsClientBeginDeallocateOptions{
 		VMInstanceIDs: &armcompute.VirtualMachineScaleSetVMInstanceIDs{
-			InstanceIDs: []*string{to.StringPtr(InstanceID)},
+			InstanceIDs: []*string{to.Ptr(InstanceID)},
 		},
 	})
 	if err != nil {
 		return err
 	}
-	if _, err = pollerDeallocate.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
-		Frequency: 1 * time.Second,
-	}); err != nil {
+	if _, err = pollerDeallocate.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{Frequency: time.Second}); err != nil {
 		return err
 	}
 
 	pollerDelete, err := client.BeginDeleteInstances(ctx, resourceGroup, virtualMachineScaleSet, armcompute.VirtualMachineScaleSetVMInstanceRequiredIDs{
-		InstanceIDs: []*string{
-			to.StringPtr(InstanceID)},
-	}, &armcompute.VirtualMachineScaleSetsClientBeginDeleteInstancesOptions{ForceDeletion: to.BoolPtr(true)})
+		InstanceIDs: []*string{to.Ptr(InstanceID)}}, &armcompute.VirtualMachineScaleSetsClientBeginDeleteInstancesOptions{ForceDeletion: to.Ptr(true)})
 	if err != nil {
 		return err
 	}
-	if _, err := pollerDelete.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{
-		Frequency: 1 * time.Second,
-	}); err != nil {
+	if _, err := pollerDelete.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{Frequency: time.Second}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (az *AzureProvider) getStorageAccount(account string) (storage.Account, error) {
+func (az *AzureProvider) getStorageAccount(account string) (*armstorage.Account, error) {
 	ctx := context.Background()
-	saList, err := az.clients.Accounts.List(ctx)
-	if err != nil {
-		return storage.Account{}, err
-	}
-	// check if storage account belongs to the same resource group
-	for _, sa := range saList.Values() {
-		if *sa.Name == account {
-			err, resourceGroup := getPathElement(*sa.ID, "resourceGroups")
-			if err != nil {
-				return storage.Account{}, err
+	pager := az.clients.Accounts.NewListPager(nil)
+
+	for pager.More() {
+		nextResult, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to advance page: %w", err)
+		}
+
+		for _, sa := range nextResult.Value {
+			if *sa.Name == account {
+				err, resourceGroup := getPathElement(*sa.ID, "resourceGroups")
+				if err != nil {
+					return nil, fmt.Errorf("failed to read Storage Account's Resource Group: %w", err)
+				}
+
+				if resourceGroup != az.resourceGroup {
+					return nil, fmt.Errorf("the '%s' Storage Account already exists and belongs to the '%s' Resource Group", account, resourceGroup)
+				}
+				break
 			}
-			if resourceGroup != az.resourceGroup {
-				return storage.Account{}, fmt.Errorf("The '%s' Storage Account already exists and belongs to the '%s' Resource Group.", account, resourceGroup)
-			}
-			break
 		}
 	}
 
-	return az.clients.Accounts.GetProperties(ctx, az.resourceGroup, account, storage.AccountExpandBlobRestoreStatus)
+	res, err := az.clients.Accounts.GetProperties(ctx, az.resourceGroup, account, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.Account, nil
 }
 
-func (az *AzureProvider) upsertStorageAccount(account string) (storage.Account, error) {
+func (az *AzureProvider) upsertStorageAccount(account string) (*armstorage.Account, error) {
 	acc, err := az.getStorageAccount(account)
 	if err != nil && !inNotFoundStorageAccount(err) {
-		return storage.Account{}, err
+		return nil, err
 	}
 
 	if inNotFoundStorageAccount(err) {
 		utils.LogInfo().Printf("The storage account %s is not found, creating ...", account)
 		ctx := context.Background()
-		future, err := az.clients.Accounts.Create(
-			ctx,
-			az.resourceGroup,
-			account,
-			storage.AccountCreateParameters{
-				Sku:                               &storage.Sku{Name: storage.StandardLRS},
-				Kind:                              storage.StorageV2,
-				Location:                          to.StringPtr(az.region),
-				AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
-			})
-
+		poller, err := az.clients.Accounts.BeginCreate(ctx, az.resourceGroup, account,
+			armstorage.AccountCreateParameters{
+				SKU:        &armstorage.SKU{Name: to.Ptr(armstorage.SKUNameStandardLRS)},
+				Kind:       to.Ptr(armstorage.KindStorageV2),
+				Location:   to.Ptr(az.region),
+				Properties: &armstorage.AccountPropertiesCreateParameters{},
+			}, nil)
 		if err != nil {
-			return storage.Account{}, err
+			return nil, err
 		}
 
-		err = future.WaitForCompletionRef(ctx, az.clients.AutorestClient)
+		res, err := poller.PollUntilDone(ctx, &runtime.PollUntilDoneOptions{Frequency: time.Second})
 		if err != nil {
-			return storage.Account{}, err
+			return nil, err
 		}
 
-		return future.Result(az.clients.AccountClient)
+		return &res.Account, nil
 	}
 
 	return acc, nil
 }
 
-func (az *AzureProvider) upsertStorageContainer(acc storage.Account, name string) error {
+func (az *AzureProvider) upsertStorageContainer(acc armstorage.Account, name string) error {
 	ctx := context.Background()
 	accountName := *acc.Name
 
-	resp, err := az.clients.Accounts.ListKeys(ctx, az.resourceGroup, accountName, storage.Kerb)
+	resp, err := az.clients.Accounts.ListKeys(ctx, az.resourceGroup, accountName, to.Ptr(armstorage.AccountsClientListKeysOptions{Expand: to.Ptr("kerb")}))
 	if err != nil {
 		return err
 	}
-	key := *(((*resp.Keys)[0]).Value)
+	key := *resp.Keys[0].Value
 
 	if az.clients.Containers == nil {
 		c, _ := azblob.NewSharedKeyCredential(accountName, key)
@@ -486,43 +487,12 @@ func isNotFoundResourceGroup(err error) bool {
 }
 
 func inNotFoundStorageAccount(err error) bool {
-	var aerr *azure.RequestError
+	var aerr *azcore.ResponseError
 	if err != nil && errors.As(err, &aerr) {
 		return aerr.StatusCode == http.StatusNotFound
 	}
 
 	return false
-}
-
-func authorizer() (autorest.Authorizer, error) {
-	if os.Getenv("ARM_USE_MSI") != "" {
-		return auth.NewAuthorizerFromEnvironment()
-	}
-
-	return auth.NewAuthorizerFromCLI()
-}
-
-func getStorageAccountsClient(subscriptionId string) (storage.AccountsClient, error) {
-	storageAccountsClient := storage.NewAccountsClient(subscriptionId)
-	authorizer, err := authorizer()
-	if err != nil {
-		return storage.AccountsClient{}, err
-	}
-	storageAccountsClient.Authorizer = authorizer
-	return storageAccountsClient, nil
-}
-
-func getResourceGroupClient(subscriptionId string) (*armresources.ResourceGroupsClient, error) {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return nil, pluralerr.ErrorWrap(err, "getting resource group client failed with")
-	}
-	groupClient, err := armresources.NewResourceGroupsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return groupClient, nil
 }
 
 func getPathElement(path, indexName string) (error, string) {

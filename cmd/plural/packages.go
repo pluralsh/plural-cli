@@ -1,14 +1,16 @@
 package plural
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pluralsh/plural/pkg/api"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) packagesCommands() []cli.Command {
@@ -169,6 +171,10 @@ func (p *Plural) getWorkspace(repo string) (*wkspace.Workspace, error) {
 	inst, err := p.Client.GetInstallation(repo)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "GetInstallation")
+	}
+
+	if inst == nil {
+		return nil, fmt.Errorf("no installation found for package: %s", repo)
 	}
 
 	return wkspace.New(p.Client, inst)

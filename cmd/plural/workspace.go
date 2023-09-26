@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/pluralsh/plural/pkg/scaffold"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) workspaceCommands() []cli.Command {
@@ -42,6 +43,14 @@ func (p *Plural) workspaceCommands() []cli.Command {
 				cli.StringSliceFlag{
 					Name:  "skip",
 					Usage: "helm sub-chart to skip. can be passed multiple times",
+				},
+				cli.StringSliceFlag{
+					Name:  "set",
+					Usage: "helm value to set. can be passed multiple times",
+				},
+				cli.StringSliceFlag{
+					Name:  "setJSON",
+					Usage: "JSON helm value to set. can be passed multiple times",
 				},
 				cli.BoolFlag{
 					Name:  "wait",
@@ -89,7 +98,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 	}
 }
 
-func kubeInit(c *cli.Context) error {
+func kubeInit(_ *cli.Context) error {
 	_, found := utils.ProjectRoot()
 	if !found {
 		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
@@ -110,15 +119,24 @@ func (p *Plural) bounceHelm(c *cli.Context) error {
 		return err
 	}
 
-	skipArgs := []string{}
+	var skipArgs []string
 	if c.IsSet("skip") {
 		for _, skipChart := range c.StringSlice("skip") {
 			skipString := fmt.Sprintf("%s.enabled=false", skipChart)
 			skipArgs = append(skipArgs, skipString)
 		}
 	}
+	var setArgs []string
+	if c.IsSet("set") {
+		setArgs = append(setArgs, c.StringSlice("set")...)
+	}
 
-	return minimal.BounceHelm(c.IsSet("wait"), skipArgs...)
+	var setJSONArgs []string
+	if c.IsSet("setJSON") {
+		setJSONArgs = append(setJSONArgs, c.StringSlice("setJSON")...)
+	}
+
+	return minimal.BounceHelm(c.IsSet("wait"), skipArgs, setArgs, setJSONArgs)
 }
 
 func (p *Plural) diffHelm(c *cli.Context) error {
@@ -141,7 +159,7 @@ func (p *Plural) diffTerraform(c *cli.Context) error {
 	return minimal.DiffTerraform()
 }
 
-func (p *Plural) createCrds(c *cli.Context) error {
+func (p *Plural) createCrds(_ *cli.Context) error {
 	err := p.InitKube()
 	if err != nil {
 		return err

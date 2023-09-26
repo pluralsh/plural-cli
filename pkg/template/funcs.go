@@ -10,12 +10,13 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/pluralsh/polly/retry"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/crypto"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/polly/retry"
 )
 
 func fileExists(path string) bool {

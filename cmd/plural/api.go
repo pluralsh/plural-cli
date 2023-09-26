@@ -1,10 +1,11 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func (p *Plural) apiCommands() []cli.Command {
@@ -111,7 +112,7 @@ func (p *Plural) handleCharts(c *cli.Context) error {
 
 func (p *Plural) handleTerraforma(c *cli.Context) error {
 	p.InitPluralClient()
-	tfs, err := p.GetTerraforma(c.Args().First())
+	tfs, err := p.GetTerraform(c.Args().First())
 	if err != nil {
 		return api.GetErrorResponse(err, "GetTerraforma")
 	}

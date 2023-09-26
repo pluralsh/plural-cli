@@ -9,6 +9,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/application"
+	"github.com/pluralsh/plural/pkg/bootstrap"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/kubernetes"
@@ -23,6 +24,8 @@ import (
 	"github.com/pluralsh/polly/containers"
 	"github.com/urfave/cli"
 )
+
+const Bootstrap = "bootstrap"
 
 func (p *Plural) getSortedInstallations(repo string) ([]*api.Installation, error) {
 	p.InitPluralClient()
@@ -174,7 +177,11 @@ func (p *Plural) deploy(c *cli.Context) error {
 	p.InitPluralClient()
 	verbose := c.Bool("verbose")
 	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
 
+	project, err := manifest.FetchProject()
 	if err != nil {
 		return err
 	}
@@ -188,7 +195,6 @@ func (p *Plural) deploy(c *cli.Context) error {
 	default:
 		sorted, err = getSortedNames(true)
 	}
-
 	if err != nil {
 		return err
 	}
@@ -197,8 +203,25 @@ func (p *Plural) deploy(c *cli.Context) error {
 
 	ignoreConsole := c.Bool("ignore-console")
 	for _, repo := range sorted {
-		if ignoreConsole && (repo == "console" || repo == "bootstrap") {
+		if ignoreConsole && (repo == "console" || repo == Bootstrap) {
 			continue
+		}
+
+		if repo == Bootstrap && project.ClusterAPI {
+			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, Bootstrap)
+
+			// Stop if cluster exists, but it is not ready yet.
+			if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
+				return err
+			}
+
+			// If cluster does not exist bootstrap needs to be done first.
+			if !ready {
+				err := bootstrap.BootstrapCluster(RunPlural)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
@@ -206,10 +229,11 @@ func (p *Plural) deploy(c *cli.Context) error {
 			return err
 		}
 
-		if err := execution.Execute(verbose); err != nil {
+		if err := execution.Execute("deploying", verbose); err != nil {
 			utils.Note("It looks like your deployment failed. This may be a transient issue and rerunning the `plural deploy` command may resolve it. Or, feel free to reach out to us on discord (https://discord.gg/bEBAMXV64s) or Intercom and we should be able to help you out\n")
 			return err
 		}
+
 		fmt.Printf("\n")
 
 		installation, err := p.GetInstallation(repo)
@@ -345,8 +369,13 @@ func (p *Plural) destroy(c *cli.Context) error {
 	p.InitPluralClient()
 	repoName := c.Args().Get(0)
 	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
 	force := c.Bool("force")
 	all := c.Bool("all")
+
+	project, err := manifest.FetchProject()
 	if err != nil {
 		return err
 	}
@@ -374,7 +403,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
 		}
 
-		return p.doDestroy(repoRoot, installation, delete)
+		return p.doDestroy(repoRoot, installation, delete, project.ClusterAPI)
 	}
 
 	installations, err := p.getSortedInstallations(repoName)
@@ -394,7 +423,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doDestroy(repoRoot, installation, delete); err != nil {
+		if err := p.doDestroy(repoRoot, installation, delete, project.ClusterAPI); err != nil {
 			return err
 		}
 	}
@@ -426,7 +455,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete bool) error {
+func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete, clusterAPI bool) error {
 	p.InitPluralClient()
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
@@ -442,8 +471,15 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if err := workspace.Destroy(); err != nil {
-		return err
+	if repo == Bootstrap && clusterAPI {
+		if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
+			return err
+		}
+
+	} else {
+		if err := workspace.Destroy(); err != nil {
+			return err
+		}
 	}
 
 	if delete {

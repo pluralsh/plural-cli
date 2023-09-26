@@ -402,7 +402,7 @@ func (client *client) ListRecipes(repo, provider string) ([]*Recipe, error) {
 	recipes := make([]*Recipe, 0)
 
 	if provider != "" {
-		p := gqlclient.Provider(NormalizeProvider(provider))
+		p := gqlclient.Provider(ToGQLClientProvider(provider))
 		resp, err := client.pluralClient.ListRecipes(client.ctx, &repo, &p)
 		if err != nil {
 			return nil, err
@@ -432,7 +432,7 @@ func (client *client) InstallRecipe(id string) error {
 }
 
 func (client *client) GetStack(name, provider string) (*Stack, error) {
-	p := gqlclient.Provider(NormalizeProvider(provider))
+	p := gqlclient.Provider(ToGQLClientProvider(provider))
 	resp, err := client.pluralClient.GetStack(client.ctx, name, p)
 	if err != nil {
 		return nil, err
