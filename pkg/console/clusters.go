@@ -89,9 +89,9 @@ func convertServiceDeployment(sd *consoleclient.ServiceDeploymentFragment) *Serv
 		output.Components = append(output.Components, Component{
 			Id:        c.ID,
 			Name:      c.Name,
-			Group:     c.Group,
+			Group:     utils.ConvertStringPointer(c.Group),
 			Kind:      c.Kind,
-			Namespace: c.Namespace,
+			Namespace: utils.ConvertStringPointer(c.Namespace),
 			State: func() ComponentState {
 				if c.State != nil {
 					return ComponentState(*c.State)
@@ -99,7 +99,7 @@ func convertServiceDeployment(sd *consoleclient.ServiceDeploymentFragment) *Serv
 				return ComponentStateUnknown
 			}(),
 			Synced:  c.Synced,
-			Version: c.Version,
+			Version: utils.ConvertStringPointer(c.Version),
 		})
 	}
 

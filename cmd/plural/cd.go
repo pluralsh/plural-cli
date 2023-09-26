@@ -21,6 +21,42 @@ func (p *Plural) cdCommands() []cli.Command {
 			Subcommands: p.cdClusterCommands(),
 			Usage:       "manage CD clusters",
 		},
+		{
+			Name:        "services",
+			Subcommands: p.cdServiceCommands(),
+			Usage:       "manage CD services",
+		},
+		{
+			Name:        "repositories",
+			Subcommands: p.cdRepositoriesCommands(),
+			Usage:       "manage CD repositories",
+		},
+	}
+}
+
+func (p *Plural) cdRepositoriesCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:   "list",
+			Action: latestVersion(p.handleListCDRepositories),
+			Usage:  "list repositories",
+		},
+		{
+			Name:   "create",
+			Action: latestVersion(p.handleCreateCDRepository),
+			Usage:  "create repository",
+		},
+	}
+}
+
+func (p *Plural) cdServiceCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "list",
+			ArgsUsage: "CLUSTER_ID",
+			Action:    latestVersion(requireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
+			Usage:     "list cluster services",
+		},
 	}
 }
 
@@ -32,6 +68,33 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Usage:  "list clusters",
 		},
 	}
+}
+
+func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
+
+	return nil
+}
+
+func (p *Plural) handleListCDRepositories(c *cli.Context) error {
+
+	return nil
+}
+
+func (p *Plural) handleListClusterServices(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	sd, err := p.ConsoleClient.ListClusterServices()
+	if err != nil {
+		return err
+	}
+
+	headers := []string{"Id", "Name", "Namespace", "Git URL", "Git Folder"}
+	return utils.PrintTable(sd, headers, func(sd console.ServiceDeployment) ([]string, error) {
+		return []string{sd.Id, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder}, nil
+	})
+
+	return nil
 }
 
 func (p *Plural) handleListClusters(c *cli.Context) error {
