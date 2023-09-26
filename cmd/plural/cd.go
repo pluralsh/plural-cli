@@ -137,8 +137,6 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 	return utils.PrintTable(clusters, headers, func(cl console.Cluster) ([]string, error) {
 		return []string{cl.Id, cl.Name, cl.Version}, nil
 	})
-
-	return nil
 }
 
 func getFlag(s string) *string {
