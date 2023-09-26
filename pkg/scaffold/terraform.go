@@ -62,6 +62,10 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 
 	var providerVersions semver.ByVersion
 
+	if len(wk.Terraform) == 0 {
+		return nil
+	}
+
 	for i := range wk.Terraform {
 		providerVersions = append(providerVersions, wk.Terraform[i].Terraform.Dependencies.ProviderVsn)
 	}
@@ -126,6 +130,7 @@ func (scaffold *Scaffold) handleTerraform(wk *wkspace.Workspace) error {
 			"Region":        wk.Provider.Region(),
 			"Context":       wk.Provider.Context(),
 			"Config":        config.Read(),
+			"ClusterAPI":    wk.Manifest.ClusterAPI,
 			"Applications":  apps,
 		}
 		if err := tmpl.Execute(&buf, values); err != nil {

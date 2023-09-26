@@ -177,8 +177,13 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		"Config":        conf,
 		"Provider":      w.Provider.Name(),
 		"Context":       w.Provider.Context(),
+		"ClusterAPI":    proj.ClusterAPI,
 		"Network":       proj.Network,
 		"Applications":  apps,
+	}
+
+	if proj.AvailabilityZones != nil {
+		vals["AvailabilityZones"] = proj.AvailabilityZones
 	}
 
 	if w.Context.SMTP != nil {
@@ -206,7 +211,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 			vals[k] = v
 		}
 	}
-
 	defaultValues, err := scftmpl.BuildValuesFromTemplate(vals, w)
 	if err != nil {
 		return err
@@ -217,26 +221,28 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		return err
 	}
 
-	mapValues, err := getValues(valuesFile)
-	if err != nil {
-		return err
-	}
-	patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
-	if err != nil {
-		return err
-	}
-
-	values, err := yaml.Marshal(patchValues)
-	if err != nil {
-		return err
-	}
-	if err := utils.WriteFile(valuesFile, values); err != nil {
-		return err
-	}
+	// TODO: Remove this after testing. It is deprecated as values.yaml migration should not longer be required.
+	//mapValues, err := getValues(valuesFile)
+	//if err != nil {
+	//	return err
+	//}
+	//patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//values, err := yaml.Marshal(patchValues)
+	//if err != nil {
+	//	return err
+	//}
+	//if err := utils.WriteFile(valuesFile, values); err != nil {
+	//	return err
+	//}
 
 	return utils.WriteFile(defaultValuesFile, io)
 }
 
+//nolint:golint,unused
 func getValues(path string) (map[string]map[string]interface{}, error) {
 	values := map[string]map[string]interface{}{}
 	valuesFromFile, err := os.ReadFile(path)

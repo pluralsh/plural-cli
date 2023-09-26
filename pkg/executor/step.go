@@ -140,7 +140,7 @@ func filteredHash(root string, ignore []string) (string, error) {
 
 func ignorePath(file string, ignore []string) bool {
 	for _, pref := range ignore {
-		if strings.HasPrefix(file, pref) {
+		if strings.Contains(file, pref) {
 			return true
 		}
 	}

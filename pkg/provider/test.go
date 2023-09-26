@@ -1,9 +1,11 @@
 package provider
 
 import (
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider/permissions"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type TestProvider struct {
@@ -15,7 +17,7 @@ type TestProvider struct {
 }
 
 func (t TestProvider) Name() string {
-	return TEST
+	return api.TEST
 }
 
 func (t TestProvider) Cluster() string {
@@ -36,6 +38,10 @@ func (t TestProvider) Bucket() string {
 
 func (t TestProvider) KubeConfig() error {
 	return nil
+}
+
+func (t TestProvider) KubeContext() string {
+	return t.Clust
 }
 
 func (t TestProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {

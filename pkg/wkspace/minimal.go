@@ -7,16 +7,25 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
 	helmdiff "github.com/databus23/helm-diff/v3/diff"
 	diffmanifest "github.com/databus23/helm-diff/v3/manifest"
+	"github.com/google/go-cmp/cmp"
 	"github.com/helm/helm-mapkubeapis/pkg/common"
 	release "github.com/helm/helm-mapkubeapis/pkg/v3"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	relutil "helm.sh/helm/v3/pkg/releaseutil"
+	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/strvals"
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/diff"
 	"github.com/pluralsh/plural/pkg/helm"
@@ -26,12 +35,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	relutil "helm.sh/helm/v3/pkg/releaseutil"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"helm.sh/helm/v3/pkg/strvals"
-	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -74,7 +77,7 @@ func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	return
 }
 
-func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
+func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs, setArgs, setJSONArgs []string) error {
 	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join("helm", m.Name)))
 	if err != nil {
 		return err
@@ -86,6 +89,16 @@ func (m *MinimalWorkspace) BounceHelm(wait bool, skipArgs ...string) error {
 
 	for _, arg := range skipArgs {
 		if err := strvals.ParseInto(arg, defaultVals); err != nil {
+			return err
+		}
+	}
+	for _, arg := range setArgs {
+		if err := strvals.ParseInto(arg, defaultVals); err != nil {
+			return err
+		}
+	}
+	for _, arg := range setJSONArgs {
+		if err := strvals.ParseJSON(arg, defaultVals); err != nil {
 			return err
 		}
 	}
@@ -349,7 +362,19 @@ func templateTerraformInputs(name, vals string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+
+	templatedData := buf.String()
+
+	// This is a workaround for https://github.com/golang/go/issues/24963
+	// In case terraform outputs are not there it will print '<no value>' and break helm templating
+	sanitized := strings.ReplaceAll(templatedData, "<no value>", "")
+
+	if len(templatedData) != len(sanitized) {
+		msg := "Replaced '<no value>' with empty string to sanitize helm values:\n%s"
+		utils.Warn(msg, cmp.Diff(templatedData, sanitized))
+	}
+
+	return []byte(sanitized), nil
 }
 
 func getHelmPath(name string) (string, error) {

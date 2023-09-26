@@ -7,13 +7,17 @@ import (
 	"github.com/samber/lo"
 )
 
-func NormalizeProvider(prov string) string {
-	provider := strings.ToUpper(prov)
-	if provider == "GOOGLE" {
-		return "GCP"
+func NormalizeProvider(p string) string {
+	// Compare with ignore case
+	if strings.EqualFold(p, ProviderGCPDeprecated) {
+		return ProviderGCP
 	}
 
-	return provider
+	return p
+}
+
+func ToGQLClientProvider(p string) string {
+	return strings.ToUpper(NormalizeProvider(p))
 }
 
 func FromSlicePtr[T any](s []*T) []T {

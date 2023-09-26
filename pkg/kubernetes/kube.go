@@ -48,6 +48,9 @@ func InKubernetes() bool {
 
 type Kube interface {
 	Secret(namespace string, name string) (*v1.Secret, error)
+	SecretList(namespace string, opts metav1.ListOptions) (*v1.SecretList, error)
+	SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error)
+	SecretDeleteCollection(namespace string, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Node(name string) (*v1.Node, error)
 	Nodes() (*v1.NodeList, error)
 	FinalizeNamespace(namespace string) error
@@ -62,6 +65,7 @@ type Kube interface {
 	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerDelete(namespace string, name string) error
 	Apply(path string, force bool) error
+	CreateNamespace(namespace string) error
 	GetClient() *kubernetes.Clientset
 	GetRestClient() *restclient.RESTClient
 }
@@ -83,12 +87,21 @@ func (k *kube) GetRestClient() *restclient.RESTClient {
 }
 
 func KubeConfig() (*rest.Config, error) {
+	return KubeConfigWithContext("")
+}
+
+func KubeConfigWithContext(context string) (*rest.Config, error) {
 	if InKubernetes() {
 		return rest.InClusterConfig()
 	}
 
 	homedir, _ := os.UserHomeDir()
 	conf := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
+
+	if len(context) > 0 {
+		return buildConfigFromFlags(context, conf)
+	}
+
 	return clientcmd.BuildConfigFromFlags("", conf)
 }
 
@@ -99,6 +112,28 @@ func Kubernetes() (Kube, error) {
 	}
 
 	return buildKubeFromConfig(conf)
+}
+
+func KubernetesWithContext(context string) (Kube, error) {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	kubeconfigPath := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
+
+	conf, err := buildConfigFromFlags(context, kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildKubeFromConfig(conf)
+}
+
+func buildConfigFromFlags(context, kubeconfigPath string) (*rest.Config, error) {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{CurrentContext: context}).ClientConfig()
 }
 
 func buildKubeFromConfig(config *rest.Config) (Kube, error) {
@@ -141,6 +176,18 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 
 func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {
 	return k.Kube.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
+}
+
+func (k *kube) SecretList(namespace string, opts metav1.ListOptions) (*v1.SecretList, error) {
+	return k.Kube.CoreV1().Secrets(namespace).List(context.Background(), opts)
+}
+
+func (k *kube) SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error) {
+	return k.Kube.CoreV1().Secrets(namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+}
+
+func (k *kube) SecretDeleteCollection(namespace string, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
+	return k.Kube.CoreV1().Secrets(namespace).DeleteCollection(context.Background(), opts, listOpts)
 }
 
 func (k *kube) Node(name string) (*v1.Node, error) {
@@ -261,4 +308,19 @@ func (k *kube) Apply(path string, force bool) error {
 	}
 
 	return nil
+}
+
+func (k *kube) CreateNamespace(namespace string) error {
+	ctx := context.Background()
+	_, err := k.Kube.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "plural",
+				"app.plural.sh/name":           namespace,
+			},
+		},
+	}, metav1.CreateOptions{})
+
+	return err
 }

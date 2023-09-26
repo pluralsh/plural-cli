@@ -6,7 +6,7 @@ import (
 )
 
 func (client *client) DestroyCluster(domain, name, provider string) error {
-	_, err := client.pluralClient.DestroyCluster(client.ctx, domain, name, gqlclient.Provider(NormalizeProvider(provider)))
+	_, err := client.pluralClient.DestroyCluster(client.ctx, domain, name, gqlclient.Provider(ToGQLClientProvider(provider)))
 	if err != nil {
 		return err
 	}

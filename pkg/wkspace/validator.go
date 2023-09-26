@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/utils"
 )
 
@@ -71,11 +71,11 @@ func (wk *Workspace) providersValid(providers []string) error {
 
 func (wk *Workspace) match(prov string) bool {
 	switch wk.Provider.Name() {
-	case provider.GCP:
+	case api.ProviderGCP:
 		return prov == "GCP"
-	case provider.AWS:
+	case api.ProviderAWS:
 		return prov == "AWS"
-	case provider.AZURE:
+	case api.ProviderAzure:
 		return prov == "AZURE"
 	default:
 		return false

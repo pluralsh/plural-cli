@@ -92,7 +92,7 @@ func (this *Client) Provider() string {
 		return ""
 	}
 
-	return api.NormalizeProvider(project.Provider)
+	return project.Provider
 }
 
 func (this *Client) Install(applications []Application, domains, buckets []string) error {

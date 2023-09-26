@@ -8,12 +8,13 @@ import (
 	"github.com/pluralsh/gqlclient"
 
 	"github.com/pluralsh/gqlclient/pkg/utils"
+	"github.com/samber/lo"
+
 	tarutils "github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/samber/lo"
 )
 
-func (client *client) GetTerraforma(repoId string) ([]*Terraform, error) {
+func (client *client) GetTerraform(repoId string) ([]*Terraform, error) {
 
 	terraformResponse, err := client.pluralClient.GetTerraform(client.ctx, repoId)
 	if err != nil {

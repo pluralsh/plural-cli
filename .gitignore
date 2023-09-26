@@ -1,10 +1,21 @@
-# Binaries for programs and plugins
+# IDE files
+.idea/
+.vscode/
+
+# Testing files
+context.yaml
+workspace.yaml
+
+# Build files and binaries
+dist/
+build/
 *.exe
 *.exe~
 *.dll
 *.so
 *.o
 *.dylib
+__debug_bin
 
 # Test binary, built with `go test -c`
 *.test
@@ -13,15 +24,6 @@
 *.out
 forge*.o
 plural*.o
-# Dependency directories (remove the comment below to include it)
-# vendor/
 
-# IDE dirs
-.idea/
-
-dist/
-build/
-
-# Testing files
-context.yaml
-workspace.yaml
+# Vendored dependencies
+vendor/

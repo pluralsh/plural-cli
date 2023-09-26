@@ -5,14 +5,15 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
-	v1 "k8s.io/api/core/v1"
 )
 
 type Provider interface {
@@ -22,6 +23,7 @@ type Provider interface {
 	Region() string
 	Bucket() string
 	KubeConfig() error
+	KubeContext() string
 	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
@@ -95,17 +97,17 @@ func GetProvider() (Provider, error) {
 
 func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 	switch man.Provider {
-	case GCP:
+	case api.ProviderGCP:
 		return gcpFromManifest(man)
-	case AWS:
+	case api.ProviderAWS:
 		return awsFromManifest(man)
-	case AZURE:
+	case api.ProviderAzure:
 		return AzureFromManifest(man, nil)
-	case EQUINIX:
+	case api.ProviderEquinix:
 		return equinixFromManifest(man)
-	case KIND:
+	case api.ProviderKind:
 		return kindFromManifest(man)
-	case TEST:
+	case api.TEST:
 		return testFromManifest(man)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", man.Provider)
@@ -115,15 +117,15 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 func New(provider string) (Provider, error) {
 	conf := config.Read()
 	switch provider {
-	case GCP:
+	case api.ProviderGCP:
 		return mkGCP(conf)
-	case AWS:
+	case api.ProviderAWS:
 		return mkAWS(conf)
-	case AZURE:
+	case api.ProviderAzure:
 		return mkAzure(conf)
-	case EQUINIX:
+	case api.ProviderEquinix:
 		return mkEquinix(conf)
-	case KIND:
+	case api.ProviderKind:
 		return mkKind(conf)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
@@ -139,12 +141,7 @@ func getAvailableProviders() error {
 		}
 
 		available = containers.ToSet(available).Difference(filterProviders).List()
-		providers.AvailableProviders = algorithms.Map(available, func(p string) string {
-			if p == "GCP" {
-				return "google"
-			}
-			return strings.ToLower(p)
-		})
+		providers.AvailableProviders = algorithms.Map(available, strings.ToLower)
 	}
 	return nil
 }

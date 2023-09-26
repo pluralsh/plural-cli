@@ -57,6 +57,7 @@ git -c core.sshCommand="ssh -i ~/.ssh/id_sharing" clone git@github.com:pluralsh/
 git config --global user.email cli-e2e@pluraldev.sh
 git config --global user.name cli-e2e
 
+USE_CLUSTER_API=${USE_CLUSTER_API:-"false"}
 
 echodate "Creating workspace.yaml ..."
 cat << EOF > "$TESTDIR"/workspace.yaml
@@ -66,6 +67,7 @@ metadata:
   name: testcli
 spec:
   cluster: testcli
+  clusterapi: __USE_CLUSTER_API__
   bucket: testcli-tf-state
   project: ""
   provider: kind
@@ -79,6 +81,9 @@ spec:
   context: {}
 EOF
 
+sed -i "s;__USE_CLUSTER_API__;$USE_CLUSTER_API;g" "$TESTDIR"/workspace.yaml
+
+cat "$TESTDIR"/workspace.yaml
 
 echodate "Entering to work directory ..."
 cd "$TESTDIR"
@@ -105,9 +110,14 @@ export PLURAL_LOGIN_AFFIRM_CURRENT_USER=true
 export PLURAL_INIT_AFFIRM_CURRENT_REPO=true
 export PLURAL_INIT_AFFIRM_BACKUP_KEY=false
 
+export PLURAL_DISABLE_MP_TABLE_VIEW=true
+
+INSTALL_APP=${INSTALL_APP:-"bootstrap"}
+INSTALL_RECIPE=${INSTALL_RECIPE:-"docker-cluster-api-simple-test"}
+
 plural init
 plural repos reset
-plural bundle install console console-kind
+plural bundle install "$INSTALL_APP" "$INSTALL_RECIPE"
 plural build --force
 retry 3 plural deploy --commit=""
 

@@ -14,14 +14,44 @@ type GcpChecker struct {
 	ctx     context.Context
 }
 
-var gcpExpected = []string{
-	"storage.buckets.create",
-	"storage.buckets.setIamPolicy",
-	"iam.serviceAccounts.create",
-	"iam.serviceAccounts.setIamPolicy",
-	"container.clusters.create",
-	"compute.networks.create",
-	"compute.subnetworks.create",
+func (g *GcpChecker) requiredPermissions() []string {
+	return []string{
+		// Compute service permissions
+		"compute.globalOperations.get",
+		"compute.instanceGroupManagers.get",
+		"compute.networks.create",
+		"compute.networks.delete",
+		"compute.networks.get",
+		"compute.networks.updatePolicy",
+		"compute.regionOperations.get",
+		"compute.regions.get",
+		"compute.routers.create",
+		"compute.routers.delete",
+		"compute.routers.get",
+		"compute.subnetworks.create",
+		"compute.subnetworks.delete",
+		"compute.subnetworks.get",
+		"compute.subnetworks.list",
+		"compute.zones.list",
+		// Container service permissions
+		"container.clusters.create",
+		"container.clusters.delete",
+		"container.clusters.get",
+		"container.clusters.getCredentials",
+		"container.clusters.update",
+		"container.nodes.get",
+		"container.nodes.list",
+		"container.nodes.update",
+		"container.pods.get",
+		// IAM service permissions
+		"iam.serviceAccounts.actAs",
+		"iam.serviceAccounts.getAccessToken",
+		"iam.serviceAccounts.create",
+		"iam.serviceAccounts.setIamPolicy",
+		// Storage service permissions
+		"storage.buckets.create",
+		"storage.buckets.setIamPolicy",
+	}
 }
 
 func NewGcpChecker(ctx context.Context, project string) (*GcpChecker, error) {
@@ -34,15 +64,17 @@ func (g *GcpChecker) MissingPermissions() (result []string, err error) {
 		return
 	}
 
+	defer svc.Close()
+
 	res, err := svc.TestIamPermissions(g.ctx, &iampb.TestIamPermissionsRequest{
 		Resource:    fmt.Sprintf("projects/%s", g.project),
-		Permissions: gcpExpected,
+		Permissions: g.requiredPermissions(),
 	})
 	if err != nil {
 		return
 	}
 
 	has := containers.ToSet(res.Permissions)
-	result = containers.ToSet(gcpExpected).Difference(has).List()
+	result = containers.ToSet(g.requiredPermissions()).Difference(has).List()
 	return
 }

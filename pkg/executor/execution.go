@@ -49,7 +49,7 @@ func GetExecution(path, name string) (*Execution, error) {
 	return &ex, nil
 }
 
-func (e *Execution) Execute(verbose bool) error {
+func (e *Execution) Execute(actionName string, verbose bool) error {
 	root, err := git.Root()
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (e *Execution) Execute(verbose bool) error {
 		return err
 	}
 
-	fmt.Printf("deploying %s.  This may take a while, so hold on to your butts\n", e.Metadata.Path)
+	fmt.Printf("%s %s.  This may take a while, so hold on to your butts\n", actionName, e.Metadata.Path)
 	for i, step := range e.Steps {
 		prev := step.Verbose
 		if verbose {

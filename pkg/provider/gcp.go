@@ -15,14 +15,6 @@ import (
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"cloud.google.com/go/storage"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/manifest"
-	permissions "github.com/pluralsh/plural/pkg/provider/permissions"
-	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
 	"github.com/pluralsh/polly/algorithms"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -30,6 +22,16 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural/pkg/provider/permissions"
+	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
+	"github.com/pluralsh/plural/pkg/template"
+	"github.com/pluralsh/plural/pkg/utils"
+	utilerr "github.com/pluralsh/plural/pkg/utils/errors"
 )
 
 type GCPProvider struct {
@@ -152,7 +154,7 @@ func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
 		Project:  provider.Project(),
-		Provider: GCP,
+		Provider: api.ProviderGCP,
 		Region:   provider.Region(),
 		Context:  provider.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -235,6 +237,10 @@ func (gcp *GCPProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (gcp *GCPProvider) KubeContext() string {
+	return fmt.Sprintf("gke_%s_%s_%s", gcp.Proj, gcp.Reg, gcp.Clust)
+}
+
 func (gcp *GCPProvider) Flush() error {
 	if gcp.writer == nil {
 		return nil
@@ -263,7 +269,7 @@ func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[str
 	} else {
 		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("GCP", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderGCP), version)
 	if err != nil {
 		return "", err
 	}
@@ -289,7 +295,7 @@ func (gcp *GCPProvider) clusterLocation() (string, string) {
 }
 
 func (gcp *GCPProvider) Name() string {
-	return GCP
+	return api.ProviderGCP
 }
 
 func (gcp *GCPProvider) Cluster() string {
@@ -340,10 +346,17 @@ func (gcp *GCPProvider) Decommision(node *v1.Node) error {
 	return utilerr.ErrorWrap(err, "failed to delete instance")
 }
 
+type PreflightCheck string
+
+const (
+	PreflightCheckEnabledServices           = PreflightCheck("[User] Enabled Services")
+	PreflightCheckServiceAccountPermissions = PreflightCheck("[User] Test Permissions")
+)
+
 func (gcp *GCPProvider) Preflights() []*Preflight {
 	return []*Preflight{
-		{Name: "Enabled Services", Callback: gcp.validateEnabled},
-		{Name: "Test IAM Permissions", Callback: gcp.validatePermissions},
+		{Name: string(PreflightCheckEnabledServices), Callback: gcp.validateEnabled},
+		{Name: string(PreflightCheckServiceAccountPermissions), Callback: gcp.validatePermissions},
 	}
 }
 
@@ -419,7 +432,7 @@ func (gcp *GCPProvider) Permissions() (permissions.Checker, error) {
 }
 
 func (gcp *GCPProvider) validatePermissions() error {
-	utils.LogInfo().Println("Validate GCP permissions")
+	utils.LogInfo().Println("Validate GCP roles/permissions")
 	ctx := context.Background()
 	proj, err := gcp.getProject()
 	if err != nil {
@@ -436,12 +449,13 @@ func (gcp *GCPProvider) validatePermissions() error {
 		return nil
 	}
 
+	utils.Error("\u2700\n")
 	for _, perm := range missing {
-		utils.LogError().Printf("Required GCP permission %s \n", perm)
+		utils.LogError().Printf("Recommended GCP permissions %s \n", perm)
 		provUtils.FailedPermission(perm)
 	}
 
-	return fmt.Errorf("Your gcp identity is missing permissions for project %s; %s\nIf you aren't comfortable granting these permissions, consider creating a separate gcp project for plural resources and adding storage.admin and owner roles to your identity", proj.Name, strings.Join(missing, ", "))
+	return fmt.Errorf("Your GCP user is missing permissions for project %s: %s\nIf you aren't comfortable granting these permissions, consider creating a separate GCP project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {

@@ -7,14 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"go.mercari.io/hcledit"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural/pkg/executor"
 	"github.com/pluralsh/plural/pkg/helm"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"go.mercari.io/hcledit"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 type checker func(s string) bool
@@ -57,7 +58,7 @@ func (w *Workspace) DestroyHelm() error {
 }
 
 func (w *Workspace) Bounce() error {
-	return w.ToMinimal().BounceHelm(false)
+	return w.ToMinimal().BounceHelm(false, nil, nil, nil)
 }
 
 func (w *Workspace) HelmDiff() error {
@@ -100,7 +101,11 @@ func (w *Workspace) Reset() error {
 
 func (w *Workspace) DestroyTerraform() error {
 	repo := w.Installation.Repository
-	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repo.Name, "terraform")))
+	repoRoot, err := git.Root()
+	if err != nil {
+		return err
+	}
+	path, err := filepath.Abs(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo.Name, "terraform")))
 	if err != nil {
 		return err
 	}
