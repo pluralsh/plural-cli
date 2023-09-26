@@ -7,10 +7,12 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/exp"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"gopkg.in/yaml.v2"
 )
 
 const pluralDomain = "onplural.sh"
@@ -73,6 +75,14 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 	}
 
 	man = versioned.Spec
+
+	// Override Cluster API flag silently
+	if !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI) {
+		man.ClusterAPI = false
+	}
+
+	man.Provider = api.NormalizeProvider(man.Provider)
+
 	return
 }
 
@@ -123,6 +133,10 @@ func (pMan *ProjectManifest) Configure() Writer {
 
 	if err := pMan.ConfigureNetwork(); err != nil {
 		return nil
+	}
+
+	if exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI) {
+		pMan.ClusterAPI = true
 	}
 
 	return func() error { return pMan.Write(ProjectManifestPath()) }

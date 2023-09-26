@@ -10,9 +10,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
 
+	"github.com/samber/lo"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/samber/lo"
 )
 
 type authedTransport struct {
@@ -71,7 +72,7 @@ type Client interface {
 	InstallRecipe(id string) error
 	GetShell() (CloudShell, error)
 	DeleteShell() error
-	GetTerraforma(repoId string) ([]*Terraform, error)
+	GetTerraform(repoId string) ([]*Terraform, error)
 	GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error)
 	UploadTerraform(dir string, repoName string) (Terraform, error)
 	GetStack(name, provider string) (*Stack, error)
@@ -176,7 +177,7 @@ func FindTerraform(client Client, repo, name string) (*Terraform, error) {
 		return nil, err
 	}
 
-	tfs, err := client.GetTerraforma(r.Id)
+	tfs, err := client.GetTerraform(r.Id)
 	if err != nil {
 		return nil, err
 	}

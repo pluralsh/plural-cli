@@ -3,11 +3,20 @@ package plural
 import (
 	"fmt"
 
+	"github.com/urfave/cli"
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/bootstrap"
+	"github.com/pluralsh/plural/pkg/bootstrap/aws"
+	"github.com/pluralsh/plural/pkg/bootstrap/validation"
+	"github.com/pluralsh/plural/pkg/cluster"
 	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural/pkg/exp"
+	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural/pkg/machinepool"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {
@@ -59,7 +68,122 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Usage:  "promote pending upgrades to your cluster",
 			Action: latestVersion(p.promoteCluster),
 		},
+		{
+			Name:      "wait",
+			Usage:     "waits on a cluster until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
+		{
+			Name:      "mpwait",
+			Usage:     "waits on a machine pool until it becomes ready",
+			ArgsUsage: "NAMESPACE NAME",
+			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
+			Category:  "Debugging",
+		},
+		{
+			Name:     "migrate",
+			Usage:    "migrate to Cluster API",
+			Action:   latestVersion(rooted(initKubeconfig(p.handleMigration))),
+			Category: "Publishing",
+			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
+		},
+		{
+			Name:        "aws-auth",
+			Usage:       "fetches the current state of your aws auth config map",
+			Subcommands: awsAuthCommands(),
+		},
 	}
+}
+
+func (p *Plural) handleMigration(_ *cli.Context) error {
+	p.InitPluralClient()
+	if err := validation.ValidateMigration(p); err != nil {
+		return err
+	}
+
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	if project.ClusterAPI {
+		utils.Success("Cluster already migrated.\n")
+		return nil
+	}
+
+	return bootstrap.MigrateCluster(RunPlural)
+}
+
+func awsAuthCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:   "fetch",
+			Usage:  "gets the current state of your aws auth configmap",
+			Action: handleAwsAuth,
+		},
+		{
+			Name:  "update",
+			Usage: "adds a user or role to the aws auth configmap",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "role-arn"},
+				cli.StringFlag{Name: "user-arn"},
+			},
+			Action: handleModifyAwsAuth,
+		},
+	}
+}
+
+func handleAwsAuth(c *cli.Context) error {
+	auth, err := aws.FetchAuth()
+	if err != nil {
+		return err
+	}
+
+	res, err := yaml.Marshal(auth)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(res))
+	return nil
+}
+
+func handleModifyAwsAuth(c *cli.Context) error {
+	role, user := c.String("role-arn"), c.String("user-arn")
+
+	if role != "" {
+		return aws.AddRole(role)
+	}
+
+	if user != "" {
+		return aws.AddUser(user)
+	}
+
+	return fmt.Errorf("you must specify at least one of role-arn or user-arn")
+}
+
+func handleClusterWait(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+
+	return cluster.Wait(kubeConf, namespace, name)
+}
+
+func handleMPWait(c *cli.Context) error {
+	namespace := c.Args().Get(0)
+	name := c.Args().Get(1)
+	kubeConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+
+	return machinepool.WaitAll(kubeConf, namespace, name)
 }
 
 func (p *Plural) listClusters(c *cli.Context) error {

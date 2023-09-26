@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider"
 	"github.com/stretchr/testify/assert"
@@ -69,13 +69,13 @@ func TestCreateBucket(t *testing.T) {
 		expectedAccountCreateCalledCount   int
 		expectedContainerCreateCalledCount int
 		accountName                        string
-		existingAccount                    *storage.Account
+		existingAccount                    *armstorage.Account
 		manifest                           *manifest.ProjectManifest
 	}{
 		{
 			name:        `create account when doesn't exist`,
 			accountName: accountName,
-			existingAccount: &storage.Account{
+			existingAccount: &armstorage.Account{
 				Name: &secondAccountName,
 			},
 			manifest: &manifest.ProjectManifest{
@@ -89,7 +89,7 @@ func TestCreateBucket(t *testing.T) {
 		{
 			name:        `storage account exists`,
 			accountName: accountName,
-			existingAccount: &storage.Account{
+			existingAccount: &armstorage.Account{
 				Name: &accountName,
 			},
 			manifest: &manifest.ProjectManifest{

@@ -2,13 +2,13 @@ package plural
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 )
 
 func (p *Plural) bundleCommands() []cli.Command {
@@ -135,11 +135,9 @@ func (p *Plural) stackList(c *cli.Context) (err error) {
 
 func (p *Plural) listRecipes(repo string) (res []*api.Recipe, err error) {
 	man, err := manifest.FetchProject()
-	prov := ""
-	if err == nil {
-		prov = strings.ToUpper(man.Provider)
+	if err != nil {
+		return
 	}
-
-	res, err = p.ListRecipes(repo, prov)
+	res, err = p.ListRecipes(repo, man.Provider)
 	return
 }

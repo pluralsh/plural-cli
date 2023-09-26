@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -35,6 +37,7 @@ type AWSProvider struct {
 	storageClient *s3.Client
 	writer        manifest.Writer
 	goContext     *context.Context
+	ctx           map[string]interface{}
 }
 
 var (
@@ -106,12 +109,18 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider.project = account
 	provider.storageClient = client
 
+	azones, err := getAvailabilityZones(ctx, provider.Region())
+	if err != nil {
+		return
+	}
+
 	projectManifest := manifest.ProjectManifest{
-		Cluster:  provider.Cluster(),
-		Project:  provider.Project(),
-		Provider: AWS,
-		Region:   provider.Region(),
-		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		Cluster:           provider.Cluster(),
+		Project:           provider.Project(),
+		Provider:          api.ProviderAWS,
+		Region:            provider.Region(),
+		AvailabilityZones: azones,
+		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
 	provider.writer = projectManifest.Configure()
@@ -125,8 +134,9 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	if err != nil {
 		return nil, err
 	}
+	providerCtx := map[string]interface{}{}
 
-	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx}, nil
+	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
@@ -137,6 +147,89 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 
 	cfg.Region = region
 	return s3.NewFromConfig(cfg), nil
+}
+
+func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
+	cfg, err := awsConfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Region = region
+	return ec2.NewFromConfig(cfg), nil
+}
+
+// TODO: during Plural init we should ask the user to choose which AZs they want to use (first 3, random, manual, look at how CAPA does that). There should be a minimum limit of 3.
+func getAvailabilityZones(ctx context.Context, region string) ([]string, error) {
+	first3 := "first three"
+	random := "random"
+	manual := "manual"
+	choice := ""
+	prompt := &survey.Select{
+		Message: "Which availability zones you would like to use:",
+		Options: []string{first3, random, manual},
+	}
+	if err := survey.AskOne(prompt, &choice); err != nil {
+		return nil, err
+	}
+
+	switch choice {
+	case first3:
+		return fetchAZ(ctx, region, true)
+	case random:
+		return fetchAZ(ctx, region, false)
+	case manual:
+		text := ""
+		prompt := &survey.Multiline{
+			Message: "Enter at least three availability zones ",
+		}
+		if err := survey.AskOne(prompt, &text); err != nil {
+			return nil, err
+		}
+		res := strings.Split(text, "\n")
+		if len(res) < 3 {
+			return nil, fmt.Errorf("expected at least three availability zones")
+		}
+		return res, nil
+	}
+
+	return nil, nil
+}
+
+func fetchAZ(context context.Context, region string, sorted bool) ([]string, error) {
+	ec2Client, err := getEC2Client(context, region)
+	if err != nil {
+		return nil, err
+	}
+	allAvailabilityZones := true
+	dryRun := false
+	regionName := "region-name"
+	azones, err := ec2Client.DescribeAvailabilityZones(context, &ec2.DescribeAvailabilityZonesInput{
+		AllAvailabilityZones: &allAvailabilityZones,
+		DryRun:               &dryRun,
+		Filters: []ec2Types.Filter{
+			{
+				Name:   &regionName,
+				Values: []string{region},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := []string{}
+	for _, az := range azones.AvailabilityZones {
+		if az.ParentZoneId == nil {
+			result = append(result, *az.ZoneName)
+		}
+	}
+	// append when there are fewer zones than 3
+	for i := 0; (3 - len(result)) > 0; i++ {
+		result = append(result, result[i])
+	}
+	if sorted {
+		sort.Strings(result)
+	}
+	return result, nil
 }
 
 func getAwsConfig(ctx context.Context) (aws.Config, error) {
@@ -156,7 +249,7 @@ func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[str
 	if _, ok := ctx["Cluster"]; !ok {
 		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
 	}
-	scaffold, err := GetProviderScaffold("AWS", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAWS), version)
 	if err != nil {
 		return "", err
 	}
@@ -171,6 +264,10 @@ func (aws *AWSProvider) KubeConfig() error {
 	cmd := exec.Command(
 		"aws", "eks", "update-kubeconfig", "--name", aws.Cluster(), "--region", aws.Region())
 	return utils.Execute(cmd)
+}
+
+func (aws *AWSProvider) KubeContext() string {
+	return fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", aws.Region(), aws.project, aws.Cluster())
 }
 
 func (p *AWSProvider) mkBucket(name string) error {
@@ -197,7 +294,7 @@ func (p *AWSProvider) mkBucket(name string) error {
 }
 
 func (aws *AWSProvider) Name() string {
-	return AWS
+	return api.ProviderAWS
 }
 
 func (aws *AWSProvider) Cluster() string {
@@ -217,7 +314,7 @@ func (aws *AWSProvider) Region() string {
 }
 
 func (aws *AWSProvider) Context() map[string]interface{} {
-	return map[string]interface{}{}
+	return aws.ctx
 }
 
 func (aws *AWSProvider) Preflights() []*Preflight {

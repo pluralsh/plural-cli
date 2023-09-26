@@ -1,23 +1,24 @@
 package provider_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pluralsh/plural/pkg/provider"
 )
 
 type fakeAccountsClient struct {
-	storage.AccountsClient
-	Account           *storage.Account
+	armstorage.AccountsClient
+	Account           *armstorage.Account
 	CreateCalledCount int
 }
 
@@ -39,7 +40,7 @@ func getFakeClientSetWithGroupsClient(existingGroup *armresources.ResourceGroup)
 	}
 }
 
-func getFakeClientSetWithAccountsClient(existingAccount *storage.Account) *provider.ClientSet {
+func getFakeClientSetWithAccountsClient(existingAccount *armstorage.Account) *provider.ClientSet {
 	return &provider.ClientSet{
 		Accounts: &fakeAccountsClient{
 			Account:           existingAccount,
@@ -58,43 +59,60 @@ func (f *fakeContainersClient) Create(_ context.Context, _ azblob.Metadata, _ az
 	return nil, nil
 }
 
-func (a *fakeAccountsClient) GetProperties(_ context.Context, _ string, name string, _ storage.AccountExpand) (result storage.Account, err error) {
-	if a.Account != nil && a.Account.Name != nil && *a.Account.Name == name {
-		return *a.Account, nil
-	}
-
-	return storage.Account{}, &azure.RequestError{
-		DetailedError: autorest.DetailedError{StatusCode: http.StatusNotFound},
-	}
-}
-
-func (a *fakeAccountsClient) List(_ context.Context) (result storage.AccountListResultPage, err error) {
-	return storage.NewAccountListResultPage(storage.AccountListResult{
-		Value: &[]storage.Account{},
-	}, nil), nil
-}
-
-func (a *fakeAccountsClient) Create(_ context.Context, _ string, _ string, _ storage.AccountCreateParameters) (result storage.AccountsCreateFuture, err error) {
+func (a *fakeAccountsClient) BeginCreate(_ context.Context, _ string, _ string, _ armstorage.AccountCreateParameters, _ *armstorage.AccountsClientBeginCreateOptions) (*runtime.Poller[armstorage.AccountsClientCreateResponse], error) {
 	a.CreateCalledCount++
-	return storage.AccountsCreateFuture{
-		FutureAPI: &fakeFutureAPI{},
-		Result: func(storage.AccountsClient) (storage.Account, error) {
-			return *a.Account, nil
+
+	js, err := json.Marshal(a.Account)
+	if err != nil {
+		return nil, err
+	}
+
+	return runtime.NewPoller(
+		&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewReader(js)),
+			Request: &http.Request{
+				Method: http.MethodGet,
+			},
 		},
-	}, nil
+		runtime.Pipeline{}, &runtime.NewPollerOptions[armstorage.AccountsClientCreateResponse]{
+			Response: &armstorage.AccountsClientCreateResponse{Account: *a.Account},
+		})
 }
 
-func (a *fakeAccountsClient) ListKeys(_ context.Context, _ string, _ string, _ storage.ListKeyExpand) (result storage.AccountListKeysResult, err error) {
+func (a *fakeAccountsClient) GetProperties(_ context.Context, _, name string, _ *armstorage.AccountsClientGetPropertiesOptions) (armstorage.AccountsClientGetPropertiesResponse, error) {
+	if a.Account != nil && a.Account.Name != nil && *a.Account.Name == name {
+		return armstorage.AccountsClientGetPropertiesResponse{Account: *a.Account}, nil
+	}
+
+	return armstorage.AccountsClientGetPropertiesResponse{}, &azcore.ResponseError{StatusCode: http.StatusNotFound}
+}
+
+func (a *fakeAccountsClient) NewListPager(_ *armstorage.AccountsClientListOptions) *runtime.Pager[armstorage.AccountsClientListResponse] {
+	return runtime.NewPager(runtime.PagingHandler[armstorage.AccountsClientListResponse]{
+		More: func(_ armstorage.AccountsClientListResponse) bool {
+			return false
+		},
+		Fetcher: func(ctx context.Context, a *armstorage.AccountsClientListResponse) (armstorage.AccountsClientListResponse, error) {
+			return armstorage.AccountsClientListResponse{
+				AccountListResult: armstorage.AccountListResult{
+					NextLink: nil,
+					Value:    nil,
+				},
+			}, nil
+		},
+	})
+}
+
+func (a *fakeAccountsClient) ListKeys(_ context.Context, _ string, _ string, _ *armstorage.AccountsClientListKeysOptions) (armstorage.AccountsClientListKeysResponse, error) {
 	keyName := "name"
 	keyValue := "value"
-	keys := []storage.AccountKey{{
-		KeyName:     &keyName,
-		Value:       &keyValue,
-		Permissions: "",
+	keys := []*armstorage.AccountKey{{
+		KeyName: &keyName,
+		Value:   &keyValue,
 	}}
-	return storage.AccountListKeysResult{
-		Response: autorest.Response{},
-		Keys:     &keys,
+	return armstorage.AccountsClientListKeysResponse{
+		AccountListKeysResult: armstorage.AccountListKeysResult{Keys: keys},
 	}, nil
 }
 
@@ -108,7 +126,6 @@ func (c *fakeGroupsClient) CreateOrUpdate(_ context.Context, _ string, parameter
 }
 
 func (c *fakeGroupsClient) Get(_ context.Context, resourceGroupName string, _ *armresources.ResourceGroupsClientGetOptions) (armresources.ResourceGroupsClientGetResponse, error) {
-
 	if c.Group != nil && c.Group.Name != nil && resourceGroupName == *c.Group.Name {
 		return armresources.ResourceGroupsClientGetResponse{
 			ResourceGroup: *c.Group,
@@ -118,48 +135,4 @@ func (c *fakeGroupsClient) Get(_ context.Context, resourceGroupName string, _ *a
 	return armresources.ResourceGroupsClientGetResponse{}, &azcore.ResponseError{
 		StatusCode: http.StatusNotFound,
 	}
-
-}
-
-type fakeFutureAPI struct {
-}
-
-func (f *fakeFutureAPI) Response() *http.Response {
-	return nil
-}
-
-func (f *fakeFutureAPI) Status() string {
-	return ""
-}
-
-func (f *fakeFutureAPI) PollingMethod() azure.PollingMethodType {
-	return ""
-}
-
-func (f *fakeFutureAPI) DoneWithContext(_ context.Context, _ autorest.Sender) (bool, error) {
-	return false, nil
-}
-
-func (f *fakeFutureAPI) GetPollingDelay() (time.Duration, bool) {
-	return time.Nanosecond, false
-}
-
-func (f *fakeFutureAPI) MarshalJSON() ([]byte, error) {
-	return nil, nil
-}
-
-func (f *fakeFutureAPI) UnmarshalJSON(_ []byte) error {
-	return nil
-}
-
-func (f *fakeFutureAPI) PollingURL() string {
-	return ""
-}
-
-func (f *fakeFutureAPI) GetResult(_ autorest.Sender) (*http.Response, error) {
-	return nil, nil
-}
-
-func (f *fakeFutureAPI) WaitForCompletionRef(context.Context, autorest.Client) error {
-	return nil
 }

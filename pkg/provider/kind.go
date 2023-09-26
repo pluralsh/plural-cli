@@ -5,16 +5,18 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	"github.com/AlecAivazis/survey/v2"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
 	"github.com/pluralsh/plural/pkg/provider/permissions"
 	"github.com/pluralsh/plural/pkg/template"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
-	v1 "k8s.io/api/core/v1"
 )
 
 type KINDProvider struct {
@@ -54,7 +56,7 @@ func mkKind(conf config.Config) (provider *KINDProvider, err error) {
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  provider.Cluster(),
 		Project:  provider.Project(),
-		Provider: KIND,
+		Provider: api.ProviderKind,
 		Region:   provider.Region(),
 		Context:  provider.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
@@ -89,7 +91,7 @@ func (kind *KINDProvider) CreateBackend(prefix string, version string, ctx map[s
 	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
 		return "", err
 	}
-	scaffold, err := GetProviderScaffold("KIND", version)
+	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderKind), version)
 	if err != nil {
 		return "", err
 	}
@@ -105,8 +107,12 @@ func (kind *KINDProvider) KubeConfig() error {
 	return utils.Execute(cmd)
 }
 
+func (kind *KINDProvider) KubeContext() string {
+	return fmt.Sprintf("kind-%s", kind.Cluster())
+}
+
 func (kind *KINDProvider) Name() string {
-	return KIND
+	return api.ProviderKind
 }
 
 func (kind *KINDProvider) Cluster() string {

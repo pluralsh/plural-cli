@@ -51,40 +51,44 @@ type NetworkConfig struct {
 }
 
 type ProjectManifest struct {
-	Cluster      string
-	Bucket       string
-	Project      string
-	Provider     string
-	Region       string
-	Owner        *Owner
-	Network      *NetworkConfig
-	BucketPrefix string `yaml:"bucketPrefix"`
-	Context      map[string]interface{}
+	ClusterAPI        bool
+	Cluster           string
+	Bucket            string
+	Project           string
+	Provider          string
+	Region            string
+	Owner             *Owner
+	Network           *NetworkConfig
+	AvailabilityZones []string
+	BucketPrefix      string `yaml:"bucketPrefix"`
+	Context           map[string]interface{}
 }
 
 func (this *ProjectManifest) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
-		Cluster      string                 `json:"cluster"`
-		Bucket       string                 `json:"bucket"`
-		Project      string                 `json:"project"`
-		Provider     string                 `json:"provider"`
-		Region       string                 `json:"region"`
-		Owner        *Owner                 `json:"owner"`
-		Network      *NetworkConfig         `json:"network"`
-		BucketPrefix string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
-		Context      map[string]interface{} `json:"context"`
+		Cluster           string                 `json:"cluster"`
+		Bucket            string                 `json:"bucket"`
+		Project           string                 `json:"project"`
+		Provider          string                 `json:"provider"`
+		Region            string                 `json:"region"`
+		Owner             *Owner                 `json:"owner"`
+		Network           *NetworkConfig         `json:"network"`
+		AvailabilityZones []string               `json:"availabilityZones"`
+		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
+		Context           map[string]interface{} `json:"context"`
 	}{
-		Cluster:      this.Cluster,
-		Bucket:       this.Bucket,
-		Project:      this.Project,
-		Provider:     this.Provider,
-		Region:       this.Region,
-		Owner:        this.Owner,
-		Network:      this.Network,
-		BucketPrefix: this.BucketPrefix,
-		Context:      this.Context,
+		Cluster:           this.Cluster,
+		Bucket:            this.Bucket,
+		Project:           this.Project,
+		Provider:          this.Provider,
+		Region:            this.Region,
+		Owner:             this.Owner,
+		Network:           this.Network,
+		AvailabilityZones: this.AvailabilityZones,
+		BucketPrefix:      this.BucketPrefix,
+		Context:           this.Context,
 	})
 }
 

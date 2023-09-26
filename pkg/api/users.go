@@ -166,7 +166,7 @@ func (client *client) CreateKey(name, content string) error {
 }
 
 func (client *client) GetEabCredential(cluster, provider string) (*EabCredential, error) {
-	resp, err := client.pluralClient.GetEabCredential(client.ctx, cluster, gqlclient.Provider(NormalizeProvider(provider)))
+	resp, err := client.pluralClient.GetEabCredential(client.ctx, cluster, gqlclient.Provider(ToGQLClientProvider(provider)))
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (client *client) GetEabCredential(cluster, provider string) (*EabCredential
 }
 
 func (client *client) DeleteEabCredential(cluster, provider string) error {
-	_, err := client.pluralClient.DeleteEabCredential(client.ctx, cluster, gqlclient.Provider(NormalizeProvider(provider)))
+	_, err := client.pluralClient.DeleteEabCredential(client.ctx, cluster, gqlclient.Provider(ToGQLClientProvider(provider)))
 	if err != nil {
 		return err
 	}
