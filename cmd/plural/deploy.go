@@ -155,6 +155,7 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 
 	workspace.PrintLinks()
 
+	appReadme(repoName, false) // nolint:errcheck
 	return err
 }
 

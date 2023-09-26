@@ -26,9 +26,6 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/buger/goterm v1.0.4
 	github.com/cert-manager/cert-manager v1.10.0
-	github.com/charmbracelet/bubbles v0.13.0
-	github.com/charmbracelet/bubbletea v0.21.0
-	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/chartmuseum/helm-push v0.10.3
 	github.com/coreos/go-semver v0.3.0
 	github.com/databus23/helm-diff/v3 v3.6.0
@@ -51,7 +48,7 @@ require (
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/muesli/reflow v0.3.0
+	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -64,6 +61,7 @@ require (
 	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.38.1
+	github.com/spf13/viper v1.15.0
 	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.14
 	github.com/wailsapp/wails/v2 v2.4.1
@@ -143,6 +141,9 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
+	github.com/charmbracelet/bubbles v0.13.0 // indirect
+	github.com/charmbracelet/bubbletea v0.21.0 // indirect
+	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cjlapao/common-go v0.0.39 // indirect
 	github.com/cloudflare/cfssl v1.6.3 // indirect
@@ -212,6 +213,7 @@ require (
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 // indirect
@@ -227,7 +229,6 @@ require (
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
@@ -379,7 +380,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
-	github.com/mattn/go-isatty v0.0.19
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
@@ -412,7 +413,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.8.6 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -456,6 +457,7 @@ require (
 )
 
 replace (
+	github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914190909-3fe18acd95d7
 	go.etcd.io/etcd/pkg/v3 => go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.26.3
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596
