@@ -18,6 +18,9 @@ type ConsoleClient interface {
 	ListClusterServices(clusterId string) (*consoleclient.ListServiceDeployment, error)
 	CreateRepository(url string, privateKey, passphrase, username, password *string) (*consoleclient.CreateGitRepository, error)
 	ListRepositories() (*consoleclient.ListGitRepositories, error)
+	CreateClusterService(clusterId string, attr consoleclient.ServiceDeploymentAttributes) (*consoleclient.CreateServiceDeployment, error)
+	UpdateClusterService(serviceId string, attr consoleclient.ServiceUpdateAttributes) (*consoleclient.UpdateServiceDeployment, error)
+	GetClusterService(serviceId string) (*consoleclient.GetServiceDeployment, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
