@@ -457,7 +457,7 @@ require (
 )
 
 replace (
-	github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914190909-3fe18acd95d7
+	github.com/norwoodj/helm-docs v1.11.2 => github.com/pluralsh/helm-docs v1.11.3-0.20230914191425-6d14ebab8817
 	go.etcd.io/etcd/pkg/v3 => go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.26.3
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596
