@@ -9,20 +9,20 @@ import (
 )
 
 type consoleClient struct {
-	ctx          context.Context
-	pluralClient *consoleclient.Client
+	ctx    context.Context
+	client *consoleclient.Client
 }
 
 type ConsoleClient interface {
-	ListClusters() ([]Cluster, error)
-	ListClusterServices(clusterId string) ([]ServiceDeployment, error)
-	CreateRepository(url string, privateKey, passphrase, username, password *string) (*GitRepository, error)
-	ListRepositories() ([]GitRepository, error)
+	ListClusters() (*consoleclient.ListClusters, error)
+	ListClusterServices(clusterId string) (*consoleclient.ListServiceDeployment, error)
+	CreateRepository(url string, privateKey, passphrase, username, password *string) (*consoleclient.CreateGitRepository, error)
+	ListRepositories() (*consoleclient.ListGitRepositories, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	return &consoleClient{
-		pluralClient: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
+		client: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
 			req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
 		}),
 		ctx: context.Background(),
