@@ -1,7 +1,7 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural/pkg/console"
+	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -88,8 +88,8 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 	}
 
 	headers := []string{"ID", "URL"}
-	return utils.PrintTable([]console.GitRepository{*repo}, headers, func(r console.GitRepository) ([]string, error) {
-		return []string{r.Id, r.URL}, nil
+	return utils.PrintTable([]gqlclient.GitRepositoryFragment{*repo.CreateGitRepository}, headers, func(r gqlclient.GitRepositoryFragment) ([]string, error) {
+		return []string{r.ID, r.URL}, nil
 	})
 }
 
@@ -103,8 +103,8 @@ func (p *Plural) handleListCDRepositories(c *cli.Context) error {
 	}
 
 	headers := []string{"ID", "URL"}
-	return utils.PrintTable(repos, headers, func(r console.GitRepository) ([]string, error) {
-		return []string{r.Id, r.URL}, nil
+	return utils.PrintTable(repos.GitRepositories.Edges, headers, func(r *gqlclient.GitRepositoryEdgeFragment) ([]string, error) {
+		return []string{r.Node.ID, r.Node.URL}, nil
 	})
 
 }
@@ -121,8 +121,8 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder"}
-	return utils.PrintTable(sd, headers, func(sd console.ServiceDeployment) ([]string, error) {
-		return []string{sd.Id, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder}, nil
+	return utils.PrintTable(sd.ServiceDeployments.Edges, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
+		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder}, nil
 	})
 }
 
@@ -137,8 +137,8 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Version"}
-	return utils.PrintTable(clusters, headers, func(cl console.Cluster) ([]string, error) {
-		return []string{cl.Id, cl.Name, cl.Version}, nil
+	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
+		return []string{cl.Node.ID, cl.Node.Name, cl.Node.Version}, nil
 	})
 }
 
