@@ -1,9 +1,13 @@
 package plural
 
 import (
+	"fmt"
+	"strings"
+
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 func init() {
@@ -64,6 +68,40 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
 			Usage:     "list cluster services",
 		},
+		{
+			Name:      "create",
+			ArgsUsage: "CLUSTER_ID",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "name", Usage: "service name"},
+				cli.StringFlag{Name: "namespace", Usage: "service namespace"},
+				cli.StringFlag{Name: "version", Usage: "service version"},
+				cli.StringFlag{Name: "repoId", Usage: "repository ID"},
+				cli.StringFlag{Name: "gitRef", Usage: "git ref"},
+				cli.StringFlag{Name: "gitFolder", Usage: "git folder"},
+				cli.StringSliceFlag{
+					Name:  "conf",
+					Usage: " config name value",
+				},
+				cli.StringFlag{Name: "configFile", Usage: "path for configuration file"},
+			},
+			Action: latestVersion(requireArgs(p.handleCreateClusterService, []string{"CLUSTER_ID"})),
+			Usage:  "create cluster service",
+		},
+		{
+			Name:      "update",
+			ArgsUsage: "SERVICE_ID",
+			Action:    latestVersion(requireArgs(p.handleUpdateClusterService, []string{"SERVICE_ID"})),
+			Usage:     "update cluster service",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "version", Usage: "service version"},
+				cli.StringFlag{Name: "gitRef", Usage: "git ref"},
+				cli.StringFlag{Name: "gitFolder", Usage: "git folder"},
+				cli.StringSliceFlag{
+					Name:  "conf",
+					Usage: " config name value",
+				},
+			},
+		},
 	}
 }
 
@@ -120,9 +158,143 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder"}
+	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo ID"}
 	return utils.PrintTable(sd.ServiceDeployments.Edges, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
-		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder}, nil
+		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.ID}, nil
+	})
+}
+
+type ServiceDeploymentAttributesConfiguration struct {
+	Configuration []*gqlclient.ConfigAttributes
+}
+
+func (p *Plural) handleCreateClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	clusterId := c.Args().Get(0)
+	v := c.String("version")
+	attributes := gqlclient.ServiceDeploymentAttributes{
+		Name:         c.String("name"),
+		Namespace:    c.String("namespace"),
+		Version:      &v,
+		RepositoryID: c.String("repoId"),
+		Git: gqlclient.GitRefAttributes{
+			Ref:    c.String("gitRef"),
+			Folder: c.String("gitFolder"),
+		},
+		Configuration: []*gqlclient.ConfigAttributes{},
+	}
+
+	if c.String("configFile") != "" {
+		configFile, err := utils.ReadFile(c.String("configFile"))
+		if err != nil {
+			return err
+		}
+		sdc := ServiceDeploymentAttributesConfiguration{}
+		if err := yaml.Unmarshal([]byte(configFile), &sdc); err != nil {
+			return err
+		}
+		attributes.Configuration = append(attributes.Configuration, sdc.Configuration...)
+	}
+	var confArgs []string
+	if c.IsSet("conf") {
+		confArgs = append(confArgs, c.StringSlice("conf")...)
+	}
+	for _, conf := range confArgs {
+		configurationPair := strings.Split(conf, "=")
+		if len(configurationPair) == 2 {
+			attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
+				Name:  configurationPair[0],
+				Value: configurationPair[1],
+			})
+		}
+	}
+
+	sd, err := p.ConsoleClient.CreateClusterService(clusterId, attributes)
+	if err != nil {
+		return err
+	}
+	if sd == nil {
+		return fmt.Errorf("the returned object is empty, check if all fields are set")
+	}
+
+	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
+	return utils.PrintTable([]*gqlclient.CreateServiceDeployment{sd}, headers, func(sd *gqlclient.CreateServiceDeployment) ([]string, error) {
+		return []string{sd.CreateServiceDeployment.ID, sd.CreateServiceDeployment.Name, sd.CreateServiceDeployment.Namespace, sd.CreateServiceDeployment.Git.Ref, sd.CreateServiceDeployment.Git.Folder, sd.CreateServiceDeployment.Repository.ID}, nil
+	})
+}
+
+func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	serviceId := c.Args().Get(0)
+
+	existing, err := p.ConsoleClient.GetClusterService(serviceId)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("existing service deployment is empty")
+	}
+	existingConfigurations := map[string]string{}
+	attributes := gqlclient.ServiceUpdateAttributes{
+		Version: &existing.ServiceDeployment.Version,
+		Git: gqlclient.GitRefAttributes{
+			Ref:    existing.ServiceDeployment.Git.Ref,
+			Folder: existing.ServiceDeployment.Git.Folder,
+		},
+		Configuration: []*gqlclient.ConfigAttributes{},
+	}
+
+	for _, conf := range existing.ServiceDeployment.Configuration {
+		existingConfigurations[conf.Name] = conf.Value
+	}
+
+	v := c.String("version")
+	if v != "" {
+		attributes.Version = &v
+	}
+	if c.String("gitRef") != "" {
+		attributes.Git.Ref = c.String("gitRef")
+	}
+	if c.String("gitFolder") != "" {
+		attributes.Git.Folder = c.String("gitFolder")
+	}
+	var confArgs []string
+	if c.IsSet("conf") {
+		confArgs = append(confArgs, c.StringSlice("conf")...)
+	}
+
+	updateConfigurations := map[string]string{}
+	for _, conf := range confArgs {
+		configurationPair := strings.Split(conf, "=")
+		if len(configurationPair) == 2 {
+			updateConfigurations[configurationPair[0]] = configurationPair[1]
+		}
+	}
+	for k, v := range updateConfigurations {
+		existingConfigurations[k] = v
+	}
+	for key, value := range existingConfigurations {
+		attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, attributes)
+	if err != nil {
+		return err
+	}
+	if sd == nil {
+		return fmt.Errorf("returned object is nil")
+	}
+
+	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
+	return utils.PrintTable([]*gqlclient.UpdateServiceDeployment{sd}, headers, func(sd *gqlclient.UpdateServiceDeployment) ([]string, error) {
+		return []string{sd.UpdateServiceDeployment.ID, sd.UpdateServiceDeployment.Name, sd.UpdateServiceDeployment.Namespace, sd.UpdateServiceDeployment.Git.Ref, sd.UpdateServiceDeployment.Git.Folder, sd.UpdateServiceDeployment.Repository.ID}, nil
 	})
 }
 
@@ -138,7 +310,7 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 
 	headers := []string{"Id", "Name", "Version"}
 	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
-		return []string{cl.Node.ID, cl.Node.Name, cl.Node.Version}, nil
+		return []string{cl.Node.ID, cl.Node.Name, *cl.Node.Version}, nil
 	})
 }
 
