@@ -7,6 +7,7 @@ import (
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/urfave/cli"
+	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -140,9 +141,9 @@ func (p *Plural) handleListCDRepositories(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"ID", "URL", "Status"}
+	headers := []string{"ID", "URL", "Status", "Error"}
 	return utils.PrintTable(repos.GitRepositories.Edges, headers, func(r *gqlclient.GitRepositoryEdgeFragment) ([]string, error) {
-		return []string{r.Node.ID, r.Node.URL, string(*r.Node.Health)}, nil
+		return []string{r.Node.ID, r.Node.URL, string(*r.Node.Health), lo.FromPtr(r.Node.Error)}, nil
 	})
 
 }
