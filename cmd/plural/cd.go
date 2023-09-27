@@ -75,14 +75,14 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "name", Usage: "service name"},
 				cli.StringFlag{Name: "namespace", Usage: "service namespace"},
 				cli.StringFlag{Name: "version", Usage: "service version"},
-				cli.StringFlag{Name: "repoId", Usage: "repository ID"},
-				cli.StringFlag{Name: "gitRef", Usage: "git ref"},
-				cli.StringFlag{Name: "gitFolder", Usage: "git folder"},
+				cli.StringFlag{Name: "repo-id", Usage: "repository ID"},
+				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha"},
+				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located"},
 				cli.StringSliceFlag{
 					Name:  "conf",
-					Usage: " config name value",
+					Usage: "config name value",
 				},
-				cli.StringFlag{Name: "configFile", Usage: "path for configuration file"},
+				cli.StringFlag{Name: "config-file", Usage: "path for configuration file"},
 			},
 			Action: latestVersion(requireArgs(p.handleCreateClusterService, []string{"CLUSTER_ID"})),
 			Usage:  "create cluster service",
@@ -94,11 +94,11 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Usage:     "update cluster service",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "version", Usage: "service version"},
-				cli.StringFlag{Name: "gitRef", Usage: "git ref"},
-				cli.StringFlag{Name: "gitFolder", Usage: "git folder"},
+				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha"},
+				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located"},
 				cli.StringSliceFlag{
 					Name:  "conf",
-					Usage: " config name value",
+					Usage: "config name value",
 				},
 			},
 		},
@@ -140,9 +140,9 @@ func (p *Plural) handleListCDRepositories(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"ID", "URL"}
+	headers := []string{"ID", "URL", "Status"}
 	return utils.PrintTable(repos.GitRepositories.Edges, headers, func(r *gqlclient.GitRepositoryEdgeFragment) ([]string, error) {
-		return []string{r.Node.ID, r.Node.URL}, nil
+		return []string{r.Node.ID, r.Node.URL, string(*r.Node.Health)}, nil
 	})
 
 }
@@ -178,16 +178,16 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		Name:         c.String("name"),
 		Namespace:    c.String("namespace"),
 		Version:      &v,
-		RepositoryID: c.String("repoId"),
+		RepositoryID: c.String("repo-id"),
 		Git: gqlclient.GitRefAttributes{
-			Ref:    c.String("gitRef"),
-			Folder: c.String("gitFolder"),
+			Ref:    c.String("git-ref"),
+			Folder: c.String("git-folder"),
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
 
-	if c.String("configFile") != "" {
-		configFile, err := utils.ReadFile(c.String("configFile"))
+	if c.String("config-file") != "" {
+		configFile, err := utils.ReadFile(c.String("config-file"))
 		if err != nil {
 			return err
 		}
@@ -256,11 +256,11 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	if v != "" {
 		attributes.Version = &v
 	}
-	if c.String("gitRef") != "" {
-		attributes.Git.Ref = c.String("gitRef")
+	if c.String("git-ref") != "" {
+		attributes.Git.Ref = c.String("git-ref")
 	}
-	if c.String("gitFolder") != "" {
-		attributes.Git.Folder = c.String("gitFolder")
+	if c.String("git-folder") != "" {
+		attributes.Git.Folder = c.String("git-folder")
 	}
 	var confArgs []string
 	if c.IsSet("conf") {
