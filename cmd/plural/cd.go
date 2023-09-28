@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pluralsh/plural/pkg/console"
+
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -35,6 +38,15 @@ func (p *Plural) cdCommands() []cli.Command {
 			Name:        "repositories",
 			Subcommands: p.cdRepositoriesCommands(),
 			Usage:       "manage CD repositories",
+		},
+		{
+			Name:   "install",
+			Action: p.handleInstallDeploymentsOperator,
+			Usage:  "install deployments operator",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "url", Usage: "console url"},
+				cli.StringFlag{Name: "token", Usage: "console token"},
+			},
 		},
 	}
 }
@@ -344,6 +356,16 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
 		return []string{cl.Node.ID, cl.Node.Name, *cl.Node.Version}, nil
 	})
+}
+
+func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
+	namespace := "plrl-deploy-operator"
+	p.InitKube()
+	err := p.Kube.CreateNamespace(namespace)
+	if !apierrors.IsAlreadyExists(err) {
+		return err
+	}
+	return console.InstallAgent(c.String("url"), c.String("token"), namespace)
 }
 
 func getFlag(s string) *string {
