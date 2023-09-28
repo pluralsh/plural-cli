@@ -6,8 +6,8 @@ import (
 
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
 	"github.com/samber/lo"
+	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -102,6 +102,15 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 					Usage: "config name value",
 				},
 			},
+		},
+		{
+			Name:      "describe",
+			ArgsUsage: "SERVICE_ID",
+			Action:    latestVersion(requireArgs(p.handleDescribeClusterService, []string{"SERVICE_ID"})),
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "o", Usage: "output format"},
+			},
+			Usage: "describe cluster service",
 		},
 	}
 }
@@ -224,6 +233,28 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	return utils.PrintTable([]*gqlclient.CreateServiceDeployment{sd}, headers, func(sd *gqlclient.CreateServiceDeployment) ([]string, error) {
 		return []string{sd.CreateServiceDeployment.ID, sd.CreateServiceDeployment.Name, sd.CreateServiceDeployment.Namespace, sd.CreateServiceDeployment.Git.Ref, sd.CreateServiceDeployment.Git.Folder, sd.CreateServiceDeployment.Repository.ID}, nil
 	})
+}
+
+func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	serviceId := c.Args().Get(0)
+	existing, err := p.ConsoleClient.GetClusterService(serviceId)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("existing service deployment is empty")
+	}
+	output := c.String("o")
+	if output == "json" {
+		utils.NewJsonPrinter(existing).PrettyPrint()
+	} else {
+		utils.NewYAMLPrinter(existing).PrettyPrint()
+	}
+
+	return nil
 }
 
 func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
