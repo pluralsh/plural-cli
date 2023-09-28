@@ -25,9 +25,8 @@ import (
 var settings = cli.New()
 
 const (
-	repoName  = "deployop"
-	repoUrl   = "https://pluralsh.github.io/deployment-operator"
-	namespace = "console"
+	repoName = "deployop"
+	repoUrl  = "https://pluralsh.github.io/deployment-operator"
 )
 
 // getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
@@ -39,13 +38,25 @@ func getEnvVar(name, defaultValue string) string {
 	return defaultValue
 }
 
-func InstallAgent(url, token string) error {
+func InstallAgent(url, token, namespace string) error {
+
+	vals := map[string]interface{}{
+		"secrets": map[string]string{
+			"deployToken": token,
+		},
+		"consoleUrl": url,
+	}
+
+	if err := addAgentRepo(); err != nil {
+		return err
+	}
+
 	helmConfig, err := helm.GetActionConfig(namespace)
 	if err != nil {
 		return nil
 	}
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(repoName, settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", repoName, "deployment-operator"), settings)
 	if err != nil {
 		return err
 	}
@@ -63,13 +74,13 @@ func InstallAgent(url, token string) error {
 		instClient.ReleaseName = repoName
 		instClient.Timeout = time.Minute * 10
 
-		_, err = instClient.Run(chart, map[string]interface{}{})
+		_, err = instClient.Run(chart, vals)
 		return err
 	}
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 10
-	_, err = client.Run(repoName, chart, map[string]interface{}{})
+	_, err = client.Run(repoName, chart, vals)
 	return nil
 }
 
