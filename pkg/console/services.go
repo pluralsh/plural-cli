@@ -2,6 +2,7 @@ package console
 
 import (
 	gqlclient "github.com/pluralsh/console-client-go"
+
 	"github.com/pluralsh/plural/pkg/api"
 )
 
@@ -35,7 +36,16 @@ func (c *consoleClient) UpdateClusterService(serviceId string, attributes gqlcli
 func (c *consoleClient) GetClusterService(serviceId string) (*gqlclient.GetServiceDeployment, error) {
 	result, err := c.client.GetServiceDeployment(c.ctx, serviceId)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "UpdateClusterService")
+		return nil, api.GetErrorResponse(err, "GetClusterService")
+	}
+
+	return result, nil
+}
+
+func (c *consoleClient) DeleteClusterService(serviceId string) (*gqlclient.DeleteServiceDeployment, error) {
+	result, err := c.client.DeleteServiceDeployment(c.ctx, serviceId)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "DeleteClusterService")
 	}
 
 	return result, nil

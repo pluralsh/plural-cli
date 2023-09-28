@@ -21,6 +21,7 @@ type ConsoleClient interface {
 	CreateClusterService(clusterId string, attr consoleclient.ServiceDeploymentAttributes) (*consoleclient.CreateServiceDeployment, error)
 	UpdateClusterService(serviceId string, attr consoleclient.ServiceUpdateAttributes) (*consoleclient.UpdateServiceDeployment, error)
 	GetClusterService(serviceId string) (*consoleclient.GetServiceDeployment, error)
+	DeleteClusterService(serviceId string) (*consoleclient.DeleteServiceDeployment, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
