@@ -133,6 +133,7 @@ func getBootstrapFlags(prov string) []string {
 	switch prov {
 	case api.ProviderAWS:
 		return []string{
+			"--set", "bootstrap.cert-manager.enabled=true",
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=true",
 			"--set", "bootstrap.aws-ebs-csi-driver.enabled=false",
 			"--set", "bootstrap.aws-load-balancer-controller.enabled=false",
@@ -146,12 +147,14 @@ func getBootstrapFlags(prov string) []string {
 		}
 	case api.ProviderAzure:
 		return []string{
+			"--set", "bootstrap.cert-manager.enabled=true",
 			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
 		}
 	case api.ProviderGCP:
 		return []string{
+			"--set", "bootstrap.cert-manager.enabled=true",
 			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
@@ -174,12 +177,16 @@ func getKubeconfigPath() (string, error) {
 
 // GetBootstrapPath returns bootstrap repository path.
 func GetBootstrapPath() (string, error) {
+	return GetModulePath("bootstrap")
+}
+
+func GetModulePath(module string) (string, error) {
 	gitRootPath, err := git.Root()
 	if err != nil {
 		return "", err
 	}
 
-	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, "bootstrap")), nil
+	return pathing.SanitizeFilepath(filepath.Join(gitRootPath, module)), nil
 }
 
 // GetStepPath returns path from which step will be executed.

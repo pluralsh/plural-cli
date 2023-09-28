@@ -7,6 +7,10 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/application"
 	"github.com/pluralsh/plural/pkg/bootstrap"
@@ -20,9 +24,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
-	"github.com/urfave/cli"
 )
 
 const Bootstrap = "bootstrap"
@@ -95,15 +96,21 @@ func (p *Plural) build(c *cli.Context) error {
 		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
 
-	if c.IsSet("only") {
-		installation, err := p.GetInstallation(c.String("only"))
-		if err != nil {
-			return api.GetErrorResponse(err, "GetInstallation")
-		} else if installation == nil {
-			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
+	if len(c.StringSlice("only")) > 0 {
+		for _, inst := range c.StringSlice("only") {
+			installation, err := p.GetInstallation(inst)
+			if err != nil {
+				return api.GetErrorResponse(err, "GetInstallation")
+			} else if installation == nil {
+				return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", inst))
+			}
+
+			if err := p.doBuild(installation, force); err != nil {
+				return err
+			}
 		}
 
-		return p.doBuild(installation, force)
+		return nil
 	}
 
 	installations, err := p.getSortedInstallations("")
