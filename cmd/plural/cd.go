@@ -7,11 +7,12 @@ import (
 	"github.com/pluralsh/plural/pkg/console"
 
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
+
+	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func init() {
@@ -123,6 +124,12 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "o", Usage: "output format"},
 			},
 			Usage: "describe cluster service",
+		},
+		{
+			Name: "delete",
+			ArgsUsage: "SERVICE_ID",
+			Action:latestVersion(requireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
+			Usage: "delete cluster service",
 		},
 	}
 }
@@ -366,6 +373,20 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 		return err
 	}
 	return console.InstallAgent(c.String("url"), c.String("token"), namespace)
+}
+
+func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	serviceId := c.Args().Get(0)
+	existing, err := p.ConsoleClient.DeleteClusterService(serviceId)
+	if err != nil {
+		return fmt.Errorf("could not delete service: %s", err)
+	}
+
+	utils.Success("Service %s/%s has been deleted successfully", existing.DeleteServiceDeployment.ID, existing.DeleteServiceDeployment.Name)
+	return nil
 }
 
 func getFlag(s string) *string {
