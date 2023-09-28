@@ -222,8 +222,8 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	}
 
 	// TODO: Remove this after testing. It is deprecated as values.yaml migration should not longer be required.
-	//mapValues, err := getValues(valuesFile)
-	//if err != nil {
+	// mapValues, err := getValues(valuesFile)
+	// if err != nil {
 	//	return err
 	//}
 	//patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)

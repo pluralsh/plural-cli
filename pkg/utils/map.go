@@ -94,9 +94,10 @@ var (
 // if needed by passing custom DiffCondition function.
 //
 // Example:
-//  A: {a: 1, b: 1, c: 2}
-//  B: {a: 1, d: 2, c: 3}
-//  Result: {b: 1, c: 2}
+//
+//	A: {a: 1, b: 1, c: 2}
+//	B: {a: 1, d: 2, c: 3}
+//	Result: {b: 1, c: 2}
 //
 // Note: It does not remove null value keys by default.
 func DiffMap(base, diff map[string]interface{}, conditions ...DiffCondition) map[string]interface{} {
@@ -108,17 +109,17 @@ func DiffMap(base, diff map[string]interface{}, conditions ...DiffCondition) map
 	}
 
 	for k, v := range base {
-		switch v.(type) {
+		switch f := v.(type) {
 		case map[string]interface{}:
 			dValue, _ := diff[k].(map[string]interface{})
-			if dMap := DiffMap(v.(map[string]interface{}), dValue, conditions...); len(dMap) > 0 {
+			if dMap := DiffMap(f, dValue, conditions...); len(dMap) > 0 {
 				result[k] = dMap
 				break
 			}
 
 			delete(result, k)
 		default:
-			diffV, _ := diff[k]
+			diffV := diff[k]
 			for _, condition := range append(conditions, equalDiffCondition) {
 				if condition(k, v, diffV) {
 					delete(result, k)
