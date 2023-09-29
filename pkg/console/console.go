@@ -15,6 +15,7 @@ type consoleClient struct {
 
 type ConsoleClient interface {
 	ListClusters() (*consoleclient.ListClusters, error)
+	GetCluster(id string) (*consoleclient.GetCluster, error)
 	ListClusterServices(clusterId string) (*consoleclient.ListServiceDeployment, error)
 	CreateRepository(url string, privateKey, passphrase, username, password *string) (*consoleclient.CreateGitRepository, error)
 	ListRepositories() (*consoleclient.ListGitRepositories, error)

@@ -14,3 +14,13 @@ func (c *consoleClient) ListClusters() (*consoleclient.ListClusters, error) {
 
 	return result, nil
 }
+
+func (c *consoleClient) GetCluster(id string) (*consoleclient.GetCluster, error) {
+
+	result, err := c.client.GetCluster(c.ctx, &id)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetCluster")
+	}
+
+	return result, nil
+}

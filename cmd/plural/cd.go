@@ -141,6 +141,15 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Action: latestVersion(p.handleListClusters),
 			Usage:  "list clusters",
 		},
+		{
+			Name:      "describe",
+			Action:    latestVersion(requireArgs(p.handleDescribeCluster, []string{"CLUSTER_ID"})),
+			Usage:     "describe cluster",
+			ArgsUsage: "CLUSTER_ID",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "o", Usage: "output format"},
+			},
+		},
 	}
 }
 
@@ -390,6 +399,28 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	}
 
 	utils.Success("Service %s/%s has been deleted successfully", existing.DeleteServiceDeployment.ID, existing.DeleteServiceDeployment.Name)
+	return nil
+}
+
+func (p *Plural) handleDescribeCluster(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	id := c.Args().Get(0)
+	existing, err := p.ConsoleClient.GetCluster(id)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("existing cluster is empty")
+	}
+	output := c.String("o")
+	if output == "json" {
+		utils.NewJsonPrinter(existing).PrettyPrint()
+	} else {
+		utils.NewYAMLPrinter(existing).PrettyPrint()
+	}
+
 	return nil
 }
 
