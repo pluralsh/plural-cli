@@ -126,10 +126,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Usage: "describe cluster service",
 		},
 		{
-			Name: "delete",
+			Name:      "delete",
 			ArgsUsage: "SERVICE_ID",
-			Action:latestVersion(requireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
-			Usage: "delete cluster service",
+			Action:    latestVersion(requireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
+			Usage:     "delete cluster service",
 		},
 	}
 }
@@ -187,9 +187,9 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo ID"}
+	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
 	return utils.PrintTable(sd.ServiceDeployments.Edges, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
-		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.ID}, nil
+		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.URL}, nil
 	})
 }
 
@@ -250,7 +250,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
 	return utils.PrintTable([]*gqlclient.CreateServiceDeployment{sd}, headers, func(sd *gqlclient.CreateServiceDeployment) ([]string, error) {
-		return []string{sd.CreateServiceDeployment.ID, sd.CreateServiceDeployment.Name, sd.CreateServiceDeployment.Namespace, sd.CreateServiceDeployment.Git.Ref, sd.CreateServiceDeployment.Git.Folder, sd.CreateServiceDeployment.Repository.ID}, nil
+		return []string{sd.CreateServiceDeployment.ID, sd.CreateServiceDeployment.Name, sd.CreateServiceDeployment.Namespace, sd.CreateServiceDeployment.Git.Ref, sd.CreateServiceDeployment.Git.Folder, sd.CreateServiceDeployment.Repository.URL}, nil
 	})
 }
 
@@ -345,7 +345,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
 	return utils.PrintTable([]*gqlclient.UpdateServiceDeployment{sd}, headers, func(sd *gqlclient.UpdateServiceDeployment) ([]string, error) {
-		return []string{sd.UpdateServiceDeployment.ID, sd.UpdateServiceDeployment.Name, sd.UpdateServiceDeployment.Namespace, sd.UpdateServiceDeployment.Git.Ref, sd.UpdateServiceDeployment.Git.Folder, sd.UpdateServiceDeployment.Repository.ID}, nil
+		return []string{sd.UpdateServiceDeployment.ID, sd.UpdateServiceDeployment.Name, sd.UpdateServiceDeployment.Namespace, sd.UpdateServiceDeployment.Git.Ref, sd.UpdateServiceDeployment.Git.Folder, sd.UpdateServiceDeployment.Repository.URL}, nil
 	})
 }
 
@@ -359,9 +359,13 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"Id", "Name", "Version"}
+	headers := []string{"Id", "Name", "Version", "Provider"}
 	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
-		return []string{cl.Node.ID, cl.Node.Name, *cl.Node.Version}, nil
+		provider := ""
+		if cl.Node.Provider != nil {
+			provider = cl.Node.Provider.Name
+		}
+		return []string{cl.Node.ID, cl.Node.Name, *cl.Node.Version, provider}, nil
 	})
 }
 

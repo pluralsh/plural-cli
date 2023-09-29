@@ -453,6 +453,7 @@ func (p *Plural) getCommands() []cli.Command {
 		},
 		{
 			Name:        "deployments",
+			Aliases:     []string{"cd"},
 			Usage:       "view and manage plural deployments",
 			Subcommands: p.cdCommands(),
 			Flags: []cli.Flag{
