@@ -63,7 +63,7 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 			Name:   "create",
 			Action: latestVersion(p.handleCreateCDRepository),
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "url", Usage: "git repo url"},
+				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
 				cli.StringFlag{Name: "privateKey", Usage: "git repo private key"},
 				cli.StringFlag{Name: "passphrase", Usage: "git repo passphrase"},
 				cli.StringFlag{Name: "username", Usage: "git repo username"},
@@ -86,12 +86,12 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Name:      "create",
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "name", Usage: "service name"},
-				cli.StringFlag{Name: "namespace", Usage: "service namespace"},
-				cli.StringFlag{Name: "version", Usage: "service version"},
-				cli.StringFlag{Name: "repo-id", Usage: "repository ID"},
-				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha"},
-				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located"},
+				cli.StringFlag{Name: "name", Usage: "service name", Required: true},
+				cli.StringFlag{Name: "namespace", Usage: "service namespace. If not specified the 'default' will be used"},
+				cli.StringFlag{Name: "version", Usage: "service version. If not specified the '0.0.1' will be used"},
+				cli.StringFlag{Name: "repo-id", Usage: "repository ID", Required: true},
+				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha", Required: true},
+				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located", Required: true},
 				cli.StringSliceFlag{
 					Name:  "conf",
 					Usage: "config name value",
@@ -157,7 +157,8 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	repo, err := p.ConsoleClient.CreateRepository(c.String("url"), getFlag(c.String("privateKey")),
+	url := c.String("url")
+	repo, err := p.ConsoleClient.CreateRepository(url, getFlag(c.String("privateKey")),
 		getFlag(c.String("passphrase")), getFlag(c.String("username")), getFlag(c.String("password")))
 	if err != nil {
 		return err
@@ -169,7 +170,7 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) handleListCDRepositories(c *cli.Context) error {
+func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
@@ -211,15 +212,26 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		return err
 	}
 	clusterId := c.Args().Get(0)
-	v := c.String("version")
+	v, err := validateFlag(c, "version", "0.0.1")
+	if err != nil {
+		return err
+	}
+	name := c.String("name")
+	namespace, err := validateFlag(c, "namespace", "default")
+	if err != nil {
+		return err
+	}
+	repoId := c.String("repo-id")
+	gitRef := c.String("git-ref")
+	gitFolder := c.String("git-folder")
 	attributes := gqlclient.ServiceDeploymentAttributes{
-		Name:         c.String("name"),
-		Namespace:    c.String("namespace"),
+		Name:         name,
+		Namespace:    namespace,
 		Version:      &v,
-		RepositoryID: c.String("repo-id"),
+		RepositoryID: repoId,
 		Git: gqlclient.GitRefAttributes{
-			Ref:    c.String("git-ref"),
-			Folder: c.String("git-folder"),
+			Ref:    gitRef,
+			Folder: c.String(gitFolder),
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
@@ -358,7 +370,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) handleListClusters(c *cli.Context) error {
+func (p *Plural) handleListClusters(_ *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
@@ -380,8 +392,11 @@ func (p *Plural) handleListClusters(c *cli.Context) error {
 
 func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	namespace := "plrl-deploy-operator"
-	p.InitKube()
-	err := p.Kube.CreateNamespace(namespace)
+	err := p.InitKube()
+	if err != nil {
+		return err
+	}
+	err = p.Kube.CreateNamespace(namespace)
 	if !apierrors.IsAlreadyExists(err) {
 		return err
 	}
@@ -429,4 +444,16 @@ func getFlag(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, error) {
+	res := ctx.String(name)
+	if res == "" {
+		if defaultVal == "" {
+			return "", fmt.Errorf("expected --%s flag", name)
+		}
+		res = defaultVal
+	}
+
+	return res, nil
 }
