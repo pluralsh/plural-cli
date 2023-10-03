@@ -28,3 +28,12 @@ func (c *consoleClient) ListRepositories() (*gqlclient.ListGitRepositories, erro
 
 	return result, nil
 }
+
+func (c *consoleClient) UpdateRepository(id string, attrs gqlclient.GitAttributes) (*gqlclient.UpdateGitRepository, error) {
+
+	res, err := c.client.UpdateGitRepository(c.ctx, id, attrs)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "UpdateGitRepository")
+	}
+	return res, nil
+}

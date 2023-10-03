@@ -71,6 +71,15 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 			},
 			Usage: "create repository",
 		},
+		{
+			Name:      "update",
+			ArgsUsage: "REPO_ID",
+			Action:    latestVersion(requireArgs(p.handleUpdateCDRepository, []string{"REPO_ID"})),
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
+			},
+			Usage: "update repository",
+		},
 	}
 }
 
@@ -150,6 +159,15 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "o", Usage: "output format"},
 			},
 		},
+		{
+			Name:      "update",
+			Action:    latestVersion(requireArgs(p.handleUpdateCluster, []string{"CLUSTER_ID"})),
+			Usage:     "update cluster",
+			ArgsUsage: "CLUSTER_ID",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
+			},
+		},
 	}
 }
 
@@ -166,6 +184,27 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 
 	headers := []string{"ID", "URL"}
 	return utils.PrintTable([]gqlclient.GitRepositoryFragment{*repo.CreateGitRepository}, headers, func(r gqlclient.GitRepositoryFragment) ([]string, error) {
+		return []string{r.ID, r.URL}, nil
+	})
+}
+
+func (p *Plural) handleUpdateCDRepository(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	repoId := c.Args().Get(0)
+
+	attr := gqlclient.GitAttributes{
+		URL: c.String("url"),
+	}
+
+	repo, err := p.ConsoleClient.UpdateRepository(repoId, attr)
+	if err != nil {
+		return err
+	}
+
+	headers := []string{"ID", "URL"}
+	return utils.PrintTable([]gqlclient.GitRepositoryFragment{*repo.UpdateGitRepository}, headers, func(r gqlclient.GitRepositoryFragment) ([]string, error) {
 		return []string{r.ID, r.URL}, nil
 	})
 }
@@ -190,15 +229,23 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	clusterId := c.Args().Get(0)
+	input := c.Args().Get(0)
+	var handle *string
+	var clusterId *string
+	if strings.HasPrefix(input, "@") {
+		h := strings.Trim(input, "@")
+		handle = &h
+	} else {
+		clusterId = &input
+	}
 
-	sd, err := p.ConsoleClient.ListClusterServices(clusterId)
+	sd, err := p.ConsoleClient.ListClusterServices(clusterId, handle)
 	if err != nil {
 		return err
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
-	return utils.PrintTable(sd.ServiceDeployments.Edges, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
+	return utils.PrintTable(sd, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
 		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.URL}, nil
 	})
 }
@@ -279,8 +326,23 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId := c.Args().Get(0)
-	existing, err := p.ConsoleClient.GetClusterService(serviceId)
+	var serviceId *string
+	var serviceName *string
+	var clusterName *string
+	input := c.Args().Get(0)
+	if strings.HasPrefix(input, "@") {
+		i := strings.Trim(input, "@")
+		split := strings.Split(i, "/")
+		if len(split) != 2 {
+			return fmt.Errorf("expected format @clusterName/serviceName")
+		}
+		clusterName = &split[0]
+		serviceName = &split[1]
+	} else {
+		serviceId = &input
+	}
+
+	existing, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
 	if err != nil {
 		return err
 	}
@@ -303,7 +365,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	}
 	serviceId := c.Args().Get(0)
 
-	existing, err := p.ConsoleClient.GetClusterService(serviceId)
+	existing, err := p.ConsoleClient.GetClusterService(&serviceId, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -312,15 +374,15 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	}
 	existingConfigurations := map[string]string{}
 	attributes := gqlclient.ServiceUpdateAttributes{
-		Version: &existing.ServiceDeployment.Version,
+		Version: &existing.Version,
 		Git: gqlclient.GitRefAttributes{
-			Ref:    existing.ServiceDeployment.Git.Ref,
-			Folder: existing.ServiceDeployment.Git.Folder,
+			Ref:    existing.Git.Ref,
+			Folder: existing.Git.Folder,
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
 
-	for _, conf := range existing.ServiceDeployment.Configuration {
+	for _, conf := range existing.Configuration {
 		existingConfigurations[conf.Name] = conf.Value
 	}
 
@@ -380,13 +442,17 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 		return err
 	}
 
-	headers := []string{"Id", "Name", "Version", "Provider"}
+	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
 	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
 		provider := ""
 		if cl.Node.Provider != nil {
 			provider = cl.Node.Provider.Name
 		}
-		return []string{cl.Node.ID, cl.Node.Name, *cl.Node.Version, provider}, nil
+		handle := ""
+		if cl.Node.Handle != nil {
+			handle = *cl.Node.Handle
+		}
+		return []string{cl.Node.ID, cl.Node.Name, handle, *cl.Node.Version, provider}, nil
 	})
 }
 
@@ -435,6 +501,47 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	} else {
 		utils.NewYAMLPrinter(existing).PrettyPrint()
 	}
+
+	return nil
+}
+
+func (p *Plural) handleUpdateCluster(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	id := c.Args().Get(0)
+	existing, err := p.ConsoleClient.GetCluster(id)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("existing cluster is empty")
+	}
+	updateAttr := gqlclient.ClusterUpdateAttributes{
+		Version: *existing.Cluster.Version,
+		Handle:  existing.Cluster.Handle,
+	}
+	newHandle := c.String("handle")
+	if newHandle != "" {
+		updateAttr.Handle = &newHandle
+	}
+
+	result, err := p.ConsoleClient.UpdateCluster(id, updateAttr)
+	if err != nil {
+		return err
+	}
+	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
+	return utils.PrintTable([]gqlclient.ClusterFragment{*result.UpdateCluster}, headers, func(cl gqlclient.ClusterFragment) ([]string, error) {
+		provider := ""
+		if cl.Provider != nil {
+			provider = cl.Provider.Name
+		}
+		handle := ""
+		if cl.Handle != nil {
+			handle = *cl.Handle
+		}
+		return []string{cl.ID, cl.Name, handle, *cl.Version, provider}, nil
+	})
 
 	return nil
 }

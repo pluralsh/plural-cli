@@ -16,12 +16,14 @@ type consoleClient struct {
 type ConsoleClient interface {
 	ListClusters() (*consoleclient.ListClusters, error)
 	GetCluster(id string) (*consoleclient.GetCluster, error)
-	ListClusterServices(clusterId string) (*consoleclient.ListServiceDeployment, error)
+	UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error)
+	ListClusterServices(clusterId, handle *string) ([]*consoleclient.ServiceDeploymentEdgeFragment, error)
 	CreateRepository(url string, privateKey, passphrase, username, password *string) (*consoleclient.CreateGitRepository, error)
 	ListRepositories() (*consoleclient.ListGitRepositories, error)
+	UpdateRepository(id string, attrs consoleclient.GitAttributes) (*consoleclient.UpdateGitRepository, error)
 	CreateClusterService(clusterId string, attr consoleclient.ServiceDeploymentAttributes) (*consoleclient.CreateServiceDeployment, error)
 	UpdateClusterService(serviceId string, attr consoleclient.ServiceUpdateAttributes) (*consoleclient.UpdateServiceDeployment, error)
-	GetClusterService(serviceId string) (*consoleclient.GetServiceDeployment, error)
+	GetClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	DeleteClusterService(serviceId string) (*consoleclient.DeleteServiceDeployment, error)
 }
 

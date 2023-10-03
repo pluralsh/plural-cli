@@ -24,3 +24,13 @@ func (c *consoleClient) GetCluster(id string) (*consoleclient.GetCluster, error)
 
 	return result, nil
 }
+
+func (c *consoleClient) UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error) {
+
+	result, err := c.client.UpdateCluster(c.ctx, id, attr)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "UpdateCluster")
+	}
+
+	return result, nil
+}
