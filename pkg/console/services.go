@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+
 	gqlclient "github.com/pluralsh/console-client-go"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -56,13 +57,30 @@ func (c *consoleClient) CreateClusterService(clusterId, clusterName *string, att
 	return result.CreateServiceDeployment, nil
 }
 
-func (c *consoleClient) UpdateClusterService(serviceId string, attributes gqlclient.ServiceUpdateAttributes) (*gqlclient.UpdateServiceDeployment, error) {
-	result, err := c.client.UpdateServiceDeployment(c.ctx, serviceId, attributes)
+func (c *consoleClient) UpdateClusterService(serviceId, serviceName, clusterName *string, attributes gqlclient.ServiceUpdateAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+	if serviceId == nil && serviceName == nil && clusterName == nil {
+		return nil, fmt.Errorf("serviceId, serviceName and clusterName can not be null")
+	}
+	if serviceId != nil {
+		result, err := c.client.UpdateServiceDeployment(c.ctx, *serviceId, attributes)
+		if err != nil {
+			return nil, api.GetErrorResponse(err, "UpdateClusterService")
+		}
+		if result == nil {
+			return nil, fmt.Errorf("the result from UpdateServiceDeployment is null")
+		}
+
+		return result.UpdateServiceDeployment, nil
+	}
+	result, err := c.client.UpdateServiceDeploymentWithHandle(c.ctx, *clusterName, *serviceName, attributes)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "UpdateClusterService")
+		return nil, api.GetErrorResponse(err, "UpdateServiceDeploymentWithHandle")
+	}
+	if result == nil {
+		return nil, fmt.Errorf("the result from UpdateServiceDeploymentWithHandle is null")
 	}
 
-	return result, nil
+	return result.UpdateServiceDeployment, nil
 }
 
 func (c *consoleClient) GetClusterService(serviceId, serviceName, clusterName *string) (*gqlclient.ServiceDeploymentExtended, error) {

@@ -322,26 +322,31 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-	var serviceId *string
-	var serviceName *string
-	var clusterName *string
-	input := c.Args().Get(0)
+func getServiceIdClusterNameServiceName(input string) (serviceId, clusterName, serviceName *string, err error) {
 	if strings.HasPrefix(input, "@") {
 		i := strings.Trim(input, "@")
 		split := strings.Split(i, "/")
 		if len(split) != 2 {
-			return fmt.Errorf("expected format @clusterName/serviceName")
+			err = fmt.Errorf("expected format @clusterName/serviceName")
+			return
 		}
 		clusterName = &split[0]
 		serviceName = &split[1]
 	} else {
 		serviceId = &input
 	}
+	return
+}
 
+func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
 	existing, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
 	if err != nil {
 		return err
@@ -363,9 +368,12 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId := c.Args().Get(0)
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
 
-	existing, err := p.ConsoleClient.GetClusterService(&serviceId, nil, nil)
+	existing, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
 	if err != nil {
 		return err
 	}
@@ -418,7 +426,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		})
 	}
 
-	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, attributes)
+	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, serviceName, clusterName, attributes)
 	if err != nil {
 		return err
 	}
@@ -427,8 +435,8 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
-	return utils.PrintTable([]*gqlclient.UpdateServiceDeployment{sd}, headers, func(sd *gqlclient.UpdateServiceDeployment) ([]string, error) {
-		return []string{sd.UpdateServiceDeployment.ID, sd.UpdateServiceDeployment.Name, sd.UpdateServiceDeployment.Namespace, sd.UpdateServiceDeployment.Git.Ref, sd.UpdateServiceDeployment.Git.Folder, sd.UpdateServiceDeployment.Repository.URL}, nil
+	return utils.PrintTable([]*gqlclient.ServiceDeploymentFragment{sd}, headers, func(sd *gqlclient.ServiceDeploymentFragment) ([]string, error) {
+		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
 	})
 }
 
