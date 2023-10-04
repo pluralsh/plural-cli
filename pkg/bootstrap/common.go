@@ -147,6 +147,7 @@ func getBootstrapFlags(prov string) []string {
 	case api.ProviderAzure:
 		return []string{
 			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
+			"--set", "cluster-api-provider-azure.cluster-api-provider-azure.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
 		}

@@ -243,6 +243,10 @@ func getMigrationFlags(prov string) []string {
 		return []string{
 			"--set", "cluster-api-provider-aws.cluster-api-provider-aws.bootstrapMode=false",
 		}
+	case api.ProviderAzure:
+		return []string{
+			"--set", "cluster-api-provider-azure.cluster-api-provider-azure.bootstrapMode=false",
+		}
 	case api.ProviderGCP:
 		return []string{
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=false",
