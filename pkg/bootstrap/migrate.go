@@ -387,7 +387,7 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 		},
 		{
 			Name:       "Build values",
-			Args:       []string{"plural", "build --only", "cert-manager", "--only" , "bootstrap", "--force"},
+			Args:       []string{"plural", "build", "--only", "cert-manager", "--only" , "bootstrap", "--force"},
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
 		},
