@@ -225,21 +225,21 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 
 }
 
+func getClusterIdClusterName(input string) (clusterId, clusterName *string) {
+	if strings.HasPrefix(input, "@") {
+		h := strings.Trim(input, "@")
+		clusterName = &h
+	} else {
+		clusterId = &input
+	}
+	return
+}
+
 func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	input := c.Args().Get(0)
-	var handle *string
-	var clusterId *string
-	if strings.HasPrefix(input, "@") {
-		h := strings.Trim(input, "@")
-		handle = &h
-	} else {
-		clusterId = &input
-	}
-
-	sd, err := p.ConsoleClient.ListClusterServices(clusterId, handle)
+	sd, err := p.ConsoleClient.ListClusterServices(getClusterIdClusterName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,6 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	clusterId := c.Args().Get(0)
 	v, err := validateFlag(c, "version", "0.0.1")
 	if err != nil {
 		return err
@@ -278,7 +277,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		RepositoryID: repoId,
 		Git: gqlclient.GitRefAttributes{
 			Ref:    gitRef,
-			Folder: c.String(gitFolder),
+			Folder: gitFolder,
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
@@ -308,7 +307,8 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		}
 	}
 
-	sd, err := p.ConsoleClient.CreateClusterService(clusterId, attributes)
+	clusterId, clusterName := getClusterIdClusterName(c.Args().Get(0))
+	sd, err := p.ConsoleClient.CreateClusterService(clusterId, clusterName, attributes)
 	if err != nil {
 		return err
 	}
@@ -317,8 +317,8 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
-	return utils.PrintTable([]*gqlclient.CreateServiceDeployment{sd}, headers, func(sd *gqlclient.CreateServiceDeployment) ([]string, error) {
-		return []string{sd.CreateServiceDeployment.ID, sd.CreateServiceDeployment.Name, sd.CreateServiceDeployment.Namespace, sd.CreateServiceDeployment.Git.Ref, sd.CreateServiceDeployment.Git.Folder, sd.CreateServiceDeployment.Repository.URL}, nil
+	return utils.PrintTable([]*gqlclient.ServiceDeploymentFragment{sd}, headers, func(sd *gqlclient.ServiceDeploymentFragment) ([]string, error) {
+		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
 	})
 }
 

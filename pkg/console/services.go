@@ -7,9 +7,9 @@ import (
 	"github.com/pluralsh/plural/pkg/api"
 )
 
-func (c *consoleClient) ListClusterServices(clusterId, cluster *string) ([]*gqlclient.ServiceDeploymentEdgeFragment, error) {
-	if clusterId == nil && cluster == nil {
-		return nil, fmt.Errorf("clusterId and cluster can not be null")
+func (c *consoleClient) ListClusterServices(clusterId, clusterName *string) ([]*gqlclient.ServiceDeploymentEdgeFragment, error) {
+	if clusterId == nil && clusterName == nil {
+		return nil, fmt.Errorf("clusterId and clusterName can not be null")
 	}
 	if clusterId != nil {
 		result, err := c.client.ListServiceDeployment(c.ctx, nil, nil, nil, clusterId)
@@ -21,7 +21,7 @@ func (c *consoleClient) ListClusterServices(clusterId, cluster *string) ([]*gqlc
 		}
 		return result.ServiceDeployments.Edges, nil
 	}
-	result, err := c.client.ListServiceDeploymentByHandle(c.ctx, nil, nil, nil, cluster)
+	result, err := c.client.ListServiceDeploymentByHandle(c.ctx, nil, nil, nil, clusterName)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "ListServiceDeploymentByHandle")
 	}
@@ -31,13 +31,29 @@ func (c *consoleClient) ListClusterServices(clusterId, cluster *string) ([]*gqlc
 	return result.ServiceDeployments.Edges, nil
 }
 
-func (c *consoleClient) CreateClusterService(clusterId string, attributes gqlclient.ServiceDeploymentAttributes) (*gqlclient.CreateServiceDeployment, error) {
-	result, err := c.client.CreateServiceDeployment(c.ctx, clusterId, attributes)
-	if err != nil {
-		return nil, api.GetErrorResponse(err, "CreateServiceDeployment")
+func (c *consoleClient) CreateClusterService(clusterId, clusterName *string, attributes gqlclient.ServiceDeploymentAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+	if clusterId == nil && clusterName == nil {
+		return nil, fmt.Errorf("clusterId and clusterName can not be null")
+	}
+	if clusterId != nil {
+		result, err := c.client.CreateServiceDeployment(c.ctx, *clusterId, attributes)
+		if err != nil {
+			return nil, api.GetErrorResponse(err, "CreateServiceDeployment")
+		}
+		if result == nil {
+			return nil, fmt.Errorf("the result from CreateServiceDeployment is null")
+		}
+		return result.CreateServiceDeployment, nil
 	}
 
-	return result, nil
+	result, err := c.client.CreateServiceDeploymentWithHandle(c.ctx, *clusterName, attributes)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "CreateServiceDeploymentWithHandle")
+	}
+	if result == nil {
+		return nil, fmt.Errorf("the result from CreateServiceDeploymentWithHandle is null")
+	}
+	return result.CreateServiceDeployment, nil
 }
 
 func (c *consoleClient) UpdateClusterService(serviceId string, attributes gqlclient.ServiceUpdateAttributes) (*gqlclient.UpdateServiceDeployment, error) {
