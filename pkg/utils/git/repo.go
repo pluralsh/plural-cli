@@ -2,7 +2,6 @@ package git
 
 import (
 	"bufio"
-	"fmt"
 	"strings"
 
 	gogit "github.com/go-git/go-git/v5"
@@ -21,33 +20,22 @@ func Repo() (*gogit.Repository, error) {
 	return gogit.PlainOpen(root)
 }
 
-func CurrentBranch() (b string, err error) {
-	repo, err := Repo()
-	if err != nil {
-		return
-	}
-
-	ref, err := repo.Head()
-	if err != nil {
-		return
-	}
-
-	b = ref.Name().Short()
-	return
+func CurrentBranch() (string, error) {
+	return GitRaw("rev-parse", "--abbrev-ref", "HEAD")
 }
 
 func HasUpstreamChanges() (bool, string, error) {
-	repo, err := Repo()
+	headRef, err := GitRaw("rev-parse", "--symbolic-full-name", "HEAD")
 	if err != nil {
 		return false, "", err
 	}
 
-	ref, err := repo.Head()
+	headSha, err := GitRaw("rev-parse", "HEAD")
 	if err != nil {
 		return false, "", err
 	}
 
-	res, err := GitRaw("ls-remote", "origin", "-h", fmt.Sprintf("refs/heads/%s", ref.Name().Short()))
+	res, err := GitRaw("ls-remote", "origin", "-h", headRef)
 	if err != nil {
 		return false, "", err
 	}
@@ -62,7 +50,7 @@ func HasUpstreamChanges() (bool, string, error) {
 		}
 	}
 
-	return remote == ref.Hash().String(), remote, nil
+	return remote == headSha, remote, nil
 }
 
 func Init() (string, error) {
