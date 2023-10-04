@@ -55,13 +55,14 @@ func InstallAgent(url, token, namespace string) error {
 		instClient.Namespace = namespace
 		instClient.ReleaseName = repoName
 		instClient.Timeout = time.Minute * 10
-
+		instClient.Wait = true
 		_, err = instClient.Run(chart, vals)
 		return err
 	}
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 10
+	client.Wait = true
 	_, err = client.Run(repoName, chart, vals)
 	return nil
 }
