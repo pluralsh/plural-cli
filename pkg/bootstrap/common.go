@@ -281,9 +281,12 @@ func RunWithTempCredentials(function ActionFunc) error {
 		}
 
 		pathPrefix := "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapCredentials"
+		asoPathPrefix := "cluster-api-provider-azure.cluster-api-provider-azure.asoControllerSettings"
 		flags = []string{
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientID", clientId),
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientSecret", clientSecret),
+			"--set", fmt.Sprintf("%s.%s=%s", asoPathPrefix, "azureClientId", clientId),
+			"--set", fmt.Sprintf("%s.%s=%s", asoPathPrefix, "azureClientSecret", clientSecret),
 		}
 
 		defer func(as *azure.AuthService) {
