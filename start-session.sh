@@ -1,10 +1,10 @@
 #!/bin/sh
 
-session="plural-workspace"
+session="/tmp/plural-workspace"
 
 # ensure necessary env vars are populated
 if [ -f /home/plural/.env ]; then
   source /home/plural/.env
 fi
 
-abduco -A $session /home/plural/boot.sh
+dtach -A $session /home/plural/boot.sh
