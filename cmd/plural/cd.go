@@ -217,7 +217,9 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
+	if repos == nil {
+		return fmt.Errorf("returned objects list [ListRepositories] is nil")
+	}
 	headers := []string{"ID", "URL", "Status", "Error"}
 	return utils.PrintTable(repos.GitRepositories.Edges, headers, func(r *gqlclient.GitRepositoryEdgeFragment) ([]string, error) {
 		return []string{r.Node.ID, r.Node.URL, string(*r.Node.Health), lo.FromPtr(r.Node.Error)}, nil
@@ -243,7 +245,9 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
+	if sd == nil {
+		return fmt.Errorf("returned objects list [ListClusterServices] is nil")
+	}
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
 	return utils.PrintTable(sd, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
 		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.URL}, nil
@@ -449,7 +453,9 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
+	if clusters == nil {
+		return fmt.Errorf("returned objects list [ListClusters] is nil")
+	}
 	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
 	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
 		provider := ""
