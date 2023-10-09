@@ -101,7 +101,7 @@ release:
 brews:
   - name: plural
     ids: [ plural-cli ]
-    tap:
+    repository: 
       owner: pluralsh
       name: homebrew-plural
 
