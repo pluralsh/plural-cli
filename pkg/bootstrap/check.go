@@ -64,7 +64,6 @@ func IsClusterPhase(context, name, namespace string, phase capi.ClusterPhase) (b
 	return c.Status.GetTypedPhase() == phase, nil
 }
 
-
 // CheckClusterReadiness checks if Cluster API cluster is in ready state.
 func CheckClusterReadiness(name, namespace string) (bool, error) {
 	utils.Highlight("Checking cluster status")
