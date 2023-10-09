@@ -54,7 +54,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: latest
-          args: release --clean --split
+          args: release --clean --split --timeout 90m
         env:
           CGO_LDFLAGS: "${{ matrix.goos == 'darwin' && '-framework UniformTypeIdentifiers' || '' }}"
           GOOS: ${{ matrix.GOOS }}
@@ -103,7 +103,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: latest
-          args: continue --merge
+          args: continue --merge --timeout 90m
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
