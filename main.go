@@ -2,9 +2,7 @@ package main
 
 import (
 	"log"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/fatih/color"
 
@@ -12,7 +10,6 @@ import (
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
 	// init Kube when k8s config exists
 	p := &plural.Plural{}
 	app := plural.CreateNewApp(p)

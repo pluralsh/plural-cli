@@ -9,6 +9,8 @@ import (
 	"strings"
 	ttpl "text/template"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -20,7 +22,6 @@ import (
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"gopkg.in/yaml.v2"
 )
 
 type dependency struct {
@@ -226,22 +227,22 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 	}
 
 	// TODO: Remove this after testing. It is deprecated as values.yaml migration should not longer be required.
-	//mapValues, err := getValues(valuesFile)
-	//if err != nil {
+	// mapValues, err := getValues(valuesFile)
+	// if err != nil {
 	//	return err
-	//}
-	//patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
-	//if err != nil {
+	// }
+	// patchValues, err := utils.PatchInterfaceMap(defaultValues, mapValues)
+	// if err != nil {
 	//	return err
-	//}
+	// }
 	//
-	//values, err := yaml.Marshal(patchValues)
-	//if err != nil {
+	// values, err := yaml.Marshal(patchValues)
+	// if err != nil {
 	//	return err
-	//}
-	//if err := utils.WriteFile(valuesFile, values); err != nil {
+	// }
+	// if err := utils.WriteFile(valuesFile, values); err != nil {
 	//	return err
-	//}
+	// }
 
 	return utils.WriteFile(defaultValuesFile, io)
 }
