@@ -5,6 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/manifest"
@@ -12,8 +15,6 @@ import (
 	pluraltest "github.com/pluralsh/plural/pkg/test"
 	"github.com/pluralsh/plural/pkg/utils/git"
 	"github.com/pluralsh/plural/pkg/wkspace"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 )
 
 func TestBuildChartValues(t *testing.T) {
@@ -31,12 +32,11 @@ func TestBuildChartValues(t *testing.T) {
 			expectedDefaultValues: `plrl:
   license: abc
 test:
-  enabled: true
   extraEnv:
   - name: ARM_USE_MSI
     value: "true"
 `,
-			expectedValues: "{}\n",
+			expectedValues: "",
 			man: &manifest.ProjectManifest{
 				Cluster:  "test",
 				Bucket:   "test",
@@ -85,12 +85,13 @@ test:
 			expectedDefaultValues: `plrl:
   license: abc
 test:
-  enabled: true
   extraEnv:
   - name: ARM_USE_MSI
     value: "true"
 `,
-			expectedValues: `test:
+			expectedValues: `plrl:
+  license: abc
+test:
   enabled: false
   extraEnv:
   - name: TEST
@@ -203,11 +204,11 @@ test:
 			assert.NoError(t, err)
 			defaultValues, err := os.ReadFile(filepath.Join(dir, "default-values.yaml"))
 			assert.NoError(t, err)
-			assert.Equal(t, string(defaultValues), test.expectedDefaultValues)
+			assert.Equal(t, test.expectedDefaultValues, string(defaultValues))
 
 			values, err := os.ReadFile(filepath.Join(dir, "values.yaml"))
 			assert.NoError(t, err)
-			assert.Equal(t, string(values), test.expectedValues)
+			assert.Equal(t, test.expectedValues, string(values))
 		})
 	}
 }

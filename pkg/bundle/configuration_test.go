@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/bundle"
 	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/stretchr/testify/assert"
 
 	"gopkg.in/yaml.v2"
 )
@@ -113,7 +114,7 @@ func TestConfigureEnvVariables(t *testing.T) {
 			ctx:           map[string]interface{}{},
 			repo:          "test",
 			envVars:       map[string]string{"PLURAL_TEST_TEST_ITEM": "workspace.yaml"},
-			expectedValue: "apiVersion: \"\"\nkind: \"\"\nmetadata: null\nspec:\n  clusterapi: false\n  cluster: \"\"\n  bucket: \"\"\n  project: test\n  provider: \"\"\n  region: \"\"\n  owner: null\n  network: null\n  availabilityzones: null\n  bucketPrefix: \"\"\n  context: {}\n",
+			expectedValue: "apiVersion: \"\"\nkind: \"\"\nmetadata: null\nspec:\n  clusterapi: false\n  cluster: \"\"\n  bucket: \"\"\n  project: test\n  provider: \"\"\n  region: \"\"\n  owner: null\n  network: null\n  availabilityzones: []\n  bucketPrefix: \"\"\n  context: {}\n",
 		},
 	}
 	for _, test := range tests {

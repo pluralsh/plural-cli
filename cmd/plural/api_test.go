@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	plural "github.com/pluralsh/plural/cmd/plural"
+	"github.com/pluralsh/plural/cmd/plural"
 	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/test/mocks"
 )
@@ -217,7 +217,7 @@ func TestGetTerraform(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
 			if test.expectedError == "" {
-				client.On("GetTerraforma", mock.AnythingOfType("string")).Return(test.terraform, nil)
+				client.On("GetTerraform", mock.AnythingOfType("string")).Return(test.terraform, nil)
 			}
 
 			app := plural.CreateNewApp(&plural.Plural{Client: client})
