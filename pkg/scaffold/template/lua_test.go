@@ -5,12 +5,13 @@ import (
 	"path"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
+
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/scaffold/template"
 	pluraltest "github.com/pluralsh/plural/pkg/test"
 	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 )
 
 func TestFromLuaTemplateComplex(t *testing.T) {
@@ -258,8 +259,7 @@ func TestFromLuaTemplate(t *testing.T) {
     links:
     - description: console web ui
       url: https://onplural.sh
-test:
-  enabled: true
+test: {}
 `,
 		},
 		{
@@ -286,7 +286,6 @@ test:
 }`,
 			expectedResponse: `global: {}
 test:
-  enabled: true
   extraEnv:
   - name: ARM_USE_MSI
     value: "true"
@@ -310,7 +309,6 @@ test:
 }`,
 			expectedResponse: `global: {}
 test:
-  enabled: true
   ingress:
     annotations:
       kubernetes.io/tls-acme: "true"
@@ -329,7 +327,6 @@ test:
 test:
   consoleIdentityClientId: '{{ .Import.Terraform.console_msi_client_id }}'
   consoleIdentityId: '{{ .Import.Terraform.console_msi_id }}'
-  enabled: true
 `,
 		},
 		{
@@ -355,7 +352,6 @@ test:
 `,
 			expectedResponse: `global: {}
 test:
-  enabled: true
   secrets:
     key: |
       key: 3fWQQvTe5w9Gu6uoJzw1C5SxnARtNT/QOvvISRFoxRs=
@@ -378,7 +374,6 @@ test:
 `,
 			expectedResponse: `global: {}
 test:
-  enabled: true
   secrets:
     key: |
       key: abc
@@ -410,7 +405,6 @@ test:
 `,
 			expectedResponse: `global: {}
 test:
-  enabled: true
   test-base:
     enabled: true
     secret:

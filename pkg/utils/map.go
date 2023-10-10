@@ -109,10 +109,10 @@ func DiffMap(base, diff map[string]interface{}, conditions ...DiffCondition) map
 	}
 
 	for k, v := range base {
-		switch f := v.(type) {
+		switch t := v.(type) {
 		case map[string]interface{}:
 			dValue, _ := diff[k].(map[string]interface{})
-			if dMap := DiffMap(f, dValue, conditions...); len(dMap) > 0 {
+			if dMap := DiffMap(t, dValue, conditions...); len(dMap) > 0 {
 				result[k] = dMap
 				break
 			}

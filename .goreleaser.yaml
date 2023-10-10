@@ -15,7 +15,9 @@ builds:
       - linux_amd64
       - linux_arm64
       - windows_amd64
-      - windows_arm64
+# TODO: Re-enable once fixed
+# Ref: https://github.com/golang/go/issues/51019
+#      - windows_arm64
       - darwin_amd64
       - darwin_arm64
     env:
@@ -101,7 +103,7 @@ release:
 brews:
   - name: plural
     ids: [ plural-cli ]
-    tap:
+    repository:
       owner: pluralsh
       name: homebrew-plural
 
