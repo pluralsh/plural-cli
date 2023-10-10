@@ -361,9 +361,16 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 	output := c.String("o")
 	if output == "json" {
 		utils.NewJsonPrinter(existing).PrettyPrint()
-	} else {
+		return nil
+	} else if output == "yaml" {
 		utils.NewYAMLPrinter(existing).PrettyPrint()
+		return nil
 	}
+	desc, err := console.DescribeService(existing)
+	if err != nil {
+		return err
+	}
+	fmt.Print(desc)
 
 	return nil
 }
@@ -501,8 +508,7 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	id := c.Args().Get(0)
-	existing, err := p.ConsoleClient.GetCluster(id)
+	existing, err := p.ConsoleClient.GetCluster(getClusterIdClusterName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -512,10 +518,14 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	output := c.String("o")
 	if output == "json" {
 		utils.NewJsonPrinter(existing).PrettyPrint()
-	} else {
+	} else if output == "yaml" {
 		utils.NewYAMLPrinter(existing).PrettyPrint()
 	}
-
+	desc, err := console.DescribeCluster(existing)
+	if err != nil {
+		return err
+	}
+	fmt.Print(desc)
 	return nil
 }
 
@@ -524,7 +534,7 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		return err
 	}
 	id := c.Args().Get(0)
-	existing, err := p.ConsoleClient.GetCluster(id)
+	existing, err := p.ConsoleClient.GetCluster(getClusterIdClusterName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -532,8 +542,8 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		return fmt.Errorf("existing cluster is empty")
 	}
 	updateAttr := gqlclient.ClusterUpdateAttributes{
-		Version: *existing.Cluster.Version,
-		Handle:  existing.Cluster.Handle,
+		Version: *existing.Version,
+		Handle:  existing.Handle,
 	}
 	newHandle := c.String("handle")
 	if newHandle != "" {
