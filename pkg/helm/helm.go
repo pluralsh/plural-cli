@@ -138,9 +138,11 @@ func AddRepo(repoName, repoUrl string) error {
 	// If the repo exists do one of two things:
 	// 1. If the configuration for the name is the same continue without error.
 	// 2. When the config is different require --force-update.
-	if f.Has(repoName) {
-		return nil
-	}
+
+	// always force updates for now
+	// if f.Has(repoName) {
+	// 	return nil
+	// }
 
 	r, err := repo.NewChartRepository(&c, getter.All(settings))
 	if err != nil {
