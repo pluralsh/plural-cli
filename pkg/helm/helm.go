@@ -36,6 +36,10 @@ func debug(format string, v ...interface{}) {
 func GetActionConfig(namespace string) (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	settings := cli.New()
+	if os.Getenv("KUBECONFIG") != "" {
+		settings.KubeConfig = os.Getenv("KUBECONFIG")
+	}
+
 	settings.SetNamespace(namespace)
 	settings.Debug = false
 	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, "", debug); err != nil {
