@@ -35,7 +35,7 @@ func InstallAgent(url, token, namespace string) error {
 
 	helmConfig, err := helm.GetActionConfig(namespace)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", repoName, "deployment-operator"), settings)
@@ -64,5 +64,5 @@ func InstallAgent(url, token, namespace string) error {
 	client.Timeout = time.Minute * 10
 	client.Wait = true
 	_, err = client.Run(repoName, chart, vals)
-	return nil
+	return err
 }
