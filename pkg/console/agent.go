@@ -16,7 +16,7 @@ import (
 var settings = cli.New()
 
 const (
-	repoName = "deployop"
+	repoName = "deploy-operator"
 	repoUrl  = "https://pluralsh.github.io/deployment-operator"
 )
 
