@@ -91,6 +91,15 @@ func KubeConfig() (*rest.Config, error) {
 }
 
 func KubeConfigWithContext(context string) (*rest.Config, error) {
+	if os.Getenv("KUBECONFIG") != "" {
+		conf := os.Getenv("KUBECONFIG")
+		if len(context) > 0 {
+			return buildConfigFromFlags(context, conf)
+		}
+
+		return clientcmd.BuildConfigFromFlags("", conf)
+	}
+
 	if InKubernetes() {
 		return rest.InClusterConfig()
 	}
