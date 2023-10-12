@@ -2,17 +2,19 @@ package plural
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/pluralsh/plural/pkg/console"
-
 	gqlclient "github.com/pluralsh/console-client-go"
+	"github.com/pluralsh/plural/pkg/console"
+	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
-
-	"github.com/pluralsh/plural/pkg/utils"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func init() {
@@ -166,6 +168,8 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
+				cli.StringFlag{Name: "kubeconf-path", Usage: "path to kubeconfig"},
+				cli.StringFlag{Name: "kubeconf-context", Usage: "the kubeconfig context you want to use. If not specified, the current one will be used"},
 			},
 		},
 	}
@@ -227,12 +231,12 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 
 }
 
-func getClusterIdClusterName(input string) (clusterId, clusterName *string) {
+func getIdAndName(input string) (id, name *string) {
 	if strings.HasPrefix(input, "@") {
 		h := strings.Trim(input, "@")
-		clusterName = &h
+		name = &h
 	} else {
-		clusterId = &input
+		id = &input
 	}
 	return
 }
@@ -241,7 +245,7 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	sd, err := p.ConsoleClient.ListClusterServices(getClusterIdClusterName(c.Args().Get(0)))
+	sd, err := p.ConsoleClient.ListClusterServices(getIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -306,12 +310,12 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		if len(configurationPair) == 2 {
 			attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
 				Name:  configurationPair[0],
-				Value: configurationPair[1],
+				Value: &configurationPair[1],
 			})
 		}
 	}
 
-	clusterId, clusterName := getClusterIdClusterName(c.Args().Get(0))
+	clusterId, clusterName := getIdAndName(c.Args().Get(0))
 	sd, err := p.ConsoleClient.CreateClusterService(clusterId, clusterName, attributes)
 	if err != nil {
 		return err
@@ -394,7 +398,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	existingConfigurations := map[string]string{}
 	attributes := gqlclient.ServiceUpdateAttributes{
 		Version: &existing.Version,
-		Git: gqlclient.GitRefAttributes{
+		Git: &gqlclient.GitRefAttributes{
 			Ref:    existing.Git.Ref,
 			Folder: existing.Git.Folder,
 		},
@@ -433,7 +437,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	for key, value := range existingConfigurations {
 		attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
 			Name:  key,
-			Value: value,
+			Value: &value,
 		})
 	}
 
@@ -508,7 +512,7 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	existing, err := p.ConsoleClient.GetCluster(getClusterIdClusterName(c.Args().Get(0)))
+	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -533,8 +537,7 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	id := c.Args().Get(0)
-	existing, err := p.ConsoleClient.GetCluster(getClusterIdClusterName(c.Args().Get(0)))
+	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -549,8 +552,19 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 	if newHandle != "" {
 		updateAttr.Handle = &newHandle
 	}
+	kubeconfigPath := c.String("kubeconf-path")
+	if kubeconfigPath != "" {
+		kubeconfig, err := getKubeconfig(kubeconfigPath, c.String("kubeconf-context"))
+		if err != nil {
+			return err
+		}
 
-	result, err := p.ConsoleClient.UpdateCluster(id, updateAttr)
+		updateAttr.Kubeconfig = &gqlclient.KubeconfigAttributes{
+			Raw: &kubeconfig,
+		}
+	}
+
+	result, err := p.ConsoleClient.UpdateCluster(existing.ID, updateAttr)
 	if err != nil {
 		return err
 	}
@@ -568,6 +582,41 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 	})
 
 	return nil
+}
+
+func getKubeconfig(path, context string) (string, error) {
+	if strings.HasPrefix(path, "~/") {
+		home, _ := os.UserHomeDir()
+		path = filepath.Join(home, path[2:])
+	}
+	if !utils.Exists(path) {
+		return "", fmt.Errorf("the specified path does not exist")
+	}
+
+	config, err := clientcmd.LoadFromFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	if context != "" {
+		if config.Contexts[context] == nil {
+			return "", fmt.Errorf("the given context doesn't exist")
+		}
+		config.CurrentContext = context
+	}
+	newConfig := *clientcmdapi.NewConfig()
+	newConfig.CurrentContext = config.CurrentContext
+	newConfig.Contexts[config.CurrentContext] = config.Contexts[config.CurrentContext]
+	newConfig.Clusters[config.CurrentContext] = config.Clusters[config.CurrentContext]
+	newConfig.AuthInfos[config.CurrentContext] = config.AuthInfos[config.CurrentContext]
+	newConfig.Extensions[config.CurrentContext] = config.Extensions[config.CurrentContext]
+	newConfig.Preferences = config.Preferences
+	result, err := clientcmd.Write(newConfig)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
 }
 
 func getFlag(s string) *string {
