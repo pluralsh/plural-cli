@@ -50,6 +50,7 @@ type Kube interface {
 	Secret(namespace string, name string) (*v1.Secret, error)
 	SecretList(namespace string, opts metav1.ListOptions) (*v1.SecretList, error)
 	SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error)
+	SecretDelete(namespace string, secretName string) error
 	SecretDeleteCollection(namespace string, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
 	Node(name string) (*v1.Node, error)
 	Nodes() (*v1.NodeList, error)
@@ -193,6 +194,10 @@ func (k *kube) SecretList(namespace string, opts metav1.ListOptions) (*v1.Secret
 
 func (k *kube) SecretCreate(namespace string, secret *v1.Secret) (*v1.Secret, error) {
 	return k.Kube.CoreV1().Secrets(namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+}
+
+func (k *kube) SecretDelete(namespace string, secretName string) error {
+	return k.Kube.CoreV1().Secrets(namespace).Delete(context.Background(), secretName, metav1.DeleteOptions{})
 }
 
 func (k *kube) SecretDeleteCollection(namespace string, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {

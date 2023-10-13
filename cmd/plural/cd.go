@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console-client-go"
@@ -31,7 +30,12 @@ func (p *Plural) cdCommands() []cli.Command {
 		{
 			Name:        "providers",
 			Subcommands: p.cdProvidersCommands(),
-			Usage:       "manage CD clusters",
+			Usage:       "manage CD providers",
+		},
+		{
+			Name:        "credentials",
+			Subcommands: p.cdCredentialsCommands(),
+			Usage:       "manage Provider credentials",
 		},
 		{
 			Name:        "clusters",
@@ -66,6 +70,23 @@ func (p *Plural) cdProvidersCommands() []cli.Command {
 			Name:   "list",
 			Action: latestVersion(p.handleListProviders),
 			Usage:  "list providers",
+		},
+	}
+}
+
+func (p *Plural) cdCredentialsCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:      "create",
+			ArgsUsage: "PROVIDER_NAME",
+			Action:    latestVersion(requireArgs(p.handleCreateProviderCredentials, []string{"PROVIDER_NAME"})),
+			Usage:     "create provider credentials",
+		},
+		{
+			Name:      "delete",
+			ArgsUsage: "ID",
+			Action:    latestVersion(requireArgs(p.handleDeleteProviderCredentials, []string{"ID"})),
+			Usage:     "delete provider credentials",
 		},
 	}
 }
@@ -597,33 +618,6 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		return []string{cl.ID, cl.Name, handle, *cl.Version, provider}, nil
 	})
 
-	return nil
-}
-
-func (p *Plural) handleListProviders(c *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-	providers, err := p.ConsoleClient.ListProviders()
-	if err != nil {
-		return err
-	}
-	if providers == nil {
-		return fmt.Errorf("returned objects list [ListProviders] is nil")
-	}
-
-	headers := []string{"ID", "Name", "Cloud", "Editable", "Repo Url"}
-	return utils.PrintTable(providers.ClusterProviders.Edges, headers, func(r *gqlclient.ClusterProviderEdgeFragment) ([]string, error) {
-		editable := ""
-		if r.Node.Editable != nil {
-			editable = strconv.FormatBool(*r.Node.Editable)
-		}
-		repoUrl := ""
-		if r.Node.Repository != nil {
-			repoUrl = r.Node.Repository.URL
-		}
-		return []string{r.Node.ID, r.Node.Name, r.Node.Cloud, editable, repoUrl}, nil
-	})
 	return nil
 }
 

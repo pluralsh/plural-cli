@@ -26,6 +26,8 @@ type ConsoleClient interface {
 	GetClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	DeleteClusterService(serviceId string) (*consoleclient.DeleteServiceDeployment, error)
 	ListProviders() (*consoleclient.ListProviders, error)
+	CreateProviderCredentials(name string, attr consoleclient.ProviderCredentialAttributes) (*consoleclient.CreateProviderCredential, error)
+	DeleteProviderCredentials(id string) (*consoleclient.DeleteProviderCredential, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
