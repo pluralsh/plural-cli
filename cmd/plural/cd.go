@@ -2,6 +2,7 @@ package plural
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,6 +52,11 @@ func (p *Plural) cdCommands() []cli.Command {
 			Name:        "repositories",
 			Subcommands: p.cdRepositoriesCommands(),
 			Usage:       "manage CD repositories",
+		},
+		{
+			Name:        "pipelines",
+			Subcommands: p.pipelineCommands(),
+			Usage:       "manage CD pipelines",
 		},
 		{
 			Name:   "install",
@@ -207,6 +213,21 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
 				cli.StringFlag{Name: "kubeconf-path", Usage: "path to kubeconfig"},
 				cli.StringFlag{Name: "kubeconf-context", Usage: "the kubeconfig context you want to use. If not specified, the current one will be used"},
+			},
+		},
+	}
+}
+
+func (p *Plural) pipelineCommands() []cli.Command {
+	return []cli.Command{
+		{
+			Name:   "create",
+			Action: latestVersion(requireArgs(p.handleCreatePipeline, []string{})),
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "file",
+					Usage: "the file this pipeline is defined in, use - for stdin",
+				},
 			},
 		},
 	}
@@ -567,6 +588,38 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 		return err
 	}
 	fmt.Print(desc)
+	return nil
+}
+
+func (p *Plural) handleCreatePipeline(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	var bytes []byte
+	var err error
+	file := c.String("file")
+	if file == "-" {
+		bytes, err = io.ReadAll(os.Stdin)
+	} else {
+		bytes, err = os.ReadFile(file)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	name, attrs, err := console.ConstructPipelineInput(bytes)
+	if err != nil {
+		return err
+	}
+
+	pipe, err := p.ConsoleClient.SavePipeline(name, *attrs)
+	if err != nil {
+		return err
+	}
+
+	utils.Success("Pipeline %s created successfully", pipe.Name)
 	return nil
 }
 
