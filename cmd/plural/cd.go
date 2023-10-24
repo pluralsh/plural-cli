@@ -109,7 +109,7 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 			Action: latestVersion(p.handleCreateCDRepository),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
-				cli.StringFlag{Name: "privateKey", Usage: "git repo private key"},
+				cli.StringFlag{Name: "private-key", Usage: "git repo private key"},
 				cli.StringFlag{Name: "passphrase", Usage: "git repo passphrase"},
 				cli.StringFlag{Name: "username", Usage: "git repo username"},
 				cli.StringFlag{Name: "password", Usage: "git repo password"},
@@ -122,6 +122,10 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(p.handleUpdateCDRepository, []string{"REPO_ID"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
+				cli.StringFlag{Name: "private-key", Usage: "git repo private key"},
+				cli.StringFlag{Name: "passphrase", Usage: "git repo passphrase"},
+				cli.StringFlag{Name: "username", Usage: "git repo username"},
+				cli.StringFlag{Name: "password", Usage: "git repo password"},
 			},
 			Usage: "update repository",
 		},
@@ -260,6 +264,22 @@ func (p *Plural) handleUpdateCDRepository(c *cli.Context) error {
 		URL: c.String("url"),
 	}
 
+	if c.String("private-key") != "" {
+		attr.PrivateKey = lo.ToPtr(c.String("private-key"))
+	}
+
+	if c.String("passphrase") != "" {
+		attr.Passphrase = lo.ToPtr(c.String("passphrase"))
+	}
+
+	if c.String("password") != "" {
+		attr.Password = lo.ToPtr(c.String("password"))
+	}
+
+	if c.String("username") != "" {
+		attr.Username = lo.ToPtr(c.String("username"))
+	}
+
 	repo, err := p.ConsoleClient.UpdateRepository(repoId, attr)
 	if err != nil {
 		return err
@@ -284,7 +304,11 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 	}
 	headers := []string{"ID", "URL", "Status", "Error"}
 	return utils.PrintTable(repos.GitRepositories.Edges, headers, func(r *gqlclient.GitRepositoryEdgeFragment) ([]string, error) {
-		return []string{r.Node.ID, r.Node.URL, string(*r.Node.Health), lo.FromPtr(r.Node.Error)}, nil
+		health := "UNKNOWN"
+		if r.Node.Health != nil {
+			health = string(*r.Node.Health)
+		}
+		return []string{r.Node.ID, r.Node.URL, health, lo.FromPtr(r.Node.Error)}, nil
 	})
 
 }
