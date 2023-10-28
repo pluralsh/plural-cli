@@ -219,6 +219,12 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "kubeconf-context", Usage: "the kubeconfig context you want to use. If not specified, the current one will be used"},
 			},
 		},
+		{
+			Name:      "get-credentials",
+			Action:    latestVersion(requireArgs(p.handleGetClusterCredentials, []string{"CLUSTER_ID"})),
+			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
+			ArgsUsage: "CLUSTER_ID",
+		},
 	}
 }
 
@@ -694,7 +700,64 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		}
 		return []string{cl.ID, cl.Name, handle, *cl.Version, provider}, nil
 	})
+}
 
+func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	cluster, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	if err != nil {
+		return err
+	}
+	if cluster == nil {
+		return fmt.Errorf("cluster is nil")
+	}
+
+	return buildKubeconfig(cluster)
+}
+
+func buildKubeconfig(cluster *gqlclient.ClusterFragment) error {
+	configAccess := clientcmd.NewDefaultPathOptions()
+	config, err := configAccess.GetStartingConfig()
+	if err != nil {
+		return fmt.Errorf("cannot read kubeconfig: %v", err)
+	}
+	if config == nil {
+		config = &clientcmdapi.Config{}
+	}
+
+	// TODO: Set CertificateAuthority.
+	configCluster := clientcmdapi.NewCluster()
+	configCluster.Server = *cluster.KasURL
+	if config.Clusters == nil {
+		config.Clusters = make(map[string]*clientcmdapi.Cluster)
+	}
+	config.Clusters[cluster.Name] = configCluster
+
+	configAuthInfo := clientcmdapi.NewAuthInfo()
+	configAuthInfo.Token = fmt.Sprintf("plrl:%s:%s", cluster.ID, consoleToken)
+	if config.AuthInfos == nil {
+		config.AuthInfos = make(map[string]*clientcmdapi.AuthInfo)
+	}
+	config.AuthInfos[cluster.Name] = configAuthInfo
+
+	configContext := clientcmdapi.NewContext()
+	configContext.Cluster = cluster.Name
+	configContext.AuthInfo = cluster.Name
+	if config.Contexts == nil {
+		config.Contexts = make(map[string]*clientcmdapi.Context)
+	}
+	config.Contexts[cluster.Name] = configContext
+
+	config.CurrentContext = cluster.Name
+
+	if err := clientcmd.ModifyConfig(configAccess, *config, true); err != nil {
+		return err
+	}
+
+	fmt.Printf("set your kubectl context to %s\n", cluster.Name)
 	return nil
 }
 
