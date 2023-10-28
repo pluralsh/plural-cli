@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	ttpl "text/template"
 
@@ -61,6 +62,9 @@ func (s *Scaffold) chartDependencies(w *wkspace.Workspace) []dependency {
 			fmt.Sprintf("%s.enabled", chartInstallation.Chart.Name),
 		}
 	}
+	sort.SliceStable(dependencies, func(i, j int) bool {
+		return dependencies[i].Name < dependencies[j].Name
+	})
 	return dependencies
 }
 
