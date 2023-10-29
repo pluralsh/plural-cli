@@ -1,6 +1,7 @@
 package plural
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pluralsh/plural/pkg/api"
@@ -41,6 +42,15 @@ func (p *Plural) InitKube() error {
 
 func (p *Plural) InitConsoleClient(token, url string) error {
 	if p.ConsoleClient == nil {
+		if token == "" {
+			conf := console.ReadConfig()
+			if conf.Token == "" {
+				return fmt.Errorf("you have not set up a console login, you can run `plural cd login` to save your credentials")
+			}
+
+			token = conf.Token
+			url = conf.Url
+		}
 		consoleClient, err := console.NewConsoleClient(token, url)
 		if err != nil {
 			return err

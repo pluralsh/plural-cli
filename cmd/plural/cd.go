@@ -67,6 +67,15 @@ func (p *Plural) cdCommands() []cli.Command {
 				cli.StringFlag{Name: "token", Usage: "console token", Required: true},
 			},
 		},
+		{
+			Name:   "login",
+			Action: handleCdLogin,
+			Usage:  "logs into your plural console",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
+				cli.StringFlag{Name: "token", Usage: "console access token"},
+			},
+		},
 	}
 }
 
@@ -700,6 +709,19 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		}
 		return []string{cl.ID, cl.Name, handle, *cl.Version, provider}, nil
 	})
+}
+
+func handleCdLogin(c *cli.Context) (err error) {
+	url := c.String("url")
+	token := c.String("token")
+	if token == "" {
+		token, err = utils.ReadPwd("Enter your console access token")
+		if err != nil {
+			return
+		}
+	}
+	conf := console.Config{Url: url, Token: token}
+	return conf.Save()
 }
 
 func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
