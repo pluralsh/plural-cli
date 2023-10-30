@@ -544,7 +544,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	for key, value := range existingConfigurations {
 		attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
 			Name:  key,
-			Value: &value,
+			Value: lo.ToPtr(value),
 		})
 	}
 
