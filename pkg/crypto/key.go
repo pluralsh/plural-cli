@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/plural/pkg/utils/pathing"
 	"gopkg.in/yaml.v2"
@@ -39,13 +40,20 @@ func (prov *KeyProvider) Marshall() ([]byte, error) {
 		Version: "crypto.plural.sh/v1",
 		Type:    KEY,
 		Id:      prov.ID(),
-		Context: map[string]interface{}{},
 	}
 
 	return yaml.Marshal(conf)
 }
 
 func buildKeyProvider(conf *Config, key *AESKey) (prov *KeyProvider, err error) {
+	if conf.Context != nil && conf.Context.Key != nil {
+		if file, err := homedir.Expand(conf.Context.Key.File); err == nil {
+			if k, err := Read(file); err == nil {
+				key = k
+			}
+		}
+	}
+
 	prov = &KeyProvider{key: key.Key}
 	if prov.ID() != conf.Id {
 		err = fmt.Errorf("the key fingerprints failed to match")
