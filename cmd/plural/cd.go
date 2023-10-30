@@ -229,7 +229,17 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			},
 		},
 		{
+			Name:      "delete",
+			Action:    latestVersion(requireArgs(p.handleDeleteCluster, []string{"CLUSTER_ID"})),
+			Usage:     "deregisters a cluster in plural cd, and drains all services (unless --soft is specified)",
+			ArgsUsage: "CLUSTER_ID",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "soft", Usage: "deletes a cluster in our system but doesn't drain resources, leaving them untouched"},
+			},
+		},
+		{
 			Name:      "get-credentials",
+			Aliases:   []string{"kubeconfig"},
 			Action:    latestVersion(requireArgs(p.handleGetClusterCredentials, []string{"CLUSTER_ID"})),
 			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
 			ArgsUsage: "CLUSTER_ID",
@@ -671,7 +681,7 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		return err
 	}
 	if existing == nil {
-		return fmt.Errorf("existing cluster is empty")
+		return fmt.Errorf("this cluster does not exist")
 	}
 	updateAttr := gqlclient.ClusterUpdateAttributes{
 		Version: *existing.Version,
@@ -709,6 +719,22 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		}
 		return []string{cl.ID, cl.Name, handle, *cl.Version, provider}, nil
 	})
+}
+
+func (p *Plural) handleDeleteCluster(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("this cluster does not exist")
+	}
+
+	return p.ConsoleClient.DeleteCluster(existing.ID)
 }
 
 func handleCdLogin(c *cli.Context) (err error) {

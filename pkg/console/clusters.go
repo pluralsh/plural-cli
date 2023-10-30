@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+
 	consoleclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/api"
 )
@@ -43,4 +44,9 @@ func (c *consoleClient) UpdateCluster(id string, attr consoleclient.ClusterUpdat
 	}
 
 	return result, nil
+}
+
+func (c *consoleClient) DeleteCluster(id string) error {
+	_, err := c.client.DeleteCluster(c.ctx, id)
+	return api.GetErrorResponse(err, "DeleteCluster")
 }
