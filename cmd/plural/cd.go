@@ -10,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural/pkg/cd"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/samber/lo"
@@ -776,50 +777,7 @@ func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
 		return fmt.Errorf("cluster is nil")
 	}
 
-	return buildKubeconfig(cluster)
-}
-
-func buildKubeconfig(cluster *gqlclient.ClusterFragment) error {
-	configAccess := clientcmd.NewDefaultPathOptions()
-	config, err := configAccess.GetStartingConfig()
-	if err != nil {
-		return fmt.Errorf("cannot read kubeconfig: %v", err)
-	}
-	if config == nil {
-		config = &clientcmdapi.Config{}
-	}
-
-	// TODO: Set CertificateAuthority.
-	configCluster := clientcmdapi.NewCluster()
-	configCluster.Server = *cluster.KasURL
-	if config.Clusters == nil {
-		config.Clusters = make(map[string]*clientcmdapi.Cluster)
-	}
-	config.Clusters[cluster.Name] = configCluster
-
-	configAuthInfo := clientcmdapi.NewAuthInfo()
-	configAuthInfo.Token = fmt.Sprintf("plrl:%s:%s", cluster.ID, consoleToken)
-	if config.AuthInfos == nil {
-		config.AuthInfos = make(map[string]*clientcmdapi.AuthInfo)
-	}
-	config.AuthInfos[cluster.Name] = configAuthInfo
-
-	configContext := clientcmdapi.NewContext()
-	configContext.Cluster = cluster.Name
-	configContext.AuthInfo = cluster.Name
-	if config.Contexts == nil {
-		config.Contexts = make(map[string]*clientcmdapi.Context)
-	}
-	config.Contexts[cluster.Name] = configContext
-
-	config.CurrentContext = cluster.Name
-
-	if err := clientcmd.ModifyConfig(configAccess, *config, true); err != nil {
-		return err
-	}
-
-	fmt.Printf("set your kubectl context to %s\n", cluster.Name)
-	return nil
+	return cd.SaveClusterKubeconfig(cluster, consoleToken)
 }
 
 func getKubeconfig(path, context string) (string, error) {
@@ -941,100 +899,19 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		}
 	}
 
-	var aws *gqlclient.AwsCloudAttributes
-	var gcp *gqlclient.GcpCloudAttributes
-	var azure *gqlclient.AzureCloudAttributes
-	switch provider {
-	case api.ProviderAzure:
-		azureSurvey := []*survey.Question{
-			{
-				Name:   "location",
-				Prompt: &survey.Input{Message: "Enter the location:"},
-			},
-			{
-				Name:   "subscription",
-				Prompt: &survey.Input{Message: "Enter the subscription ID:"},
-			},
-			{
-				Name:   "resource",
-				Prompt: &survey.Input{Message: "Enter the resource group:"},
-			},
-			{
-				Name:   "network",
-				Prompt: &survey.Input{Message: "Enter the network name:"},
-			},
-		}
-		var resp struct {
-			Location     string
-			Subscription string
-			Resource     string
-			Network      string
-		}
-		if err := survey.Ask(azureSurvey, &resp); err != nil {
-			return err
-		}
-		azure = &gqlclient.AzureCloudAttributes{
-			Location:       &resp.Location,
-			SubscriptionID: &resp.Subscription,
-			ResourceGroup:  &resp.Resource,
-			Network:        &resp.Network,
-		}
-
-	case api.ProviderGCP:
-		awsSurvey := []*survey.Question{
-			{
-				Name:   "project",
-				Prompt: &survey.Input{Message: "Enter the project name:"},
-			},
-			{
-				Name:   "network",
-				Prompt: &survey.Input{Message: "Enter the network name:"},
-			},
-			{
-				Name:   "region",
-				Prompt: &survey.Input{Message: "Enter the region:"},
-			},
-		}
-		var resp struct {
-			Project string
-			Network string
-			Region  string
-		}
-		if err := survey.Ask(awsSurvey, &resp); err != nil {
-			return err
-		}
-		gcp = &gqlclient.GcpCloudAttributes{
-			Project: &resp.Project,
-			Network: &resp.Network,
-			Region:  &resp.Region,
-		}
-	case api.ProviderAWS:
-		region := ""
-		prompt := &survey.Input{
-			Message: "Enter AWS region:",
-		}
-		if err := survey.AskOne(prompt, &region, survey.WithValidator(survey.Required)); err != nil {
-			return err
-		}
-
-		aws = &gqlclient.AwsCloudAttributes{
-			Region: &region,
-		}
+	ca, err := cd.AskCloudSettings(provider)
+	if err != nil {
+		return err
 	}
-	attr.CloudSettings = &gqlclient.CloudSettingsAttributes{
-		Aws:   aws,
-		Gcp:   gcp,
-		Azure: azure,
-	}
+	attr.CloudSettings = ca
 
 	existing, err := p.ConsoleClient.CreateCluster(attr)
 	if err != nil {
 		return err
 	}
 	if existing == nil {
-		return fmt.Errorf("cluster is nil")
+		return fmt.Errorf("couldn't create cluster")
 	}
-
 	return nil
 }
 
