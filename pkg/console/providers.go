@@ -34,3 +34,12 @@ func (c *consoleClient) DeleteProviderCredentials(id string) (*consoleclient.Del
 
 	return result, nil
 }
+
+func (c *consoleClient) CreateProvider(attr consoleclient.ClusterProviderAttributes) (*consoleclient.CreateClusterProvider, error) {
+	result, err := c.client.CreateClusterProvider(c.ctx, attr)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "CreateProvider")
+	}
+
+	return result, nil
+}

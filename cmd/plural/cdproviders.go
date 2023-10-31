@@ -61,7 +61,7 @@ func (p *Plural) handleCreateProviderCredentials(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) handleListProviders(c *cli.Context) error {
+func (p *Plural) handleListProviders(_ *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
@@ -85,10 +85,9 @@ func (p *Plural) handleListProviders(c *cli.Context) error {
 		}
 		return []string{r.Node.ID, r.Node.Name, r.Node.Cloud, editable, repoUrl}, nil
 	})
-	return nil
 }
 
-var availableProviders = []string{api.ProviderGCP}
+var availableProviders = []string{api.ProviderGCP, api.ProviderAzure, api.ProviderAWS}
 
 func (p *Plural) credentialsPreflights() (*gqlclient.ProviderCredentialAttributes, error) {
 	provider := ""
@@ -117,7 +116,10 @@ func (p *Plural) credentialsPreflights() (*gqlclient.ProviderCredentialAttribute
 }
 
 func (p *Plural) createSecret() (name, namespace string, err error) {
-	p.InitKube()
+	err = p.InitKube()
+	if err != nil {
+		return "", "", err
+	}
 	secretSurvey := []*survey.Question{
 		{
 			Name:     "name",

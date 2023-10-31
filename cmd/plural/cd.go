@@ -7,7 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
+	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/samber/lo"
@@ -243,6 +245,17 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(p.handleGetClusterCredentials, []string{"CLUSTER_ID"})),
 			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
 			ArgsUsage: "CLUSTER_ID",
+		},
+		{
+			Name:      "create",
+			Action:    latestVersion(requireArgs(p.handleCreateCluster, []string{"Name"})),
+			Usage:     "create cluster",
+			ArgsUsage: "Name",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
+				cli.StringFlag{Name: "version", Usage: "kubernetes cluster version", Required: true},
+				cli.StringFlag{Name: "provider-id", Usage: "provider ID"},
+			},
 		},
 	}
 }
@@ -861,4 +874,236 @@ func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, err
 	}
 
 	return res, nil
+}
+
+var providerSurvey = []*survey.Question{
+	{
+		Name:   "name",
+		Prompt: &survey.Input{Message: "Enter the name of your provider:"},
+	},
+	{
+		Name:   "namespace",
+		Prompt: &survey.Input{Message: "Enter the namespace of your provider:"},
+	},
+}
+
+func (p *Plural) handleCreateCluster(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	name := c.Args().Get(0)
+	provider := ""
+	attr := gqlclient.ClusterAttributes{
+		Name: name,
+	}
+	if c.String("handle") != "" {
+		attr.Handle = lo.ToPtr(c.String("handle"))
+	}
+	if c.String("version") != "" {
+		attr.Version = c.String("version")
+	}
+	if c.String("provider-id") != "" {
+		attr.ProviderID = lo.ToPtr(c.String("provider-id"))
+	} else {
+		providerList, err := p.ConsoleClient.ListProviders()
+		if err != nil {
+			return err
+		}
+		providerNames := []string{}
+		providerMap := map[string]string{}
+		for _, prov := range providerList.ClusterProviders.Edges {
+			providerNames = append(providerNames, prov.Node.Name)
+			providerMap[prov.Node.Name] = prov.Node.ID
+		}
+		createNewProvider := "Create New Provider"
+		providerNames = append(providerNames, createNewProvider)
+
+		prompt := &survey.Select{
+			Message: "Select one of the following providers:",
+			Options: providerNames,
+		}
+		if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
+			return err
+		}
+		if provider != createNewProvider {
+			utils.Success("Using provider %s\n", provider)
+			id := providerMap[provider]
+			attr.ProviderID = &id
+		} else {
+
+			clusterProv, err := p.handleCreateProvider()
+			if err != nil {
+				return err
+			}
+			utils.Success("Provider %s created successfully\n", clusterProv.CreateClusterProvider.Name)
+			attr.ProviderID = &clusterProv.CreateClusterProvider.ID
+			provider = clusterProv.CreateClusterProvider.Cloud
+		}
+	}
+
+	var aws *gqlclient.AwsCloudAttributes
+	var gcp *gqlclient.GcpCloudAttributes
+	switch provider {
+	case api.ProviderGCP:
+		awsSurvey := []*survey.Question{
+			{
+				Name:   "project",
+				Prompt: &survey.Input{Message: "Enter the project name:"},
+			},
+			{
+				Name:   "network",
+				Prompt: &survey.Input{Message: "Enter the network name:"},
+			},
+			{
+				Name:   "region",
+				Prompt: &survey.Input{Message: "Enter the region:"},
+			},
+		}
+		var resp struct {
+			Project string
+			Network string
+			Region  string
+		}
+		if err := survey.Ask(awsSurvey, &resp); err != nil {
+			return err
+		}
+		gcp = &gqlclient.GcpCloudAttributes{
+			Project: &resp.Project,
+			Network: &resp.Network,
+			Region:  &resp.Region,
+		}
+	case api.ProviderAWS:
+		region := ""
+		prompt := &survey.Input{
+			Message: "Enter AWS region:",
+		}
+		if err := survey.AskOne(prompt, &region, survey.WithValidator(survey.Required)); err != nil {
+			return err
+		}
+
+		aws = &gqlclient.AwsCloudAttributes{
+			Region: &region,
+		}
+	}
+	attr.CloudSettings = &gqlclient.CloudSettingsAttributes{
+		Aws: aws,
+		Gcp: gcp,
+	}
+
+	existing, err := p.ConsoleClient.CreateCluster(attr)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("cluster is nil")
+	}
+
+	return nil
+}
+
+func (p *Plural) handleCreateProvider() (*gqlclient.CreateClusterProvider, error) {
+	provider := ""
+	var resp struct {
+		Name      string
+		Namespace string
+	}
+	if err := survey.Ask(providerSurvey, &resp); err != nil {
+		return nil, err
+	}
+
+	prompt := &survey.Select{
+		Message: "Select one of the following providers:",
+		Options: availableProviders,
+	}
+	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
+		return nil, err
+	}
+
+	var aws *gqlclient.AwsSettingsAttributes
+	var gcp *gqlclient.GcpSettingsAttributes
+	var azure *gqlclient.AzureSettingsAttributes
+	switch provider {
+	case api.ProviderGCP:
+		applicationCredentials := ""
+		prompt := &survey.Input{
+			Message: "Enter GCP application credentials:",
+		}
+		if err := survey.AskOne(prompt, &applicationCredentials, survey.WithValidator(survey.Required)); err != nil {
+			return nil, err
+		}
+		gcp = &gqlclient.GcpSettingsAttributes{
+			ApplicationCredentials: applicationCredentials,
+		}
+	case api.ProviderAzure:
+		azureSurvey := []*survey.Question{
+			{
+				Name:   "tenant",
+				Prompt: &survey.Input{Message: "Enter the tenant ID:"},
+			},
+			{
+				Name:   "client",
+				Prompt: &survey.Input{Message: "Enter the client ID:"},
+			},
+			{
+				Name:   "secret",
+				Prompt: &survey.Input{Message: "Enter the client secret:"},
+			},
+		}
+		var resp struct {
+			Tenant string
+			Client string
+			Secret string
+		}
+		if err := survey.Ask(azureSurvey, &resp); err != nil {
+			return nil, err
+		}
+
+		azure = &gqlclient.AzureSettingsAttributes{
+			TenantID:     resp.Tenant,
+			ClientID:     resp.Client,
+			ClientSecret: resp.Secret,
+		}
+	case api.ProviderAWS:
+		awsSurvey := []*survey.Question{
+			{
+				Name:   "key",
+				Prompt: &survey.Input{Message: "Enter the Access Key ID:"},
+			},
+			{
+				Name:   "secret",
+				Prompt: &survey.Input{Message: "Enter Secret Access Key:"},
+			},
+		}
+		var resp struct {
+			Key    string
+			Secret string
+		}
+		if err := survey.Ask(awsSurvey, &resp); err != nil {
+			return nil, err
+		}
+
+		aws = &gqlclient.AwsSettingsAttributes{
+			AccessKeyID:     resp.Key,
+			SecretAccessKey: resp.Secret,
+		}
+	}
+
+	providerAttr := gqlclient.ClusterProviderAttributes{
+		Name:      resp.Name,
+		Namespace: &resp.Namespace,
+		Cloud:     &provider,
+		CloudSettings: &gqlclient.CloudProviderSettingsAttributes{
+			Aws:   aws,
+			Gcp:   gcp,
+			Azure: azure,
+		},
+	}
+	clusterProv, err := p.ConsoleClient.CreateProvider(providerAttr)
+	if err != nil {
+		return nil, err
+	}
+	if clusterProv == nil {
+		return nil, fmt.Errorf("provider was not created properly")
+	}
+	return clusterProv, nil
 }
