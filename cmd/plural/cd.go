@@ -697,7 +697,7 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 		return fmt.Errorf("this cluster does not exist")
 	}
 	updateAttr := gqlclient.ClusterUpdateAttributes{
-		Version: *existing.Version,
+		Version: existing.Version,
 		Handle:  existing.Handle,
 	}
 	newHandle := c.String("handle")
@@ -900,7 +900,7 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		attr.Handle = lo.ToPtr(c.String("handle"))
 	}
 	if c.String("version") != "" {
-		attr.Version = c.String("version")
+		attr.Version = lo.ToPtr(c.String("version"))
 	}
 	if c.String("provider-id") != "" {
 		attr.ProviderID = lo.ToPtr(c.String("provider-id"))
