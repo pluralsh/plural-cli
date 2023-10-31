@@ -248,9 +248,9 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:      "create",
-			Action:    latestVersion(requireArgs(p.handleCreateCluster, []string{"Name"})),
+			Action:    latestVersion(requireArgs(p.handleCreateCluster, []string{"CLUSTER_NAME"})),
 			Usage:     "create cluster",
-			ArgsUsage: "Name",
+			ArgsUsage: "CLUSTER_NAME",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
 				cli.StringFlag{Name: "version", Usage: "kubernetes cluster version", Required: true},
