@@ -254,7 +254,6 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
 				cli.StringFlag{Name: "version", Usage: "kubernetes cluster version", Required: true},
-				cli.StringFlag{Name: "provider-id", Usage: "provider ID"},
 			},
 		},
 	}
@@ -849,7 +848,6 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		return err
 	}
 	name := c.Args().Get(0)
-	provider := ""
 	attr := gqlclient.ClusterAttributes{
 		Name: name,
 	}
@@ -859,43 +857,41 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 	if c.String("version") != "" {
 		attr.Version = lo.ToPtr(c.String("version"))
 	}
-	if c.String("provider-id") != "" {
-		attr.ProviderID = lo.ToPtr(c.String("provider-id"))
+
+	providerList, err := p.ConsoleClient.ListProviders()
+	if err != nil {
+		return err
+	}
+	providerNames := []string{}
+	providerMap := map[string]string{}
+	for _, prov := range providerList.ClusterProviders.Edges {
+		providerNames = append(providerNames, prov.Node.Name)
+		providerMap[prov.Node.Name] = prov.Node.ID
+	}
+	createNewProvider := "Create New Provider"
+	providerNames = append(providerNames, createNewProvider)
+
+	prompt := &survey.Select{
+		Message: "Select one of the following providers:",
+		Options: providerNames,
+	}
+	provider := ""
+	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+	if provider != createNewProvider {
+		utils.Success("Using provider %s\n", provider)
+		id := providerMap[provider]
+		attr.ProviderID = &id
 	} else {
-		providerList, err := p.ConsoleClient.ListProviders()
+
+		clusterProv, err := p.handleCreateProvider()
 		if err != nil {
 			return err
 		}
-		providerNames := []string{}
-		providerMap := map[string]string{}
-		for _, prov := range providerList.ClusterProviders.Edges {
-			providerNames = append(providerNames, prov.Node.Name)
-			providerMap[prov.Node.Name] = prov.Node.ID
-		}
-		createNewProvider := "Create New Provider"
-		providerNames = append(providerNames, createNewProvider)
-
-		prompt := &survey.Select{
-			Message: "Select one of the following providers:",
-			Options: providerNames,
-		}
-		if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
-			return err
-		}
-		if provider != createNewProvider {
-			utils.Success("Using provider %s\n", provider)
-			id := providerMap[provider]
-			attr.ProviderID = &id
-		} else {
-
-			clusterProv, err := p.handleCreateProvider()
-			if err != nil {
-				return err
-			}
-			utils.Success("Provider %s created successfully\n", clusterProv.CreateClusterProvider.Name)
-			attr.ProviderID = &clusterProv.CreateClusterProvider.ID
-			provider = clusterProv.CreateClusterProvider.Cloud
-		}
+		utils.Success("Provider %s created successfully\n", clusterProv.CreateClusterProvider.Name)
+		attr.ProviderID = &clusterProv.CreateClusterProvider.ID
+		provider = clusterProv.CreateClusterProvider.Cloud
 	}
 
 	ca, err := cd.AskCloudSettings(provider)
