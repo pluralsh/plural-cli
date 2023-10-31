@@ -943,7 +943,43 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 
 	var aws *gqlclient.AwsCloudAttributes
 	var gcp *gqlclient.GcpCloudAttributes
+	var azure *gqlclient.AzureCloudAttributes
 	switch provider {
+	case api.ProviderAzure:
+		azureSurvey := []*survey.Question{
+			{
+				Name:   "location",
+				Prompt: &survey.Input{Message: "Enter the location:"},
+			},
+			{
+				Name:   "subscription",
+				Prompt: &survey.Input{Message: "Enter the subscription ID:"},
+			},
+			{
+				Name:   "resource",
+				Prompt: &survey.Input{Message: "Enter the resource group:"},
+			},
+			{
+				Name:   "network",
+				Prompt: &survey.Input{Message: "Enter the network name:"},
+			},
+		}
+		var resp struct {
+			Location     string
+			Subscription string
+			Resource     string
+			Network      string
+		}
+		if err := survey.Ask(azureSurvey, &resp); err != nil {
+			return err
+		}
+		azure = &gqlclient.AzureCloudAttributes{
+			Location:       &resp.Location,
+			SubscriptionID: &resp.Subscription,
+			ResourceGroup:  &resp.Resource,
+			Network:        &resp.Network,
+		}
+
 	case api.ProviderGCP:
 		awsSurvey := []*survey.Question{
 			{
@@ -986,8 +1022,9 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		}
 	}
 	attr.CloudSettings = &gqlclient.CloudSettingsAttributes{
-		Aws: aws,
-		Gcp: gcp,
+		Aws:   aws,
+		Gcp:   gcp,
+		Azure: azure,
 	}
 
 	existing, err := p.ConsoleClient.CreateCluster(attr)
