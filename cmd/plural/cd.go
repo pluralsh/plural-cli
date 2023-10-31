@@ -9,7 +9,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/api"
 	"github.com/pluralsh/plural/pkg/cd"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
@@ -933,84 +932,16 @@ func (p *Plural) handleCreateProvider() (*gqlclient.CreateClusterProvider, error
 		return nil, err
 	}
 
-	var aws *gqlclient.AwsSettingsAttributes
-	var gcp *gqlclient.GcpSettingsAttributes
-	var azure *gqlclient.AzureSettingsAttributes
-	switch provider {
-	case api.ProviderGCP:
-		applicationCredentials := ""
-		prompt := &survey.Input{
-			Message: "Enter GCP application credentials:",
-		}
-		if err := survey.AskOne(prompt, &applicationCredentials, survey.WithValidator(survey.Required)); err != nil {
-			return nil, err
-		}
-		gcp = &gqlclient.GcpSettingsAttributes{
-			ApplicationCredentials: applicationCredentials,
-		}
-	case api.ProviderAzure:
-		azureSurvey := []*survey.Question{
-			{
-				Name:   "tenant",
-				Prompt: &survey.Input{Message: "Enter the tenant ID:"},
-			},
-			{
-				Name:   "client",
-				Prompt: &survey.Input{Message: "Enter the client ID:"},
-			},
-			{
-				Name:   "secret",
-				Prompt: &survey.Input{Message: "Enter the client secret:"},
-			},
-		}
-		var resp struct {
-			Tenant string
-			Client string
-			Secret string
-		}
-		if err := survey.Ask(azureSurvey, &resp); err != nil {
-			return nil, err
-		}
-
-		azure = &gqlclient.AzureSettingsAttributes{
-			TenantID:     resp.Tenant,
-			ClientID:     resp.Client,
-			ClientSecret: resp.Secret,
-		}
-	case api.ProviderAWS:
-		awsSurvey := []*survey.Question{
-			{
-				Name:   "key",
-				Prompt: &survey.Input{Message: "Enter the Access Key ID:"},
-			},
-			{
-				Name:   "secret",
-				Prompt: &survey.Input{Message: "Enter Secret Access Key:"},
-			},
-		}
-		var resp struct {
-			Key    string
-			Secret string
-		}
-		if err := survey.Ask(awsSurvey, &resp); err != nil {
-			return nil, err
-		}
-
-		aws = &gqlclient.AwsSettingsAttributes{
-			AccessKeyID:     resp.Key,
-			SecretAccessKey: resp.Secret,
-		}
+	cps, err := cd.AskCloudProviderSettings(provider)
+	if err != nil {
+		return nil, err
 	}
 
 	providerAttr := gqlclient.ClusterProviderAttributes{
-		Name:      resp.Name,
-		Namespace: &resp.Namespace,
-		Cloud:     &provider,
-		CloudSettings: &gqlclient.CloudProviderSettingsAttributes{
-			Aws:   aws,
-			Gcp:   gcp,
-			Azure: azure,
-		},
+		Name:          resp.Name,
+		Namespace:     &resp.Namespace,
+		Cloud:         &provider,
+		CloudSettings: cps,
 	}
 	clusterProv, err := p.ConsoleClient.CreateProvider(providerAttr)
 	if err != nil {
