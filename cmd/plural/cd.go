@@ -256,6 +256,15 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "version", Usage: "kubernetes cluster version", Required: true},
 			},
 		},
+		{
+			Name:   "bootstrap",
+			Action: latestVersion(p.handleClusterBootstrap),
+			Usage:  "creates a new BYOK cluster and installs the agent onto it using the current kubeconfig",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
+				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
+			},
+		},
 	}
 }
 
@@ -601,6 +610,10 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 }
 
 func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
+	return p.doInstallOperator(c.String("url"), c.String("token"))
+}
+
+func (p *Plural) doInstallOperator(url, token string) error {
 	namespace := "plrl-deploy-operator"
 	err := p.InitKube()
 	if err != nil {
@@ -610,7 +623,7 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	if !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	return console.InstallAgent(c.String("url"), c.String("token"), namespace)
+	return console.InstallAgent(url, token, namespace)
 }
 
 func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
@@ -841,6 +854,31 @@ var providerSurvey = []*survey.Question{
 		Name:   "namespace",
 		Prompt: &survey.Input{Message: "Enter the namespace of your provider:"},
 	},
+}
+
+func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	attrs := gqlclient.ClusterAttributes{Name: c.String("name")}
+	if c.String("handle") != "" {
+		attrs.Handle = lo.ToPtr(c.String("handle"))
+	}
+
+	existing, err := p.ConsoleClient.CreateCluster(attrs)
+	if err != nil {
+		return err
+	}
+
+	if existing.CreateCluster.DeployToken == nil {
+		return fmt.Errorf("could not fetch deploy token from cluster")
+	}
+
+	deployToken := *existing.CreateCluster.DeployToken
+	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
+	utils.Highlight("instaling agent on %s with url %s and initial deploy token %s\n", c.String("name"), p.ConsoleClient.Url(), deployToken)
+	return p.doInstallOperator(url, deployToken)
 }
 
 func (p *Plural) handleCreateCluster(c *cli.Context) error {

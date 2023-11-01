@@ -3,6 +3,7 @@ package console
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/pluralsh/plural/pkg/helm"
 	"helm.sh/helm/v3/pkg/action"
@@ -53,11 +54,15 @@ func InstallAgent(url, token, namespace string) error {
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
 		instClient.ReleaseName = repoName
+		instClient.Wait = true
+		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
 		return err
 	}
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
+	client.Wait = true
+	client.Timeout = time.Minute * 5
 	_, err = client.Run(repoName, chart, vals)
 	return err
 }

@@ -11,9 +11,11 @@ import (
 type consoleClient struct {
 	ctx    context.Context
 	client *consoleclient.Client
+	url    string
 }
 
 type ConsoleClient interface {
+	Url() string
 	ListClusters() (*consoleclient.ListClusters, error)
 	GetCluster(clusterId, clusterName *string) (*consoleclient.ClusterFragment, error)
 	UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error)
@@ -36,9 +38,14 @@ type ConsoleClient interface {
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	return &consoleClient{
+		url: url,
 		client: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
 			req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
 		}),
 		ctx: context.Background(),
 	}, nil
+}
+
+func (client *consoleClient) Url() string {
+	return client.url
 }
