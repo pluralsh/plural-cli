@@ -16,8 +16,8 @@ import (
 var settings = cli.New()
 
 const (
-	repoName = "deploy-operator"
-	repoUrl  = "https://pluralsh.github.io/deployment-operator"
+	releaseName = "deploy-operator"
+	repoUrl     = "https://pluralsh.github.io/deployment-operator"
 )
 
 func InstallAgent(url, token, namespace string) error {
@@ -29,7 +29,7 @@ func InstallAgent(url, token, namespace string) error {
 		"consoleUrl": url,
 	}
 
-	if err := helm.AddRepo(repoName, repoUrl); err != nil {
+	if err := helm.AddRepo(releaseName, repoUrl); err != nil {
 		return err
 	}
 
@@ -38,7 +38,7 @@ func InstallAgent(url, token, namespace string) error {
 		return err
 	}
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", repoName, "deployment-operator"), settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", releaseName, "deployment-operator"), settings)
 	if err != nil {
 		return err
 	}
@@ -50,19 +50,22 @@ func InstallAgent(url, token, namespace string) error {
 
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
-	if _, err := histClient.Run(repoName); errors.Is(err, driver.ErrReleaseNotFound) {
+	if _, err := histClient.Run(releaseName); errors.Is(err, driver.ErrReleaseNotFound) {
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
-		instClient.ReleaseName = repoName
-		instClient.Wait = true
+		instClient.ReleaseName = releaseName
 		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
 		return err
 	}
+
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
-	client.Wait = true
 	client.Timeout = time.Minute * 5
-	_, err = client.Run(repoName, chart, vals)
+	_, err = client.Run(releaseName, chart, vals)
 	return err
+}
+
+func UninstallAgent(namespace string) error {
+	return helm.Uninstall(releaseName, namespace)
 }

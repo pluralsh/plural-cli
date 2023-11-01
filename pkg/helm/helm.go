@@ -157,6 +157,39 @@ func AddRepo(repoName, repoUrl string) error {
 	return f.WriteFile(repoFile, 0644)
 }
 
+func Uninstall(name, namespace string) error {
+	if available, err := IsReleaseAvailable(name, namespace); !available {
+		return err
+	}
+
+	actionConfig, err := GetActionConfig(namespace)
+	if err != nil {
+		return err
+	}
+	client := action.NewUninstall(actionConfig)
+
+	_, err = client.Run(name)
+	return err
+}
+
+func IsReleaseAvailable(name, namespace string) (bool, error) {
+	actionConfig, err := GetActionConfig(namespace)
+	if err != nil {
+		return false, err
+	}
+	client := action.NewList(actionConfig)
+	resp, err := client.Run()
+	if err != nil {
+		return false, err
+	}
+	for _, rel := range resp {
+		if rel.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func getEnvVar(name, defaultValue string) string {
 	if v, ok := os.LookupEnv(name); ok {
 		return v

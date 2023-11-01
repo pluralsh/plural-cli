@@ -25,6 +25,10 @@ func init() {
 	consoleURL = ""
 }
 
+const (
+	operatorNamespace = "plrl-deploy-operator"
+)
+
 var consoleToken string
 var consoleURL string
 
@@ -68,6 +72,11 @@ func (p *Plural) cdCommands() []cli.Command {
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "console token", Required: true},
 			},
+		},
+		{
+			Name:   "uninstall",
+			Action: p.handleUninstallOperator,
+			Usage:  "uninstalls the deployment operator from the current cluster",
 		},
 		{
 			Name:   "login",
@@ -263,6 +272,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
+				cli.StringSliceFlag{
+					Name:  "tag",
+					Usage: "a cluster tag to add, useful for targeting with global services",
+				},
 			},
 		},
 	}
@@ -613,17 +626,24 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	return p.doInstallOperator(c.String("url"), c.String("token"))
 }
 
-func (p *Plural) doInstallOperator(url, token string) error {
-	namespace := "plrl-deploy-operator"
+func (p *Plural) handleUninstallOperator(c *cli.Context) error {
 	err := p.InitKube()
 	if err != nil {
 		return err
 	}
-	err = p.Kube.CreateNamespace(namespace)
+	return console.UninstallAgent(operatorNamespace)
+}
+
+func (p *Plural) doInstallOperator(url, token string) error {
+	err := p.InitKube()
+	if err != nil {
+		return err
+	}
+	err = p.Kube.CreateNamespace(operatorNamespace)
 	if !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	return console.InstallAgent(url, token, namespace)
+	return console.InstallAgent(url, token, operatorNamespace)
 }
 
 func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
@@ -864,6 +884,20 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	attrs := gqlclient.ClusterAttributes{Name: c.String("name")}
 	if c.String("handle") != "" {
 		attrs.Handle = lo.ToPtr(c.String("handle"))
+	}
+
+	if c.IsSet("tag") {
+		attrs.Tags = lo.Map(c.StringSlice("tag"), func(tag string, index int) *gqlclient.TagAttributes {
+			tags := strings.Split(tag, "=")
+			if len(tags) == 2 {
+				return &gqlclient.TagAttributes{
+					Name:  tags[0],
+					Value: tags[1],
+				}
+			}
+			return nil
+		})
+		attrs.Tags = lo.Filter(attrs.Tags, func(t *gqlclient.TagAttributes, ind int) bool { return t != nil })
 	}
 
 	existing, err := p.ConsoleClient.CreateCluster(attrs)
