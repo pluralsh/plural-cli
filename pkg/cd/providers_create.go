@@ -1,7 +1,10 @@
 package cd
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
@@ -88,14 +91,53 @@ func askAzureCloudProviderSettings() (*gqlclient.AzureSettingsAttributes, error)
 }
 
 func askGCPCloudProviderSettings() (*gqlclient.GcpSettingsAttributes, error) {
-	applicationCredentials := ""
+	applicationCredentialsFilePath := ""
+
 	prompt := &survey.Input{
-		Message: "Enter GCP application credentials:",
+		Message: "Enter GCP application credentials file path:",
 	}
-	if err := survey.AskOne(prompt, &applicationCredentials, survey.WithValidator(survey.Required)); err != nil {
+	if err := survey.AskOne(prompt, &applicationCredentialsFilePath, survey.WithValidator(validServiceAccountCredentials)); err != nil {
 		return nil, err
 	}
+
 	return &gqlclient.GcpSettingsAttributes{
-		ApplicationCredentials: applicationCredentials,
+		ApplicationCredentials: toCredentialsJSON(applicationCredentialsFilePath),
 	}, nil
+}
+
+type credentials struct {
+	Email string          `json:"client_email"`
+	ID    string          `json:"client_id"`
+	Type  credentialsType `json:"type"`
+}
+
+type credentialsType = string
+
+const (
+	ServiceAccountType credentialsType = "service_account"
+)
+
+func validServiceAccountCredentials(val interface{}) error {
+	path, _ := val.(string)
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	creds := new(credentials)
+	if err = json.Unmarshal(bytes, creds); err != nil {
+		return err
+	}
+
+	if creds.Type != ServiceAccountType || len(creds.Email) == 0 || len(creds.ID) == 0 {
+		return fmt.Errorf("provided credentials file is not a valid service account. Must have type 'service_account' and both 'client_id' and 'client_email' set")
+	}
+
+	return nil
+}
+
+func toCredentialsJSON(path string) string {
+	bytes, _ := os.ReadFile(path)
+
+	return base64.StdEncoding.EncodeToString(bytes)
 }
