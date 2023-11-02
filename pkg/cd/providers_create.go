@@ -74,19 +74,25 @@ func askAzureCloudProviderSettings() (*gqlclient.AzureSettingsAttributes, error)
 			Name:   "secret",
 			Prompt: &survey.Input{Message: "Enter the client secret:"},
 		},
+		{
+			Name:   "subscription",
+			Prompt: &survey.Input{Message: "Enter the subscription ID:"},
+		},
 	}
 	var resp struct {
-		Tenant string
-		Client string
-		Secret string
+		Tenant       string
+		Client       string
+		Secret       string
+		Subscription string
 	}
 	if err := survey.Ask(azureSurvey, &resp); err != nil {
 		return nil, err
 	}
 	return &gqlclient.AzureSettingsAttributes{
-		TenantID:     resp.Tenant,
-		ClientID:     resp.Client,
-		ClientSecret: resp.Secret,
+		TenantID:       resp.Tenant,
+		ClientID:       resp.Client,
+		ClientSecret:   resp.Secret,
+		SubscriptionID: resp.Subscription,
 	}, nil
 }
 
