@@ -13,15 +13,13 @@ import (
 	"helm.sh/helm/v3/pkg/storage/driver"
 )
 
-var settings = cli.New()
-
 const (
 	releaseName = "deploy-operator"
 	repoUrl     = "https://pluralsh.github.io/deployment-operator"
 )
 
 func InstallAgent(url, token, namespace string) error {
-
+	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets": map[string]string{
 			"deployToken": token,
@@ -49,13 +47,17 @@ func InstallAgent(url, token, namespace string) error {
 	}
 
 	histClient := action.NewHistory(helmConfig)
-	histClient.Max = 5
-	if _, err := histClient.Run(releaseName); errors.Is(err, driver.ErrReleaseNotFound) {
+	histClient.Max = 1
+	_, err = histClient.Run(releaseName)
+	if errors.Is(err, driver.ErrReleaseNotFound) {
+		fmt.Println("installing deployment operator...")
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
 		instClient.ReleaseName = releaseName
 		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
+		return err
+	} else if err != nil {
 		return err
 	}
 
