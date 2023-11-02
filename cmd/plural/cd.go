@@ -643,7 +643,11 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	return console.InstallAgent(url, token, operatorNamespace)
+	err = console.InstallAgent(url, token, operatorNamespace)
+	if err == nil {
+		utils.Success("deployment operator installed successfully\n")
+	}
+	return err
 }
 
 func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
