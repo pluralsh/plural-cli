@@ -1,13 +1,13 @@
 package cd
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
+
 	"github.com/pluralsh/plural/pkg/api"
 )
 
@@ -144,6 +144,5 @@ func validServiceAccountCredentials(val interface{}) error {
 
 func toCredentialsJSON(path string) string {
 	bytes, _ := os.ReadFile(path)
-
-	return base64.StdEncoding.EncodeToString(bytes)
+	return string(bytes)
 }
