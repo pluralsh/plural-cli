@@ -99,7 +99,10 @@ func Profiles() ([]*VersionedConfig, error) {
 			if err = yaml.Unmarshal(contents, versioned); err != nil {
 				return nil, err
 			}
-			confs = append(confs, versioned)
+
+			if versioned.Kind == "Config" {
+				confs = append(confs, versioned)
+			}
 		}
 	}
 
