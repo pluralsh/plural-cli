@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural/pkg/cd"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/polly/containers"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -940,12 +941,21 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 	}
 	providerNames := []string{}
 	providerMap := map[string]string{}
+	cloudProviders := []string{}
 	for _, prov := range providerList.ClusterProviders.Edges {
 		providerNames = append(providerNames, prov.Node.Name)
 		providerMap[prov.Node.Name] = prov.Node.ID
+		cloudProviders = append(cloudProviders, prov.Node.Cloud)
 	}
+
+	existingProv := containers.ToSet[string](cloudProviders)
+	availableProv := containers.ToSet[string](availableProviders)
+	toCreate := availableProv.Difference(existingProv)
 	createNewProvider := "Create New Provider"
-	providerNames = append(providerNames, createNewProvider)
+
+	if toCreate.Len() != 0 {
+		providerNames = append(providerNames, createNewProvider)
+	}
 
 	prompt := &survey.Select{
 		Message: "Select one of the following providers:",
@@ -961,9 +971,13 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		attr.ProviderID = &id
 	} else {
 
-		clusterProv, err := p.handleCreateProvider()
+		clusterProv, err := p.handleCreateProvider(toCreate.List())
 		if err != nil {
 			return err
+		}
+		if clusterProv == nil {
+			utils.Success("All supported providers are created\n")
+			return nil
 		}
 		utils.Success("Provider %s created successfully\n", clusterProv.CreateClusterProvider.Name)
 		attr.ProviderID = &clusterProv.CreateClusterProvider.ID
@@ -986,7 +1000,7 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) handleCreateProvider() (*gqlclient.CreateClusterProvider, error) {
+func (p *Plural) handleCreateProvider(existingProviders []string) (*gqlclient.CreateClusterProvider, error) {
 	provider := ""
 	var resp struct {
 		Name      string
@@ -998,7 +1012,7 @@ func (p *Plural) handleCreateProvider() (*gqlclient.CreateClusterProvider, error
 
 	prompt := &survey.Select{
 		Message: "Select one of the following providers:",
-		Options: availableProviders,
+		Options: existingProviders,
 	}
 	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
 		return nil, err
