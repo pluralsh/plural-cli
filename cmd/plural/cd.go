@@ -1013,7 +1013,8 @@ func (p *Plural) handleInstallControlPlane(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight("writing values.secret.yaml, you should keep this in a secure location for future helm upgrades")
+	fmt.Print("\n\n")
+	utils.Highlight("===> writing values.secret.yaml, you should keep this in a secure location for future helm upgrades\n\n")
 	if err := os.WriteFile("values.secret.yaml", []byte(vals), 0644); err != nil {
 		return err
 	}
