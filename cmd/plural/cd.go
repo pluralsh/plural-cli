@@ -10,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural/pkg/cd"
+	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
 	"github.com/pluralsh/polly/containers"
@@ -73,6 +74,11 @@ func (p *Plural) cdCommands() []cli.Command {
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "console token", Required: true},
 			},
+		},
+		{
+			Name:   "control-plane",
+			Action: p.handleInstallControlPlane,
+			Usage:  "sets up the plural console in an existing k8s cluster",
 		},
 		{
 			Name:   "uninstall",
@@ -997,6 +1003,23 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 	if existing == nil {
 		return fmt.Errorf("couldn't create cluster")
 	}
+	return nil
+}
+
+func (p *Plural) handleInstallControlPlane(c *cli.Context) error {
+	conf := config.Read()
+	vals, err := cd.CreateControlPlane(conf)
+	if err != nil {
+		return err
+	}
+
+	utils.Highlight("writing values.secret.yaml, you should keep this in a secure location for future helm upgrades")
+	if err := os.WriteFile("values.secret.yaml", []byte(vals), 0644); err != nil {
+		return err
+	}
+
+	fmt.Println("After confirming everything looks correct in values.secret.yaml, run the following command to install:")
+	utils.Highlight("helm upgrade --install --create-namespace -f values.secret.yaml console -n plrl-console")
 	return nil
 }
 
