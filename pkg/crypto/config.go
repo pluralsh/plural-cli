@@ -13,7 +13,15 @@ type Config struct {
 	Version string
 	Type    IdentityType
 	Id      string
-	Context map[string]interface{}
+	Context *Context
+}
+
+type Context struct {
+	Key *KeyConfig `yaml:"key" json:"key"`
+}
+
+type KeyConfig struct {
+	File string
 }
 
 func configPath() string {
