@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"k8s.io/cli-runtime/pkg/printers"
 	"sort"
 	"strings"
 	"text/tabwriter"
 
 	consoleclient "github.com/pluralsh/console-client-go"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 // Each level has 2 spaces for PrefixWriter
@@ -198,7 +198,10 @@ func tabbedString(f func(io.Writer) error) (string, error) {
 		return "", err
 	}
 
-	out.Flush()
+	err = out.Flush()
+	if err != nil {
+		return "", err
+	}
 	return buf.String(), nil
 }
 
@@ -235,12 +238,18 @@ func (pw *prefixWriter) Write(level int, format string, a ...interface{}) {
 		prefix += levelSpace
 	}
 	output := fmt.Sprintf(prefix+format, a...)
-	printers.WriteEscaped(pw.out, output)
+	err := printers.WriteEscaped(pw.out, output)
+	if err != nil {
+		return
+	}
 }
 
 func (pw *prefixWriter) WriteLine(a ...interface{}) {
 	output := fmt.Sprintln(a...)
-	printers.WriteEscaped(pw.out, output)
+	err := printers.WriteEscaped(pw.out, output)
+	if err != nil {
+		return
+	}
 }
 
 func (pw *prefixWriter) Flush() {

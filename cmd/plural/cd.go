@@ -664,7 +664,7 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	serviceId := c.Args().Get(0)
 	existing, err := p.ConsoleClient.DeleteClusterService(serviceId)
 	if err != nil {
-		return fmt.Errorf("could not delete service: %s", err)
+		return fmt.Errorf("could not delete service: %w", err)
 	}
 
 	utils.Success("Service %s/%s has been deleted successfully", existing.DeleteServiceDeployment.ID, existing.DeleteServiceDeployment.Name)

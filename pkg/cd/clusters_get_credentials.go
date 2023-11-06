@@ -12,7 +12,7 @@ func SaveClusterKubeconfig(cluster *gqlclient.ClusterFragment, token string) err
 	configAccess := clientcmd.NewDefaultPathOptions()
 	config, err := configAccess.GetStartingConfig()
 	if err != nil {
-		return fmt.Errorf("cannot read kubeconfig: %v", err)
+		return fmt.Errorf("cannot read kubeconfig: %w", err)
 	}
 	if config == nil {
 		config = &clientcmdapi.Config{}

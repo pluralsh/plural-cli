@@ -119,15 +119,6 @@ func moveHelmSecrets(sourceContext, targetContext string) error {
 	return createSecrets(targetContext, secrets.Items)
 }
 
-// getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
-func getEnvVar(name, defaultValue string) string {
-	if v, ok := os.LookupEnv(name); ok {
-		return v
-	}
-
-	return defaultValue
-}
-
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
 func getBootstrapFlags(prov string) []string {
 	switch prov {
