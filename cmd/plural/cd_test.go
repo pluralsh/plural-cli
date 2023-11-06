@@ -51,7 +51,7 @@ func TestDescribeCDCluster(t *testing.T) {
 		args             []string
 		expectedResponse string
 		expectedError    string
-		result           *consoleclient.GetCluster
+		result           *consoleclient.ClusterFragment
 	}{
 		{
 			name:          `test "deployments clusters describe" when returns nil`,
@@ -61,31 +61,20 @@ func TestDescribeCDCluster(t *testing.T) {
 		},
 		{
 			name: `test "deployments clusters describe"`,
-			result: &consoleclient.GetCluster{
-				Cluster: &consoleclient.ClusterFragment{
-					ID:   "abc",
-					Name: "test",
-				},
+			result: &consoleclient.ClusterFragment{
+				ID:   "abc",
+				Name: "test",
 			},
 			args: []string{plural.ApplicationName, "deployments", "clusters", "describe", "abc"},
-			expectedResponse: `cluster:
-  currentVersion: null
-  handle: null
-  id: abc
-  name: test
-  nodePools: null
-  pingedAt: null
-  provider: null
-  self: null
-  version: null
-
+			expectedResponse: `Id:    abc
+Name:  test
 `,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewConsoleClient(t)
-			client.On("GetCluster", mock.AnythingOfType("string")).Return(test.result, nil)
+			client.On("GetCluster", mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(test.result, nil)
 			app := plural.CreateNewApp(&plural.Plural{
 				Client:            nil,
 				ConsoleClient:     client,
