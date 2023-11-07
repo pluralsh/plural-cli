@@ -81,7 +81,7 @@ func (p *Plural) doInstallOperator(url, token string) error {
 		return err
 	}
 	err = p.Kube.CreateNamespace(operatorNamespace)
-	if !apierrors.IsAlreadyExists(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
 	err = console.InstallAgent(url, token, operatorNamespace)
