@@ -38,6 +38,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "repo-id", Usage: "repository ID", Required: true},
 				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha", Required: true},
 				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located", Required: true},
+				cli.StringFlag{Name: "kustomize-folder", Usage: "folder within the kustomize file is located"},
 				cli.StringSliceFlag{
 					Name:  "conf",
 					Usage: "config name value",
@@ -56,6 +57,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "version", Usage: "service version"},
 				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha"},
 				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located"},
+				cli.StringFlag{Name: "kustomize-folder", Usage: "folder within the kustomize file is located"},
 				cli.StringSliceFlag{
 					Name:  "conf",
 					Usage: "config name value",
@@ -125,6 +127,12 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
 
+	if c.String("kustomize-folder") != "" {
+		attributes.Kustomize = &gqlclient.KustomizeAttributes{
+			Path: c.String("kustomize-folder"),
+		}
+	}
+
 	if c.String("config-file") != "" {
 		configFile, err := utils.ReadFile(c.String("config-file"))
 		if err != nil {
@@ -190,6 +198,11 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
+	if existing.Kustomize != nil {
+		attributes.Kustomize = &gqlclient.KustomizeAttributes{
+			Path: existing.Kustomize.Path,
+		}
+	}
 
 	for _, conf := range existing.Configuration {
 		existingConfigurations[conf.Name] = conf.Value
@@ -226,7 +239,11 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 			Value: lo.ToPtr(value),
 		})
 	}
-
+	if c.String("kustomize-folder") != "" {
+		attributes.Kustomize = &gqlclient.KustomizeAttributes{
+			Path: c.String("kustomize-folder"),
+		}
+	}
 	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, serviceName, clusterName, attributes)
 	if err != nil {
 		return err

@@ -92,6 +92,10 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 			w.Write(LEVEL_2, "Id:\t%s\n", service.Revision.ID)
 
 		}
+		if service.Kustomize != nil {
+			w.Write(LEVEL_0, "Kustomize:\t\n")
+			w.Write(LEVEL_1, "Path:\t%s\n", service.Kustomize.Path)
+		}
 		if service.Repository != nil {
 			w.Write(LEVEL_0, "Repository:\t\n")
 			w.Write(LEVEL_1, "Id:\t%s\n", service.Repository.ID)
