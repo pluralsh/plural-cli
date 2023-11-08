@@ -24,13 +24,13 @@ func TestPluralConfigCommand(t *testing.T) {
 		{
 			name:             `test "config read" command when config file doesn't exists'`,
 			args:             []string{plural.ApplicationName, "config", "read"},
-			expectedResponse: "apiVersion: platform.plural.sh/v1alpha1\nkind: Config\nmetadata: null\nspec:\n  email: \"\"\n  token: \"\"\n  namespacePrefix: \"\"\n  endpoint: \"\"\n  lockProfile: \"\"\n  reportErrors: false\n",
+			expectedResponse: "apiVersion: platform.plural.sh/v1alpha1\nkind: Config\nmetadata: null\nspec:\n  email: \"\"\n  token: \"\"\n  consoleToken: \"\"\n  namespacePrefix: \"\"\n  endpoint: \"\"\n  lockProfile: \"\"\n  reportErrors: false\n",
 		},
 		{
 			name:             `test "config read" command with default test config'`,
 			args:             []string{plural.ApplicationName, "config", "read"},
 			createConfig:     true,
-			expectedResponse: "apiVersion: platform.plural.sh/v1alpha1\nkind: Config\nmetadata: null\nspec:\n  email: test@plural.sh\n  token: abc\n  namespacePrefix: test\n  endpoint: http://example.com\n  lockProfile: abc\n  reportErrors: false\n",
+			expectedResponse: "apiVersion: platform.plural.sh/v1alpha1\nkind: Config\nmetadata: null\nspec:\n  email: test@plural.sh\n  token: abc\n  consoleToken: \"\"\n  namespacePrefix: test\n  endpoint: http://example.com\n  lockProfile: abc\n  reportErrors: false\n",
 		},
 	}
 	for _, test := range tests {

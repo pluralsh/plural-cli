@@ -1,13 +1,12 @@
 package console
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/pluralsh/plural/pkg/helm"
 	"helm.sh/helm/v3/pkg/action"
-
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -47,20 +46,21 @@ func InstallAgent(url, token, namespace string) error {
 	}
 
 	histClient := action.NewHistory(helmConfig)
-	histClient.Max = 1
-	_, err = histClient.Run(releaseName)
-	if errors.Is(err, driver.ErrReleaseNotFound) {
+	histClient.Max = 5
+
+	if _, err = histClient.Run(releaseName); errors.Is(err, driver.ErrReleaseNotFound) {
 		fmt.Println("installing deployment operator...")
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
 		instClient.ReleaseName = releaseName
 		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
-		return err
-	} else if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-
+	fmt.Println("upgrading deployment operator...")
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 5

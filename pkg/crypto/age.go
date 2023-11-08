@@ -56,7 +56,6 @@ func (prov *AgeProvider) Marshall() ([]byte, error) {
 		Version: "crypto.plural.sh/v1",
 		Type:    AGE,
 		Id:      prov.ID(),
-		Context: map[string]interface{}{},
 	}
 
 	return yaml.Marshal(conf)

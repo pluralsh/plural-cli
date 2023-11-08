@@ -138,6 +138,7 @@ func getBootstrapFlags(prov string) []string {
 	case api.ProviderAzure:
 		return []string{
 			"--set", "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapMode=true",
+			"--set", "cluster-api-provider-azure.cluster-api-provider-azure.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
 		}
@@ -271,9 +272,12 @@ func RunWithTempCredentials(function ActionFunc) error {
 		}
 
 		pathPrefix := "cluster-api-cluster.cluster.azure.clusterIdentity.bootstrapCredentials"
+		asoPathPrefix := "cluster-api-provider-azure.cluster-api-provider-azure.asoControllerSettings"
 		flags = []string{
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientID", clientId),
 			"--set", fmt.Sprintf("%s.%s=%s", pathPrefix, "clientSecret", clientSecret),
+			"--set", fmt.Sprintf("%s.%s=%s", asoPathPrefix, "azureClientId", clientId),
+			"--set", fmt.Sprintf("%s.%s=%s", asoPathPrefix, "azureClientSecret", clientSecret),
 		}
 
 		defer func(as *azure.AuthService) {
