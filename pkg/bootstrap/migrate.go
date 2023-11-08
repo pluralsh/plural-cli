@@ -384,8 +384,20 @@ func getMigrationSteps(runPlural ActionFunc) ([]*Step, error) {
 			Retries: 2,
 		},
 		{
+			Name:       "Install cert-manager bundle",
+			Args:       []string{"plural", "bundle", "install", "cert-manager", fmt.Sprintf("cert-manager-%s", man.Provider)},
+			TargetPath: gitRootDir,
+			Execute:    runPlural,
+		},
+		{
+			Name:       "Build values",
+			Args:       []string{"plural", "build", "--only", "cert-manager", "--only" , "bootstrap", "--force"},
+			TargetPath: gitRootDir,
+			Execute:    runPlural,
+		},
+		{
 			Name:       "Run deploy",
-			Args:       []string{"plural", "deploy", "--from", "bootstrap", "--silence", "--commit", "migrate to cluster api"},
+			Args:       []string{"plural", "deploy", "--from", "cert-manager", "--silence", "--commit", "migrate to cluster api"},
 			TargetPath: gitRootDir,
 			Execute:    runPlural,
 		},

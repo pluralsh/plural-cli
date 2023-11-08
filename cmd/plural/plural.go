@@ -88,7 +88,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases: []string{"bld"},
 			Usage:   "builds your workspace",
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				cli.StringSliceFlag{
 					Name:  "only",
 					Usage: "repository to (re)build",
 				},
