@@ -38,7 +38,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Usage:  "install deployments operator",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
-				cli.StringFlag{Name: "token", Usage: "console token", Required: true},
+				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
 			},
 		},
 		{
