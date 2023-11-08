@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/urfave/cli"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/pluralsh/plural/pkg/cd"
 	"github.com/pluralsh/plural/pkg/config"
 	"github.com/pluralsh/plural/pkg/console"
 	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/urfave/cli"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func init() {
@@ -53,12 +54,20 @@ func (p *Plural) cdCommands() []cli.Command {
 		},
 		{
 			Name:   "login",
-			Action: handleCdLogin,
+			Action: p.handleCdLogin,
 			Usage:  "logs into your plural console",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "console access token"},
 			},
+		},
+		{
+			Name:   "eject",
+			Action: p.handleEject,
+			Usage:  "ejects cluster scaffolds",
+			ArgsUsage: "<cluster-id>",
+			// TODO: enable once logic is finished
+			Hidden: true,
 		},
 	}
 }
@@ -91,7 +100,7 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	return err
 }
 
-func handleCdLogin(c *cli.Context) (err error) {
+func (p *Plural) handleCdLogin(c *cli.Context) (err error) {
 	url := c.String("url")
 	token := c.String("token")
 	if token == "" {
@@ -120,4 +129,26 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 	fmt.Println("After confirming everything looks correct in values.secret.yaml, run the following command to install:")
 	utils.Highlight("helm upgrade --install --create-namespace -f values.secret.yaml console -n plrl-console")
 	return nil
+}
+
+func (p *Plural) handleEject(c *cli.Context) (err error) {
+	if !c.Args().Present() {
+		return fmt.Errorf("clusterid cannot be empty")
+	}
+
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	clusterId := c.Args().First()
+	cluster, err := p.ConsoleClient.GetCluster(&clusterId, nil)
+	if err != nil {
+		return err
+	}
+
+	if cluster == nil {
+		return fmt.Errorf("could not find cluster with given id")
+	}
+
+	return cd.Eject(cluster)
 }
