@@ -53,6 +53,7 @@ func toContext(setup *SetupRequest) *manifest.Context {
 		"passphrase":  "",
 		"repo_url":    setup.GitUrl,
 		"console_dns": fmt.Sprintf("console.%s", setup.Workspace.Subdomain),
+		"kas_dns":     fmt.Sprintf("kas.%s", setup.Workspace.Subdomain),
 		"is_demo":     setup.IsDemo,
 	}
 
