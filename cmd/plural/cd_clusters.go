@@ -235,7 +235,7 @@ func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
 		return fmt.Errorf("cluster is nil")
 	}
 
-	return cd.SaveClusterKubeconfig(cluster, consoleToken)
+	return cd.SaveClusterKubeconfig(cluster, p.ConsoleClient.Token())
 }
 
 func (p *Plural) handleCreateCluster(c *cli.Context) error {
