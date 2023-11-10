@@ -38,7 +38,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Usage:  "install deployments operator",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
-				cli.StringFlag{Name: "token", Usage: "console token", Required: true},
+				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (p *Plural) doInstallOperator(url, token string) error {
 		return err
 	}
 	err = p.Kube.CreateNamespace(operatorNamespace)
-	if !apierrors.IsAlreadyExists(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
 	err = console.InstallAgent(url, token, operatorNamespace)

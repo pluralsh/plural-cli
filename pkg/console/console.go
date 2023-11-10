@@ -12,10 +12,12 @@ type consoleClient struct {
 	ctx    context.Context
 	client *consoleclient.Client
 	url    string
+	token  string
 }
 
 type ConsoleClient interface {
 	Url() string
+	Token() string
 	ListClusters() (*consoleclient.ListClusters, error)
 	GetCluster(clusterId, clusterName *string) (*consoleclient.ClusterFragment, error)
 	UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error)
@@ -38,7 +40,8 @@ type ConsoleClient interface {
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	return &consoleClient{
-		url: url,
+		url:   url,
+		token: token,
 		client: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
 			req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
 		}),
@@ -48,4 +51,8 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 
 func (client *consoleClient) Url() string {
 	return client.url
+}
+
+func (client *consoleClient) Token() string {
+	return client.token
 }
