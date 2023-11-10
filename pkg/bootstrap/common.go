@@ -144,7 +144,6 @@ func getBootstrapFlags(prov string) []string {
 		}
 	case api.ProviderGCP:
 		return []string{
-			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
@@ -312,7 +311,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 		}
 
 		flags = []string{
-			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, string(credentials.JSON)),
+			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%s`, string(credentials.JSON)),
 		}
 	}
 
