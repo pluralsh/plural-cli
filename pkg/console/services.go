@@ -83,6 +83,26 @@ func (c *consoleClient) UpdateClusterService(serviceId, serviceName, clusterName
 	return result.UpdateServiceDeployment, nil
 }
 
+func (c *consoleClient) CloneService(clusterId string, serviceId, serviceName, clusterName *string, attributes gqlclient.ServiceCloneAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+	if serviceId == nil && serviceName == nil && clusterName == nil {
+		return nil, fmt.Errorf("serviceId, serviceName and clusterName can not be null")
+	}
+	if serviceId != nil {
+		result, err := c.client.CloneServiceDeployment(c.ctx, clusterId, *serviceId, attributes)
+		if err != nil {
+			return nil, api.GetErrorResponse(err, "CloneService")
+		}
+
+		return result.CloneService, nil
+	}
+	result, err := c.client.CloneServiceDeploymentWithHandle(c.ctx, clusterId, *clusterName, *serviceName, attributes)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "CloneServiceWithHandle")
+	}
+
+	return result.CloneService, nil
+}
+
 func (c *consoleClient) GetClusterService(serviceId, serviceName, clusterName *string) (*gqlclient.ServiceDeploymentExtended, error) {
 	if serviceId == nil && serviceName == nil && clusterName == nil {
 		return nil, fmt.Errorf("serviceId, serviceName and clusterName can not be null")

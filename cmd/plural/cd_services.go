@@ -65,6 +65,20 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			},
 		},
 		{
+			Name:      "clone",
+			ArgsUsage: "CLUSTER SERVICE",
+			Action:    latestVersion(requireArgs(p.handleCloneClusterService, []string{"CLUSTER", "SERVICE"})),
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "name", Usage: "the name for the cloned service", Required: true},
+				cli.StringFlag{Name: "namespace", Usage: "the namespace for this cloned service", Required: true},
+				cli.StringSliceFlag{
+					Name:  "conf",
+					Usage: "config name value",
+				},
+			},
+			Usage: "deep clone a service onto either the same cluster or another",
+		},
+		{
 			Name:      "describe",
 			ArgsUsage: "SERVICE_ID",
 			Action:    latestVersion(requireArgs(p.handleDescribeClusterService, []string{"SERVICE_ID"})),
@@ -165,6 +179,60 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	}
 	if sd == nil {
 		return fmt.Errorf("the returned object is empty, check if all fields are set")
+	}
+
+	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
+	return utils.PrintTable([]*gqlclient.ServiceDeploymentFragment{sd}, headers, func(sd *gqlclient.ServiceDeploymentFragment) ([]string, error) {
+		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
+	})
+}
+
+func (p *Plural) handleCloneClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	cluster, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	if err != nil {
+		return err
+	}
+	if cluster == nil {
+		return fmt.Errorf("could not find cluster %s", c.Args().Get(0))
+	}
+
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+
+	attributes := gqlclient.ServiceCloneAttributes{
+		Name:      c.String("name"),
+		Namespace: lo.ToPtr(c.String("namespace")),
+	}
+
+	// TODO: DRY this up with service update
+	var confArgs []string
+	if c.IsSet("conf") {
+		confArgs = append(confArgs, c.StringSlice("conf")...)
+	}
+
+	updateConfigurations := map[string]string{}
+	for _, conf := range confArgs {
+		configurationPair := strings.Split(conf, "=")
+		if len(configurationPair) == 2 {
+			updateConfigurations[configurationPair[0]] = configurationPair[1]
+		}
+	}
+	for key, value := range updateConfigurations {
+		attributes.Configuration = append(attributes.Configuration, &gqlclient.ConfigAttributes{
+			Name:  key,
+			Value: lo.ToPtr(value),
+		})
+	}
+
+	sd, err := p.ConsoleClient.CloneService(cluster.ID, serviceId, serviceName, clusterName, attributes)
+	if err != nil {
+		return err
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
@@ -295,13 +363,25 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId := c.Args().Get(0)
-	existing, err := p.ConsoleClient.DeleteClusterService(serviceId)
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
+
+	svc, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return err
+	}
+	if svc == nil {
+		return fmt.Errorf("Could not find service for %s", c.Args().Get(0))
+	}
+
+	deleted, err := p.ConsoleClient.DeleteClusterService(svc.ID)
 	if err != nil {
 		return fmt.Errorf("could not delete service: %w", err)
 	}
 
-	utils.Success("Service %s/%s has been deleted successfully", existing.DeleteServiceDeployment.ID, existing.DeleteServiceDeployment.Name)
+	utils.Success("Service %s has been deleted successfully\n", deleted.DeleteServiceDeployment.Name)
 	return nil
 }
 
