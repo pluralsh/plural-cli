@@ -127,7 +127,7 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 	}
 
 	fmt.Println("After confirming everything looks correct in values.secret.yaml, run the following command to install:")
-	utils.Highlight("helm upgrade --install --create-namespace -f values.secret.yaml console -n plrl-console")
+	utils.Highlight("helm upgrade --install --create-namespace -f values.secret.yaml --repo https://pluralsh.github.io/console console console -n plrl-console")
 	return nil
 }
 
