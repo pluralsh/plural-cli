@@ -119,15 +119,6 @@ func moveHelmSecrets(sourceContext, targetContext string) error {
 	return createSecrets(targetContext, secrets.Items)
 }
 
-// getEnvVar gets value of environment variable, if it is not set then default value is returned instead.
-func getEnvVar(name, defaultValue string) string {
-	if v, ok := os.LookupEnv(name); ok {
-		return v
-	}
-
-	return defaultValue
-}
-
 // getBootstrapFlags returns list of provider-specific flags used during cluster bootstrap and destroy.
 func getBootstrapFlags(prov string) []string {
 	switch prov {
@@ -153,7 +144,6 @@ func getBootstrapFlags(prov string) []string {
 		}
 	case api.ProviderGCP:
 		return []string{
-			"--set", "bootstrap.cert-manager.serviceAccount.create=true",
 			"--set", "cluster-api-provider-gcp.cluster-api-provider-gcp.bootstrapMode=true",
 			"--set", "bootstrap.external-dns.enabled=false",
 			"--set", "plural-certmanager-webhook.enabled=false",
@@ -321,7 +311,7 @@ func RunWithTempCredentials(function ActionFunc) error {
 		}
 
 		flags = []string{
-			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%q`, string(credentials.JSON)),
+			"--setJSON", fmt.Sprintf(`cluster-api-provider-gcp.cluster-api-provider-gcp.managerBootstrapCredentials.credentialsJson=%s`, string(credentials.JSON)),
 		}
 	}
 

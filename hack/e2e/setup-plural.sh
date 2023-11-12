@@ -114,7 +114,7 @@ export PLURAL_DISABLE_MP_TABLE_VIEW=true
 
 INSTALL_APP=${INSTALL_APP:-"bootstrap"}
 INSTALL_RECIPE=${INSTALL_RECIPE:-"docker-cluster-api-simple-test"}
-
+export EXP_PLURAL_CAPI=true
 plural init
 plural repos reset
 plural bundle install "$INSTALL_APP" "$INSTALL_RECIPE"

@@ -84,6 +84,7 @@ test:
       spec:
         email: test@plural.sh
         token: abc
+        consoleToken: ""
         namespacePrefix: test
         endpoint: http://example.com
         lockProfile: abc
@@ -156,6 +157,7 @@ test:
       spec:
         email: test@plural.sh
         token: abc
+        consoleToken: ""
         namespacePrefix: test
         endpoint: http://example.com
         lockProfile: abc
