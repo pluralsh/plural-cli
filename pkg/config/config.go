@@ -33,6 +33,7 @@ type Metadata struct {
 type Config struct {
 	Email           string `json:"email"`
 	Token           string `yaml:"token" json:"token"`
+	ConsoleToken    string `yaml:"consoleToken" json:"consoleToken"`
 	NamespacePrefix string `yaml:"namespacePrefix"`
 	Endpoint        string `yaml:"endpoint"`
 	LockProfile     string `yaml:"lockProfile"`
@@ -98,7 +99,10 @@ func Profiles() ([]*VersionedConfig, error) {
 			if err = yaml.Unmarshal(contents, versioned); err != nil {
 				return nil, err
 			}
-			confs = append(confs, versioned)
+
+			if versioned.Kind == "Config" {
+				confs = append(confs, versioned)
+			}
 		}
 	}
 

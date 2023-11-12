@@ -1,0 +1,15 @@
+name: test
+stages:
+- name: dev
+  services:
+  - name: cd-demo/guestbook
+- name: prod
+  services:
+  - name: cd-demo-workload-1/guestbook
+    criteria:
+      source: cd-demo/guestbook
+      secrets:
+      - test
+edges:
+- from: dev
+  to: prod
