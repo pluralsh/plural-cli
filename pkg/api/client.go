@@ -59,6 +59,7 @@ type Client interface {
 	GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error)
 	CreateCrd(repo string, chart string, file string) error
 	CreateDomain(name string) error
+	CreateInstallation(id string) (string, error)
 	GetInstallation(name string) (*Installation, error)
 	GetInstallationById(id string) (*Installation, error)
 	GetInstallations() ([]*Installation, error)

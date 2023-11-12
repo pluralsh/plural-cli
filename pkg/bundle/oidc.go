@@ -55,6 +55,29 @@ func ConfigureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[s
 	return api.GetErrorResponse(err, "OIDCProvider")
 }
 
+func SetupOIDC(repo string, client api.Client, redirectUris []string, authMethod string) error {
+	inst, err := client.GetInstallation(repo)
+	if err != nil {
+		return api.GetErrorResponse(err, "GetInstallation")
+	}
+
+	me, err := client.Me()
+	if err != nil {
+		return api.GetErrorResponse(err, "Me")
+	}
+
+	oidcSettings := &api.OidcProviderAttributes{
+		RedirectUris: redirectUris,
+		AuthMethod:   authMethod,
+		Bindings: []api.Binding{
+			{UserId: me.Id},
+		},
+	}
+	mergeOidcAttributes(inst, oidcSettings)
+	err = client.OIDCProvider(inst.Id, oidcSettings)
+	return api.GetErrorResponse(err, "OIDCProvider")
+}
+
 func mergeOidcAttributes(inst *api.Installation, attributes *api.OidcProviderAttributes) {
 	if inst.OIDCProvider == nil {
 		return
