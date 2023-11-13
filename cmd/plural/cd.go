@@ -62,9 +62,9 @@ func (p *Plural) cdCommands() []cli.Command {
 			},
 		},
 		{
-			Name:   "eject",
-			Action: p.handleEject,
-			Usage:  "ejects cluster scaffolds",
+			Name:      "eject",
+			Action:    p.handleEject,
+			Usage:     "ejects cluster scaffolds",
 			ArgsUsage: "<cluster-id>",
 			// TODO: enable once logic is finished
 			Hidden: true,
@@ -92,6 +92,17 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	err = p.Kube.CreateNamespace(operatorNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
+	}
+	consoleClient, err := console.NewConsoleClient(token, url)
+	if err != nil {
+		return err
+	}
+	myCluster, err := consoleClient.MyCluster()
+	if err != nil {
+		return err
+	}
+	if !confirm(fmt.Sprintf("Are you sure you want to install deploy operator for %s cluster?", myCluster.MyCluster.Name), "PLURAL_INSTALL_AGENT_CONFIRM") {
+		return nil
 	}
 	err = console.InstallAgent(url, token, operatorNamespace)
 	if err == nil {
