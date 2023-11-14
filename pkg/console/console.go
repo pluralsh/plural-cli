@@ -37,6 +37,7 @@ type ConsoleClient interface {
 	SavePipeline(name string, attrs consoleclient.PipelineAttributes) (*consoleclient.PipelineFragment, error)
 	CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error)
 	CreateProvider(attr consoleclient.ClusterProviderAttributes) (*consoleclient.CreateClusterProvider, error)
+	MyCluster() (*consoleclient.MyCluster, error)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
