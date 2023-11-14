@@ -390,6 +390,32 @@ func (_m *ConsoleClient) ListRepositories() (*gqlclient.ListGitRepositories, err
 	return r0, r1
 }
 
+// MyCluster provides a mock function with given fields:
+func (_m *ConsoleClient) MyCluster() (*gqlclient.MyCluster, error) {
+	ret := _m.Called()
+
+	var r0 *gqlclient.MyCluster
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*gqlclient.MyCluster, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *gqlclient.MyCluster); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.MyCluster)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SavePipeline provides a mock function with given fields: name, attrs
 func (_m *ConsoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
 	ret := _m.Called(name, attrs)
