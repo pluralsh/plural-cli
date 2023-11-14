@@ -93,6 +93,30 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
+	consoleClient, err := console.NewConsoleClient(token, url)
+	if err != nil {
+		return err
+	}
+	myCluster, err := consoleClient.MyCluster()
+	if err != nil {
+		return err
+	}
+	clusterFragment, err := consoleClient.GetCluster(&myCluster.MyCluster.ID, nil)
+	if err != nil {
+		return err
+	}
+
+	handle := "-"
+	provider := "-"
+	if clusterFragment.Handle != nil {
+		handle = *clusterFragment.Handle
+	}
+	if clusterFragment.Provider != nil {
+		provider = clusterFragment.Provider.Name
+	}
+	if !confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM") {
+		return nil
+	}
 	err = console.InstallAgent(url, token, operatorNamespace)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")

@@ -58,3 +58,7 @@ func (c *consoleClient) CreateCluster(attributes consoleclient.ClusterAttributes
 	}
 	return newCluster, nil
 }
+
+func (c *consoleClient) MyCluster() (*consoleclient.MyCluster, error) {
+	return c.client.MyCluster(c.ctx)
+}
