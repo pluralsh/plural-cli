@@ -5,7 +5,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 
 	"github.com/pluralsh/oauth"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 var (

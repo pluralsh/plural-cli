@@ -14,11 +14,11 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/scm"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/scm"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 var prefix = []byte("CHARTMART-ENCRYPTED")

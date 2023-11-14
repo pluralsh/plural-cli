@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/hcl"
-	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural-cli/pkg/executor"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
 func Read(path string) (*Build, error) {

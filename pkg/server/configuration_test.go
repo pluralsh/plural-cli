@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/server"
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/server"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/stretchr/testify/assert"
 )
 

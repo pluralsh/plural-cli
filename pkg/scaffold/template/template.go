@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/pluralsh/gqlclient"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/output"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/output"
+	"github.com/pluralsh/plural-cli/pkg/template"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 	"gopkg.in/yaml.v2"
 )
 

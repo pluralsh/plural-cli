@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/urfave/cli"
 )
 

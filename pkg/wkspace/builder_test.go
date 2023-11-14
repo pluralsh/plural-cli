@@ -3,7 +3,7 @@ package wkspace
 import (
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/stretchr/testify/assert"
 )
 

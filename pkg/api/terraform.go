@@ -10,8 +10,8 @@ import (
 	"github.com/pluralsh/gqlclient/pkg/utils"
 	"github.com/samber/lo"
 
-	tarutils "github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	tarutils "github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func (client *client) GetTerraform(repoId string) ([]*Terraform, error) {

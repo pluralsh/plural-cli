@@ -7,8 +7,8 @@ import (
 	"github.com/pluralsh/gqlclient"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func (p *Plural) authCommands() []cli.Command {

@@ -9,7 +9,7 @@ import (
 	"github.com/pluralsh/oauth"
 	"golang.org/x/oauth2"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 type Github struct {

@@ -8,11 +8,11 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/osteele/liquid"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/bundle"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/crypto"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/bundle"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 var (

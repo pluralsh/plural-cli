@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
+	plrlErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
 
 type AwsChecker struct {

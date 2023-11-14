@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/console"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/console"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"

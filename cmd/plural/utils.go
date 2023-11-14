@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/thoas/go-funk"
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"

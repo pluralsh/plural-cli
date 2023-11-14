@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func Cmd(conf *config.Config, program string, args ...string) error {

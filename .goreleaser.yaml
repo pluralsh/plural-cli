@@ -25,10 +25,10 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
-      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
-      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
-      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     tags:
       - desktop
       - production
@@ -54,10 +54,10 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X "github.com/pluralsh/plural/cmd/plural.Version={{.Version}}"
-      - -X "github.com/pluralsh/plural/cmd/plural.Commit={{.Commit}}"
-      - -X "github.com/pluralsh/plural/cmd/plural.Date={{.Date}}"
-      - -X "github.com/pluralsh/plural/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Version={{.Version}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Commit={{.Commit}}"
+      - -X "github.com/pluralsh/plural-cli/cmd/plural.Date={{.Date}}"
+      - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     tags: [ linux ]
     env:
       - CGO_ENABLED=0

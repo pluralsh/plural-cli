@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/executor"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 type Crd struct {

@@ -2,13 +2,12 @@ package plural
 
 import (
 	"fmt"
-
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
 

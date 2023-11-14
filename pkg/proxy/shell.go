@@ -1,8 +1,8 @@
 package proxy
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/kubernetes/exec"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/kubernetes/exec"
 )
 
 func execShell(namespace string, proxy *v1alpha1.Proxy) error {

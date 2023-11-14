@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	plural "github.com/pluralsh/plural/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/stretchr/testify/assert"
 )
 

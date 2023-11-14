@@ -1,8 +1,8 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/scaffold"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/scaffold"
 	"github.com/urfave/cli"
 )
 

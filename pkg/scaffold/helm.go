@@ -11,17 +11,17 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/provider"
-	scftmpl "github.com/pluralsh/plural/pkg/scaffold/template"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/errors"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	scftmpl "github.com/pluralsh/plural-cli/pkg/scaffold/template"
+	"github.com/pluralsh/plural-cli/pkg/template"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/errors"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
 type dependency struct {

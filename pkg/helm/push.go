@@ -8,7 +8,7 @@ import (
 
 	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/chartmuseum/helm-push/pkg/helm"
-	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/config"
 )
 
 func Push(chartName, repoUrl string) error {

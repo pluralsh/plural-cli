@@ -7,11 +7,11 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/vpn"
 	"github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
-	"github.com/pluralsh/plural/pkg/vpn"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 

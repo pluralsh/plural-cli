@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
 func fetchFunction(item *api.ConfigurationItem) (interface{}, error) {

@@ -10,12 +10,12 @@ import (
 	"go.mercari.io/hcledit"
 	"helm.sh/helm/v3/pkg/action"
 
-	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/helm"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/executor"
+	"github.com/pluralsh/plural-cli/pkg/helm"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 type checker func(s string) bool

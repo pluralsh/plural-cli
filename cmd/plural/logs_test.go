@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
+	plural "github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	plural "github.com/pluralsh/plural/cmd/plural"
-	"github.com/pluralsh/plural/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

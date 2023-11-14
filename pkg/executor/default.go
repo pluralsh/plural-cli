@@ -3,7 +3,7 @@ package executor
 import (
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func defaultSteps(path string) []*Step {

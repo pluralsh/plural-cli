@@ -1,8 +1,8 @@
 package wkspace
 
 import (
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 )
 
 func (wk *Workspace) BuildManifest(prev *manifest.Manifest) *manifest.Manifest {
