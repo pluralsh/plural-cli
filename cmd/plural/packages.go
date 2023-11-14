@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
 func (p *Plural) packagesCommands() []cli.Command {

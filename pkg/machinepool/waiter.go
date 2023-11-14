@@ -7,8 +7,8 @@ import (
 
 	tm "github.com/buger/goterm"
 	"github.com/gdamore/tcell/v2"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/rivo/tview"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

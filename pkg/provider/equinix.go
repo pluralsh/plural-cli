@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hashicorp/go-retryablehttp"
@@ -29,14 +29,14 @@ import (
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
 	"sigs.k8s.io/yaml"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/provider/permissions"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	pluralErrors "github.com/pluralsh/plural/pkg/utils/errors"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
+	"github.com/pluralsh/plural-cli/pkg/template"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	pluralErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 type EQUINIXProvider struct {

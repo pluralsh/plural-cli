@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

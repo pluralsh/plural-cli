@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/pluralsh/gqlclient"
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/samber/lo"
 
 	"github.com/stretchr/testify/assert"

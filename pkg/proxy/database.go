@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pluralsh/plural-cli/pkg/kubernetes/portforward"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/kubernetes/portforward"
-	"github.com/pluralsh/plural/pkg/utils"
 )
 
 type postgres struct {

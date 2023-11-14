@@ -7,7 +7,7 @@ import (
 
 	apiclient "sigs.k8s.io/cluster-api/cmd/clusterctl/client"
 
-	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/config"
 )
 
 type CAPIBackup struct {

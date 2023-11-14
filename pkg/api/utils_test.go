@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
 func TestNormalizeProvider(t *testing.T) {

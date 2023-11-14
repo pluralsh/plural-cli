@@ -3,7 +3,7 @@ package plural
 import (
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/urfave/cli"
 )
 

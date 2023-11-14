@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 

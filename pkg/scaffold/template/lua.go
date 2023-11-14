@@ -8,8 +8,8 @@ import (
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/template"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func ExecuteLua(vals map[string]interface{}, tplate string) (map[string]interface{}, error) {

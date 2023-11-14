@@ -2,7 +2,7 @@ package scm
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 var validRepo = survey.ComposeValidators(

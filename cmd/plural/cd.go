@@ -7,10 +7,10 @@ import (
 	"github.com/urfave/cli"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/pluralsh/plural/pkg/cd"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/console"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/cd"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/console"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func init() {
@@ -62,9 +62,9 @@ func (p *Plural) cdCommands() []cli.Command {
 			},
 		},
 		{
-			Name:   "eject",
-			Action: p.handleEject,
-			Usage:  "ejects cluster scaffolds",
+			Name:      "eject",
+			Action:    p.handleEject,
+			Usage:     "ejects cluster scaffolds",
 			ArgsUsage: "<cluster-id>",
 			// TODO: enable once logic is finished
 			Hidden: true,

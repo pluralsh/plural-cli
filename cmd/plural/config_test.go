@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 
-	plural "github.com/pluralsh/plural/cmd/plural"
-	"github.com/pluralsh/plural/pkg/config"
-	pluraltest "github.com/pluralsh/plural/pkg/test"
+	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
 )
 
 func TestPluralConfigCommand(t *testing.T) {

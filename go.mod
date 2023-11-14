@@ -1,4 +1,4 @@
-module github.com/pluralsh/plural
+module github.com/pluralsh/plural-cli
 
 go 1.21
 

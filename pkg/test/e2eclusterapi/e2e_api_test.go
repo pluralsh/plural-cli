@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/machinepool"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/machinepool"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/containers"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

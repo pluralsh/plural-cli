@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pluralsh/plural/pkg/application"
-	"github.com/pluralsh/plural/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/application"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 )
 
 func listApplications(c *gin.Context) error {

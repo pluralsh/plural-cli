@@ -7,7 +7,7 @@ import (
 
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
 
 func Clone(auth transport.AuthMethod, url, path string) (*gogit.Repository, error) {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/server"
+	"github.com/pluralsh/plural-cli/pkg/server"
 )
 
 func TestHealthcheck(t *testing.T) {

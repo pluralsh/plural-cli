@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	consoleclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
 func (c *consoleClient) ListClusters() (*consoleclient.ListClusters, error) {

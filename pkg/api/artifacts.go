@@ -7,7 +7,7 @@ import (
 
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
-	file "github.com/pluralsh/plural/pkg/utils"
+	file "github.com/pluralsh/plural-cli/pkg/utils"
 	"sigs.k8s.io/yaml"
 )
 

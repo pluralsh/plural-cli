@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/pluralsh/plural/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/provider"
 )
 
 type fakeAccountsClient struct {

@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/pluralsh/plural/pkg/console"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/console"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
 
