@@ -1,8 +1,8 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/proxy"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/proxy"
 	"github.com/urfave/cli"
 )
 

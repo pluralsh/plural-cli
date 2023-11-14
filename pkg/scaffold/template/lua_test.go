@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/scaffold/template"
-	pluraltest "github.com/pluralsh/plural/pkg/test"
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/scaffold/template"
+	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 func TestFromLuaTemplateComplex(t *testing.T) {

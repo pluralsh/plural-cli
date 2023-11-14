@@ -9,7 +9,7 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 
-	prov "github.com/pluralsh/plural/pkg/provider"
+	prov "github.com/pluralsh/plural-cli/pkg/provider"
 )
 
 const azureEnvFile = `

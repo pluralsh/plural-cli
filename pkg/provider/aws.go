@@ -17,16 +17,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/template"
-	"github.com/pluralsh/plural/pkg/utils"
-	plrlErrors "github.com/pluralsh/plural/pkg/utils/errors"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/template"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	plrlErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 
-	"github.com/pluralsh/plural/pkg/provider/permissions"
-	provUtils "github.com/pluralsh/plural/pkg/provider/utils"
+	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
+	provUtils "github.com/pluralsh/plural-cli/pkg/provider/utils"
 )
 
 type AWSProvider struct {

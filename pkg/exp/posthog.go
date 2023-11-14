@@ -1,8 +1,8 @@
 package exp
 
 import (
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/exp/posthog"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/exp/posthog"
 )
 
 // PostHogProvider implements Provider interface

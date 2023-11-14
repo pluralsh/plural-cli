@@ -3,7 +3,7 @@ package bootstrap_test
 import (
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/bootstrap"
+	"github.com/pluralsh/plural-cli/pkg/bootstrap"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 )

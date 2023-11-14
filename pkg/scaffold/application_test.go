@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/scaffold"
+	"github.com/pluralsh/plural-cli/pkg/scaffold"
 	"github.com/stretchr/testify/assert"
 )
 

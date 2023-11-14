@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	vpnv1alpha1 "github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
-	plural "github.com/pluralsh/plural/cmd/plural"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"

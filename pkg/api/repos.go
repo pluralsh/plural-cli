@@ -12,7 +12,7 @@ import (
 
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
-	fileutils "github.com/pluralsh/plural/pkg/utils"
+	fileutils "github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 )
 

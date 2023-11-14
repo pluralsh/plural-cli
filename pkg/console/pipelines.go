@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	"sigs.k8s.io/yaml"

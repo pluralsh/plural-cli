@@ -4,8 +4,8 @@ import (
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func (p *Plural) apiCommands() []cli.Command {

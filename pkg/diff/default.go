@@ -3,8 +3,8 @@ package diff
 import (
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/executor"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/executor"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func defaultDiff(path string) []*executor.Step {

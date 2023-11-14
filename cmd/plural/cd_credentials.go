@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
 

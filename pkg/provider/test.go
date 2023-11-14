@@ -3,9 +3,9 @@ package provider
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/provider/permissions"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 )
 
 type TestProvider struct {

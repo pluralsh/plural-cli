@@ -8,11 +8,11 @@ import (
 
 	"github.com/pluralsh/gqlclient"
 
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	lua "github.com/pluralsh/plural-cli/pkg/scaffold/template"
+	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/config"
-	lua "github.com/pluralsh/plural/pkg/scaffold/template"
-	"github.com/pluralsh/plural/pkg/template"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"

@@ -5,7 +5,7 @@ import (
 
 	gqlclient "github.com/pluralsh/console-client-go"
 
-	"github.com/pluralsh/plural/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
 func (c *consoleClient) ListClusterServices(clusterId, clusterName *string) ([]*gqlclient.ServiceDeploymentEdgeFragment, error) {

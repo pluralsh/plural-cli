@@ -6,7 +6,7 @@ import (
 	"time"
 
 	tm "github.com/buger/goterm"
-	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/application/api/v1beta1"

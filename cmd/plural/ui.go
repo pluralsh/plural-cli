@@ -5,9 +5,9 @@ package plural
 import (
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/ui"
-	"github.com/pluralsh/plural/pkg/wkspace"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/ui"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
 func (p *Plural) uiCommands() cli.Command {

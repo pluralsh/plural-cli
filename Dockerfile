@@ -27,9 +27,9 @@ ARG TARGETARCH
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags '-s -w \
-    -X "github.com/pluralsh/plural/cmd/plural.Version=${APP_VSN}" \
-    -X "github.com/pluralsh/plural/cmd/plural.Commit=${APP_COMMIT}" \
-    -X "github.com/pluralsh/plural/cmd/plural.Date=${APP_DATE}"' \
+    -X "github.com/pluralsh/plural-cli/cmd/plural.Version=${APP_VSN}" \
+    -X "github.com/pluralsh/plural-cli/cmd/plural.Commit=${APP_COMMIT}" \
+    -X "github.com/pluralsh/plural-cli/cmd/plural.Date=${APP_DATE}"' \
     -o plural .
 
 FROM golang:1.20-alpine3.17

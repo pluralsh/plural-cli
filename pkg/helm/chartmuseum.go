@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
-	"github.com/pluralsh/plural/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/config"
 	"helm.sh/helm/v3/pkg/getter"
 )
 
