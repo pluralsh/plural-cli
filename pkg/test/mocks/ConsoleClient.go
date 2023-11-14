@@ -12,6 +12,32 @@ type ConsoleClient struct {
 	mock.Mock
 }
 
+// CloneService provides a mock function with given fields: clusterId, serviceId, serviceName, clusterName, attributes
+func (_m *ConsoleClient) CloneService(clusterId string, serviceId *string, serviceName *string, clusterName *string, attributes gqlclient.ServiceCloneAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+	ret := _m.Called(clusterId, serviceId, serviceName, clusterName, attributes)
+
+	var r0 *gqlclient.ServiceDeploymentFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, *string, *string, *string, gqlclient.ServiceCloneAttributes) (*gqlclient.ServiceDeploymentFragment, error)); ok {
+		return rf(clusterId, serviceId, serviceName, clusterName, attributes)
+	}
+	if rf, ok := ret.Get(0).(func(string, *string, *string, *string, gqlclient.ServiceCloneAttributes) *gqlclient.ServiceDeploymentFragment); ok {
+		r0 = rf(clusterId, serviceId, serviceName, clusterName, attributes)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.ServiceDeploymentFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, *string, *string, *string, gqlclient.ServiceCloneAttributes) error); ok {
+		r1 = rf(clusterId, serviceId, serviceName, clusterName, attributes)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateCluster provides a mock function with given fields: attributes
 func (_m *ConsoleClient) CreateCluster(attributes gqlclient.ClusterAttributes) (*gqlclient.CreateCluster, error) {
 	ret := _m.Called(attributes)
@@ -388,6 +414,20 @@ func (_m *ConsoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttri
 	}
 
 	return r0, r1
+}
+
+// Token provides a mock function with given fields:
+func (_m *ConsoleClient) Token() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
 }
 
 // UpdateCluster provides a mock function with given fields: id, attr
