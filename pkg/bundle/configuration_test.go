@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/bundle"
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/bundle"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 
 	"gopkg.in/yaml.v2"
 )

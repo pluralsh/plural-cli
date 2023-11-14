@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )

@@ -3,9 +3,9 @@ package plural
 import (
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/output"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/output"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/urfave/cli"
 )
 

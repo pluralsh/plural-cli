@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func serverFunc(f func(c *gin.Context) error) func(c *gin.Context) {

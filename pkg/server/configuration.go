@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 type Configuration struct {

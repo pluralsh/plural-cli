@@ -1,7 +1,7 @@
 package scm
 
 import (
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 )
 
 type Context struct {

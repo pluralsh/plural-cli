@@ -8,10 +8,10 @@ import (
 	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural/pkg/application"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/application"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 
 	"sigs.k8s.io/application/api/v1beta1"
 )

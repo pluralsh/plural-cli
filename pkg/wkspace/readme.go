@@ -3,8 +3,8 @@ package wkspace
 import (
 	"path/filepath"
 
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 const (

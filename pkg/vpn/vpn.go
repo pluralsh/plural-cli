@@ -1,8 +1,8 @@
 package vpn
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
-	"github.com/pluralsh/plural/pkg/kubernetes"
 
 	v1 "k8s.io/api/core/v1"
 )

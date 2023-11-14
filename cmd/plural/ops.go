@@ -3,8 +3,8 @@ package plural
 import (
 	"fmt"
 
-	"github.com/pluralsh/plural/pkg/provider"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	v1 "k8s.io/api/core/v1"
 )

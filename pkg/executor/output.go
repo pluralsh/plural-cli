@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 type OutputWriter struct {

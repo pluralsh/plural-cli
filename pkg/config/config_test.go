@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pluralsh/plural/pkg/config"
-	pluraltest "github.com/pluralsh/plural/pkg/test"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 

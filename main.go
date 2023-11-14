@@ -6,7 +6,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/pluralsh/plural/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/plural"
 )
 
 func main() {

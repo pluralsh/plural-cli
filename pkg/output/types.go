@@ -3,7 +3,7 @@ package output
 import (
 	"os"
 
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"gopkg.in/yaml.v2"
 )
 

@@ -9,7 +9,7 @@ import (
 	"path"
 	"testing"
 
-	utiltest "github.com/pluralsh/plural/pkg/test"
+	utiltest "github.com/pluralsh/plural-cli/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 

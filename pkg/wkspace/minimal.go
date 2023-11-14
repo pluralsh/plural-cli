@@ -26,15 +26,15 @@ import (
 	"helm.sh/helm/v3/pkg/strvals"
 	"sigs.k8s.io/yaml"
 
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/diff"
-	"github.com/pluralsh/plural/pkg/helm"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/output"
-	"github.com/pluralsh/plural/pkg/provider"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/diff"
+	"github.com/pluralsh/plural-cli/pkg/helm"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/output"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 const (

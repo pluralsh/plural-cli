@@ -3,9 +3,9 @@ package proxy
 import (
 	"fmt"
 
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/utils"
 )
 
 func List(kube kubernetes.Kube, namespace string) (*v1alpha1.ProxyList, error) {

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pluralsh/plural/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/samber/lo"
 )
 

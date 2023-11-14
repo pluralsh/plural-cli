@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func FailedPermission(perm string) {

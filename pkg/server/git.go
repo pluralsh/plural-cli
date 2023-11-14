@@ -7,9 +7,9 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func gitExists() (bool, error) {

@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/kubernetes/utils"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/portforward"

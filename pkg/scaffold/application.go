@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 
 	"github.com/imdario/mergo"
-	"github.com/pluralsh/plural/pkg/output"
-	"github.com/pluralsh/plural/pkg/utils"
-	"github.com/pluralsh/plural/pkg/utils/git"
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/output"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"sigs.k8s.io/yaml"
 )
 

@@ -6,17 +6,17 @@ import (
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"
 
-	"github.com/pluralsh/plural/pkg/api"
-	"github.com/pluralsh/plural/pkg/bootstrap"
-	"github.com/pluralsh/plural/pkg/bootstrap/aws"
-	"github.com/pluralsh/plural/pkg/bootstrap/validation"
-	"github.com/pluralsh/plural/pkg/cluster"
-	"github.com/pluralsh/plural/pkg/config"
-	"github.com/pluralsh/plural/pkg/exp"
-	"github.com/pluralsh/plural/pkg/kubernetes"
-	"github.com/pluralsh/plural/pkg/machinepool"
-	"github.com/pluralsh/plural/pkg/manifest"
-	"github.com/pluralsh/plural/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/bootstrap"
+	"github.com/pluralsh/plural-cli/pkg/bootstrap/aws"
+	"github.com/pluralsh/plural-cli/pkg/bootstrap/validation"
+	"github.com/pluralsh/plural-cli/pkg/cluster"
+	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/exp"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/machinepool"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 func (p *Plural) clusterCommands() []cli.Command {

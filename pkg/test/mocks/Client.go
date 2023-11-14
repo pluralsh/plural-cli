@@ -4,7 +4,7 @@ package mocks
 
 import (
 	gqlclient "github.com/pluralsh/gqlclient"
-	api "github.com/pluralsh/plural/pkg/api"
+	api "github.com/pluralsh/plural-cli/pkg/api"
 
 	mock "github.com/stretchr/testify/mock"
 )

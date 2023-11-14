@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pluralsh/plural/pkg/utils/pathing"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 func Tar(src string, w io.Writer, regex string) error {
