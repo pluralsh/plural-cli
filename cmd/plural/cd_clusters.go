@@ -67,7 +67,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Usage:     "deregisters a cluster in plural cd, and drains all services (unless --soft is specified)",
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
-				cli.BoolFlag{Name: "soft", Usage: "deletes a cluster in our system but doesn't drain resources, leaving them untouched"},
+				cli.BoolFlag{
+					Name:  "soft",
+					Usage: "deletes a cluster in our system but doesn't drain resources, leaving them untouched",
+				},
 			},
 		},
 		{
@@ -221,6 +224,7 @@ func (p *Plural) handleDeleteCluster(c *cli.Context) error {
 	}
 
 	if c.Bool("soft") {
+		fmt.Println("soft deleting this cluster")
 		return p.ConsoleClient.DetachCluster(existing.ID)
 	}
 
