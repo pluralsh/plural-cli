@@ -224,7 +224,7 @@ func (p *Plural) handleDeleteCluster(c *cli.Context) error {
 	}
 
 	if c.Bool("soft") {
-		fmt.Println("soft deleting this cluster")
+		fmt.Println("detaching cluster from Plural CD, this will leave all workloads running.")
 		return p.ConsoleClient.DetachCluster(existing.ID)
 	}
 
