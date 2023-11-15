@@ -220,6 +220,10 @@ func (p *Plural) handleDeleteCluster(c *cli.Context) error {
 		return fmt.Errorf("this cluster does not exist")
 	}
 
+	if c.Bool("soft") {
+		return p.ConsoleClient.DetachCluster(existing.ID)
+	}
+
 	return p.ConsoleClient.DeleteCluster(existing.ID)
 }
 func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
