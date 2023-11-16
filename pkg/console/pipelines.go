@@ -39,9 +39,9 @@ type PipelineEdge struct {
 }
 
 type Gate struct {
-	Name    string `json:"gate"`
+	Name    string `json:"name"`
 	Type    string `json:"type"`
-	Cluster string `json:"type"`
+	Cluster string `json:"cluster"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
@@ -84,7 +84,7 @@ func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
 	for _, g := range edge.Gates {
 		res = append(res, &gqlclient.PipelineGateAttributes{
 			Name: g.Name,
-			Type: gqlclient.GateType(g.Type),
+			Type: gqlclient.GateType(strings.ToUpper(g.Type)),
 		})
 	}
 	return res
