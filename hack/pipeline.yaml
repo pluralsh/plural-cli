@@ -13,3 +13,6 @@ stages:
 edges:
 - from: dev
   to: prod
+  gates:
+  - type: approval
+    name: approval
