@@ -222,6 +222,7 @@ func (p *Plural) handleDeleteCluster(c *cli.Context) error {
 
 	return p.ConsoleClient.DeleteCluster(existing.ID)
 }
+
 func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
