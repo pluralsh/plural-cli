@@ -33,8 +33,15 @@ type PromotionCriteria struct {
 }
 
 type PipelineEdge struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Gates []*Gate
+}
+
+type Gate struct {
+	Name    string `json:"gate"`
+	Type    string `json:"type"`
+	Cluster string `json:"type"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
@@ -53,7 +60,9 @@ func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes
 	}
 	pipeline := &gqlclient.PipelineAttributes{}
 	pipeline.Edges = algorithms.Map(pipe.Edges, func(e PipelineEdge) *gqlclient.PipelineEdgeAttributes {
-		return &gqlclient.PipelineEdgeAttributes{From: lo.ToPtr(e.From), To: lo.ToPtr(e.To)}
+		edge := gqlclient.PipelineEdgeAttributes{From: lo.ToPtr(e.From), To: lo.ToPtr(e.To)}
+		edge.Gates = constructGates(e)
+		return &edge
 	})
 	pipeline.Stages = algorithms.Map(pipe.Stages, func(s PipelineStage) *gqlclient.PipelineStageAttributes {
 		stage := &gqlclient.PipelineStageAttributes{Name: s.Name}
@@ -68,6 +77,17 @@ func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes
 		return stage
 	})
 	return pipe.Name, pipeline, nil
+}
+
+func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
+	res := make([]*gqlclient.PipelineGateAttributes, 0)
+	for _, g := range edge.Gates {
+		res = append(res, &gqlclient.PipelineGateAttributes{
+			Name: g.Name,
+			Type: gqlclient.GateType(g.Type),
+		})
+	}
+	return res
 }
 
 func buildCriteria(criteria *PromotionCriteria) *gqlclient.PromotionCriteriaAttributes {
