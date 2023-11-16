@@ -51,6 +51,11 @@ func (c *consoleClient) DeleteCluster(id string) error {
 	return api.GetErrorResponse(err, "DeleteCluster")
 }
 
+func (c *consoleClient) DetachCluster(id string) error {
+	_, err := c.client.DetachCluster(c.ctx, id)
+	return api.GetErrorResponse(err, "DetachCluster")
+}
+
 func (c *consoleClient) CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error) {
 	newCluster, err := c.client.CreateCluster(c.ctx, attributes)
 	if err != nil {

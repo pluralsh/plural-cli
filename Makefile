@@ -26,6 +26,7 @@ WAILS_BINDINGS_TAGS ?= bindings,generate
 WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
+GOBIN ?= go env GOBIN
 
 # Targets to run before other targets
 # install-tools - Install binaries required to run targets
@@ -38,7 +39,7 @@ git-push:
 
 .PHONY: install
 install:
-	go install -ldflags '$(LDFLAGS)' .
+	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural .
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
