@@ -40,6 +40,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
+				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
 			},
 		},
 		{
@@ -73,6 +74,16 @@ func (p *Plural) cdCommands() []cli.Command {
 }
 
 func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
+	if !c.Bool("force") {
+		confirm, err := confirmCluster(c.String("url"), c.String("token"))
+		if err != nil {
+			return err
+		}
+		if !confirm {
+			return nil
+		}
+	}
+
 	return p.doInstallOperator(c.String("url"), c.String("token"))
 }
 
@@ -93,17 +104,28 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
+
+	err = console.InstallAgent(url, token, operatorNamespace)
+	if err == nil {
+		utils.Success("deployment operator installed successfully\n")
+	}
+	return err
+}
+
+func confirmCluster(url, token string) (bool, error) {
 	consoleClient, err := console.NewConsoleClient(token, url)
 	if err != nil {
-		return err
+		return false, err
 	}
+
 	myCluster, err := consoleClient.MyCluster()
 	if err != nil {
-		return err
+		return false, err
 	}
+
 	clusterFragment, err := consoleClient.GetCluster(&myCluster.MyCluster.ID, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	handle := "-"
@@ -114,14 +136,7 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if clusterFragment.Provider != nil {
 		provider = clusterFragment.Provider.Name
 	}
-	if !confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM") {
-		return nil
-	}
-	err = console.InstallAgent(url, token, operatorNamespace)
-	if err == nil {
-		utils.Success("deployment operator installed successfully\n")
-	}
-	return err
+	return confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
 }
 
 func (p *Plural) handleCdLogin(c *cli.Context) (err error) {
