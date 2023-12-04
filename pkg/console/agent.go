@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	ChartName   = "deployment-operator"
-	ReleaseName = "deploy-operator"
-	RepoUrl     = "https://pluralsh.github.io/deployment-operator"
+	ChartName         = "deployment-operator"
+	ReleaseName       = "deploy-operator"
+	RepoUrl           = "https://pluralsh.github.io/deployment-operator"
+	OperatorNamespace = "plrl-deploy-operator"
 )
 
 func InstallAgent(url, token, namespace string) error {
