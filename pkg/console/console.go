@@ -52,10 +52,10 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	}, nil
 }
 
-func (client *consoleClient) Url() string {
-	return client.url
+func (c *consoleClient) Url() string {
+	return c.url
 }
 
-func (client *consoleClient) Token() string {
-	return client.token
+func (c *consoleClient) Token() string {
+	return c.token
 }
