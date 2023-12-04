@@ -18,10 +18,6 @@ func init() {
 	consoleURL = ""
 }
 
-const (
-	OperatorNamespace = "plrl-deploy-operator"
-)
-
 var consoleToken string
 var consoleURL string
 
@@ -92,7 +88,7 @@ func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	return console.UninstallAgent(OperatorNamespace)
+	return console.UninstallAgent(console.OperatorNamespace)
 }
 
 func (p *Plural) doInstallOperator(url, token string) error {
@@ -100,11 +96,11 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if err != nil {
 		return err
 	}
-	err = p.Kube.CreateNamespace(OperatorNamespace)
+	err = p.Kube.CreateNamespace(console.OperatorNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	err = console.InstallAgent(url, token, OperatorNamespace)
+	err = console.InstallAgent(url, token, console.OperatorNamespace)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
 	}
