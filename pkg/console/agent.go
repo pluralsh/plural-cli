@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	releaseName = "deploy-operator"
-	repoUrl     = "https://pluralsh.github.io/deployment-operator"
+	ChartName   = "deployment-operator"
+	ReleaseName = "deploy-operator"
+	RepoUrl     = "https://pluralsh.github.io/deployment-operator"
 )
 
 func InstallAgent(url, token, namespace string) error {
@@ -26,7 +27,7 @@ func InstallAgent(url, token, namespace string) error {
 		"consoleUrl": url,
 	}
 
-	if err := helm.AddRepo(releaseName, repoUrl); err != nil {
+	if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
 		return err
 	}
 
@@ -35,7 +36,7 @@ func InstallAgent(url, token, namespace string) error {
 		return err
 	}
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", releaseName, "deployment-operator"), settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
 	if err != nil {
 		return err
 	}
@@ -48,11 +49,11 @@ func InstallAgent(url, token, namespace string) error {
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
 
-	if _, err = histClient.Run(releaseName); errors.Is(err, driver.ErrReleaseNotFound) {
+	if _, err = histClient.Run(ReleaseName); errors.Is(err, driver.ErrReleaseNotFound) {
 		fmt.Println("installing deployment operator...")
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
-		instClient.ReleaseName = releaseName
+		instClient.ReleaseName = ReleaseName
 		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
 		if err != nil {
@@ -64,10 +65,10 @@ func InstallAgent(url, token, namespace string) error {
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 5
-	_, err = client.Run(releaseName, chart, vals)
+	_, err = client.Run(ReleaseName, chart, vals)
 	return err
 }
 
 func UninstallAgent(namespace string) error {
-	return helm.Uninstall(releaseName, namespace)
+	return helm.Uninstall(ReleaseName, namespace)
 }
