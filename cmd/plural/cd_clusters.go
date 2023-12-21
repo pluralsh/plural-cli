@@ -103,6 +103,11 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				},
 			},
 		},
+		{
+			Name:   "reinstall",
+			Action: latestVersion(p.handleClusterReinstall),
+			Usage:  "reinstalls the deployment operator into a cluster",
+		},
 	}
 }
 
@@ -374,6 +379,20 @@ func (p *Plural) handleCreateProvider(existingProviders []string) (*gqlclient.Cr
 		return nil, fmt.Errorf("provider was not created properly")
 	}
 	return clusterProv, nil
+}
+
+func (p *Plural) handleClusterReinstall(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	deployToken, err := p.ConsoleClient.GetDeployToken(getIdAndName(c.Args().Get(0)))
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
+	return p.doInstallOperator(url, deployToken)
 }
 
 func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
