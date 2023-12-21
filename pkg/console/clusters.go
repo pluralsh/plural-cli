@@ -5,6 +5,7 @@ import (
 
 	consoleclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/samber/lo"
 )
 
 func (c *consoleClient) ListClusters() (*consoleclient.ListClusters, error) {
@@ -34,6 +35,19 @@ func (c *consoleClient) GetCluster(clusterId, clusterName *string) (*consoleclie
 	}
 
 	return result.Cluster, nil
+}
+
+func (c *consoleClient) GetDeployToken(clusterId, clusterName *string) (string, error) {
+	res, err := c.client.GetClusterWithToken(c.ctx, clusterId, clusterName)
+	if err != nil {
+		return "", err
+	}
+
+	if res == nil {
+		return "", fmt.Errorf("cluster not found")
+	}
+
+	return lo.FromPtr(res.Cluster.DeployToken), nil
 }
 
 func (c *consoleClient) UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error) {

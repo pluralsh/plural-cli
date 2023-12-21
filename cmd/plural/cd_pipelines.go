@@ -60,6 +60,6 @@ func (p *Plural) handleCreatePipeline(c *cli.Context) error {
 		return err
 	}
 
-	utils.Success("Pipeline %s created successfully", pipe.Name)
+	utils.Success("Pipeline %s created successfully\n", pipe.Name)
 	return nil
 }

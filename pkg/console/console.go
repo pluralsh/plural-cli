@@ -20,6 +20,7 @@ type ConsoleClient interface {
 	Token() string
 	ListClusters() (*consoleclient.ListClusters, error)
 	GetCluster(clusterId, clusterName *string) (*consoleclient.ClusterFragment, error)
+	GetDeployToken(clusterId, clusterName *string) (string, error)
 	UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error)
 	DeleteCluster(id string) error
 	DetachCluster(id string) error

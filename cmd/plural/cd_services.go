@@ -133,7 +133,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		Name:         name,
 		Namespace:    namespace,
 		Version:      &v,
-		RepositoryID: repoId,
+		RepositoryID: lo.ToPtr(repoId),
 		Git: &gqlclient.GitRefAttributes{
 			Ref:    gitRef,
 			Folder: gitFolder,
