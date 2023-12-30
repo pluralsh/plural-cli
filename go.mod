@@ -27,7 +27,6 @@ require (
 	github.com/buger/goterm v1.0.4
 	github.com/cert-manager/cert-manager v1.10.0
 	github.com/chartmuseum/helm-push v0.10.3
-	github.com/coreos/go-semver v0.3.0
 	github.com/databus23/helm-diff/v3 v3.6.0
 	github.com/fatih/color v1.15.0
 	github.com/gdamore/tcell/v2 v2.6.0
@@ -51,6 +50,7 @@ require (
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/osteele/liquid v1.3.2
+	github.com/otiai10/copy v1.9.0
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.15
@@ -64,7 +64,6 @@ require (
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/viper v1.15.0
-	github.com/thoas/go-funk v0.9.2
 	github.com/urfave/cli v1.22.14
 	github.com/wailsapp/wails/v2 v2.4.1
 	github.com/xanzy/go-gitlab v0.70.0
@@ -154,6 +153,7 @@ require (
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/coredns/caddy v1.1.1 // indirect
 	github.com/coredns/corefile-migration v1.0.20 // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/drone/envsubst/v2 v2.0.0-20210730161058-179042472c46 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

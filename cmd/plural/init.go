@@ -29,6 +29,11 @@ func (p *Plural) handleInit(c *cli.Context) error {
 	gitCreated := false
 	repo := ""
 
+	if utils.Exists("./workspace.yaml") {
+		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized...\n")
+		return nil
+	}
+
 	git, err := wkspace.Preflight()
 	if err != nil && git {
 		return err

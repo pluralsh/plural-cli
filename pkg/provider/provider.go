@@ -25,6 +25,7 @@ type Provider interface {
 	KubeConfig() error
 	KubeContext() string
 	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
+	CreateBucket() error
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
