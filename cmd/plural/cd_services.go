@@ -182,7 +182,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
-	return utils.PrintTable([]*gqlclient.ServiceDeploymentFragment{sd}, headers, func(sd *gqlclient.ServiceDeploymentFragment) ([]string, error) {
+	return utils.PrintTable([]*gqlclient.ServiceDeploymentExtended{sd}, headers, func(sd *gqlclient.ServiceDeploymentExtended) ([]string, error) {
 		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
 	})
 }
@@ -321,7 +321,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	}
 
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
-	return utils.PrintTable([]*gqlclient.ServiceDeploymentFragment{sd}, headers, func(sd *gqlclient.ServiceDeploymentFragment) ([]string, error) {
+	return utils.PrintTable([]*gqlclient.ServiceDeploymentExtended{sd}, headers, func(sd *gqlclient.ServiceDeploymentExtended) ([]string, error) {
 		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
 	})
 }

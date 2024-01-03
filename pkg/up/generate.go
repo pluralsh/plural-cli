@@ -23,6 +23,8 @@ func (ctx *Context) Generate() error {
 	prov := ctx.Provider.Name()
 	tpls := []templatePair{
 		{from: "./bootstrap/charts/runtime/values.yaml.tpl", to: "./helm-values/runtime.yaml", overwrite: true},
+		{from: "./bootstrap/helm/certmanager.yaml", to: "./helm-values/certmanager.yaml", overwrite: true},
+		{from: "./bootstrap/helm/flux.yaml", to: "./helm-values/flux.yaml", overwrite: true},
 		{from: fmt.Sprintf("./bootstrap/templates/providers/bootstrap/%s.tf", prov), to: "clusters/provider.tf"},
 		{from: fmt.Sprintf("./bootstrap/templates/setup/providers/%s.tf", prov), to: "clusters/mgmt.tf"},
 		{from: "./bootstrap/templates/setup/console.tf", to: "clusters/console.tf"},

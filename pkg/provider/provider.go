@@ -56,8 +56,12 @@ type Providers struct {
 
 var (
 	providers       = Providers{}
-	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
 )
+
+func IgnoreProviders(prov []string) {
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
+}
 
 func GetProviderScaffold(provider, version string) (string, error) {
 	if providers.Scaffolds == nil {

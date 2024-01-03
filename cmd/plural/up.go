@@ -5,6 +5,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -16,6 +17,7 @@ const (
 )
 
 func (p *Plural) handleUp(c *cli.Context) error {
+	provider.IgnoreProviders([]string{"GENERIC", "KIND"})
 	if err := p.handleInit(c); err != nil {
 		return err
 	}
@@ -39,15 +41,15 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return fmt.Errorf("cancelled deploy")
 	}
 
-	if err := ctx.Deploy(); err != nil {
+	if err := ctx.Deploy(func() error {
+		utils.Highlight("\n==> Commit and push your configuration\n\n")
+		if commit := commitMsg(c); commit != "" {
+			utils.Highlight("Pushing upstream...\n")
+			return git.Sync(repoRoot, commit, c.Bool("force"))
+		}
+		return nil
+	}); err != nil {
 		return err
-	}
-
-	utils.Highlight("\n==> Commit and push your configuration\n\n")
-
-	if commit := commitMsg(c); commit != "" {
-		utils.Highlight("Pushing upstream...\n")
-		return git.Sync(repoRoot, commit, c.Bool("force"))
 	}
 
 	return nil

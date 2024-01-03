@@ -16,7 +16,7 @@ type terraformCmd struct {
 	retries int
 }
 
-func (ctx *Context) Deploy() error {
+func (ctx *Context) Deploy(commit func() error) error {
 	if err := ctx.Provider.CreateBucket(); err != nil {
 		return err
 	}
@@ -31,6 +31,12 @@ func (ctx *Context) Deploy() error {
 	if err := ping(fmt.Sprintf("https://console.%s", ctx.Manifest.Network.Subdomain)); err != nil {
 		return err
 	}
+
+	if err := commit(); err != nil {
+		return err
+	}
+
+	utils.Highlight("\nSetting up gitops management...\n")
 
 	return runAll([]terraformCmd{
 		{dir: "./apps/terraform", cmd: "init", args: []string{"-upgrade"}},
