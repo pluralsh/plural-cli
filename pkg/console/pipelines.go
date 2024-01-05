@@ -42,8 +42,8 @@ type Gate struct {
 	Name      string                        `json:"name"`
 	Type      string                        `json:"type"`
 	Cluster   string                        `json:"cluster"`
-	ClusterID string                        `json:"clusterId"`
-	Spec      *gqlclient.GateSpecAttributes `json:"spec"`
+	ClusterID string                        `json:"clusterId,omitempty"`
+	Spec      *gqlclient.GateSpecAttributes `json:"spec,omitempty"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
