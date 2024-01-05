@@ -39,9 +39,10 @@ type PipelineEdge struct {
 }
 
 type Gate struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Cluster string `json:"cluster"`
+	Name    string                        `json:"name"`
+	Type    string                        `json:"type"`
+	Cluster string                        `json:"cluster"`
+	Spec    *gqlclient.GateSpecAttributes `json:"spec"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
@@ -79,12 +80,46 @@ func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes
 	return pipe.Name, pipeline, nil
 }
 
+//func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
+//	res := make([]*gqlclient.PipelineGateAttributes, 0)
+//	for _, g := range edge.Gates {
+//		res = append(res, &gqlclient.PipelineGateAttributes{
+//			Name: g.Name,
+//			Type: gqlclient.GateType(strings.ToUpper(g.Type)),
+//			//TODO: implement spec parsing
+//			Spec: nil,
+//		})
+//	}
+//	return res
+//}
+
 func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
 	res := make([]*gqlclient.PipelineGateAttributes, 0)
 	for _, g := range edge.Gates {
+		//gate := &Gate{}
+		//err := yaml.Unmarshal([]byte(g.Spec), gate)
+		//if err != nil {
+		//	// handle error
+		//}
+
+		// Convert labels and annotations to map[string]interface{}
+		labels := make(map[string]interface{})
+		for k, v := range g.Spec.Job.Labels {
+			labels[k] = v
+		}
+		annotations := make(map[string]interface{})
+		for k, v := range g.Spec.Job.Annotations {
+			annotations[k] = v
+		}
+
+		// Update the labels and annotations in the gate spec
+		g.Spec.Job.Labels = labels
+		g.Spec.Job.Annotations = annotations
+
 		res = append(res, &gqlclient.PipelineGateAttributes{
 			Name: g.Name,
 			Type: gqlclient.GateType(strings.ToUpper(g.Type)),
+			Spec: g.Spec,
 		})
 	}
 	return res
