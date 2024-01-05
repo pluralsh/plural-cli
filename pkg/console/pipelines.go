@@ -39,10 +39,11 @@ type PipelineEdge struct {
 }
 
 type Gate struct {
-	Name    string                        `json:"name"`
-	Type    string                        `json:"type"`
-	Cluster string                        `json:"cluster"`
-	Spec    *gqlclient.GateSpecAttributes `json:"spec"`
+	Name      string                        `json:"name"`
+	Type      string                        `json:"type"`
+	Cluster   string                        `json:"cluster"`
+	ClusterID string                        `json:"clusterId"`
+	Spec      *gqlclient.GateSpecAttributes `json:"spec"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
@@ -119,7 +120,10 @@ func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
 		res = append(res, &gqlclient.PipelineGateAttributes{
 			Name: g.Name,
 			Type: gqlclient.GateType(strings.ToUpper(g.Type)),
-			Spec: g.Spec,
+			//pointerize the cluster id
+			Cluster:   lo.ToPtr(g.Cluster),
+			ClusterID: lo.ToPtr(g.ClusterID),
+			Spec:      g.Spec,
 		})
 	}
 	return res
