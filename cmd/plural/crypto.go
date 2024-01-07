@@ -42,6 +42,7 @@ workspace.yaml filter=plural-crypt diff=plural-crypt
 context.yaml* filter=plural-crypt diff=plural-crypt
 workspace.yaml* filter=plural-crypt diff=plural-crypt
 helm-values/*.yaml filter=plural-crypt diff=plural-crypt
+.env filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
 

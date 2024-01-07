@@ -180,7 +180,7 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	vals, err := cd.ControlPlaneValues(conf, c.String("domain"), c.String("dsn"), c.String("name"))
+	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"))
 	if err != nil {
 		return err
 	}

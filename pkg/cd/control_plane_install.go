@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/osteele/liquid"
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -29,16 +31,48 @@ const (
 	tplUrl      = "https://raw.githubusercontent.com/pluralsh/console/master/templates/values.yaml.tpl"
 )
 
-func ControlPlaneValues(conf config.Config, domain, dsn, name string) (string, error) {
+type secrets struct {
+	AesKey string `yaml:"aes_key"`
+	Erlang string `yaml:"erlang"`
+}
+
+type ingress struct {
+	ConsoleDns string `yaml:"console_dns"`
+	KasDns     string `yaml:"kas_dns"`
+}
+
+type consoleValues struct {
+	Ingress ingress `yaml:"ingress"`
+	Secrets secrets `yaml:"secrets"`
+}
+
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
 	randoms := map[string]string{}
+	existing := consoleValues{}
+	if utils.Exists(file) {
+		if d, err := utils.ReadFile(file); err == nil {
+			if err := yaml.Unmarshal([]byte(d), &existing); err == nil {
+				if existing.Ingress.ConsoleDns != "" {
+					consoleDns = existing.Ingress.ConsoleDns
+				}
+				if existing.Ingress.KasDns != "" {
+					kasDns = existing.Ingress.KasDns
+				}
+			}
+		}
+	}
 	for _, key := range []string{"jwt", "erlang", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
 		rand, err := crypto.RandStr(32)
 		if err != nil {
 			return "", err
 		}
 		randoms[key] = rand
+	}
+
+	if existing.Secrets.Erlang != "" {
+		randoms["erlang"] = existing.Secrets.Erlang
 	}
 
 	client := api.FromConfig(&conf)
@@ -74,6 +108,11 @@ func ControlPlaneValues(conf config.Config, domain, dsn, name string) (string, e
 		"provider":      prov.Name(),
 		"clusterIssuer": "plural",
 	}
+
+	if existing.Secrets.AesKey != "" {
+		configuration["aesKey"] = existing.Secrets.AesKey
+	}
+
 	for k, v := range randoms {
 		configuration[k] = v
 	}

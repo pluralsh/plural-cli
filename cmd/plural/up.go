@@ -5,7 +5,6 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -17,7 +16,7 @@ const (
 )
 
 func (p *Plural) handleUp(c *cli.Context) error {
-	provider.IgnoreProviders([]string{"GENERIC", "KIND"})
+	// provider.IgnoreProviders([]string{"GENERIC", "KIND"})
 	if err := p.handleInit(c); err != nil {
 		return err
 	}
