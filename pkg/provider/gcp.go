@@ -248,9 +248,14 @@ func (gcp *GCPProvider) Flush() error {
 	return gcp.writer()
 }
 
+func (gcp *GCPProvider) CreateBucket() error {
+	err := gcp.mkBucket(gcp.bucket)
+	return utilerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
+}
+
 func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := gcp.mkBucket(gcp.bucket); err != nil {
-		return "", utilerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
+	if err := gcp.CreateBucket(); err != nil {
+		return "", err
 	}
 
 	ctx["Project"] = gcp.Project()

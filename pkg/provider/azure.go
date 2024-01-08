@@ -201,13 +201,21 @@ func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*Az
 	return &AzureProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil, clients}, nil
 }
 
-func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
+func (az *AzureProvider) CreateBucket() error {
 	if err := az.CreateResourceGroup(az.Project()); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", az.Project()))
+		return pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state resource group %s", az.Project()))
 	}
 
-	if err := az.CreateBucket(az.bucket); err != nil {
-		return "", pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", az.bucket))
+	if err := az.createContainer(az.bucket); err != nil {
+		return pluralerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", az.bucket))
+	}
+
+	return nil
+}
+
+func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
+	if err := az.CreateBucket(); err != nil {
+		return "", err
 	}
 
 	ctx["Region"] = az.Region()
@@ -230,7 +238,7 @@ func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[st
 	return template.RenderString(scaffold, ctx)
 }
 
-func (az *AzureProvider) CreateBucket(bucket string) (err error) {
+func (az *AzureProvider) createContainer(bucket string) (err error) {
 	acc, err := az.upsertStorageAccount(utils.ToString(az.Context()["StorageAccount"]))
 	if err != nil {
 		return
