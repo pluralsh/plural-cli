@@ -106,6 +106,53 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:  versionInfo,
 		},
 		{
+			Name:  "up",
+			Usage: "sets up your repository and an initial management cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "endpoint",
+					Usage: "the endpoint for the plural installation you're working with",
+				},
+				cli.StringFlag{
+					Name:  "service-account",
+					Usage: "email for the service account you'd like to use for this workspace",
+				},
+				cli.BoolFlag{
+					Name:  "ignore-preflights",
+					Usage: "whether to ignore preflight check failures prior to init",
+				},
+				cli.StringFlag{
+					Name:  "commit",
+					Usage: "commits your changes with this message",
+				},
+			},
+			Action: latestVersion(p.handleUp),
+		},
+		{
+			Name:   "down",
+			Usage:  "destroys your management cluster and any apps installed on it",
+			Action: latestVersion(p.handleDown),
+		},
+		{
+			Name:  "init",
+			Usage: "initializes plural within a git repo",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "endpoint",
+					Usage: "the endpoint for the plural installation you're working with",
+				},
+				cli.StringFlag{
+					Name:  "service-account",
+					Usage: "email for the service account you'd like to use for this workspace",
+				},
+				cli.BoolFlag{
+					Name:  "ignore-preflights",
+					Usage: "whether to ignore preflight check failures prior to init",
+				},
+			},
+			Action: tracked(latestVersion(p.handleInit), "cli.init"),
+		},
+		{
 			Name:    "build",
 			Aliases: []string{"bld"},
 			Usage:   "builds your workspace",
@@ -273,25 +320,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Subcommands: p.authCommands(),
 		},
 		{
-			Name:  "init",
-			Usage: "initializes plural within a git repo",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "endpoint",
-					Usage: "the endpoint for the plural installation you're working with",
-				},
-				cli.StringFlag{
-					Name:  "service-account",
-					Usage: "email for the service account you'd like to use for this workspace",
-				},
-				cli.BoolFlag{
-					Name:  "ignore-preflights",
-					Usage: "whether to ignore preflight check failures prior to init",
-				},
-			},
-			Action: tracked(latestVersion(p.handleInit), "cli.init"),
-		},
-		{
 			Name:     "preflights",
 			Usage:    "runs provider preflight checks",
 			Category: "Workspace",
@@ -444,16 +472,10 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Debugging",
 		},
 		{
-			Name:        "utils",
-			Usage:       "useful plural utilities",
-			Subcommands: utilsCommands(),
-			Category:    "Miscellaneous",
-		},
-		{
 			Name:        "vpn",
 			Usage:       "interacting with the plural vpn",
 			Subcommands: p.vpnCommands(),
-			Category:    "Miscellaneous",
+			Category:    "Workspace",
 		},
 		{
 			Name:     "ai",
@@ -500,12 +522,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:    "shows repos with pending changes",
 			Action:   latestVersion(diffed),
 			Category: "Workspace",
-		},
-		{
-			Name:     "from-grafana",
-			Usage:    "imports a grafana dashboard to a plural crd",
-			Action:   latestVersion(formatDashboard),
-			Category: "Publishing",
 		},
 		{
 			Name:        "bootstrap",

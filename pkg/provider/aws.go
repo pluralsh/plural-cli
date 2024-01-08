@@ -237,6 +237,10 @@ func getAwsConfig(ctx context.Context) (aws.Config, error) {
 	return cfg, plrlErrors.ErrorWrap(err, "Failed to initialize aws client: ")
 }
 
+func (aws *AWSProvider) CreateBucket() error {
+	return aws.mkBucket(aws.bucket)
+}
+
 func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 	if err := aws.mkBucket(aws.bucket); err != nil {
 		return "", plrlErrors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))

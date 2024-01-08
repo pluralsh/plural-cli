@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/osteele/liquid"
@@ -12,7 +15,11 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 var (
@@ -20,8 +27,145 @@ var (
 )
 
 const (
-	templateUrl = "https://raw.githubusercontent.com/pluralsh/console/cd-scaffolding/charts/console/values.yaml.liquid"
+	templateUrl = "https://raw.githubusercontent.com/pluralsh/console/master/templates/values.yaml.liquid"
+	tplUrl      = "https://raw.githubusercontent.com/pluralsh/console/master/templates/values.yaml.tpl"
 )
+
+type secrets struct {
+	AesKey string `yaml:"aes_key"`
+	Erlang string `yaml:"erlang"`
+}
+
+type ingress struct {
+	ConsoleDns string `yaml:"console_dns"`
+	KasDns     string `yaml:"kas_dns"`
+}
+
+type consoleValues struct {
+	Ingress ingress `yaml:"ingress"`
+	Secrets secrets `yaml:"secrets"`
+}
+
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (string, error) {
+	consoleDns := fmt.Sprintf("console.%s", domain)
+	kasDns := fmt.Sprintf("kas.%s", domain)
+	randoms := map[string]string{}
+	existing := consoleValues{}
+	if utils.Exists(file) {
+		if d, err := utils.ReadFile(file); err == nil {
+			if err := yaml.Unmarshal([]byte(d), &existing); err == nil {
+				if existing.Ingress.ConsoleDns != "" {
+					consoleDns = existing.Ingress.ConsoleDns
+				}
+				if existing.Ingress.KasDns != "" {
+					kasDns = existing.Ingress.KasDns
+				}
+			}
+		}
+	}
+	for _, key := range []string{"jwt", "erlang", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
+		rand, err := crypto.RandStr(32)
+		if err != nil {
+			return "", err
+		}
+		randoms[key] = rand
+	}
+
+	if existing.Secrets.Erlang != "" {
+		randoms["erlang"] = existing.Secrets.Erlang
+	}
+
+	client := api.FromConfig(&conf)
+	me, err := client.Me()
+	if err != nil {
+		return "", fmt.Errorf("you must run `plural login` before installing")
+	}
+
+	root, err := git.Root()
+	if err != nil {
+		return "", err
+	}
+
+	project, err := manifest.ReadProject(filepath.Join(root, "workspace.yaml"))
+	if err != nil {
+		return "", err
+	}
+
+	prov, err := provider.FromManifest(project)
+	if err != nil {
+		return "", err
+	}
+
+	configuration := map[string]interface{}{
+		"consoleDns":    consoleDns,
+		"kasDns":        kasDns,
+		"aesKey":        utils.GenAESKey(),
+		"adminName":     me.Email,
+		"adminEmail":    me.Email,
+		"clusterName":   name,
+		"pluralToken":   conf.Token,
+		"postgresUrl":   dsn,
+		"provider":      prov.Name(),
+		"clusterIssuer": "plural",
+	}
+
+	if existing.Secrets.AesKey != "" {
+		configuration["aesKey"] = existing.Secrets.AesKey
+	}
+
+	for k, v := range randoms {
+		configuration[k] = v
+	}
+
+	cryptos, err := cryptoVals()
+	if err != nil {
+		return "", err
+	}
+
+	for k, v := range cryptos {
+		configuration[k] = v
+	}
+
+	clientId, clientSecret, err := ensureInstalledAndOidc(client, consoleDns)
+	if err != nil {
+		return "", err
+	}
+	configuration["pluralClientId"] = clientId
+	configuration["pluralClientSecret"] = clientSecret
+
+	tpl, err := fetchTemplate(tplUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return template.RenderString(string(tpl), configuration)
+}
+
+func cryptoVals() (map[string]string, error) {
+	res := make(map[string]string)
+	keyFile, err := config.PluralDir("key")
+	if err != nil {
+		return res, err
+	}
+
+	aes, err := utils.ReadFile(keyFile)
+	if err != nil {
+		return res, err
+	}
+	res["key"] = aes
+
+	identityFile, err := config.PluralDir("identity")
+	if err != nil {
+		return res, nil
+	}
+
+	identity, err := utils.ReadFile(identityFile)
+	if err != nil {
+		return res, nil
+	}
+	res["identity"] = identity
+	return res, nil
+}
 
 func CreateControlPlane(conf config.Config) (string, error) {
 	client := api.FromConfig(&conf)
@@ -88,7 +232,7 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	configuration["pluralClientId"] = clientId
 	configuration["pluralClientSecret"] = clientSecret
 
-	tpl, err := fetchTemplate()
+	tpl, err := fetchTemplate(templateUrl)
 	if err != nil {
 		return "", err
 	}
@@ -101,8 +245,8 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	return string(res), err
 }
 
-func fetchTemplate() (res []byte, err error) {
-	resp, err := http.Get(templateUrl)
+func fetchTemplate(url string) (res []byte, err error) {
+	resp, err := http.Get(url)
 	if err != nil {
 		return
 	}

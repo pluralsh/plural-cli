@@ -117,6 +117,10 @@ func equinixFromManifest(man *manifest.ProjectManifest) (*EQUINIXProvider, error
 	return &EQUINIXProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
+func (equinix *EQUINIXProvider) CreateBucket() error {
+	return nil
+}
+
 func (equinix *EQUINIXProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 
 	ctx["Region"] = equinix.Region()

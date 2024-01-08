@@ -24,6 +24,11 @@ func CurrentBranch() (string, error) {
 	return GitRaw("rev-parse", "--abbrev-ref", "HEAD")
 }
 
+func Submodule(url string) error {
+	_, err := GitRaw("submodule", "add", url)
+	return err
+}
+
 func HasUpstreamChanges() (bool, string, error) {
 	headRef, err := GitRaw("rev-parse", "--symbolic-full-name", "HEAD")
 	if err != nil {

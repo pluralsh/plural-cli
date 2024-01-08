@@ -45,6 +45,17 @@ func (p *Plural) cdCommands() []cli.Command {
 			Usage:  "sets up the plural console in an existing k8s cluster",
 		},
 		{
+			Name:   "control-plane-values",
+			Action: p.handlePrintControlPlaneValues,
+			Usage:  "dumps a values file for installing the plural console",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "domain", Usage: "The plural domain to use for this console", Required: true},
+				cli.StringFlag{Name: "dsn", Usage: "The Postgres DSN to use for database connections", Required: true},
+				cli.StringFlag{Name: "name", Usage: "The name given to the cluster", Required: true},
+				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
+			},
+		},
+		{
 			Name:   "uninstall",
 			Action: p.handleUninstallOperator,
 			Usage:  "uninstalls the deployment operator from the current cluster",
@@ -164,6 +175,17 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 	utils.Highlight("helm repo add plrl-console https://pluralsh.github.io/console\n")
 	utils.Highlight("helm upgrade --install --create-namespace -f values.secret.yaml console plrl-console/console -n plrl-console\n")
 	return nil
+}
+
+func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
+	p.InitPluralClient()
+	conf := config.Read()
+	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"))
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(c.String("file"), []byte(vals), 0644)
 }
 
 func (p *Plural) handleEject(c *cli.Context) (err error) {
