@@ -25,6 +25,7 @@ type Provider interface {
 	KubeConfig() error
 	KubeContext() string
 	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
+	CreateBucket() error
 	Context() map[string]interface{}
 	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
@@ -55,8 +56,12 @@ type Providers struct {
 
 var (
 	providers       = Providers{}
-	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
 )
+
+func IgnoreProviders(prov []string) {
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
+}
 
 func GetProviderScaffold(provider, version string) (string, error) {
 	if providers.Scaffolds == nil {

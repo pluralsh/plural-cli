@@ -32,7 +32,7 @@ func (c *consoleClient) ListClusterServices(clusterId, clusterName *string) ([]*
 	return result.ServiceDeployments.Edges, nil
 }
 
-func (c *consoleClient) CreateClusterService(clusterId, clusterName *string, attributes gqlclient.ServiceDeploymentAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+func (c *consoleClient) CreateClusterService(clusterId, clusterName *string, attributes gqlclient.ServiceDeploymentAttributes) (*gqlclient.ServiceDeploymentExtended, error) {
 	if clusterId == nil && clusterName == nil {
 		return nil, fmt.Errorf("clusterId and clusterName can not be null")
 	}
@@ -57,7 +57,7 @@ func (c *consoleClient) CreateClusterService(clusterId, clusterName *string, att
 	return result.CreateServiceDeployment, nil
 }
 
-func (c *consoleClient) UpdateClusterService(serviceId, serviceName, clusterName *string, attributes gqlclient.ServiceUpdateAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+func (c *consoleClient) UpdateClusterService(serviceId, serviceName, clusterName *string, attributes gqlclient.ServiceUpdateAttributes) (*gqlclient.ServiceDeploymentExtended, error) {
 	if serviceId == nil && serviceName == nil && clusterName == nil {
 		return nil, fmt.Errorf("serviceId, serviceName and clusterName can not be null")
 	}

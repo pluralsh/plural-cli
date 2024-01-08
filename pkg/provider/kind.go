@@ -71,6 +71,8 @@ func kindFromManifest(man *manifest.ProjectManifest) (*KINDProvider, error) {
 	return &KINDProvider{man.Cluster, man.Project, man.Bucket, man.Region, man.Context, nil}, nil
 }
 
+func (kind *KINDProvider) CreateBucket() error { return nil }
+
 func (kind *KINDProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
 
 	ctx["Region"] = kind.Region()
