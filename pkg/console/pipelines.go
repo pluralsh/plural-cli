@@ -55,6 +55,15 @@ func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttrib
 	return result.SavePipeline, nil
 }
 
+func (c *consoleClient) DeletePipeline(id string) (*gqlclient.PipelineFragment, error) {
+	result, err := c.client.DeletePipeline(c.ctx, id)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "DeletePipeline")
+	}
+
+	return result.DeletePipeline, nil
+}
+
 func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes, error) {
 	var pipe Pipeline
 	if err := yaml.Unmarshal(input, &pipe); err != nil {
@@ -104,18 +113,18 @@ func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
 		//}
 
 		// Convert labels and annotations to map[string]interface{}
-		labels := make(map[string]interface{})
-		for k, v := range g.Spec.Job.Labels {
-			labels[k] = v
-		}
-		annotations := make(map[string]interface{})
-		for k, v := range g.Spec.Job.Annotations {
-			annotations[k] = v
-		}
+		//labels := make(map[string]interface{})
+		//for k, v := range g.Spec.Job.Labels {
+		//	labels[k] = v
+		//}
+		//annotations := make(map[string]interface{})
+		//for k, v := range g.Spec.Job.Annotations {
+		//	annotations[k] = v
+		//}
 
 		// Update the labels and annotations in the gate spec
-		g.Spec.Job.Labels = labels
-		g.Spec.Job.Annotations = annotations
+		g.Spec.Job.Labels = g.Spec.Job.Labels
+		g.Spec.Job.Annotations = g.Spec.Job.Annotations
 
 		res = append(res, &gqlclient.PipelineGateAttributes{
 			Name: g.Name,

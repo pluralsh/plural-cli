@@ -32,6 +32,13 @@ func (p *Plural) pipelineCommands() []cli.Command {
 				},
 			},
 		},
+		{
+			Name:      "delete",
+			ArgsUsage: "PIPELINE_ID",
+			Action:    latestVersion(requireArgs(p.handleDeletePipeline, []string{"PIPELINE_ID"})),
+			Flags:     []cli.Flag{},
+			Usage:     "delete pipeline with id",
+		},
 	}
 }
 
@@ -70,6 +77,22 @@ func (p *Plural) handleCreatePipeline(c *cli.Context) error {
 	}
 
 	utils.Success("Pipeline %s created successfully\n", pipe.Name)
+	return nil
+}
+
+func (p *Plural) handleDeletePipeline(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	pipelineId := c.Args().Get(0)
+
+	pipe, err := p.ConsoleClient.DeletePipeline(pipelineId)
+	if err != nil {
+		fmt.Printf("Error deleting pipeline: %v\n", err)
+		return err
+	}
+
+	utils.Success("Pipeline %s with id %s deleted successfully\n", pipe.Name, pipe.ID)
 	return nil
 }
 
