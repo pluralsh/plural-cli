@@ -55,7 +55,7 @@ require (
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.15
-	github.com/pluralsh/console-client-go v0.0.70
+	github.com/pluralsh/console-client-go v0.0.80
 	github.com/pluralsh/gqlclient v1.11.0
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.1.1
@@ -75,6 +75,7 @@ require (
 	golang.org/x/mod v0.10.0
 	golang.org/x/oauth2 v0.8.0
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.11.2
 	k8s.io/api v0.26.4
 	k8s.io/apimachinery v0.26.4
@@ -284,7 +285,6 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/cluster-bootstrap v0.25.3 // indirect
 	k8s.io/kops v1.25.2 // indirect
 	k8s.io/kube-aggregator v0.25.2 // indirect
