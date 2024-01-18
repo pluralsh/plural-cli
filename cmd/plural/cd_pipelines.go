@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -67,14 +69,22 @@ func (p *Plural) handleCreatePipeline(c *cli.Context) error {
 	}
 
 	fmt.Printf("Pipeline name: %s\n", name)
-	fmt.Printf("Pipeline attributes: %+v\n", attrs)
-	PrettyPrintStruct(attrs, 3)
+	attrsJSON, err := json.MarshalIndent(attrs, "", "  ")
+	if err != nil {
+		fmt.Printf("failed to marshalindent pipeline input attributes:\n %s \n", err)
+	}
+	fmt.Printf("pipeline json from API: \n %s\n", string(attrsJSON))
 
 	pipe, err := p.ConsoleClient.SavePipeline(name, *attrs)
 	if err != nil {
 		fmt.Printf("Error saving pipeline: %v\n", err)
 		return err
 	}
+	pipeJSON, err := json.MarshalIndent(pipe, "", "  ")
+	if err != nil {
+		fmt.Printf("failed to marshalindent pipeline input attributes:\n %s \n", err)
+	}
+	fmt.Printf("pipeline json from API: \n %s\n", string(pipeJSON))
 
 	utils.Success("Pipeline %s created successfully\n", pipe.Name)
 	return nil
