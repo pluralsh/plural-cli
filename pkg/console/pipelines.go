@@ -81,6 +81,17 @@ func (c *consoleClient) ListPipelines() (*gqlclient.GetPipelines, error) {
 	return result, err
 }
 
+func (c *consoleClient) ListPipelineGates() (*gqlclient.GetClusterGates, error) {
+	//type GetClusterGates struct {
+	//	ClusterGates []*PipelineGateFragment "json:\"clusterGates\" graphql:\"clusterGates\""
+	//}
+	result, err := c.client.GetClusterGates(c.ctx)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetClusterGates")
+	}
+	return result, err
+}
+
 func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes, error) {
 	var pipe Pipeline
 	if err := yaml.Unmarshal(input, &pipe); err != nil {

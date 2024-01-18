@@ -40,6 +40,7 @@ type ConsoleClient interface {
 	DeletePipeline(id string) (*consoleclient.PipelineFragment, error)
 	GetPipeline(id string) (*consoleclient.PipelineFragment, error)
 	ListPipelines() (*consoleclient.GetPipelines, error)
+	ListPipelineGates() (*consoleclient.GetClusterGates, error)
 	CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error)
 	CreateProvider(attr consoleclient.ClusterProviderAttributes) (*consoleclient.CreateClusterProvider, error)
 	MyCluster() (*consoleclient.MyCluster, error)
