@@ -84,6 +84,11 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 		if service.DeletedAt != nil {
 			w.Write(LEVEL_0, "Status:\tTerminating (lasts %s)\n", *service.DeletedAt)
 		}
+		dryRun := false
+		if service.DryRun != nil {
+			dryRun = *service.DryRun
+		}
+		w.Write(LEVEL_0, "Dry run:\t%v\n", dryRun)
 		w.Write(LEVEL_0, "Git:\t\n")
 		w.Write(LEVEL_1, "Ref:\t%s\n", service.Git.Ref)
 		w.Write(LEVEL_1, "Folder:\t%s\n", service.Git.Folder)
