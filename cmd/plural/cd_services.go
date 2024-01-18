@@ -39,6 +39,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "git-ref", Usage: "git ref, can be branch, tag or commit sha", Required: true},
 				cli.StringFlag{Name: "git-folder", Usage: "folder within the source tree where manifests are located", Required: true},
 				cli.StringFlag{Name: "kustomize-folder", Usage: "folder within the kustomize file is located"},
+				cli.BoolFlag{Name: "dry-run", Usage: "dry run mode"},
 				cli.StringSliceFlag{
 					Name:  "conf",
 					Usage: "config name value",
@@ -62,6 +63,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 					Name:  "conf",
 					Usage: "config name value",
 				},
+				cli.BoolFlag{Name: "dry-run", Usage: "dry run mode"},
 			},
 		},
 		{
@@ -129,6 +131,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	repoId := c.String("repo-id")
 	gitRef := c.String("git-ref")
 	gitFolder := c.String("git-folder")
+	dryRun := c.Bool("dry-run")
 	attributes := gqlclient.ServiceDeploymentAttributes{
 		Name:         name,
 		Namespace:    namespace,
@@ -139,6 +142,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 			Folder: gitFolder,
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
+		DryRun:        lo.ToPtr(dryRun),
 	}
 
 	if c.String("kustomize-folder") != "" {
@@ -266,6 +270,9 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
+	if existing.DryRun != nil {
+		attributes.DryRun = existing.DryRun
+	}
 	if existing.Kustomize != nil {
 		attributes.Kustomize = &gqlclient.KustomizeAttributes{
 			Path: existing.Kustomize.Path,
@@ -312,6 +319,11 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 			Path: c.String("kustomize-folder"),
 		}
 	}
+	if c.IsSet("dry-run") {
+		dryRun := c.Bool("dry-run")
+		attributes.DryRun = &dryRun
+	}
+
 	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, serviceName, clusterName, attributes)
 	if err != nil {
 		return err
