@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
-	"strings"
 
 	"encoding/json"
 
+	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -40,6 +39,17 @@ func (p *Plural) pipelineCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(p.handleDeletePipeline, []string{"PIPELINE_ID"})),
 			Flags:     []cli.Flag{},
 			Usage:     "delete pipeline with id",
+		},
+		//{
+		//	Name:      "list",
+		//	ArgsUsage: "CLUSTER_ID",
+		//	Action:    latestVersion(requireArgs(p.handleListPipelines, []string{"CLUSTER_ID"})),
+		//	Usage:     "list cluster services",
+		//},
+		{
+			Name:   "list",
+			Action: latestVersion(p.handleListPipelines),
+			Usage:  "list pipelines",
 		},
 	}
 }
@@ -106,39 +116,21 @@ func (p *Plural) handleDeletePipeline(c *cli.Context) error {
 	return nil
 }
 
-func PrettyPrintStruct(v interface{}, depth int) {
-	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Ptr && !rv.IsNil() {
-		PrettyPrintStruct(rv.Elem().Interface(), depth)
-		return
+func (p *Plural) handleListPipelines(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		fmt.Printf("Error initializing client: %v\n", err)
+		return err
 	}
-
-	if rv.Kind() != reflect.Struct {
-		fmt.Printf("%s%v\n", strings.Repeat("  ", depth), rv.Interface())
-		return
+	pipelines, err := p.ConsoleClient.ListPipelines()
+	if err != nil {
+		fmt.Printf("Error getting pipelines: %v\n", err)
+		return err
 	}
-
-	for i := 0; i < rv.NumField(); i++ {
-		field := rv.Field(i)
-		fieldType := rv.Type().Field(i)
-		fmt.Printf("%s%s: ", strings.Repeat("  ", depth), fieldType.Name)
-
-		if field.Kind() == reflect.Struct {
-			fmt.Println()
-			PrettyPrintStruct(field.Interface(), depth+1)
-		} else if field.Kind() == reflect.Ptr {
-			if field.IsNil() {
-				fmt.Println("nil")
-			} else {
-				PrettyPrintStruct(field.Elem().Interface(), depth+1)
-			}
-		} else if field.Kind() == reflect.Slice || field.Kind() == reflect.Array {
-			fmt.Println()
-			for j := 0; j < field.Len(); j++ {
-				PrettyPrintStruct(field.Index(j).Interface(), depth+1)
-			}
-		} else {
-			fmt.Println(field.Interface())
-		}
+	if pipelines == nil {
+		return fmt.Errorf("returned objects list [ListPipelines] is nil")
 	}
+	headers := []string{"Id", "Name"}
+	return utils.PrintTable(pipelines.Pipelines.Edges, headers, func(pef *gqlclient.PipelineEdgeFragment) ([]string, error) {
+		return []string{pef.Node.ID, pef.Node.Name}, nil
+	})
 }

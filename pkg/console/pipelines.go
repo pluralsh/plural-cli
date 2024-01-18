@@ -64,6 +64,23 @@ func (c *consoleClient) DeletePipeline(id string) (*gqlclient.PipelineFragment, 
 	return result.DeletePipeline, nil
 }
 
+func (c *consoleClient) GetPipeline(id string) (*gqlclient.PipelineFragment, error) {
+	result, err := c.client.GetPipeline(c.ctx, id)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetPipeline")
+	}
+
+	return result.Pipeline, err
+}
+
+func (c *consoleClient) ListPipelines() (*gqlclient.GetPipelines, error) {
+	result, err := c.client.GetPipelines(c.ctx, nil)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetPipelines")
+	}
+	return result, err
+}
+
 func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes, error) {
 	var pipe Pipeline
 	if err := yaml.Unmarshal(input, &pipe); err != nil {
