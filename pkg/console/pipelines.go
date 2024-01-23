@@ -1,6 +1,7 @@
 package console
 
 import (
+	"encoding/json"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console-client-go"
@@ -8,6 +9,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
+	batchv1 "k8s.io/api/batch/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -39,11 +41,25 @@ type PipelineEdge struct {
 }
 
 type Gate struct {
-	Name      string                        `json:"name"`
-	Type      string                        `json:"type"`
-	Cluster   string                        `json:"cluster"`
-	ClusterID string                        `json:"clusterId,omitempty"`
-	Spec      *gqlclient.GateSpecAttributes `json:"spec,omitempty"`
+	Name      string             `json:"name"`
+	Type      string             `json:"type"`
+	Cluster   string             `json:"cluster"`
+	ClusterID string             `json:"clusterId,omitempty"`
+	Spec      GateSpecAttributes `json:"spec,omitempty"`
+}
+
+type GateSpecAttributes struct {
+	Job *GateJobAttributes `json:"job,omitempty"`
+}
+
+type GateJobAttributes struct {
+	Namespace string `json:"namespace"`
+	// if you'd rather define the job spec via straight k8s yaml
+	Raw            *batchv1.JobSpec                 `json:"raw,omitempty"`
+	Containers     []*gqlclient.ContainerAttributes `json:"containers,omitempty"`
+	Labels         *string                          `json:"labels,omitempty"`
+	Annotations    *string                          `json:"annotations,omitempty"`
+	ServiceAccount *string                          `json:"serviceAccount,omitempty"`
 }
 
 func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
@@ -134,33 +150,27 @@ func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes
 func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
 	res := make([]*gqlclient.PipelineGateAttributes, 0)
 	for _, g := range edge.Gates {
-		//gate := &Gate{}
-		//err := yaml.Unmarshal([]byte(g.Spec), gate)
-		//if err != nil {
-		//	// handle error
-		//}
-
-		// Convert labels and annotations to map[string]interface{}
-		//labels := make(map[string]interface{})
-		//for k, v := range g.Spec.Job.Labels {
-		//	labels[k] = v
-		//}
-		//annotations := make(map[string]interface{})
-		//for k, v := range g.Spec.Job.Annotations {
-		//	annotations[k] = v
-		//}
-
-		// Update the labels and annotations in the gate spec
-		g.Spec.Job.Labels = g.Spec.Job.Labels
-		g.Spec.Job.Annotations = g.Spec.Job.Annotations
+		rawJobSpec, err := json.Marshal(g.Spec.Job.Raw)
+		if err != nil {
+			utils.Error("unable to marshal raw job spec\n %s", err)
+		}
+		spec := &gqlclient.GateSpecAttributes{
+			Job: &gqlclient.GateJobAttributes{
+				Raw:            lo.ToPtr(string(rawJobSpec)),
+				Namespace:      g.Spec.Job.Namespace,
+				Containers:     g.Spec.Job.Containers,
+				Labels:         g.Spec.Job.Labels,
+				Annotations:    g.Spec.Job.Annotations,
+				ServiceAccount: g.Spec.Job.ServiceAccount,
+			},
+		}
 
 		res = append(res, &gqlclient.PipelineGateAttributes{
-			Name: g.Name,
-			Type: gqlclient.GateType(strings.ToUpper(g.Type)),
-			//pointerize the cluster id
+			Name:      g.Name,
+			Type:      gqlclient.GateType(strings.ToUpper(g.Type)),
 			Cluster:   lo.ToPtr(g.Cluster),
 			ClusterID: lo.ToPtr(g.ClusterID),
-			Spec:      g.Spec,
+			Spec:      spec,
 		})
 	}
 	return res
