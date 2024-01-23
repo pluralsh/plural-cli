@@ -505,6 +505,13 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "CD",
 		},
 		{
+			Name:        "pull-requests",
+			Aliases:     []string{"pr"},
+			Usage:       "Generate and manage pull requests",
+			Subcommands: prCommands(),
+			Category:    "CD",
+		},
+		{
 			Name:    "template",
 			Aliases: []string{"tpl"},
 			Usage:   "templates a helm chart to be uploaded to plural",
