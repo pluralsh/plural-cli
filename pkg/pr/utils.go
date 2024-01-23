@@ -1,23 +1,20 @@
 package pr
 
 import (
-	"bytes"
 	"os"
-	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/osteele/liquid"
 )
 
-func templateReplacement(data string, ctx map[string]interface{}) (string, error) {
-	tpl, err := template.New("gotpl").Funcs(sprig.TxtFuncMap()).Parse(data)
-	if err != nil {
-		return "", err
+var (
+	liquidEngine = liquid.NewEngine()
+)
+
+func templateReplacement(data []byte, ctx map[string]interface{}) ([]byte, error) {
+	bindings := map[string]interface{}{
+		"context": ctx,
 	}
-	var buf bytes.Buffer
-	if err := tpl.Execute(&buf, map[string]interface{}{"context": ctx}); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return liquidEngine.ParseAndRender(data, bindings)
 }
 
 func replaceInPlace(path string, rep func(data []byte) ([]byte, error)) error {

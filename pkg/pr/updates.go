@@ -7,7 +7,7 @@ import (
 )
 
 func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
-	replacement, err := templateReplacement(updates.ReplaceTemplate, ctx)
+	replacement, err := templateReplacement([]byte(updates.ReplaceTemplate), ctx)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 	})
 }
 
-func updateFile(path string, updates *UpdateSpec, replacement string) error {
+func updateFile(path string, updates *UpdateSpec, replacement []byte) error {
 	switch updates.MatchStrategy {
 	case "any":
 		return anyUpdateFile(path, updates, replacement)
@@ -47,14 +47,14 @@ func updateFile(path string, updates *UpdateSpec, replacement string) error {
 	}
 }
 
-func anyUpdateFile(path string, updates *UpdateSpec, replacement string) error {
+func anyUpdateFile(path string, updates *UpdateSpec, replacement []byte) error {
 	return replaceInPlace(path, func(data []byte) ([]byte, error) {
 		for _, reg := range updates.Regexes {
 			r, err := regexp.Compile(reg)
 			if err != nil {
 				return data, err
 			}
-			data = r.ReplaceAll(data, []byte(replacement))
+			data = r.ReplaceAll(data, replacement)
 		}
 		return data, nil
 	})
@@ -64,13 +64,13 @@ func allUpdateFile(path string, updates *UpdateSpec) error {
 	return nil
 }
 
-func recursiveUpdateFile(path string, updates *UpdateSpec, replacement string) error {
+func recursiveUpdateFile(path string, updates *UpdateSpec, replacement []byte) error {
 	return replaceInPlace(path, func(data []byte) ([]byte, error) {
 		return recursiveReplace(data, updates.Regexes, replacement)
 	})
 }
 
-func recursiveReplace(data []byte, regexes []string, replacement string) ([]byte, error) {
+func recursiveReplace(data []byte, regexes []string, replacement []byte) ([]byte, error) {
 	if len(regexes) == 0 {
 		return []byte(replacement), nil
 	}
