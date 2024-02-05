@@ -163,11 +163,11 @@ brews:
     test: |
       system "#{bin}/plural", "--help"
 
-    # Packages your package depends on.
-    dependencies:
-      - name: helm
-        type: recommended
-      - name: kubectl
-        type: recommended
-      - name: terraform
-        type: recommended
+    # # Packages your package depends on.
+    # dependencies:
+    #   - name: helm
+    #     type: recommended
+    #   - name: kubectl
+    #     type: recommended
+    #   - name: terraform
+    #     type: recommended
