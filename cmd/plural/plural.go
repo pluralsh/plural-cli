@@ -530,14 +530,14 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   latestVersion(diffed),
 			Category: "Workspace",
 		},
-		{
-			Name:        "bootstrap",
-			Usage:       "Commands for bootstrapping cluster",
-			Subcommands: p.bootstrapCommands(),
-			Category:    "Bootstrap",
-			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
-		},
-		p.uiCommands(),
+		// {
+		// 	Name:        "bootstrap",
+		// 	Usage:       "Commands for bootstrapping cluster",
+		// 	Subcommands: p.bootstrapCommands(),
+		// 	Category:    "Bootstrap",
+		// 	Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
+		// },
+		// p.uiCommands(),
 	}
 }
 

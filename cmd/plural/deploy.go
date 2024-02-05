@@ -9,7 +9,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/application"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap"
 	"github.com/pluralsh/plural-cli/pkg/diff"
 	"github.com/pluralsh/plural-cli/pkg/executor"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
@@ -181,10 +180,10 @@ func (p *Plural) deploy(c *cli.Context) error {
 		return err
 	}
 
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
+	// project, err := manifest.FetchProject()
+	// if err != nil {
+	// 	return err
+	// }
 
 	var sorted []string
 	switch {
@@ -207,22 +206,22 @@ func (p *Plural) deploy(c *cli.Context) error {
 			continue
 		}
 
-		if repo == Bootstrap && project.ClusterAPI {
-			ready, err := bootstrap.CheckClusterReadiness(project.Cluster, Bootstrap)
+		// if repo == Bootstrap && project.ClusterAPI {
+		// 	ready, err := bootstrap.CheckClusterReadiness(project.Cluster, Bootstrap)
 
-			// Stop if cluster exists, but it is not ready yet.
-			if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
-				return err
-			}
+		// 	// Stop if cluster exists, but it is not ready yet.
+		// 	if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
+		// 		return err
+		// 	}
 
-			// If cluster does not exist bootstrap needs to be done first.
-			if !ready {
-				err := bootstrap.BootstrapCluster(RunPlural)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		// 	// If cluster does not exist bootstrap needs to be done first.
+		// 	if !ready {
+		// 		err := bootstrap.BootstrapCluster(RunPlural)
+		// 		if err != nil {
+		// 			return err
+		// 		}
+		// 	}
+		// }
 
 		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
 		if err != nil {
@@ -471,15 +470,19 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 		return err
 	}
 
-	if repo == Bootstrap && clusterAPI {
-		if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
-			return err
-		}
+	// if repo == Bootstrap && clusterAPI {
+	// 	if err = bootstrap.DestroyCluster(workspace.Destroy, RunPlural); err != nil {
+	// 		return err
+	// 	}
 
-	} else {
-		if err := workspace.Destroy(); err != nil {
-			return err
-		}
+	// } else {
+	// 	if err := workspace.Destroy(); err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	if err := workspace.Destroy(); err != nil {
+		return err
 	}
 
 	if delete {
