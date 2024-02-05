@@ -28,6 +28,14 @@ type UpdateSpec struct {
 }
 
 type CreateSpec struct {
+	ExternalDir string
+	Templates   []*CreateTemplate `json:"templates"`
+}
+
+type CreateTemplate struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	External    bool   `json:"external"`
 }
 
 func Build(path string) (*PrTemplate, error) {

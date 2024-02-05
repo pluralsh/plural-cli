@@ -17,13 +17,13 @@ func templateReplacement(data []byte, ctx map[string]interface{}) ([]byte, error
 	return liquidEngine.ParseAndRender(data, bindings)
 }
 
-func replaceInPlace(path string, rep func(data []byte) ([]byte, error)) error {
-	info, err := os.Stat(path)
+func replaceTo(from, to string, rep func(data []byte) ([]byte, error)) error {
+	info, err := os.Stat(from)
 	if err != nil {
 		return err
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(from)
 	if err != nil {
 		return err
 	}
@@ -32,5 +32,9 @@ func replaceInPlace(path string, rep func(data []byte) ([]byte, error)) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, resData, info.Mode())
+	return os.WriteFile(to, resData, info.Mode())
+}
+
+func replaceInPlace(path string, rep func(data []byte) ([]byte, error)) error {
+	return replaceTo(path, path, rep)
 }
