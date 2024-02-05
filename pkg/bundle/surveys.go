@@ -101,14 +101,14 @@ func fileSurvey(def string, item *api.ConfigurationItem) (prompt survey.Prompt, 
 			if err != nil {
 				path = toComplete
 			}
-			files, _ := filepath.Glob(cleanPath(path) + "*")
+			files, _ := filepath.Glob(CleanPath(path) + "*")
 			return files
 		},
 	}
 	return
 }
 
-func cleanPath(path string) string {
+func CleanPath(path string) string {
 	if strings.HasSuffix(path, "/") {
 		return path
 	}

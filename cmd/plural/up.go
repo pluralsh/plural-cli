@@ -32,6 +32,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
+	if err := ctx.Backfill(); err != nil {
+		return err
+	}
+
 	if err := ctx.Generate(); err != nil {
 		return err
 	}
