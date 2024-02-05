@@ -29,10 +29,6 @@ builds:
       - -X "github.com/pluralsh/plural-cli/cmd/plural.Commit={{.Commit}}"
       - -X "github.com/pluralsh/plural-cli/cmd/plural.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-    tags:
-      - desktop
-      - production
-      - ui
     binary: plural
     # Do not embed UI into linux/arm64 and windows/arm64 binaries
     overrides:
@@ -46,7 +42,7 @@ builds:
         tags: [ windows ]
         env:
           - CGO_ENABLED=0
-  # Build CLI binary without embedded UI for linux. Required by our Console.
+  # Build CLI binary without embedded UI for linux.
   - id: plural-cli-console
     targets:
       - linux_amd64
