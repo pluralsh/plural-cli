@@ -2,6 +2,7 @@ package console
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -20,6 +21,20 @@ const (
 	LEVEL_3
 	LEVEL_4
 )
+
+func DescribeServiceContext(sc *consoleclient.ServiceContextFragment) (string, error) {
+	return tabbedString(func(out io.Writer) error {
+		w := NewPrefixWriter(out)
+		w.Write(LEVEL_0, "Id:\t%s\n", sc.ID)
+		w.Write(LEVEL_0, "Configuration:\n  \tName\tContext\n")
+		w.Write(LEVEL_1, "\t----\t------\n")
+		for name, value := range sc.Configuration {
+			configurationJson, _ := json.Marshal(value)
+			w.Write(LEVEL_1, "\t%v \t%v\n", name, string(configurationJson))
+		}
+		return nil
+	})
+}
 
 func DescribeCluster(cluster *consoleclient.ClusterFragment) (string, error) {
 	return tabbedString(func(out io.Writer) error {
