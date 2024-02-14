@@ -10,7 +10,7 @@ import (
 
 type consoleClient struct {
 	ctx    context.Context
-	client *consoleclient.Client
+	client consoleclient.ConsoleClient
 	url    string
 	token  string
 }
@@ -40,16 +40,34 @@ type ConsoleClient interface {
 	CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error)
 	CreateProvider(attr consoleclient.ClusterProviderAttributes) (*consoleclient.CreateClusterProvider, error)
 	MyCluster() (*consoleclient.MyCluster, error)
+	SaveServiceContext(name string, attributes consoleclient.ServiceContextAttributes) (*consoleclient.ServiceContextFragment, error)
+	GetServiceContext(name string) (*consoleclient.ServiceContextFragment, error)
+}
+
+type authedTransport struct {
+	token   string
+	wrapped http.RoundTripper
+}
+
+func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "Token "+t.token)
+	return t.wrapped.RoundTrip(req)
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
+
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			token:   token,
+			wrapped: http.DefaultTransport,
+		},
+	}
+
 	return &consoleClient{
-		url:   url,
-		token: token,
-		client: consoleclient.NewClient(http.DefaultClient, fmt.Sprintf("%s/gql", url), func(req *http.Request) {
-			req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
-		}),
-		ctx: context.Background(),
+		url:    url,
+		token:  token,
+		client: consoleclient.NewClient(&httpClient, fmt.Sprintf("%s/gql", url), nil),
+		ctx:    context.Background(),
 	}, nil
 }
 

@@ -27,6 +27,7 @@ func (p *Plural) cdCommands() []cli.Command {
 		p.cdCredentials(),
 		p.cdClusters(),
 		p.cdServices(),
+		p.cdContexts(),
 		p.cdRepositories(),
 		p.cdPipelines(),
 		{
