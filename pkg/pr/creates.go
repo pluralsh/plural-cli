@@ -15,7 +15,13 @@ func applyCreates(creates *CreateSpec, ctx map[string]interface{}) error {
 			source = filepath.Join(creates.ExternalDir, source)
 		}
 
-		if err := replaceTo(source, tpl.Destination, func(data []byte) ([]byte, error) {
+		destPath := []byte(tpl.Destination)
+		dest, err := templateReplacement(destPath, ctx)
+		if err != nil {
+			dest = destPath
+		}
+
+		if err := replaceTo(source, string(dest), func(data []byte) ([]byte, error) {
 			return templateReplacement(data, ctx)
 		}); err != nil {
 			return err
