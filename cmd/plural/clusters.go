@@ -4,15 +4,10 @@ import (
 	"fmt"
 
 	"github.com/urfave/cli"
-	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap/aws"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap/validation"
 	"github.com/pluralsh/plural-cli/pkg/cluster"
 	"github.com/pluralsh/plural-cli/pkg/config"
-	"github.com/pluralsh/plural-cli/pkg/exp"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/machinepool"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
@@ -82,87 +77,87 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
-		{
-			Name:     "migrate",
-			Usage:    "migrate to Cluster API",
-			Action:   latestVersion(rooted(initKubeconfig(p.handleMigration))),
-			Category: "Publishing",
-			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
-		},
-		{
-			Name:        "aws-auth",
-			Usage:       "fetches the current state of your aws auth config map",
-			Subcommands: awsAuthCommands(),
-		},
+		// {
+		// 	Name:     "migrate",
+		// 	Usage:    "migrate to Cluster API",
+		// 	Action:   latestVersion(rooted(initKubeconfig(p.handleMigration))),
+		// 	Category: "Publishing",
+		// 	Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
+		// },
+		// {
+		// 	Name:        "aws-auth",
+		// 	Usage:       "fetches the current state of your aws auth config map",
+		// 	Subcommands: awsAuthCommands(),
+		// },
 	}
 }
 
-func (p *Plural) handleMigration(_ *cli.Context) error {
-	p.InitPluralClient()
-	if err := validation.ValidateMigration(p); err != nil {
-		return err
-	}
+// func (p *Plural) handleMigration(_ *cli.Context) error {
+// 	p.InitPluralClient()
+// 	if err := validation.ValidateMigration(p); err != nil {
+// 		return err
+// 	}
 
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
+// 	project, err := manifest.FetchProject()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if project.ClusterAPI {
-		utils.Success("Cluster already migrated.\n")
-		return nil
-	}
+// 	if project.ClusterAPI {
+// 		utils.Success("Cluster already migrated.\n")
+// 		return nil
+// 	}
 
-	return bootstrap.MigrateCluster(RunPlural)
-}
+// 	return bootstrap.MigrateCluster(RunPlural)
+// }
 
-func awsAuthCommands() []cli.Command {
-	return []cli.Command{
-		{
-			Name:   "fetch",
-			Usage:  "gets the current state of your aws auth configmap",
-			Action: handleAwsAuth,
-		},
-		{
-			Name:  "update",
-			Usage: "adds a user or role to the aws auth configmap",
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "role-arn"},
-				cli.StringFlag{Name: "user-arn"},
-			},
-			Action: handleModifyAwsAuth,
-		},
-	}
-}
+// func awsAuthCommands() []cli.Command {
+// 	return []cli.Command{
+// 		{
+// 			Name:   "fetch",
+// 			Usage:  "gets the current state of your aws auth configmap",
+// 			Action: handleAwsAuth,
+// 		},
+// 		{
+// 			Name:  "update",
+// 			Usage: "adds a user or role to the aws auth configmap",
+// 			Flags: []cli.Flag{
+// 				cli.StringFlag{Name: "role-arn"},
+// 				cli.StringFlag{Name: "user-arn"},
+// 			},
+// 			Action: handleModifyAwsAuth,
+// 		},
+// 	}
+// }
 
-func handleAwsAuth(c *cli.Context) error {
-	auth, err := aws.FetchAuth()
-	if err != nil {
-		return err
-	}
+// func handleAwsAuth(c *cli.Context) error {
+// 	auth, err := aws.FetchAuth()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	res, err := yaml.Marshal(auth)
-	if err != nil {
-		return err
-	}
+// 	res, err := yaml.Marshal(auth)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	fmt.Println(string(res))
-	return nil
-}
+// 	fmt.Println(string(res))
+// 	return nil
+// }
 
-func handleModifyAwsAuth(c *cli.Context) error {
-	role, user := c.String("role-arn"), c.String("user-arn")
+// func handleModifyAwsAuth(c *cli.Context) error {
+// 	role, user := c.String("role-arn"), c.String("user-arn")
 
-	if role != "" {
-		return aws.AddRole(role)
-	}
+// 	if role != "" {
+// 		return aws.AddRole(role)
+// 	}
 
-	if user != "" {
-		return aws.AddUser(user)
-	}
+// 	if user != "" {
+// 		return aws.AddUser(user)
+// 	}
 
-	return fmt.Errorf("you must specify at least one of role-arn or user-arn")
-}
+// 	return fmt.Errorf("you must specify at least one of role-arn or user-arn")
+// }
 
 func handleClusterWait(c *cli.Context) error {
 	namespace := c.Args().Get(0)
