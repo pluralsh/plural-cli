@@ -7,6 +7,7 @@ import (
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/containers"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -64,6 +65,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 					Usage: "config name value",
 				},
 				cli.BoolFlag{Name: "dry-run", Usage: "dry run mode"},
+				cli.StringSliceFlag{
+					Name:  "context-id",
+					Usage: "bind service context",
+				},
 			},
 		},
 		{
@@ -111,7 +116,17 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	}
 	headers := []string{"Id", "Name", "Namespace", "Git Ref", "Git Folder", "Repo"}
 	return utils.PrintTable(sd, headers, func(sd *gqlclient.ServiceDeploymentEdgeFragment) ([]string, error) {
-		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, sd.Node.Git.Ref, sd.Node.Git.Folder, sd.Node.Repository.URL}, nil
+		ref := ""
+		folder := ""
+		url := ""
+		if sd.Node.Git != nil {
+			ref = sd.Node.Git.Ref
+			folder = sd.Node.Git.Folder
+		}
+		if sd.Node.Repository != nil {
+			url = sd.Node.Repository.URL
+		}
+		return []string{sd.Node.ID, sd.Node.Name, sd.Node.Namespace, ref, folder, url}, nil
 	})
 }
 
@@ -249,6 +264,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
+	contextBindings := containers.NewSet[string]()
 	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
 	if err != nil {
 		return err
@@ -270,6 +286,10 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		},
 		Configuration: []*gqlclient.ConfigAttributes{},
 	}
+	for _, context := range existing.Contexts {
+		contextBindings.Add(context.ID)
+	}
+
 	if existing.DryRun != nil {
 		attributes.DryRun = existing.DryRun
 	}
@@ -296,6 +316,21 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	var confArgs []string
 	if c.IsSet("conf") {
 		confArgs = append(confArgs, c.StringSlice("conf")...)
+	}
+	var contextArgs []string
+	if c.IsSet("context-id") {
+		contextArgs = append(contextArgs, c.StringSlice("context-id")...)
+	}
+	for _, context := range contextArgs {
+		contextBindings.Add(context)
+	}
+	if contextBindings.Len() > 0 {
+		attributes.ContextBindings = make([]*gqlclient.ContextBindingAttributes, 0)
+		for _, context := range contextBindings.List() {
+			attributes.ContextBindings = append(attributes.ContextBindings, &gqlclient.ContextBindingAttributes{
+				ContextID: context,
+			})
+		}
 	}
 
 	updateConfigurations := map[string]string{}
