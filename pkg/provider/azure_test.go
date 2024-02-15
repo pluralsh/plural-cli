@@ -108,7 +108,7 @@ func TestCreateBucket(t *testing.T) {
 			prov, err := provider.AzureFromManifest(test.manifest, clientSet)
 			assert.NoError(t, err)
 
-			err = prov.CreateBucket("test")
+			err = prov.CreateBucket()
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
