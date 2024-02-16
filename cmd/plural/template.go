@@ -2,7 +2,6 @@ package plural
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"os"
 
@@ -12,11 +11,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	lua "github.com/pluralsh/plural-cli/pkg/scaffold/template"
 	"github.com/pluralsh/plural-cli/pkg/template"
-	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
-	k8sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func testTemplate(c *cli.Context) error {
@@ -106,45 +102,4 @@ type GrafanaDashboard struct {
 			LegendFormat string
 		}
 	}
-}
-
-func formatDashboard(c *cli.Context) error {
-	if err := v1alpha1.AddToScheme(scheme.Scheme); err != nil {
-		return err
-	}
-	s := k8sjson.NewYAMLSerializer(k8sjson.DefaultMetaFactory, scheme.Scheme,
-		scheme.Scheme)
-
-	dashboard := v1alpha1.Dashboard{}
-	grafana := GrafanaDashboard{}
-	data, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(data, &grafana); err != nil {
-		return err
-	}
-
-	graphs := make([]*v1alpha1.DashboardGraph, 0)
-	for _, panel := range grafana.Panels {
-		graph := &v1alpha1.DashboardGraph{}
-		graph.Name = panel.Title
-		graph.Queries = make([]*v1alpha1.GraphQuery, 0)
-		for _, target := range panel.Targets {
-			query := &v1alpha1.GraphQuery{
-				Query:  target.Expr,
-				Legend: target.LegendFormat,
-			}
-			graph.Queries = append(graph.Queries, query)
-		}
-		graphs = append(graphs, graph)
-	}
-
-	dashboard.Spec.Graphs = graphs
-	dashboard.Spec.Timeslices = []string{"1h", "2h", "6h", "1d", "7d"}
-	dashboard.Spec.DefaultTime = "1h"
-	dashboard.Spec.Name = grafana.Title
-
-	return s.Encode(&dashboard, os.Stdout)
 }

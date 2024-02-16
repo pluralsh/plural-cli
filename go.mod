@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.21
+go 1.22
 
 require (
 	cloud.google.com/go/compute v1.19.2
@@ -85,7 +85,6 @@ require (
 	sigs.k8s.io/cluster-api v1.4.3
 	sigs.k8s.io/cluster-api-operator v0.2.0
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.1.4
-	sigs.k8s.io/kind v0.18.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -103,7 +102,6 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.1.1 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
-	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
@@ -185,7 +183,6 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-github/v48 v48.2.0 // indirect
 	github.com/google/s2a-go v0.1.3 // indirect
-	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect

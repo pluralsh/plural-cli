@@ -3,6 +3,7 @@ package plural
 import (
 	"encoding/json"
 	"fmt"
+
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"

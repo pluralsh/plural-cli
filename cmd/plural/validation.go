@@ -5,9 +5,6 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
-
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/executor"
@@ -17,6 +14,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/errors"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/urfave/cli"
 )
 
 func init() {
@@ -211,6 +210,17 @@ func upstreamSynced(fn func(*cli.Context) error) func(*cli.Context) error {
 		force := c.Bool("force")
 		if !changed && !force {
 			return errors.ErrorWrap(errRemoteDiff, fmt.Sprintf("Expecting HEAD at commit=%s", sha))
+		}
+
+		return fn(c)
+	}
+}
+
+func requireKind(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		exists, _ := utils.Which("kind")
+		if !exists {
+			return fmt.Errorf("The kind CLI is not installed")
 		}
 
 		return fn(c)
