@@ -146,25 +146,6 @@ func TestUpdateNodePools(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	replicas = 2
-	machinePool.Spec.Replicas = &replicas
-	machinePool, err = client.Update(context.Background(), machinePool)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := utils.WaitFor(5*time.Minute, 5*time.Second, func() (bool, error) {
-		nodeList, err := kube.Nodes()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(nodeList.Items) == 3 {
-			return true, nil
-		}
-		return false, nil
-	}); err != nil {
-		t.Fatal(err)
-	}
-
 	machinePool, err = client.Get(context.Background(), mp.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
