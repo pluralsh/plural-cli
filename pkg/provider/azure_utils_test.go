@@ -47,6 +47,7 @@ func getFakeClientSetWithAccountsClient(existingAccount *armstorage.Account) *pr
 			CreateCalledCount: 0,
 		},
 		Containers: &fakeContainersClient{},
+		Groups:     &fakeGroupsClient{},
 	}
 }
 

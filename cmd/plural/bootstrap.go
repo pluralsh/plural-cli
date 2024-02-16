@@ -3,10 +3,15 @@ package plural
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -21,13 +26,6 @@ import (
 	clusterapi "sigs.k8s.io/cluster-api/api/v1beta1"
 	apiclient "sigs.k8s.io/cluster-api/cmd/clusterctl/client"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/kind/pkg/cluster"
-
-	"github.com/pluralsh/plural-cli/pkg/manifest"
-
-	"github.com/pluralsh/plural-cli/pkg/kubernetes"
-	"github.com/pluralsh/plural-cli/pkg/provider"
-	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 var runtimescheme = runtime.NewScheme()
@@ -38,6 +36,18 @@ func init() {
 	utilruntime.Must(clusterapi.AddToScheme(runtimescheme))
 	utilruntime.Must(clusterapioperator.AddToScheme(runtimescheme))
 }
+
+const (
+	kindConfig = `kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: dual
+nodes:
+- role: control-plane
+  extraMounts:
+    - hostPath: /var/run/docker.sock
+      containerPath: /var/run/docker.sock`
+)
 
 func (p *Plural) bootstrapCommands() []cli.Command {
 	return []cli.Command{
@@ -87,13 +97,13 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 					Usage: "skip creating when cluster exists",
 				},
 			},
-			Action: latestVersion(requireArgs(handleCreateCluster, []string{"NAME"})),
+			Action: latestVersion(requireKind(requireArgs(handleCreateCluster, []string{"NAME"}))),
 		},
 		{
 			Name:      "delete",
 			ArgsUsage: "NAME",
 			Usage:     "Deletes bootstrap cluster",
-			Action:    latestVersion(requireArgs(handleDeleteCluster, []string{"NAME"})),
+			Action:    latestVersion(requireKind(requireArgs(handleDeleteCluster, []string{"NAME"}))),
 		},
 		{
 			Name:  "move",
@@ -254,53 +264,45 @@ func (p *Plural) handleCreateNamespace(c *cli.Context) error {
 
 func handleDeleteCluster(c *cli.Context) error {
 	name := c.Args().Get(0)
-	provider := cluster.NewProvider()
-	utils.Highlight("Deleting cluster %s ...\n", name)
-	return provider.Delete(name, "")
+	return utils.Exec("kind", "delete", "cluster", "--name", name)
 }
 
 func handleCreateCluster(c *cli.Context) error {
 	name := c.Args().Get(0)
 	imageFlag := c.String("image")
 	skipCreation := c.Bool("skip-if-exists")
-	provider := cluster.NewProvider()
-	utils.Highlight("Creating cluster %s ...\n", name)
-	n, err := provider.ListNodes(name)
-	if err != nil {
-		return err
-	}
-	if len(n) != 0 && skipCreation {
+	if utils.IsKindClusterAlreadyExists(name) && skipCreation {
 		utils.Highlight("Cluster %s already exists \n", name)
 		return nil
 	}
-	if err := provider.Create(
-		name,
-		cluster.CreateWithNodeImage(imageFlag),
-		cluster.CreateWithRetain(false),
-		cluster.CreateWithDisplayUsage(true),
-		cluster.CreateWithDisplaySalutation(true),
-		cluster.CreateWithRawConfig([]byte(`kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-networking:
-  ipFamily: dual
-nodes:
-- role: control-plane
-  extraMounts:
-    - hostPath: /var/run/docker.sock
-      containerPath: /var/run/docker.sock
-`)),
-	); err != nil {
-		return errors.Wrap(err, "failed to create cluster")
-	}
-	kubeconfig, err := provider.KubeConfig(name, false)
+
+	dir, err := os.MkdirTemp("", "kind")
 	if err != nil {
 		return err
 	}
-	client, err := getClient(kubeconfig)
+	defer os.RemoveAll(dir)
+	config := path.Join(dir, "config.yaml")
+	if err := os.WriteFile(config, []byte(kindConfig), 0644); err != nil {
+		return err
+	}
+	args := []string{"create", "cluster", "--name", name, "--config", config}
+	if imageFlag != "" {
+		args = append(args, "--image", imageFlag)
+	}
+
+	if err := utils.Exec("kind", args...); err != nil {
+		return err
+	}
+
+	kubeconfig, err := utils.GetKindClusterKubeconfig(name, false)
 	if err != nil {
 		return err
 	}
 
+	client, err := getClient(kubeconfig)
+	if err != nil {
+		return err
+	}
 	if err := client.Create(context.Background(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "bootstrap",
@@ -308,8 +310,7 @@ nodes:
 	}); err != nil {
 		return err
 	}
-
-	internalKubeconfig, err := provider.KubeConfig(name, true)
+	internalKubeconfig, err := utils.GetKindClusterKubeconfig(name, true)
 	if err != nil {
 		return err
 	}

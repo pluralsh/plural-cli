@@ -11,7 +11,6 @@ import (
 	"golang.org/x/oauth2/google"
 	v1 "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/kind/pkg/cluster"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bootstrap/azure"
@@ -27,10 +26,7 @@ const localClusterContext = "kind-bootstrap"
 var disableAzurePodIdentityFlag = []string{"--set", "bootstrap.azurePodIdentity.enabled=false"}
 
 func bootstrapClusterExists() bool {
-	clusterName := "bootstrap"
-	p := cluster.NewProvider()
-	n, _ := p.ListNodes(clusterName)
-	return len(n) > 0
+	return utils.IsKindClusterAlreadyExists("bootstrap")
 }
 
 func applyManifest(manifest string) error {
