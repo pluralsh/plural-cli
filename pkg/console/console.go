@@ -42,6 +42,7 @@ type ConsoleClient interface {
 	MyCluster() (*consoleclient.MyCluster, error)
 	SaveServiceContext(name string, attributes consoleclient.ServiceContextAttributes) (*consoleclient.ServiceContextFragment, error)
 	GetServiceContext(name string) (*consoleclient.ServiceContextFragment, error)
+	KickClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 }
 
 type authedTransport struct {

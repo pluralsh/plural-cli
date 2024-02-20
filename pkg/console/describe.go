@@ -103,7 +103,12 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 		if service.DryRun != nil {
 			dryRun = *service.DryRun
 		}
+		templated := true
+		if service.Templated != nil {
+			templated = *service.Templated
+		}
 		w.Write(LEVEL_0, "Dry run:\t%v\n", dryRun)
+		w.Write(LEVEL_0, "Templated:\t%v\n", templated)
 		w.Write(LEVEL_0, "Git:\t\n")
 		w.Write(LEVEL_1, "Ref:\t%s\n", service.Git.Ref)
 		w.Write(LEVEL_1, "Folder:\t%s\n", service.Git.Folder)
