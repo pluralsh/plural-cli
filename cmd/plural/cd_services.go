@@ -100,6 +100,12 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Action:    latestVersion(requireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
 			Usage:     "delete cluster service",
 		},
+		{
+			Name:      "kick",
+			ArgsUsage: "SERVICE_ID",
+			Action:    latestVersion(requireArgs(p.handleKickClusterService, []string{"SERVICE_ID"})),
+			Usage:     "force sync cluster service",
+		},
 	}
 }
 
@@ -429,6 +435,29 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	}
 
 	utils.Success("Service %s has been deleted successfully\n", deleted.DeleteServiceDeployment.Name)
+	return nil
+}
+
+func (p *Plural) handleKickClusterService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
+	svc, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return err
+	}
+	if svc == nil {
+		return fmt.Errorf("Could not find service for %s", c.Args().Get(0))
+	}
+	kick, err := p.ConsoleClient.KickClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return err
+	}
+	utils.Success("Service %s has been sync successfully\n", kick.Name)
 	return nil
 }
 

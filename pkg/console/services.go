@@ -136,3 +136,28 @@ func (c *consoleClient) DeleteClusterService(serviceId string) (*gqlclient.Delet
 
 	return result, nil
 }
+
+func (c *consoleClient) KickClusterService(serviceId, serviceName, clusterName *string) (*gqlclient.ServiceDeploymentExtended, error) {
+	if serviceId == nil && serviceName == nil && clusterName == nil {
+		return nil, fmt.Errorf("serviceId, serviceName and clusterName can not be null")
+	}
+	if serviceId != nil {
+		result, err := c.client.KickService(c.ctx, *serviceId)
+		if err != nil {
+			return nil, api.GetErrorResponse(err, "KickService")
+		}
+		if result == nil {
+			return nil, fmt.Errorf("the result from KickService is null")
+		}
+		return result.KickService, nil
+	}
+	result, err := c.client.KickServiceByHandle(c.ctx, *clusterName, *serviceName)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "KickServiceByHandle")
+	}
+	if result == nil {
+		return nil, fmt.Errorf("the result from KickServiceByHandle is null")
+	}
+
+	return result.KickService, nil
+}
