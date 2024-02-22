@@ -3,7 +3,7 @@ FROM ubuntu:22.10 as user
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
 
-FROM golang:1.20-alpine3.17 AS builder
+FROM golang:1.22-alpine3.19 AS builder
 
 WORKDIR /workspace
 
