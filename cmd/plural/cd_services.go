@@ -65,6 +65,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 					Usage: "config name value",
 				},
 				cli.BoolFlag{Name: "dry-run", Usage: "dry run mode"},
+				cli.BoolFlag{Name: "templated", Usage: "set templated flag"},
 				cli.StringSliceFlag{
 					Name:  "context-id",
 					Usage: "bind service context",
@@ -363,6 +364,10 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 	if c.IsSet("dry-run") {
 		dryRun := c.Bool("dry-run")
 		attributes.DryRun = &dryRun
+	}
+	if c.IsSet("templated") {
+		templated := c.Bool("templated")
+		attributes.Templated = &templated
 	}
 
 	sd, err := p.ConsoleClient.UpdateClusterService(serviceId, serviceName, clusterName, attributes)
