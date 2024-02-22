@@ -8,8 +8,6 @@ plural.lock
 .golangci.yml
 docker-compose.yml
 *.md
-plural.lock
-Pluralfile
 renovate.json
 packer/
 hack/
