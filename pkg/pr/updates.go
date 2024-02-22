@@ -7,6 +7,10 @@ import (
 )
 
 func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
+	if updates == nil {
+		return nil
+	}
+
 	replacement, err := templateReplacement([]byte(updates.ReplaceTemplate), ctx)
 	if err != nil {
 		return err
