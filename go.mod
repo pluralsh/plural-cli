@@ -38,7 +38,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/terraform-json v0.17.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/helm/helm-mapkubeapis v0.4.1
 	github.com/imdario/mergo v0.3.13
 	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
