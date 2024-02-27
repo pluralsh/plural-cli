@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"path/filepath"
 	"regexp"
+
+	"github.com/samber/lo"
 )
 
 func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
@@ -11,10 +13,22 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 		return nil
 	}
 
+	if err := processRegexReplacements(updates.RegexReplacements, ctx); err != nil {
+		return err
+	}
+
 	replacement, err := templateReplacement([]byte(updates.ReplaceTemplate), ctx)
 	if err != nil {
 		return err
 	}
+
+	files := lo.Map(updates.Files, func(name string, ind int) string {
+		res, err := templateReplacement([]byte(name), ctx)
+		if err != nil {
+			return name
+		}
+		return string(res)
+	})
 
 	return filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -25,7 +39,7 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 			return nil
 		}
 
-		ok, err := filenameMatches(path, updates.Files)
+		ok, err := filenameMatches(path, files)
 		if err != nil {
 			return err
 		}
@@ -36,6 +50,38 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 
 		return nil
 	})
+}
+
+func processRegexReplacements(replacements []RegexReplacement, ctx map[string]interface{}) error {
+	if len(replacements) <= 0 {
+		return nil
+	}
+
+	for _, replacement := range replacements {
+		replaceWith, err := templateReplacement([]byte(replacement.Replacement), ctx)
+		if err != nil {
+			return err
+		}
+
+		replaceFunc := func(data []byte) ([]byte, error) {
+			r, err := regexp.Compile(replacement.Regex)
+			if err != nil {
+				return data, err
+			}
+			return r.ReplaceAll(data, replaceWith), nil
+		}
+
+		dest, err := templateReplacement([]byte(replacement.File), ctx)
+		if err != nil {
+			dest = []byte(replacement.File)
+		}
+
+		if err := replaceInPlace(string(dest), replaceFunc); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func updateFile(path string, updates *UpdateSpec, replacement []byte) error {
