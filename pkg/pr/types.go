@@ -20,11 +20,12 @@ type PrTemplateSpec struct {
 }
 
 type UpdateSpec struct {
-	Regexes         []string `json:"regexes"`
-	Files           []string `json:"files"`
-	ReplaceTemplate string   `json:"replace_template"`
-	Yq              string   `json:"yq"`
-	MatchStrategy   string   `json:"match_strategy"`
+	Regexes           []string           `json:"regexes"`
+	Files             []string           `json:"files"`
+	ReplaceTemplate   string             `json:"replace_template"`
+	Yq                string             `json:"yq"`
+	MatchStrategy     string             `json:"match_strategy"`
+	RegexReplacements []RegexReplacement `json:"regex_replacements"`
 }
 
 type CreateSpec struct {
@@ -36,6 +37,13 @@ type CreateTemplate struct {
 	Source      string `json:"source"`
 	Destination string `json:"destination"`
 	External    bool   `json:"external"`
+}
+
+type RegexReplacement struct {
+	Regex       string `json:"regex"`
+	Replacement string `json:"replacement"`
+	File        string `json:"file"`
+	Templated   bool   `json:"templated"`
 }
 
 func Build(path string) (*PrTemplate, error) {
