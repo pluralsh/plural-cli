@@ -4,8 +4,11 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	consoleclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/samber/lo"
 	"github.com/urfave/cli"
 )
+
+const defaultPageSize = 100
 
 func (p *Plural) cdNotifications() cli.Command {
 	return cli.Command{
@@ -95,11 +98,9 @@ func (p *Plural) handleListNotificationSinks(_ *cli.Context) error {
 	}
 	result := make([]*consoleclient.NotificationSinkFragment, 0)
 	var after *string
-	var pageSize int64
-	pageSize = 100
 	hasNextPage := true
 	for hasNextPage {
-		resp, err := p.ConsoleClient.ListNotificationSinks(after, &pageSize)
+		resp, err := p.ConsoleClient.ListNotificationSinks(after, lo.ToPtr(int64(defaultPageSize)))
 		if err != nil {
 			return err
 		}
