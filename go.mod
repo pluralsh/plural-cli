@@ -29,7 +29,7 @@ require (
 	github.com/chartmuseum/helm-push v0.10.3
 	github.com/databus23/helm-diff/v3 v3.6.0
 	github.com/fatih/color v1.15.0
-	github.com/gdamore/tcell/v2 v2.6.0
+	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gofrs/flock v0.8.1
@@ -61,7 +61,7 @@ require (
 	github.com/pluralsh/polly v0.1.1
 	github.com/pluralsh/terraform-delinker v0.0.2
 	github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69
-	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d
+	github.com/rivo/tview v0.0.0-20240307173318-e804876934a1
 	github.com/rodaine/hclencoder v0.0.1
 	github.com/samber/lo v1.38.1
 	github.com/spf13/viper v1.15.0
@@ -385,7 +385,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
