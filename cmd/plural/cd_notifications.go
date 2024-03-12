@@ -4,7 +4,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	consoleclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/samber/lo"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 )
 
@@ -92,23 +92,37 @@ func (p *Plural) handleCreateNotificationSinks(c *cli.Context) error {
 	})
 }
 
+func (s *Plural) listNotifications() *algorithms.Pager[*consoleclient.NotificationSinkEdgeFragment] {
+	fetch := func(page *string, size int64) ([]*consoleclient.NotificationSinkEdgeFragment, *algorithms.PageInfo, error) {
+		resp, err := s.ConsoleClient.ListNotificationSinks(page, &size)
+		if err != nil {
+			return nil, nil, err
+		}
+		pageInfo := &algorithms.PageInfo{
+			HasNext:  resp.PageInfo.HasNextPage,
+			After:    resp.PageInfo.EndCursor,
+			PageSize: size,
+		}
+		return resp.Edges, pageInfo, nil
+	}
+	return algorithms.NewPager[*consoleclient.NotificationSinkEdgeFragment](defaultPageSize, fetch)
+}
+
 func (p *Plural) handleListNotificationSinks(_ *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
 	result := make([]*consoleclient.NotificationSinkFragment, 0)
-	var after *string
-	hasNextPage := true
-	for hasNextPage {
-		resp, err := p.ConsoleClient.ListNotificationSinks(after, lo.ToPtr(int64(defaultPageSize)))
+
+	pager := p.listNotifications()
+
+	for pager.HasNext() {
+		resp, err := pager.NextPage()
 		if err != nil {
 			return err
 		}
 
-		hasNextPage = resp.PageInfo.HasNextPage
-		after = resp.PageInfo.EndCursor
-
-		for _, n := range resp.Edges {
+		for _, n := range resp {
 			result = append(result, n.Node)
 		}
 	}
