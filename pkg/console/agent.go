@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/pluralsh/plural-cli/pkg/helm"
+	"github.com/pluralsh/polly/algorithms"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
@@ -19,7 +20,7 @@ const (
 	OperatorNamespace = "plrl-deploy-operator"
 )
 
-func InstallAgent(url, token, namespace string) error {
+func InstallAgent(url, token, namespace string, values map[string]interface{}) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets": map[string]string{
@@ -27,6 +28,7 @@ func InstallAgent(url, token, namespace string) error {
 		},
 		"consoleUrl": url,
 	}
+	vals = algorithms.Merge(vals, values)
 
 	if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
 		return err
