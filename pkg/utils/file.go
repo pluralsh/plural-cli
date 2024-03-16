@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"gopkg.in/yaml.v2"
 )
 
 func CopyFile(src, dest string) error {
@@ -67,6 +68,15 @@ func WriteFile(name string, content []byte) error {
 func ReadFile(name string) (string, error) {
 	content, err := os.ReadFile(name)
 	return string(content), err
+}
+
+func YamlFile(name string, out interface{}) error {
+	content, err := os.ReadFile(name)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(content, out)
 }
 
 func Exists(path string) bool {

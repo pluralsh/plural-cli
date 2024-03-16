@@ -37,6 +37,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
 			},
 		},
@@ -92,7 +93,7 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 		}
 	}
 
-	return p.doInstallOperator(c.String("url"), c.String("token"))
+	return p.doInstallOperator(c.String("url"), c.String("token"), c.String("values"))
 }
 
 func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
@@ -103,7 +104,7 @@ func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
 	return console.UninstallAgent(console.OperatorNamespace)
 }
 
-func (p *Plural) doInstallOperator(url, token string) error {
+func (p *Plural) doInstallOperator(url, token, values string) error {
 	err := p.InitKube()
 	if err != nil {
 		return err
@@ -112,7 +113,15 @@ func (p *Plural) doInstallOperator(url, token string) error {
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
-	err = console.InstallAgent(url, token, console.OperatorNamespace)
+
+	vals := map[string]interface{}{}
+	if values != "" {
+		if err := utils.YamlFile(values, &vals); err != nil {
+			return err
+		}
+	}
+
+	err = console.InstallAgent(url, token, console.OperatorNamespace, vals)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
 	}
