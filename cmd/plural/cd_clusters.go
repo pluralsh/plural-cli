@@ -97,6 +97,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
 				cli.StringSliceFlag{
 					Name:  "tag",
 					Usage: "a cluster tag to add, useful for targeting with global services",
@@ -106,7 +107,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		{
 			Name:   "reinstall",
 			Action: latestVersion(p.handleClusterReinstall),
-			Usage:  "reinstalls the deployment operator into a cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
+			},
+			Usage: "reinstalls the deployment operator into a cluster",
 		},
 	}
 }
@@ -392,7 +396,7 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	}
 
 	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
-	return p.doInstallOperator(url, deployToken)
+	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
 
 func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
@@ -430,6 +434,6 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	deployToken := *existing.CreateCluster.DeployToken
 	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
-	utils.Highlight("instaling agent on %s with url %s and initial deploy token %s\n", c.String("name"), p.ConsoleClient.Url(), deployToken)
-	return p.doInstallOperator(url, deployToken)
+	utils.Highlight("installing agent on %s with url %s and initial deploy token %s\n", c.String("name"), p.ConsoleClient.Url(), deployToken)
+	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
