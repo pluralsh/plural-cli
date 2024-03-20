@@ -326,7 +326,12 @@ func (k *kube) Apply(path string, force bool) error {
 
 func (k *kube) CreateNamespace(namespace string) error {
 	ctx := context.Background()
-	_, err := k.Kube.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+	_, err := k.Kube.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	if err == nil {
+		return nil
+	}
+
+	_, err = k.Kube.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
 			Labels: map[string]string{
