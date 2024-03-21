@@ -110,6 +110,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
 
   # Publish CLI / Cloud CLI container images
   publish:
