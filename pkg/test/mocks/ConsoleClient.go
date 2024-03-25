@@ -102,6 +102,36 @@ func (_m *ConsoleClient) CreateClusterService(clusterId *string, clusterName *st
 	return r0, r1
 }
 
+// CreateNotificationSinks provides a mock function with given fields: attr
+func (_m *ConsoleClient) CreateNotificationSinks(attr gqlclient.NotificationSinkAttributes) (*gqlclient.NotificationSinkFragment, error) {
+	ret := _m.Called(attr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateNotificationSinks")
+	}
+
+	var r0 *gqlclient.NotificationSinkFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(gqlclient.NotificationSinkAttributes) (*gqlclient.NotificationSinkFragment, error)); ok {
+		return rf(attr)
+	}
+	if rf, ok := ret.Get(0).(func(gqlclient.NotificationSinkAttributes) *gqlclient.NotificationSinkFragment); ok {
+		r0 = rf(attr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.NotificationSinkFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(gqlclient.NotificationSinkAttributes) error); ok {
+		r1 = rf(attr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateProvider provides a mock function with given fields: attr
 func (_m *ConsoleClient) CreateProvider(attr gqlclient.ClusterProviderAttributes) (*gqlclient.CreateClusterProvider, error) {
 	ret := _m.Called(attr)
@@ -489,6 +519,36 @@ func (_m *ConsoleClient) ListClusters() (*gqlclient.ListClusters, error) {
 
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListNotificationSinks provides a mock function with given fields: after, first
+func (_m *ConsoleClient) ListNotificationSinks(after *string, first *int64) (*gqlclient.ListNotificationSinks_NotificationSinks, error) {
+	ret := _m.Called(after, first)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListNotificationSinks")
+	}
+
+	var r0 *gqlclient.ListNotificationSinks_NotificationSinks
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*string, *int64) (*gqlclient.ListNotificationSinks_NotificationSinks, error)); ok {
+		return rf(after, first)
+	}
+	if rf, ok := ret.Get(0).(func(*string, *int64) *gqlclient.ListNotificationSinks_NotificationSinks); ok {
+		r0 = rf(after, first)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.ListNotificationSinks_NotificationSinks)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*string, *int64) error); ok {
+		r1 = rf(after, first)
 	} else {
 		r1 = ret.Error(1)
 	}
