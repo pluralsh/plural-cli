@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 func CopyFile(src, dest string) error {
