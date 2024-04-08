@@ -1,12 +1,9 @@
 package plural
 
 import (
-	"os"
-
 	consoleclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
-	"sigs.k8s.io/yaml"
 )
 
 func (p *Plural) cdSettings() cli.Command {
@@ -34,15 +31,13 @@ func (p *Plural) handleUpdateAgents(c *cli.Context) error {
 	}
 
 	filepath := c.Args().Get(0)
-	content, err := os.ReadFile(filepath)
+	content, err := utils.ReadFile(filepath)
 	if err != nil {
 		return err
 	}
-	attr := &consoleclient.DeploymentSettingsAttributes{}
-	if err := yaml.Unmarshal(content, attr); err != nil {
-		return err
+	attr := &consoleclient.DeploymentSettingsAttributes{
+		AgentHelmValues: &content,
 	}
-
 	res, err := p.ConsoleClient.UpdateDeploymentSettings(*attr)
 	if err != nil {
 		return err
