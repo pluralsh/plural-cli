@@ -39,7 +39,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
-				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
 			},
 		},
