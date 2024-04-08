@@ -53,7 +53,7 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 }
 
 func processRegexReplacements(replacements []RegexReplacement, ctx map[string]interface{}) error {
-	if len(replacements) <= 0 {
+	if len(replacements) == 0 {
 		return nil
 	}
 
