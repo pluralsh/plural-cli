@@ -97,7 +97,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
-				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.StringSliceFlag{
 					Name:  "tag",
 					Usage: "a cluster tag to add, useful for targeting with global services",
@@ -108,7 +108,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Name:   "reinstall",
 			Action: latestVersion(p.handleClusterReinstall),
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: true},
+				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 			},
 			Usage: "reinstalls the deployment operator into a cluster",
 		},
