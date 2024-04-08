@@ -1,5 +1,3 @@
-//nolint
-
 package provider
 
 import (
@@ -35,6 +33,7 @@ type LinodeProvider struct {
 	writer  manifest.Writer
 }
 
+//nolint:all
 func getLinodeSurvey() (surveys []*survey.Question, err error) {
 	client, err := linodeClient()
 	if err != nil {
@@ -60,6 +59,7 @@ func getLinodeSurvey() (surveys []*survey.Question, err error) {
 	return
 }
 
+//nolint:all
 func mkLinode(conf config.Config) (provider *LinodeProvider, err error) {
 	provider = &LinodeProvider{}
 	s, err := getLinodeSurvey()
@@ -92,6 +92,7 @@ func mkLinode(conf config.Config) (provider *LinodeProvider, err error) {
 	return
 }
 
+//nolint:all
 func linodeFromManifest(man *manifest.ProjectManifest) (*LinodeProvider, error) {
 	client, err := linodeClient()
 	if err != nil {
@@ -106,6 +107,7 @@ func linodeFromManifest(man *manifest.ProjectManifest) (*LinodeProvider, error) 
 	}, nil
 }
 
+//nolint:all
 func linodeClient() (*linodego.Client, error) {
 	apiKey, ok := os.LookupEnv("LINODE_TOKEN")
 	if !ok {
