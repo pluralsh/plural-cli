@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	consoleclient "github.com/pluralsh/console-client-go"
 )
@@ -59,7 +60,6 @@ func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func NewConsoleClient(token, url string) (ConsoleClient, error) {
-
 	httpClient := http.Client{
 		Transport: &authedTransport{
 			token:   token,
@@ -70,9 +70,20 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	return &consoleClient{
 		url:    url,
 		token:  token,
-		client: consoleclient.NewClient(&httpClient, fmt.Sprintf("%s/gql", url), nil),
+		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil),
 		ctx:    context.Background(),
 	}, nil
+}
+
+func NormalizeUrl(url string) string {
+	if !strings.HasPrefix(url, "https://") {
+		url = fmt.Sprintf("https://%s", url)
+	}
+	if !strings.HasSuffix(url, "/gql") {
+		url = fmt.Sprintf("%s/gql", url)
+	}
+
+	return url
 }
 
 func (c *consoleClient) Url() string {
