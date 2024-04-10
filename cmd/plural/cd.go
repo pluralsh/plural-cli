@@ -44,9 +44,10 @@ func (p *Plural) cdCommands() []cli.Command {
 			},
 		},
 		{
-			Name:   "control-plane",
-			Action: p.handleInstallControlPlane,
-			Usage:  "sets up the plural console in an existing k8s cluster",
+			Name:    "control-plane",
+			Aliases: []string{"helm-values"},
+			Action:  p.handleInstallControlPlane,
+			Usage:   "sets up the plural console in an existing k8s cluster",
 		},
 		{
 			Name:   "control-plane-values",
@@ -69,7 +70,7 @@ func (p *Plural) cdCommands() []cli.Command {
 			Action: p.handleCdLogin,
 			Usage:  "logs into your plural console",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
+				cli.StringFlag{Name: "url", Usage: "console url"},
 				cli.StringFlag{Name: "token", Usage: "console access token"},
 			},
 		},
@@ -159,13 +160,22 @@ func confirmCluster(url, token string) (bool, error) {
 
 func (p *Plural) handleCdLogin(c *cli.Context) (err error) {
 	url := c.String("url")
-	token := c.String("token")
-	if token == "" {
-		token, err = utils.ReadPwd("Enter your console access token")
+	if url == "" {
+		url, err = utils.ReadLine("Enter the url of your console: ")
 		if err != nil {
 			return
 		}
 	}
+
+	token := c.String("token")
+	if token == "" {
+		token, err = utils.ReadPwd("Enter your console access token: ")
+		if err != nil {
+			return
+		}
+	}
+
+	url = console.NormalizeUrl(url)
 	conf := console.Config{Url: url, Token: token}
 	return conf.Save()
 }
