@@ -1,6 +1,8 @@
 package console
 
 import (
+	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -10,6 +12,10 @@ import (
 const (
 	pluralDir  = ".plural"
 	ConfigName = "console.yml"
+)
+
+var (
+	errUrlFormat = fmt.Errorf("Url must be of format https://{your-console-domain}")
 )
 
 type VersionedConfig struct {
@@ -41,7 +47,24 @@ func ReadConfig() (conf Config) {
 	return
 }
 
+func (conf *Config) Validate() error {
+	url, err := url.Parse(conf.Url)
+	if err != nil {
+		return err
+	}
+
+	if url.Scheme != "https" {
+		return errUrlFormat
+	}
+
+	return nil
+}
+
 func (conf *Config) Save() error {
+	if err := conf.Validate(); err != nil {
+		return err
+	}
+
 	versioned := &VersionedConfig{
 		ApiVersion: "platform.plural.sh/v1alpha1",
 		Kind:       "Console",
