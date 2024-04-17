@@ -406,6 +406,36 @@ func (_m *ConsoleClient) GetDeployToken(clusterId *string, clusterName *string) 
 	return r0, r1
 }
 
+// GetGlobalSettings provides a mock function with given fields:
+func (_m *ConsoleClient) GetGlobalSettings() (*gqlclient.DeploymentSettingsFragment, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetGlobalSettings")
+	}
+
+	var r0 *gqlclient.DeploymentSettingsFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*gqlclient.DeploymentSettingsFragment, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *gqlclient.DeploymentSettingsFragment); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.DeploymentSettingsFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetServiceContext provides a mock function with given fields: name
 func (_m *ConsoleClient) GetServiceContext(name string) (*gqlclient.ServiceContextFragment, error) {
 	ret := _m.Called(name)

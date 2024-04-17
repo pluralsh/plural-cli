@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/urfave/cli"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -118,12 +119,24 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	}
 
 	vals := map[string]interface{}{}
+	globalVals := map[string]interface{}{}
+
+	settings, err := p.ConsoleClient.GetGlobalSettings()
+	if err != nil {
+		return err
+	}
+	if settings != nil && settings.AgentHelmValues != nil {
+		if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
+			return err
+		}
+	}
+
 	if values != "" {
 		if err := utils.YamlFile(values, &vals); err != nil {
 			return err
 		}
 	}
-
+	vals = algorithms.Merge(vals, globalVals)
 	err = console.InstallAgent(url, token, console.OperatorNamespace, vals)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
