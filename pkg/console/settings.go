@@ -18,3 +18,14 @@ func (c *consoleClient) UpdateDeploymentSettings(attr gqlclient.DeploymentSettin
 
 	return resp, nil
 }
+
+func (c *consoleClient) GetGlobalSettings() (*gqlclient.DeploymentSettingsFragment, error) {
+	resp, err := c.client.GetDeploymentSettings(c.ctx)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetDeploymentSettings")
+	}
+	if resp == nil {
+		return nil, fmt.Errorf("returned GetDeploymentSettings object is nil")
+	}
+	return resp.DeploymentSettings, nil
+}
