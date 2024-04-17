@@ -98,6 +98,11 @@ jobs:
           path: dist/windows
           key: windows-${{ env.sha_short }}
           enableCrossOsArchive: true
+      - name: Get Previous Tag
+        id: prev
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        env:
+          INPUT_PREFIX: v
       - name: GoReleaser (Release)
         uses: goreleaser/goreleaser-action@v4
         if: steps.cache.outputs.cache-hit != 'true' # do not run if cache hit
@@ -111,6 +116,7 @@ jobs:
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
+          GORELEASER_PREVIOUS_TAG: ${{ steps.release.outputs.prev }}
 
   # Publish CLI / Cloud CLI container images
   publish:
