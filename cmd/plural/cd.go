@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pluralsh/polly/algorithms"
+
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
@@ -118,22 +120,24 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	}
 
 	vals := map[string]interface{}{}
-	if values == "" {
-		settings, err := p.ConsoleClient.GetGlobalSettings()
-		if err != nil {
-			return err
-		}
-		if settings != nil && settings.AgentHelmValues != nil {
-			if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &vals); err != nil {
-				return err
-			}
-		}
-	} else {
-		if err := utils.YamlFile(values, &vals); err != nil {
+	globalVals := map[string]interface{}{}
+
+	settings, err := p.ConsoleClient.GetGlobalSettings()
+	if err != nil {
+		return err
+	}
+	if settings != nil && settings.AgentHelmValues != nil {
+		if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
 			return err
 		}
 	}
 
+	if values != "" {
+		if err := utils.YamlFile(values, &vals); err != nil {
+			return err
+		}
+	}
+	vals = algorithms.Merge(vals, globalVals)
 	err = console.InstallAgent(url, token, console.OperatorNamespace, vals)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
