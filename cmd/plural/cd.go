@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pluralsh/polly/algorithms"
-
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
