@@ -14,6 +14,27 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func ListDirectory(dir string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	return files, err
+}
+
+func IsDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return fileInfo.IsDir()
+}
+
 func CopyFile(src, dest string) error {
 	bytesRead, err := os.ReadFile(src)
 	if err != nil {
