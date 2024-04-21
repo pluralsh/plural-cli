@@ -97,6 +97,9 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 		}
 	}
 
+	// we don't care if this fails to init as this command can be auth-less
+	_ = p.InitConsoleClient(consoleToken, consoleURL)
+
 	return p.doInstallOperator(c.String("url"), c.String("token"), c.String("values"))
 }
 
@@ -121,13 +124,12 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	vals := map[string]interface{}{}
 	globalVals := map[string]interface{}{}
 
-	settings, err := p.ConsoleClient.GetGlobalSettings()
-	if err != nil {
-		return err
-	}
-	if settings != nil && settings.AgentHelmValues != nil {
-		if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
-			return err
+	if p.ConsoleClient != nil {
+		settings, err := p.ConsoleClient.GetGlobalSettings()
+		if err == nil && settings != nil && settings.AgentHelmValues != nil {
+			if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
+				return err
+			}
 		}
 	}
 
