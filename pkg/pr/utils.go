@@ -2,6 +2,7 @@ package pr
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/osteele/liquid"
 )
@@ -32,6 +33,11 @@ func replaceTo(from, to string, rep func(data []byte) ([]byte, error)) error {
 	if err != nil {
 		return err
 	}
+
+	if err := os.MkdirAll(filepath.Dir(to), 0755); err != nil {
+		return err
+	}
+
 	return os.WriteFile(to, resData, info.Mode())
 }
 
