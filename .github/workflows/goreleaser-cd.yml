@@ -31,14 +31,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.18.1
-      - name: Setup SHA variable
-        shell: bash
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Setup Cache
         uses: actions/cache@v3.2.3
         with:
           path: dist/${{ matrix.goos }}
-          key: ${{ matrix.goos }}-${{ env.sha_short }}
+          key: ${{ matrix.goos }}-${{ github.ref_name }}
           enableCrossOsArchive: true
       - name: Install Dependencies
         if: matrix.goos == 'linux'
@@ -49,6 +46,11 @@ jobs:
       - name: Build web
         shell: bash
         run: make build-web
+      - name: Get Previous Tag
+        id: prev
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        env:
+          INPUT_PREFIX: v
       - name: GoReleaser (Build)
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -63,6 +65,7 @@ jobs:
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
+          GORELEASER_PREVIOUS_TAG: ${{ steps.release.outputs.prev }}
 
   # Release binaries with GoReleaser
   release:
@@ -86,17 +89,17 @@ jobs:
         uses: actions/cache@v3.2.3
         with:
           path: dist/linux
-          key: linux-${{ env.sha_short }}
+          key: linux-${{ github.ref_name }}
       - name: Restore Darwin Cache
         uses: actions/cache@v3.2.3
         with:
           path: dist/darwin
-          key: darwin-${{ env.sha_short }}
+          key: darwin-${{ github.ref_name }}
       - name: Restore Windows Cache
         uses: actions/cache@v3.2.3
         with:
           path: dist/windows
-          key: windows-${{ env.sha_short }}
+          key: windows-${{ github.ref_name }}
           enableCrossOsArchive: true
       - name: Get Previous Tag
         id: prev
