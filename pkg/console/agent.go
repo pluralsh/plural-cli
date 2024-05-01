@@ -39,11 +39,10 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 		return err
 	}
 
-	/// new action to configure the chart version
 	newInstallAction := action.NewInstall(helmConfig)
 	newInstallAction.ChartPathOptions.Version = version
 
-	cp, err := newInstallAction.ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
 	if err != nil {
 		return err
 	}
