@@ -116,7 +116,7 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	if err != nil {
 		return err
 	}
-	err = p.Kube.CreateNamespace(console.OperatorNamespace)
+	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}
