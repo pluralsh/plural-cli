@@ -252,7 +252,7 @@ func (p *Plural) handleCreateNamespace(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := p.CreateNamespace(name); err != nil {
+	if err := p.CreateNamespace(name, true); err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			return nil
 		}
