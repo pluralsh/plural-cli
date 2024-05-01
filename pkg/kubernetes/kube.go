@@ -66,7 +66,7 @@ type Kube interface {
 	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
 	WireguardPeerDelete(namespace string, name string) error
 	Apply(path string, force bool) error
-	CreateNamespace(namespace string) error
+	CreateNamespace(namespace string, managedByPlural bool) error
 	GetClient() *kubernetes.Clientset
 	GetRestClient() *restclient.RESTClient
 }
@@ -324,22 +324,24 @@ func (k *kube) Apply(path string, force bool) error {
 	return nil
 }
 
-func (k *kube) CreateNamespace(namespace string) error {
+func (k *kube) CreateNamespace(namespace string, managedByPlural bool) error {
 	ctx := context.Background()
 	_, err := k.Kube.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 	if err == nil {
 		return nil
 	}
-
-	_, err = k.Kube.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/managed-by": "plural",
-				"app.plural.sh/name":           namespace,
+				"app.plural.sh/name": namespace,
 			},
 		},
-	}, metav1.CreateOptions{})
+	}
+	if managedByPlural {
+		ns.Labels["app.kubernetes.io/managed-by"] = "plural"
+	}
+	_, err = k.Kube.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})
 
 	return err
 }
