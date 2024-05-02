@@ -20,7 +20,7 @@ const (
 	OperatorNamespace = "plrl-deploy-operator"
 )
 
-func InstallAgent(url, token, namespace string, values map[string]interface{}) error {
+func InstallAgent(url, token, namespace, version string, values map[string]interface{}) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets": map[string]string{
@@ -38,6 +38,9 @@ func InstallAgent(url, token, namespace string, values map[string]interface{}) e
 	if err != nil {
 		return err
 	}
+
+	newInstallAction := action.NewInstall(helmConfig)
+	newInstallAction.ChartPathOptions.Version = version
 
 	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
 	if err != nil {

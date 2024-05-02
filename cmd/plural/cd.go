@@ -3,6 +3,7 @@ package plural
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/config"
@@ -123,12 +124,16 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 
 	vals := map[string]interface{}{}
 	globalVals := map[string]interface{}{}
+	version := ""
 
 	if p.ConsoleClient != nil {
 		settings, err := p.ConsoleClient.GetGlobalSettings()
-		if err == nil && settings != nil && settings.AgentHelmValues != nil {
-			if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
-				return err
+		if err == nil && settings != nil {
+			version = strings.Trim(settings.AgentVsn, "v")
+			if settings.AgentHelmValues != nil {
+				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -139,7 +144,7 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 		}
 	}
 	vals = algorithms.Merge(vals, globalVals)
-	err = console.InstallAgent(url, token, console.OperatorNamespace, vals)
+	err = console.InstallAgent(url, token, console.OperatorNamespace, version, vals)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
 	}

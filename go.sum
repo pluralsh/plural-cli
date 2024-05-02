@@ -1426,6 +1426,8 @@ github.com/pluralsh/cluster-api-migration v0.2.15 h1:TIfusD+wnhZTGmwNfIlKlKJOT2d
 github.com/pluralsh/cluster-api-migration v0.2.15/go.mod h1:J6lEvC/70KouikX16mE331cxc3y3sBwtmfHGwZqu06w=
 github.com/pluralsh/console-client-go v0.1.17 h1:QMtnWdRvV13/sND/CFjFBUR8nyg3JJgwXReSyM6bK7A=
 github.com/pluralsh/console-client-go v0.1.17/go.mod h1:eyCiLA44YbXiYyJh8303jk5JdPkt9McgCo5kBjk4lKo=
+github.com/pluralsh/console-client-go v0.5.3 h1:RB4XtKlvh8+BM5o1o0h+W6zHculBGbL6q5lI/yRnqJE=
+github.com/pluralsh/console-client-go v0.5.3/go.mod h1:eyCiLA44YbXiYyJh8303jk5JdPkt9McgCo5kBjk4lKo=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
 github.com/pluralsh/gqlclient v1.11.0 h1:FfXW7FiEJLHOfTAa7NxDb8jb3aMZNIpCAcG+bg8uHYA=
