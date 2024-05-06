@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	gqlclient "github.com/pluralsh/console-client-go"
+	"github.com/pluralsh/plural-cli/pkg/cd/template"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/containers"
@@ -94,6 +95,24 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{Name: "o", Usage: "output format"},
 			},
 			Usage: "describe cluster service",
+		},
+		{
+			Name:   "template",
+			Action: p.handleTemplateService,
+			Usage:  "Dry-runs templating a .liquid or .tpl file with either a full service as params or custom config",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "service",
+					Usage: "specify the service you want to use as context while templating"},
+				cli.StringFlag{
+					Name:  "configuration",
+					Usage: "hand-coded configuration for templating (useful if you want to test before creating a service)",
+				},
+				cli.StringFlag{
+					Name:  "file",
+					Usage: "The .liquid or .tpl file you want to attempt to template.",
+				},
+			},
 		},
 		{
 			Name:      "delete",
@@ -211,6 +230,50 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 	return utils.PrintTable([]*gqlclient.ServiceDeploymentExtended{sd}, headers, func(sd *gqlclient.ServiceDeploymentExtended) ([]string, error) {
 		return []string{sd.ID, sd.Name, sd.Namespace, sd.Git.Ref, sd.Git.Folder, sd.Repository.URL}, nil
 	})
+}
+
+func (p *Plural) handleTemplateService(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	printResult := func(out []byte) error {
+		fmt.Println()
+		fmt.Println(string(out))
+		return nil
+	}
+
+	if identifier := c.String("service"); identifier != "" {
+		serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(identifier)
+		if err != nil {
+			return err
+		}
+
+		existing, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
+		if err != nil {
+			return err
+		}
+		if existing == nil {
+			return fmt.Errorf("Service %s does not exist", identifier)
+		}
+
+		res, err := template.RenderService(c.String("file"), existing)
+		if err != nil {
+			return err
+		}
+		return printResult(res)
+	}
+
+	bindings := map[string]interface{}{}
+	if err := utils.YamlFile(c.String("configuration"), &bindings); err != nil {
+		return err
+	}
+
+	res, err := template.RenderYaml(c.String("file"), bindings)
+	if err != nil {
+		return err
+	}
+	return printResult(res)
 }
 
 func (p *Plural) handleCloneClusterService(c *cli.Context) error {
