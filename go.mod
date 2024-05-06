@@ -51,14 +51,14 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/osteele/liquid v1.3.2
+	github.com/osteele/liquid v1.4.0
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.15
-	github.com/pluralsh/console-client-go v0.5.3
+	github.com/pluralsh/console-client-go v0.5.5
 	github.com/pluralsh/gqlclient v1.11.0
 	github.com/pluralsh/plural-operator v0.5.5
-	github.com/pluralsh/polly v0.1.7
+	github.com/pluralsh/polly v0.1.8
 	github.com/pluralsh/terraform-delinker v0.0.2
 	github.com/posthog/posthog-go v0.0.0-20230801140217-d607812dee69
 	github.com/rivo/tview v0.0.0-20230615085408-bb9595ee0f4d
