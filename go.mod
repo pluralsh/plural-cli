@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/serviceusage v1.6.0
 	cloud.google.com/go/storage v1.35.1
 	filippo.io/age v1.1.1
-	github.com/AlecAivazis/survey/v2 v2.3.5
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
