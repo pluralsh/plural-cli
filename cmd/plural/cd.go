@@ -117,6 +117,15 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	if err != nil {
 		return err
 	}
+	alreadyExists, err := console.IsAlreadyAgentInstalled(p.Kube.GetClient())
+	if err != nil {
+		return err
+	}
+	if alreadyExists && !confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+		utils.Success("deployment operator is already installed, skip installation\n")
+		return nil
+	}
+
 	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
