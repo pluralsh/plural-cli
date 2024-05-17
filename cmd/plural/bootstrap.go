@@ -216,7 +216,7 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 		return fmt.Errorf("You're not within an installation repo")
 	}
 
-	client, err := apiclient.New("")
+	client, err := apiclient.New(context.Background(), "")
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (p *Plural) handleMoveCluster(c *cli.Context) error {
 		Namespace: "bootstrap",
 		DryRun:    false,
 	}
-	if err := client.Move(options); err != nil {
+	if err := client.Move(context.Background(), options); err != nil {
 		return err
 	}
 
