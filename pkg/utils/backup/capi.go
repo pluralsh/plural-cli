@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 
 type CAPIBackup struct {
 	dirPath string
+	ctx     context.Context
 }
 
 func (this CAPIBackup) createDir() {
@@ -28,7 +30,7 @@ func (this CAPIBackup) Exists() bool {
 }
 
 func (this CAPIBackup) Save(options apiclient.MoveOptions) error {
-	client, err := apiclient.New("")
+	client, err := apiclient.New(this.ctx, "")
 	if err != nil {
 		return err
 	}
@@ -41,11 +43,11 @@ func (this CAPIBackup) Save(options apiclient.MoveOptions) error {
 	options.ToDirectory = this.dirPath
 	options.Namespace = "bootstrap"
 
-	return client.Move(options)
+	return client.Move(this.ctx, options)
 }
 
 func (this CAPIBackup) Restore(options apiclient.MoveOptions) error {
-	client, err := apiclient.New("")
+	client, err := apiclient.New(this.ctx, "")
 	if err != nil {
 		return err
 	}
@@ -61,7 +63,7 @@ func (this CAPIBackup) Restore(options apiclient.MoveOptions) error {
 	options.FromDirectory = this.dirPath
 	options.Namespace = "bootstrap"
 
-	return client.Move(options)
+	return client.Move(this.ctx, options)
 }
 
 func (this CAPIBackup) Remove() error {
@@ -76,6 +78,7 @@ func NewCAPIBackup(cluster string) Backup[apiclient.MoveOptions] {
 	path, _ := config.PluralDir()
 
 	return CAPIBackup{
+		ctx:     context.Background(),
 		dirPath: filepath.Join(path, backupsDir, cluster),
 	}
 }
