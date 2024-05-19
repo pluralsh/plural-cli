@@ -1,7 +1,9 @@
 package console
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -11,6 +13,8 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -19,6 +23,24 @@ const (
 	RepoUrl           = "https://pluralsh.github.io/deployment-operator"
 	OperatorNamespace = "plrl-deploy-operator"
 )
+
+func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
+	dl, err := k8sClient.AppsV1().Deployments("").List(context.Background(), metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=deployment-operator",
+	})
+	if err != nil {
+		return false, err
+	}
+	for _, deployment := range dl.Items {
+		for _, container := range deployment.Spec.Template.Spec.Containers {
+			if strings.Contains(container.Image, "pluralsh/deployment-operator") {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
 
 func InstallAgent(url, token, namespace, version string, values map[string]interface{}) error {
 	settings := cli.New()
