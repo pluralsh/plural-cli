@@ -8,6 +8,7 @@ import (
 	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/console"
+	"github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/containers"
@@ -390,7 +391,12 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 		return err
 	}
 
-	deployToken, err := p.ConsoleClient.GetDeployToken(getIdAndName(c.Args().Get(0)))
+	id, name := getIdAndName(c.Args().Get(0))
+	return p.reinstallOperator(c, id, name)
+}
+
+func (p *Plural) reinstallOperator(c *cli.Context, id, handle *string) error {
+	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
 	if err != nil {
 		return err
 	}
@@ -425,6 +431,14 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	existing, err := p.ConsoleClient.CreateCluster(attrs)
 	if err != nil {
+		if errors.Like(err, "handle") && affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+			handle := lo.ToPtr(attrs.Name)
+			if attrs.Handle != nil {
+				handle = attrs.Handle
+			}
+			return p.reinstallOperator(c, nil, handle)
+		}
+
 		return err
 	}
 
