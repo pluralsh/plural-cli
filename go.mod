@@ -20,7 +20,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Yamashou/gqlgenc v0.18.1
-	github.com/aws/aws-sdk-go-v2 v1.26.1
+	github.com/aws/aws-sdk-go-v2 v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6
 	github.com/briandowns/spinner v1.23.0
@@ -116,10 +116,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.8 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.6 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.50.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.2 // indirect
@@ -128,9 +128,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.5 // indirect
@@ -303,7 +303,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.0
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
