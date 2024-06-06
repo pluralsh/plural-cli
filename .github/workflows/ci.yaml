@@ -439,10 +439,10 @@ jobs:
           sudo apt update
           sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev
       - name: GoReleaser (Build)
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
-          version: latest
+          version: "~> v1"
           args: release --clean --split --timeout 90m
         env:
           CGO_LDFLAGS: "${{ matrix.goos == 'darwin' && '-framework UniformTypeIdentifiers' || '' }}"
