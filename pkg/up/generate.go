@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -13,9 +14,14 @@ type templatePair struct {
 	overwrite bool
 }
 
+func (ctx *Context) Cleanup() {
+	git.RemoveSubmodule("bootstrap")
+	os.RemoveAll("./bootstrap")
+}
+
 func (ctx *Context) Generate() error {
 	if !utils.Exists("./bootstrap") {
-		if err := git.Submodule("https://github.com/pluralsh/bootstrap.git"); err != nil {
+		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "stacks-support"); err != nil {
 			return err
 		}
 	}
@@ -45,8 +51,11 @@ func (ctx *Context) Generate() error {
 	}
 
 	copies := []templatePair{
+		{from: "./bootstrap/terraform/modules/clusters", to: "terraform/modules/clusters"},
+		{from: fmt.Sprintf("./bootstrap/terraform/clouds/%s", prov), to: "terraform/modules/mgmt"},
 		{from: "./bootstrap/apps/repositories", to: "apps/repositories"},
 		{from: "./bootstrap/apps/services", to: "apps/services"},
+		{from: "./bootstrap/templates", to: "templates"},
 	}
 
 	for _, copy := range copies {
@@ -55,6 +64,34 @@ func (ctx *Context) Generate() error {
 		}
 
 		if err := utils.CopyDir(copy.from, copy.to); err != nil {
+			return err
+		}
+	}
+
+	ctx.changeDelims()
+	overwrites := []templatePair{
+		{from: "apps/services/setup.yaml", to: "apps/services/setup.yaml"},
+		{from: "apps/services/pr-automation/cluster-creator.yaml", to: "apps/services/pr-automation/cluster-creator.yaml"},
+	}
+
+	for _, tpl := range overwrites {
+		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ctx *Context) afterSetup() error {
+	prov := ctx.Provider.Name()
+	overwrites := []templatePair{
+		{from: fmt.Sprintf("./bootstrap/templates/setup/stacks/%s.yaml", prov), to: "apps/services/stacks/serviceaccount.yaml"},
+	}
+
+	ctx.Delims = nil
+	for _, tpl := range overwrites {
+		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			return err
 		}
 	}
