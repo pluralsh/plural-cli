@@ -25,7 +25,22 @@ func CurrentBranch() (string, error) {
 }
 
 func Submodule(url string) error {
-	_, err := GitRaw("submodule", "add", url)
+	_, err := GitRaw("submodule", "add", "-f", url)
+	return err
+}
+
+func RemoveSubmodule(name string) error {
+	_, err := GitRaw("rm", name)
+	return err
+}
+
+func BranchedSubmodule(url, branch string) error {
+	_, err := GitRaw("submodule", "add", "-f", "-b", branch, url)
+	return err
+}
+
+func Rm(path string) error {
+	_, err := GitRaw("rm", path)
 	return err
 }
 
