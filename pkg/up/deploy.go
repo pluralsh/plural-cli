@@ -1,6 +1,7 @@
 package up
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -25,6 +26,18 @@ func (ctx *Context) Deploy(commit func() error) error {
 		{dir: "./clusters", cmd: "init", args: []string{"-upgrade"}},
 		{dir: "./clusters", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
 	}); err != nil {
+		return err
+	}
+
+	stateCmd := &terraformCmd{dir: "./clusters"}
+	outs, err := stateCmd.outputs()
+	if err != nil {
+		return err
+	}
+
+	ctx.StacksIdentity = stacksRole(outs)
+
+	if err := ctx.afterSetup(); err != nil {
 		return err
 	}
 
@@ -59,6 +72,22 @@ func runAll(cmds []terraformCmd) error {
 	}
 
 	return nil
+}
+
+func (tf *terraformCmd) outputs() (map[string]Output, error) {
+	outputs := map[string]Output{}
+	cmd := exec.Command("terraform", "output", "-json")
+	cmd.Dir = tf.dir
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(out, &outputs); err != nil {
+		return nil, err
+	}
+
+	return outputs, nil
 }
 
 func (tf *terraformCmd) run() (err error) {

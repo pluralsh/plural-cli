@@ -2,9 +2,8 @@ package up
 
 import (
 	"bytes"
-	"time"
-
 	"text/template"
+	"time"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -37,24 +36,32 @@ func (ctx *Context) template(tmplate string) (string, error) {
 	}
 
 	values := map[string]interface{}{
-		"Cluster":   cluster,
-		"Provider":  provider,
-		"Subdomain": ctx.Manifest.Network.Subdomain,
-		"Network":   ctx.Manifest.Network,
-		"Bucket":    ctx.Provider.Bucket(),
-		"Project":   ctx.Provider.Project(),
-		"Region":    ctx.Provider.Region(),
-		"Context":   ctx.Provider.Context(),
-		"Config":    ctx.Config,
-		"Acme":      eabCredential,
+		"Cluster":        cluster,
+		"Provider":       provider,
+		"Subdomain":      ctx.Manifest.Network.Subdomain,
+		"Network":        ctx.Manifest.Network,
+		"Bucket":         ctx.Provider.Bucket(),
+		"Project":        ctx.Provider.Project(),
+		"Region":         ctx.Provider.Region(),
+		"Context":        ctx.Provider.Context(),
+		"Config":         ctx.Config,
+		"RepoUrl":        ctx.RepoUrl,
+		"Identifier":     ctx.identifier(),
+		"Acme":           eabCredential,
+		"StacksIdentity": ctx.StacksIdentity,
 	}
 
-	tpl, err := template.New("gotpl").Parse(tmplate)
+	tpl := template.New("tpl")
+	if ctx.Delims != nil {
+		tpl.Delims(ctx.Delims.left, ctx.Delims.right)
+	}
+
+	readyTpl, err := tpl.Parse(tmplate)
 	if err != nil {
 		return "", err
 	}
 
 	var buf bytes.Buffer
-	err = tpl.Execute(&buf, values)
+	err = readyTpl.Execute(&buf, values)
 	return buf.String(), err
 }
