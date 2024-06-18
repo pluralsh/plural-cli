@@ -1,7 +1,9 @@
 package up
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
@@ -14,9 +16,30 @@ import (
 )
 
 type Context struct {
-	Provider provider.Provider
-	Manifest *manifest.ProjectManifest
-	Config   *config.Config
+	Provider       provider.Provider
+	Manifest       *manifest.ProjectManifest
+	Config         *config.Config
+	RepoUrl        string
+	StacksIdentity string
+	Delims         *delims
+}
+
+type delims struct {
+	left  string
+	right string
+}
+
+func (ctx *Context) identifier() string {
+	if ctx.RepoUrl == "" {
+		return ""
+	}
+
+	split := strings.Split(ctx.RepoUrl, ":")
+	return strings.TrimSuffix(split[len(split)-1], ".git")
+}
+
+func (ctx *Context) changeDelims() {
+	ctx.Delims = &delims{"[[", "]]"}
 }
 
 func (ctx *Context) Backfill() error {
@@ -32,6 +55,16 @@ func (ctx *Context) Backfill() error {
 
 	if _, ok = console["private_key"]; !ok {
 		return backfillConsoleContext(ctx.Manifest)
+	}
+
+	if v, ok := console["repo_url"]; ok {
+		if r, ok := v.(string); ok {
+			ctx.RepoUrl = r
+		}
+	}
+
+	if ctx.RepoUrl == "" {
+		return fmt.Errorf("You never configured a repoUrl for your workspace, check `context.yaml`")
 	}
 
 	return nil
