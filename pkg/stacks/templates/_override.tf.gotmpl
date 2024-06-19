@@ -1,0 +1,11 @@
+terraform {
+  backend "http" {
+    address = "{{ .Address }}"
+    lock_address = "{{ .LockAddress }}"
+    lock_method = "POST"
+    unlock_address = "{{ .UnlockAddress }}"
+    unlock_method = "POST"
+    username = "{{ .Actor }}"
+    password = "{{ .DeployToken }}"
+  }
+}
