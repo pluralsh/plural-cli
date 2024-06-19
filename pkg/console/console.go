@@ -16,7 +16,12 @@ type consoleClient struct {
 	token  string
 }
 
+func (c *consoleClient) Client() consoleclient.ConsoleClient {
+	return c.client
+}
+
 type ConsoleClient interface {
+	Client() consoleclient.ConsoleClient
 	Url() string
 	Token() string
 	ListClusters() (*consoleclient.ListClusters, error)

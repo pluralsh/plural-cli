@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/samber/lo"
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/config"
@@ -34,32 +35,6 @@ func (p *Plural) cdStacksCommands() []cli.Command {
 	}
 }
 
-var backendSurvey = []*survey.Question{
-	{
-		Name:     "address",
-		Prompt:   &survey.Input{Message: "Enter the address of terraform backend:"},
-		Validate: survey.Required,
-	},
-	{
-		Name:     "lockAddress",
-		Prompt:   &survey.Input{Message: "Enter the lock address of terraform backend:"},
-		Validate: survey.Required,
-	},
-	{
-		Name:     "unlockAddress",
-		Prompt:   &survey.Input{Message: "Enter the unlock address of terraform backend:"},
-		Validate: survey.Required,
-	},
-	{
-		Name: "dir",
-		Prompt: &survey.Input{
-			Message: "Enter the path to the directory where '_override.tf' file should be stored [defaults to current working dir]:",
-			Default: ".",
-		},
-		Validate: survey.Required,
-	},
-}
-
 func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 	if !config.Exists() {
 		return fmt.Errorf("plural config not found. Run 'plural cd login' to log in first")
@@ -70,27 +45,47 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 		return fmt.Errorf("not logged in. Run 'plural cd login' to log in first")
 	}
 
-	var resp struct {
-		Address       string
-		LockAddress   string
-		UnlockAddress string
-		Dir           string
-	}
-
-	if err := survey.Ask(backendSurvey, &resp); err != nil {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
 
-	fileName, err := stacks.GenerateOverrideTemplate(&stacks.OverrideTemplateInput{
-		Address:       resp.Address,
-		LockAddress:   resp.LockAddress,
-		UnlockAddress: resp.UnlockAddress,
-		Actor:         cfg.Email,
-		DeployToken:   cfg.Token,
-	}, resp.Dir)
+	id := ""
+	err := p.askStackID(&id)
 	if err != nil {
 		return err
 	}
 
-	return git.AppendGitIgnore(resp.Dir, []string{fileName})
+	stateUrls, err := stacks.GetTerraformStateUrls(p.ConsoleClient.Client(), id)
+	if err != nil {
+		return err
+	}
+
+	dir := ""
+	if err := survey.AskOne(&survey.Input{
+		Message: "Enter the path to the directory where '_override.tf' file should be stored [defaults to current working dir]:",
+		Default: ".",
+	}, &dir); err != nil {
+		return err
+	}
+
+	fileName, err := stacks.GenerateOverrideTemplate(&stacks.OverrideTemplateInput{
+		Address:       lo.FromPtr(stateUrls.Address),
+		LockAddress:   lo.FromPtr(stateUrls.Lock),
+		UnlockAddress: lo.FromPtr(stateUrls.Unlock),
+		Actor:         cfg.Email,
+		DeployToken:   cfg.Token,
+	}, dir)
+	if err != nil {
+		return err
+	}
+
+	return git.AppendGitIgnore(dir, []string{fileName})
+}
+
+func (p *Plural) askStackID(id *string) (err error) {
+	return survey.AskOne(
+		&survey.Input{Message: "Enter the stack id:"},
+		id,
+		survey.WithValidator(survey.Required),
+	)
 }
