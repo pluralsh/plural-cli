@@ -48,6 +48,7 @@ type ConsoleClient interface {
 	CreateNotificationSinks(attr consoleclient.NotificationSinkAttributes) (*consoleclient.NotificationSinkFragment, error)
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
+	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 }
 
 type authedTransport struct {

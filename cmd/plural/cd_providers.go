@@ -7,11 +7,12 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console-client-go"
-	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 const kindSecret = "Secret"
@@ -47,7 +48,7 @@ func (p *Plural) handleListProviders(_ *cli.Context) error {
 	}
 
 	headers := []string{"ID", "Name", "Cloud", "Editable", "Repo Url"}
-	return utils.PrintTable(providers.ClusterProviders.Edges, headers, func(r *gqlclient.ClusterProviderEdgeFragment) ([]string, error) {
+	return utils.PrintTable(providers.ClusterProviders.Edges, headers, func(r *gqlclient.ListProviders_ClusterProviders_Edges) ([]string, error) {
 		editable := ""
 		if r.Node.Editable != nil {
 			editable = strconv.FormatBool(*r.Node.Editable)

@@ -15,8 +15,8 @@ type templatePair struct {
 }
 
 func (ctx *Context) Cleanup() {
-	git.RemoveSubmodule("bootstrap")
-	os.RemoveAll("./bootstrap")
+	_ = git.RemoveSubmodule("bootstrap")
+	_ = os.RemoveAll("./bootstrap")
 }
 
 func (ctx *Context) Generate() error {
