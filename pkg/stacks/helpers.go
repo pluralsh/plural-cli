@@ -1,15 +1,15 @@
 package stacks
 
 import (
-	"context"
 	"fmt"
 
-	console "github.com/pluralsh/console-client-go"
-	"github.com/samber/lo"
+	gqlclient "github.com/pluralsh/console-client-go"
+
+	"github.com/pluralsh/plural-cli/pkg/console"
 )
 
-func GetTerraformStateUrls(client console.ConsoleClient, stackID string) (*console.TerraformStateUrls, error) {
-	stackRuns, err := client.ListStackRuns(context.Background(), stackID, nil, nil, lo.ToPtr(int64(100)), nil)
+func GetTerraformStateUrls(client console.ConsoleClient, stackID string) (*gqlclient.TerraformStateUrls, error) {
+	stackRuns, err := client.ListStackRuns(stackID)
 	if err != nil {
 		return nil, err
 	}
@@ -28,14 +28,14 @@ func GetTerraformStateUrls(client console.ConsoleClient, stackID string) (*conso
 	return stateUrls, nil
 }
 
-func toTerraformStateUrls(stackRuns []*console.ListStackRuns_InfrastructureStack_Runs_Edges) *console.TerraformStateUrls {
+func toTerraformStateUrls(stackRuns []*gqlclient.ListStackRuns_InfrastructureStack_Runs_Edges) *gqlclient.TerraformStateUrls {
 	for _, edge := range stackRuns {
 		run := edge.Node
-		if run.Type != console.StackTypeTerraform || run.StateUrls.Terraform == nil {
+		if run.Type != gqlclient.StackTypeTerraform || run.StateUrls.Terraform == nil {
 			continue
 		}
 
-		return &console.TerraformStateUrls{
+		return &gqlclient.TerraformStateUrls{
 			Address: run.StateUrls.Terraform.Address,
 			Lock:    run.StateUrls.Terraform.Lock,
 			Unlock:  run.StateUrls.Terraform.Unlock,

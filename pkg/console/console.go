@@ -16,12 +16,7 @@ type consoleClient struct {
 	token  string
 }
 
-func (c *consoleClient) Client() consoleclient.ConsoleClient {
-	return c.client
-}
-
 type ConsoleClient interface {
-	Client() consoleclient.ConsoleClient
 	Url() string
 	Token() string
 	ListClusters() (*consoleclient.ListClusters, error)
@@ -53,6 +48,7 @@ type ConsoleClient interface {
 	CreateNotificationSinks(attr consoleclient.NotificationSinkAttributes) (*consoleclient.NotificationSinkFragment, error)
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
+	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 }
 
 type authedTransport struct {

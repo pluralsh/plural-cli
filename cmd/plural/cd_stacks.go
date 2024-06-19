@@ -55,7 +55,7 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 		return err
 	}
 
-	stateUrls, err := stacks.GetTerraformStateUrls(p.ConsoleClient.Client(), id)
+	stateUrls, err := stacks.GetTerraformStateUrls(p.ConsoleClient, id)
 	if err != nil {
 		return err
 	}
