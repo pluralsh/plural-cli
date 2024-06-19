@@ -73,7 +73,7 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 		LockAddress:   lo.FromPtr(stateUrls.Lock),
 		UnlockAddress: lo.FromPtr(stateUrls.Unlock),
 		Actor:         cfg.Email,
-		DeployToken:   cfg.Token,
+		DeployToken:   consoleToken,
 	}, dir)
 	if err != nil {
 		return err
