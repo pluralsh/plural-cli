@@ -41,7 +41,12 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
-	if err := ping(fmt.Sprintf("https://console.%s", ctx.Manifest.Network.Subdomain)); err != nil {
+	subdomain := ctx.Manifest.Network.Subdomain
+	if err := testDns(fmt.Sprintf("console.%s", subdomain)); err != nil {
+		return err
+	}
+
+	if err := ping(fmt.Sprintf("https://console.%s", subdomain)); err != nil {
 		return err
 	}
 
