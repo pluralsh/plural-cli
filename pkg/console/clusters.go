@@ -37,6 +37,19 @@ func (c *consoleClient) GetCluster(clusterId, clusterName *string) (*consoleclie
 	return result.Cluster, nil
 }
 
+func (c *consoleClient) AgentUrl(id string) (string, error) {
+	res, err := c.client.GetAgentURL(c.ctx, id)
+	if err != nil {
+		return "", err
+	}
+
+	if res == nil {
+		return "", fmt.Errorf("cluster not found")
+	}
+
+	return lo.FromPtr(res.Cluster.AgentURL), nil
+}
+
 func (c *consoleClient) GetDeployToken(clusterId, clusterName *string) (string, error) {
 	res, err := c.client.GetClusterWithToken(c.ctx, clusterId, clusterName)
 	if err != nil {
