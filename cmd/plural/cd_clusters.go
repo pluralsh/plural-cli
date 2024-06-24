@@ -401,7 +401,13 @@ func (p *Plural) reinstallOperator(c *cli.Context, id, handle *string) error {
 		return err
 	}
 
-	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
+	url := p.ConsoleClient.ExtUrl()
+	if cluster, err := p.ConsoleClient.GetCluster(id, handle); err == nil {
+		if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.ID); err == nil {
+			url = agentUrl
+		}
+	}
+
 	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
 
@@ -446,8 +452,12 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 		return fmt.Errorf("could not fetch deploy token from cluster")
 	}
 
+	url := p.ConsoleClient.ExtUrl()
+	if agentUrl, err := p.ConsoleClient.AgentUrl(existing.CreateCluster.ID); err == nil {
+		url = agentUrl
+	}
+
 	deployToken := *existing.CreateCluster.DeployToken
-	url := fmt.Sprintf("%s/ext/gql", p.ConsoleClient.Url())
 	utils.Highlight("installing agent on %s with url %s and initial deploy token %s\n", c.String("name"), p.ConsoleClient.Url(), deployToken)
 	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
