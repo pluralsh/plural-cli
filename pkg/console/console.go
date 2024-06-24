@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	consoleclient "github.com/pluralsh/console-client-go"
@@ -13,12 +14,15 @@ type consoleClient struct {
 	ctx    context.Context
 	client consoleclient.ConsoleClient
 	url    string
+	extUrl string
 	token  string
 }
 
 type ConsoleClient interface {
 	Url() string
+	ExtUrl() string
 	Token() string
+	AgentUrl(id string) (string, error)
 	ListClusters() (*consoleclient.ListClusters, error)
 	GetCluster(clusterId, clusterName *string) (*consoleclient.ClusterFragment, error)
 	GetDeployToken(clusterId, clusterName *string) (string, error)
@@ -71,10 +75,24 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 
 	return &consoleClient{
 		url:    url,
+		extUrl: NormalizeExtUrl(url),
 		token:  token,
 		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil),
 		ctx:    context.Background(),
 	}, nil
+}
+
+func NormalizeExtUrl(uri string) string {
+	if !strings.HasPrefix(uri, "https://") {
+		uri = fmt.Sprintf("https://%s", uri)
+	}
+
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprintf("https://%s/ext/gql", parsed.Host)
 }
 
 func NormalizeUrl(url string) string {
@@ -90,6 +108,10 @@ func NormalizeUrl(url string) string {
 
 func (c *consoleClient) Url() string {
 	return c.url
+}
+
+func (c *consoleClient) ExtUrl() string {
+	return c.extUrl
 }
 
 func (c *consoleClient) Token() string {

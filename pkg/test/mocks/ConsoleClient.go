@@ -12,6 +12,34 @@ type ConsoleClient struct {
 	mock.Mock
 }
 
+// AgentUrl provides a mock function with given fields: id
+func (_m *ConsoleClient) AgentUrl(id string) (string, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AgentUrl")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (string, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CloneService provides a mock function with given fields: clusterId, serviceId, serviceName, clusterName, attributes
 func (_m *ConsoleClient) CloneService(clusterId string, serviceId *string, serviceName *string, clusterName *string, attributes gqlclient.ServiceCloneAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
 	ret := _m.Called(clusterId, serviceId, serviceName, clusterName, attributes)
@@ -313,6 +341,24 @@ func (_m *ConsoleClient) DetachCluster(id string) error {
 		r0 = rf(id)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ExtUrl provides a mock function with given fields:
+func (_m *ConsoleClient) ExtUrl() string {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExtUrl")
+	}
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
 	}
 
 	return r0
