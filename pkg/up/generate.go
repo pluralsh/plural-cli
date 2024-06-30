@@ -21,7 +21,7 @@ func (ctx *Context) Cleanup() {
 
 func (ctx *Context) Generate() error {
 	if !utils.Exists("./bootstrap") {
-		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "stacks-support"); err != nil {
+		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "refactored-up"); err != nil {
 			return err
 		}
 	}
@@ -31,11 +31,11 @@ func (ctx *Context) Generate() error {
 		{from: "./bootstrap/charts/runtime/values.yaml.tpl", to: "./helm-values/runtime.yaml", overwrite: true},
 		{from: "./bootstrap/helm/certmanager.yaml", to: "./helm-values/certmanager.yaml", overwrite: true},
 		{from: "./bootstrap/helm/flux.yaml", to: "./helm-values/flux.yaml", overwrite: true},
-		{from: fmt.Sprintf("./bootstrap/templates/providers/bootstrap/%s.tf", prov), to: "clusters/provider.tf"},
-		{from: fmt.Sprintf("./bootstrap/templates/setup/providers/%s.tf", prov), to: "clusters/mgmt.tf"},
-		{from: "./bootstrap/templates/setup/console.tf", to: "clusters/console.tf"},
-		{from: fmt.Sprintf("./bootstrap/templates/providers/apps/%s.tf", prov), to: "apps/terraform/provider.tf"},
-		{from: "./bootstrap/templates/setup/cd.tf", to: "apps/terraform/cd.tf"},
+		{from: fmt.Sprintf("./bootstrap/templates/providers/bootstrap/%s.tf", prov), to: "terraform/mgmt/provider.tf"},
+		{from: fmt.Sprintf("./bootstrap/templates/setup/providers/%s.tf", prov), to: "terraform/mgmt/mgmt.tf"},
+		{from: "./bootstrap/templates/setup/console.tf", to: "terraform/mgmt/console.tf"},
+		{from: fmt.Sprintf("./bootstrap/templates/providers/apps/%s.tf", prov), to: "terraform/apps/provider.tf"},
+		{from: "./bootstrap/templates/setup/cd.tf", to: "terraform/apps/cd.tf"},
 		{from: "./bootstrap/README.md", to: "README.md", overwrite: true},
 	}
 
@@ -52,7 +52,7 @@ func (ctx *Context) Generate() error {
 
 	copies := []templatePair{
 		{from: "./bootstrap/terraform/modules/clusters", to: "terraform/modules/clusters"},
-		{from: fmt.Sprintf("./bootstrap/terraform/clouds/%s", prov), to: "terraform/modules/mgmt"},
+		{from: fmt.Sprintf("./bootstrap/terraform/clouds/%s", prov), to: "terraform/mgmt/cluster"},
 		{from: "./bootstrap/apps/repositories", to: "apps/repositories"},
 		{from: "./bootstrap/apps/services", to: "apps/services"},
 		{from: "./bootstrap/templates", to: "templates"},

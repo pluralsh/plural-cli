@@ -23,13 +23,13 @@ func (ctx *Context) Deploy(commit func() error) error {
 	}
 
 	if err := runAll([]terraformCmd{
-		{dir: "./clusters", cmd: "init", args: []string{"-upgrade"}},
-		{dir: "./clusters", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+		{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
 	}); err != nil {
 		return err
 	}
 
-	stateCmd := &terraformCmd{dir: "./clusters"}
+	stateCmd := &terraformCmd{dir: "./terraform/mgmt"}
 	outs, err := stateCmd.outputs()
 	if err != nil {
 		return err
@@ -56,16 +56,20 @@ func (ctx *Context) Deploy(commit func() error) error {
 
 	utils.Highlight("\nSetting up gitops management...\n")
 
-	return runAll([]terraformCmd{
-		{dir: "./apps/terraform", cmd: "init", args: []string{"-upgrade"}},
-		{dir: "./apps/terraform", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
-	})
+	if err := runAll([]terraformCmd{
+		{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
+		{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+	}); err != nil {
+		return err
+	}
+
+	return ctx.Prune()
 }
 
 func (ctx *Context) Destroy() error {
 	return runAll([]terraformCmd{
-		{dir: "./clusters", cmd: "init", args: []string{"-upgrade"}},
-		{dir: "./clusters", cmd: "destroy", args: []string{"-auto-approve"}, retries: 2},
+		{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+		{dir: "./terraform/mgmt", cmd: "destroy", args: []string{"-auto-approve"}, retries: 2},
 	})
 }
 
