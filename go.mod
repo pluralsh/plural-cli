@@ -447,7 +447,7 @@ replace (
 	go.etcd.io/etcd/pkg/v3 => go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.29.5
 	k8s.io/client-go => k8s.io/client-go v0.29.0
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
+	k8s.io/kube-openapi => k8s.io/kube-openapi 0aa61b46e8c2
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.16.6
 	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.17.1
 	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.17.0
