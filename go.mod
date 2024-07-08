@@ -72,7 +72,7 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	go.mercari.io/hcledit v0.0.8
 	golang.org/x/crypto v0.22.0
-	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/exp 46b078467d37
 	golang.org/x/mod v0.17.0
 	golang.org/x/oauth2 v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
