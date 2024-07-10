@@ -5,5 +5,9 @@ func Apply(template *PrTemplate) error {
 		return err
 	}
 
-	return applyCreates(template.Spec.Creates, template.Context)
+	if err := applyCreates(template.Spec.Creates, template.Context); err != nil {
+		return err
+	}
+
+	return applyDeletes(template.Spec.Deletes, template.Context)
 }

@@ -17,6 +17,7 @@ type PrTemplate struct {
 type PrTemplateSpec struct {
 	Updates *UpdateSpec `json:"updates"`
 	Creates *CreateSpec `json:"creates"`
+	Deletes *DeleteSpec `json:"deletes"`
 }
 
 type UpdateSpec struct {
@@ -31,6 +32,11 @@ type UpdateSpec struct {
 type CreateSpec struct {
 	ExternalDir string
 	Templates   []*CreateTemplate `json:"templates"`
+}
+
+type DeleteSpec struct {
+	Files   []string `json:"files"`
+	Folders []string `json:"folders"`
 }
 
 type CreateTemplate struct {
