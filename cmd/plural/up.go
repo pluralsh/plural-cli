@@ -55,6 +55,8 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
+	utils.Success("Finished setting up your management cluster!\n")
+	utils.Highlight("Feel free to use `terrafrom` as you normally would, and leverage the gitops setup we've generated in the `apps/` subfolder\n")
 	return nil
 }
 

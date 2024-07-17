@@ -21,7 +21,7 @@ func (ctx *Context) Cleanup() {
 
 func (ctx *Context) Generate() error {
 	if !utils.Exists("./bootstrap") {
-		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "refactored-up"); err != nil {
+		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "main"); err != nil {
 			return err
 		}
 	}
