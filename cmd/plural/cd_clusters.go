@@ -99,6 +99,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
+				cli.StringFlag{Name: "project", Usage: "the project this cluster will belong to", Required: false},
 				cli.StringSliceFlag{
 					Name:  "tag",
 					Usage: "a cluster tag to add, useful for targeting with global services",
@@ -419,6 +420,18 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	attrs := gqlclient.ClusterAttributes{Name: c.String("name")}
 	if c.String("handle") != "" {
 		attrs.Handle = lo.ToPtr(c.String("handle"))
+	}
+
+	if c.String("project") != "" {
+		project, err := p.ConsoleClient.GetProject(c.String("project"))
+		if err != nil {
+			return nil
+		}
+		if project == nil {
+			return fmt.Errorf("Could not find project %s", c.String("project"))
+		}
+
+		attrs.ProjectID = lo.ToPtr(project.ID)
 	}
 
 	if c.IsSet("tag") {

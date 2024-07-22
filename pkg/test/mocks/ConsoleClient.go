@@ -482,6 +482,36 @@ func (_m *ConsoleClient) GetGlobalSettings() (*gqlclient.DeploymentSettingsFragm
 	return r0, r1
 }
 
+// GetProject provides a mock function with given fields: name
+func (_m *ConsoleClient) GetProject(name string) (*gqlclient.ProjectFragment, error) {
+	ret := _m.Called(name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProject")
+	}
+
+	var r0 *gqlclient.ProjectFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*gqlclient.ProjectFragment, error)); ok {
+		return rf(name)
+	}
+	if rf, ok := ret.Get(0).(func(string) *gqlclient.ProjectFragment); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.ProjectFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetServiceContext provides a mock function with given fields: name
 func (_m *ConsoleClient) GetServiceContext(name string) (*gqlclient.ServiceContextFragment, error) {
 	ret := _m.Called(name)
