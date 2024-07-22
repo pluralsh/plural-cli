@@ -24,6 +24,7 @@ type ConsoleClient interface {
 	Token() string
 	AgentUrl(id string) (string, error)
 	ListClusters() (*consoleclient.ListClusters, error)
+	GetProject(name string) (*consoleclient.ProjectFragment, error)
 	GetCluster(clusterId, clusterName *string) (*consoleclient.ClusterFragment, error)
 	GetDeployToken(clusterId, clusterName *string) (string, error)
 	UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error)

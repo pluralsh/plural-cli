@@ -8,6 +8,15 @@ import (
 	"github.com/samber/lo"
 )
 
+func (c *consoleClient) GetProject(name string) (*consoleclient.ProjectFragment, error) {
+	result, err := c.client.GetProject(c.ctx, nil, lo.ToPtr(name))
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetProject")
+	}
+
+	return result.Project, nil
+}
+
 func (c *consoleClient) ListClusters() (*consoleclient.ListClusters, error) {
 
 	result, err := c.client.ListClusters(c.ctx, nil, nil, nil)
