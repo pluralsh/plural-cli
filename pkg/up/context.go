@@ -140,8 +140,8 @@ func backfillConsoleContext(man *manifest.ProjectManifest) error {
 		return err
 	}
 
-	if !strings.HasPrefix(url, "git@") || !strings.HasPrefix(url, "ssh:") {
-		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry")
+	if strings.HasPrefix(url, "http") {
+		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry", url)
 	}
 
 	console["repo_url"] = url
