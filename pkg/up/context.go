@@ -11,6 +11,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 
 	"github.com/mitchellh/go-homedir"
 )
@@ -134,6 +135,16 @@ func backfillConsoleContext(man *manifest.ProjectManifest) error {
 		return err
 	}
 
+	url, err := git.GetURL()
+	if err != nil {
+		return err
+	}
+
+	if !strings.HasPrefix(url, "git@") || !strings.HasPrefix(url, "ssh:") {
+		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry")
+	}
+
+	console["repo_url"] = url
 	console["private_key"] = contents
 	ctx.Configuration["console"] = console
 	return ctx.Write(path)
