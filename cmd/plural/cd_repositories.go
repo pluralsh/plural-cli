@@ -3,7 +3,7 @@ package plural
 import (
 	"fmt"
 
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"

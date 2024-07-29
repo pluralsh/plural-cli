@@ -1,7 +1,7 @@
 package cd
 
 import (
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 )
 
 func Eject(_ *gqlclient.ClusterFragment) error {

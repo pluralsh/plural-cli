@@ -240,9 +240,7 @@ func (client *client) ListKeyBackups() ([]*KeyBackup, error) {
 		return nil, err
 	}
 
-	backups := algorithms.Map(resp.KeyBackups.Edges, func(edge *struct {
-		Node *gqlclient.KeyBackupFragment "json:\"node\" graphql:\"node\""
-	}) *KeyBackup {
+	backups := algorithms.Map(resp.KeyBackups.Edges, func(edge *gqlclient.Backups_KeyBackups_Edges) *KeyBackup {
 		return convertKeyBackup(edge.Node)
 	})
 

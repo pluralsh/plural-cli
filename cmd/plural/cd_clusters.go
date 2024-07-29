@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"

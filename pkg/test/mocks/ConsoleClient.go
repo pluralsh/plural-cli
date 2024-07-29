@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 	mock "github.com/stretchr/testify/mock"
 )
 

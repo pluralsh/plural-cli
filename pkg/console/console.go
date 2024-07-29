@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	consoleclient "github.com/pluralsh/console-client-go"
+	consoleclient "github.com/pluralsh/console/go/client"
 )
 
 type consoleClient struct {

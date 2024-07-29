@@ -1,7 +1,7 @@
 package console
 
 import (
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 )
 
 func (c *consoleClient) ListNotificationSinks(after *string, first *int64) (*gqlclient.ListNotificationSinks_NotificationSinks, error) {

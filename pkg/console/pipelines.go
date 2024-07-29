@@ -3,7 +3,7 @@ package console
 import (
 	"strings"
 
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
