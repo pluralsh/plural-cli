@@ -121,11 +121,11 @@ func (client *client) CreateCrd(repo string, chart string, file string) error {
 		Name:  file,
 		Field: "blob",
 	}
-
+	client.pluralClient.Client.CustomDo = gqlclient.WithFiles([]gqlclient.Upload{upload}, client.httpClient)
 	_, err = client.pluralClient.CreateCrd(context.Background(), gqlclient.ChartName{
 		Chart: &chart,
 		Repo:  &repo,
-	}, name, "blob", gqlclient.WithFiles([]gqlclient.Upload{upload}))
+	}, name, "blob")
 
 	return err
 }

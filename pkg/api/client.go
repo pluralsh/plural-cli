@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	rawclient "github.com/Yamashou/gqlgenc/client"
+	rawclient "github.com/Yamashou/gqlgenc/clientv2"
 	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
 
@@ -105,6 +105,7 @@ type client struct {
 	ctx          context.Context
 	pluralClient *gqlclient.Client
 	config       config.Config
+	httpClient   *http.Client
 }
 
 func NewClient() Client {
@@ -121,9 +122,10 @@ func FromConfig(conf *config.Config) Client {
 	}
 
 	return &client{
-		pluralClient: gqlclient.NewClient(&httpClient, conf.Url()),
+		pluralClient: gqlclient.NewClient(&httpClient, conf.Url(), nil),
 		config:       *conf,
 		ctx:          context.Background(),
+		httpClient:   &httpClient,
 	}
 
 }

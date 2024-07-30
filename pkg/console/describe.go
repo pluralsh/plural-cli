@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	consoleclient "github.com/pluralsh/console-client-go"
+	consoleclient "github.com/pluralsh/console/go/client"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
