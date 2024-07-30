@@ -2,8 +2,6 @@ module github.com/pluralsh/plural-cli
 
 go 1.22.0
 
-replace github.com/pluralsh/gqlclient => /home/lukasz/GolandProjects/plural/gqlclient
-
 require (
 	cloud.google.com/go/compute v1.23.3
 	cloud.google.com/go/resourcemanager v1.9.4
@@ -59,7 +57,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.16
 	github.com/pluralsh/console/go/client v1.4.0
-	github.com/pluralsh/gqlclient v1.12.0
+	github.com/pluralsh/gqlclient v1.12.1
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.1.8
 	github.com/pluralsh/terraform-delinker v0.0.2

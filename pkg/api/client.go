@@ -105,6 +105,7 @@ type client struct {
 	ctx          context.Context
 	pluralClient *gqlclient.Client
 	config       config.Config
+	httpClient   *http.Client
 }
 
 func NewClient() Client {
@@ -124,6 +125,7 @@ func FromConfig(conf *config.Config) Client {
 		pluralClient: gqlclient.NewClient(&httpClient, conf.Url(), nil),
 		config:       *conf,
 		ctx:          context.Background(),
+		httpClient:   &httpClient,
 	}
 
 }
