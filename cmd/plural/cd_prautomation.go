@@ -21,13 +21,12 @@ func (p *Plural) cdPrAutomationsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "create",
-			Action:    latestVersion(requireArgs(p.handleCreatePrAutomation, []string{"NAME"})),
+			Action:    latestVersion(requireArgs(p.handleCreatePrAutomation, []string{"ID"})),
 			Usage:     "create PR automation",
-			ArgsUsage: "NAME",
+			ArgsUsage: "ID",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "context", Usage: "JSON blob string"},
 				cli.StringFlag{Name: "branch", Usage: "branch name"},
-				cli.StringFlag{Name: "automation-id", Usage: "the ID of the PR automation", Required: true},
 			},
 		},
 	}
@@ -37,26 +36,28 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	var branch *string
-	name := c.Args().Get(0)
-	id := c.String("automation-id")
-	context := c.String("context")
-	if context == "-" {
-		bytes, err := io.ReadAll(os.Stdin)
-		if err != nil {
-			return err
+	var branch, context *string
+
+	id := c.Args().Get(0)
+	if c := c.String("context"); c != "" {
+		if c == "-" {
+			bytes, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				return err
+			}
+			context = lo.ToPtr(string(bytes))
 		}
-		context = string(bytes)
 	}
+
 	if b := c.String("branch"); b != "" {
 		branch = &b
 	}
 
-	_, err := p.ConsoleClient.CreatePullRequest(id, name, branch, lo.ToPtr(context))
+	pr, err := p.ConsoleClient.CreatePullRequest(id, branch, context)
 	if err != nil {
 		return err
 	}
 
-	utils.Success("PR %s created successfully\n", name)
+	utils.Success("PR %s created successfully\n", pr.ID)
 	return nil
 }
