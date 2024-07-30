@@ -36,6 +36,7 @@ func (p *Plural) cdCommands() []cli.Command {
 		p.cdNotifications(),
 		p.cdSettings(),
 		p.cdStacks(),
+		p.cdPrAutomations(),
 		{
 			Name:   "install",
 			Action: p.handleInstallDeploymentsOperator,

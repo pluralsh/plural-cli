@@ -79,7 +79,7 @@ func retrier(retryMsg, successMsg string, f func() error) error {
 
 	go func() {
 		for {
-			fmt.Printf(retryMsg)
+			fmt.Printf(retryMsg) //nolint
 			err := f()
 			if err == nil {
 				utils.Success(successMsg)
