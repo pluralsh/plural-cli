@@ -1,11 +1,9 @@
 package plural
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
-	gqlclient "github.com/pluralsh/console-client-go"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -27,7 +25,9 @@ func (p *Plural) cdPrAutomationsCommands() []cli.Command {
 			Usage:     "create PR automation",
 			ArgsUsage: "NAME",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "context", Usage: "JSON blob string", Required: true},
+				cli.StringFlag{Name: "context", Usage: "JSON blob string"},
+				cli.StringFlag{Name: "branch", Usage: "branch name"},
+				cli.StringFlag{Name: "automation-id", Usage: "the ID of the PR automation", Required: true},
 			},
 		},
 	}
@@ -37,7 +37,9 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
+	var branch *string
 	name := c.Args().Get(0)
+	id := c.String("automation-id")
 	context := c.String("context")
 	if context == "-" {
 		bytes, err := io.ReadAll(os.Stdin)
@@ -46,18 +48,15 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 		}
 		context = string(bytes)
 	}
-	attrs := &gqlclient.PrAutomationAttributes{}
-
-	err := json.Unmarshal([]byte(context), attrs)
-	if err != nil {
-		return err
+	if b := c.String("branch"); b != "" {
+		branch = &b
 	}
-	attrs.Name = lo.ToPtr(name)
-	_, err = p.ConsoleClient.CreatePrAutomation(*attrs)
+
+	_, err := p.ConsoleClient.CreatePullRequest(id, name, branch, lo.ToPtr(context))
 	if err != nil {
 		return err
 	}
 
-	utils.Success("PR automation %s created successfully\n", name)
+	utils.Success("PR %s created successfully\n", name)
 	return nil
 }
