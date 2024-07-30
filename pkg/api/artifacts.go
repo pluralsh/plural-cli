@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/gqlclient"
+
 	"github.com/pluralsh/gqlclient/pkg/utils"
 	file "github.com/pluralsh/plural-cli/pkg/utils"
 	"sigs.k8s.io/yaml"
@@ -63,11 +64,12 @@ func (client *client) CreateArtifact(repo string, attrs ArtifactAttributes) (Art
 		return artifact, err
 	}
 
-	createArtifact, err := client.pluralClient.CreateArtifact(context.Background(), repo, attrs.Name, readme, attrs.Type, attrs.Platform, "blob", &attrs.Arch, gqlclient.WithFiles([]gqlclient.Upload{{
+	client.pluralClient.Client.CustomDo = gqlclient.WithFiles([]gqlclient.Upload{{
 		Field: "blob",
 		Name:  attrs.Blob,
 		R:     rf,
-	}}))
+	}}, client.httpClient)
+	createArtifact, err := client.pluralClient.CreateArtifact(context.Background(), repo, attrs.Name, readme, attrs.Type, attrs.Platform, "blob", &attrs.Arch)
 	if err != nil {
 		return artifact, err
 	}

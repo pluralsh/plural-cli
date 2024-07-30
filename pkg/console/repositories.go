@@ -1,7 +1,7 @@
 package console
 
 import (
-	gqlclient "github.com/pluralsh/console-client-go"
+	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/api"
 )
 

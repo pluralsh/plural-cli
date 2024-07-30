@@ -3,7 +3,7 @@ package template
 import (
 	"strings"
 
-	console "github.com/pluralsh/console-client-go"
+	console "github.com/pluralsh/console/go/client"
 )
 
 func clusterConfiguration(cluster *console.BaseClusterFragment) map[string]interface{} {

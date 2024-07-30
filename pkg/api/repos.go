@@ -143,8 +143,8 @@ func (client *client) CreateRepository(name, publisher string, input *gqlclient.
 
 		input.Notes = &notes
 	}
-
-	_, err = client.pluralClient.CreateRepository(context.Background(), name, publisher, *input, gqlclient.WithFiles(uploads))
+	client.pluralClient.Client.CustomDo = gqlclient.WithFiles(uploads, client.httpClient)
+	_, err = client.pluralClient.CreateRepository(context.Background(), name, publisher, *input)
 	return err
 }
 

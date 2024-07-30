@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	consoleclient "github.com/pluralsh/console-client-go"
+	consoleclient "github.com/pluralsh/console/go/client"
 	plural "github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"

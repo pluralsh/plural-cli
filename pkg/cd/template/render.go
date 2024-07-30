@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	console "github.com/pluralsh/console-client-go"
+	console "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/polly/template"
 )
 

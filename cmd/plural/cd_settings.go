@@ -1,7 +1,7 @@
 package plural
 
 import (
-	consoleclient "github.com/pluralsh/console-client-go"
+	consoleclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )

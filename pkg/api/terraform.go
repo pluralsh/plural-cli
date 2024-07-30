@@ -97,13 +97,14 @@ func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
 	defer rf.Close()
 	defer os.Remove(tarFile)
 
-	resp, err := client.pluralClient.UploadTerraform(client.ctx, repoName, name, "package", gqlclient.WithFiles([]gqlclient.Upload{
+	client.pluralClient.Client.CustomDo = gqlclient.WithFiles([]gqlclient.Upload{
 		{
 			Field: "package",
 			Name:  tarFile,
 			R:     rf,
 		},
-	}))
+	}, client.httpClient)
+	resp, err := client.pluralClient.UploadTerraform(client.ctx, repoName, name, "package")
 	if err != nil {
 		return tf, err
 	}
