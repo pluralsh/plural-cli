@@ -160,6 +160,36 @@ func (_m *ConsoleClient) CreateNotificationSinks(attr gqlclient.NotificationSink
 	return r0, r1
 }
 
+// CreatePrAutomation provides a mock function with given fields: attrs
+func (_m *ConsoleClient) CreatePrAutomation(attrs gqlclient.PrAutomationAttributes) (*gqlclient.PrAutomationFragment, error) {
+	ret := _m.Called(attrs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreatePrAutomation")
+	}
+
+	var r0 *gqlclient.PrAutomationFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(gqlclient.PrAutomationAttributes) (*gqlclient.PrAutomationFragment, error)); ok {
+		return rf(attrs)
+	}
+	if rf, ok := ret.Get(0).(func(gqlclient.PrAutomationAttributes) *gqlclient.PrAutomationFragment); ok {
+		r0 = rf(attrs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gqlclient.PrAutomationFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(gqlclient.PrAutomationAttributes) error); ok {
+		r1 = rf(attrs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateProvider provides a mock function with given fields: attr
 func (_m *ConsoleClient) CreateProvider(attr gqlclient.ClusterProviderAttributes) (*gqlclient.CreateClusterProvider, error) {
 	ret := _m.Called(attr)

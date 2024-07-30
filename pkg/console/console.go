@@ -54,6 +54,7 @@ type ConsoleClient interface {
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
+	CreatePrAutomation(attrs consoleclient.PrAutomationAttributes) (*consoleclient.PrAutomationFragment, error)
 }
 
 type authedTransport struct {
