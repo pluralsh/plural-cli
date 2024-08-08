@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 
 	"github.com/olekukonko/tablewriter"
@@ -25,13 +27,13 @@ func (p *Plural) packagesCommands() []cli.Command {
 			Name:      "uninstall",
 			Usage:     "uninstall a helm or terraform package",
 			ArgsUsage: "helm|terraform REPO NAME",
-			Action:    latestVersion(affirmed(requireArgs(rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
+			Action:    common.LatestVersion(affirmed(requireArgs(rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
 		},
 		{
 			Name:      "list",
 			Usage:     "lists the packages installed for a given repo",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(rooted(p.listPackages), []string{"REPO"})),
+			Action:    common.LatestVersion(requireArgs(rooted(p.listPackages), []string{"REPO"})),
 		},
 		{
 			Name:        "show",

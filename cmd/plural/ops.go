@@ -3,6 +3,8 @@ package plural
 import (
 	"fmt"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -15,12 +17,12 @@ func (p *Plural) opsCommands() []cli.Command {
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(initKubeconfig(p.handleTerminateNode)),
+			Action:    common.LatestVersion(initKubeconfig(p.handleTerminateNode)),
 		},
 		{
 			Name:   "cluster",
 			Usage:  "list the nodes in your cluster",
-			Action: latestVersion(initKubeconfig(p.handleListNodes)),
+			Action: common.LatestVersion(initKubeconfig(p.handleListNodes)),
 		},
 	}
 }

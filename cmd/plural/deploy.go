@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/cmd/crypto"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/application"
@@ -91,8 +95,8 @@ func diffed(_ *cli.Context) error {
 func (p *Plural) build(c *cli.Context) error {
 	p.InitPluralClient()
 	force := c.Bool("force")
-	if err := CheckGitCrypt(c); err != nil {
-		return errors.ErrorWrap(errNoGit, "Failed to scan your repo for secrets to encrypt them")
+	if err := crypto.CheckGitCrypt(c); err != nil {
+		return errors.ErrorWrap(common.ErrNoGit, "Failed to scan your repo for secrets to encrypt them")
 	}
 
 	if c.IsSet("only") {
@@ -103,7 +107,7 @@ func (p *Plural) build(c *cli.Context) error {
 			return utils.HighlightError(fmt.Errorf("%s is not installed. Please install it with `plural bundle install`", c.String("only")))
 		}
 
-		return p.doBuild(installation, force)
+		return common.DoBuild(p.Client, installation, force)
 	}
 
 	installations, err := p.getSortedInstallations("")
@@ -112,51 +116,11 @@ func (p *Plural) build(c *cli.Context) error {
 	}
 
 	for _, installation := range installations {
-		if err := p.doBuild(installation, force); err != nil {
+		if err := common.DoBuild(p.Client, installation, force); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func (p *Plural) doBuild(installation *api.Installation, force bool) error {
-	repoName := installation.Repository.Name
-	fmt.Printf("Building workspace for %s\n", repoName)
-
-	if !wkspace.Configured(repoName) {
-		fmt.Printf("You have not locally configured %s but have it registered as an installation in our api, ", repoName)
-		fmt.Printf("either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`\n", repoName, repoName)
-		return nil
-	}
-
-	workspace, err := wkspace.New(p.Client, installation)
-	if err != nil {
-		return err
-	}
-
-	vsn, ok := workspace.RequiredCliVsn()
-	if ok && !versionValid(vsn) {
-		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
-	}
-
-	if err := workspace.Prepare(); err != nil {
-		return err
-	}
-
-	build, err := scaffold.Scaffolds(workspace)
-	if err != nil {
-		return err
-	}
-
-	err = build.Execute(workspace, force)
-	if err == nil {
-		utils.Success("Finished building %s\n\n", repoName)
-	}
-
-	workspace.PrintLinks()
-
-	appReadme(repoName, false) // nolint:errcheck
-	return err
 }
 
 func (p *Plural) info(c *cli.Context) error {
