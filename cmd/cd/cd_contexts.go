@@ -1,8 +1,9 @@
-package plural
+package cd
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/console"
@@ -27,13 +28,13 @@ func (p *Plural) cdServiceContextCommands() []cli.Command {
 				cli.StringFlag{Name: "config-file", Usage: "path for json configuration file with the context blob", Required: true},
 				cli.StringFlag{Name: "name", Usage: "context name", Required: true},
 			},
-			Action: latestVersion(requireArgs(p.handleUpsertServiceContext, []string{"NAME"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleUpsertServiceContext, []string{"NAME"})),
 			Usage:  "upsert service context",
 		},
 		{
 			Name:      "get",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(requireArgs(p.handleGetServiceContext, []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleGetServiceContext, []string{"NAME"})),
 			Usage:     "get service context",
 		},
 	}

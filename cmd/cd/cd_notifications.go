@@ -1,8 +1,9 @@
-package plural
+package cd
 
 import (
 	"github.com/AlecAivazis/survey/v2"
 	consoleclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
@@ -28,13 +29,13 @@ func (p *Plural) cdNotificationSinkCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "list",
-			Action: latestVersion(p.handleListNotificationSinks),
+			Action: common.LatestVersion(p.handleListNotificationSinks),
 			Usage:  "list notification sinks",
 		},
 		{
 			Name:      "upsert",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(requireArgs(p.handleCreateNotificationSinks, []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateNotificationSinks, []string{"NAME"})),
 			Usage:     "upsert notification sink",
 		},
 	}

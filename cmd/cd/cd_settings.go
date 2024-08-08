@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	consoleclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -19,7 +20,7 @@ func (p *Plural) cdSettingsCommands() []cli.Command {
 		{
 			Name:      "agents",
 			ArgsUsage: "FILENAME",
-			Action:    latestVersion(requireArgs(p.handleUpdateAgents, []string{"FILENAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateAgents, []string{"FILENAME"})),
 			Usage:     "update agents settings",
 		},
 	}

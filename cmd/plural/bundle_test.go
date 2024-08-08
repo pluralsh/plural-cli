@@ -1,6 +1,7 @@
 package plural_test
 
 import (
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"os"
 	"testing"
 
@@ -59,7 +60,7 @@ func TestBundleList(t *testing.T) {
 
 			client := mocks.NewClient(t)
 			client.On("ListRecipes", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(test.recipe, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -85,7 +86,7 @@ func TestBundleInstallNoGitRootDirectory(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			_, err := captureStdout(app, os.Args)
@@ -146,7 +147,7 @@ func TestBundleInstall(t *testing.T) {
 			client := mocks.NewClient(t)
 			client.On("GetRecipe", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(test.recipe, nil)
 			client.On("InstallRecipe", mock.AnythingOfType("string")).Return(nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)

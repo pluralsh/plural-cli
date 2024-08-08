@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -46,7 +48,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "client-config",
 			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerConfig))), []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerConfig))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -66,12 +68,12 @@ func (p *Plural) vpnListCommands() []cli.Command {
 		{
 			Name:   "servers",
 			Usage:  "lists vpn servers",
-			Action: latestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardServerList)))),
+			Action: common.LatestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardServerList)))),
 		},
 		{
 			Name:   "clients",
 			Usage:  "lists vpn clients for a server",
-			Action: latestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerList)))),
+			Action: common.LatestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerList)))),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -88,7 +90,7 @@ func (p *Plural) vpnCreateCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -105,7 +107,7 @@ func (p *Plural) vpnDeleteCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "delete a vpn client for a server",
-			Action:    latestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",

@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -21,12 +22,12 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "list",
-			Action: latestVersion(p.handleListCDRepositories),
+			Action: common.LatestVersion(p.handleListCDRepositories),
 			Usage:  "list repositories",
 		},
 		{
 			Name:   "create",
-			Action: latestVersion(p.handleCreateCDRepository),
+			Action: common.LatestVersion(p.handleCreateCDRepository),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
 				cli.StringFlag{Name: "private-key", Usage: "git repo private key"},
@@ -39,7 +40,7 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 		{
 			Name:      "update",
 			ArgsUsage: "REPO_ID",
-			Action:    latestVersion(requireArgs(p.handleUpdateCDRepository, []string{"REPO_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCDRepository, []string{"REPO_ID"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
 				cli.StringFlag{Name: "private-key", Usage: "git repo private key"},

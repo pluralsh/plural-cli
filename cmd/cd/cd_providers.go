@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"strconv"
 	"strings"
 
@@ -29,7 +30,7 @@ func (p *Plural) cdProvidersCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "list",
-			Action: latestVersion(p.handleListProviders),
+			Action: common.LatestVersion(p.handleListProviders),
 			Usage:  "list providers",
 		},
 	}

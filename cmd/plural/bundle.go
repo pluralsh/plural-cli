@@ -2,6 +2,7 @@ package plural
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/urfave/cli"
 
@@ -17,7 +18,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(rooted(requireArgs(p.bundleList, []string{"repo"}))),
+			Action:    common.LatestVersion(rooted(requireArgs(p.bundleList, []string{"repo"}))),
 		},
 		{
 			Name:      "install",
@@ -29,7 +30,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: tracked(latestVersion(rooted(p.bundleInstall)), "bundle.install"),
+			Action: tracked(common.LatestVersion(rooted(p.bundleInstall)), "bundle.install"),
 		},
 	}
 }
@@ -46,7 +47,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "re-enter the configuration for all bundles",
 				},
 			},
-			Action: tracked(latestVersion(rooted(requireArgs(p.stackInstall, []string{"stack-name"}))), "stack.install"),
+			Action: tracked(common.LatestVersion(rooted(requireArgs(p.stackInstall, []string{"stack-name"}))), "stack.install"),
 		},
 		{
 			Name:  "list",
@@ -57,7 +58,7 @@ func (p *Plural) stackCommands() []cli.Command {
 					Usage: "only list stacks within your account",
 				},
 			},
-			Action: latestVersion(rooted(p.stackList)),
+			Action: common.LatestVersion(rooted(p.stackList)),
 		},
 	}
 }

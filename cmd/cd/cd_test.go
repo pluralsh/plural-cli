@@ -1,14 +1,18 @@
-package plural_test
+package cd_test
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"testing"
 
 	consoleclient "github.com/pluralsh/console/go/client"
-	plural "github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/plural"
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/urfave/cli"
 )
 
 func TestListCDClusters(t *testing.T) {
@@ -30,9 +34,9 @@ func TestListCDClusters(t *testing.T) {
 			client := mocks.NewConsoleClient(t)
 			client.On("ListClusters").Return(test.result, nil)
 			app := plural.CreateNewApp(&plural.Plural{
-				Client:            nil,
-				ConsoleClient:     client,
-				Kube:              nil,
+				Plural: pluralclient.Plural{
+					ConsoleClient: client,
+				},
 				HelmConfiguration: nil,
 			})
 			app.HelpName = plural.ApplicationName
@@ -76,9 +80,9 @@ Name:  test
 			client := mocks.NewConsoleClient(t)
 			client.On("GetCluster", mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(test.result, nil)
 			app := plural.CreateNewApp(&plural.Plural{
-				Client:            nil,
-				ConsoleClient:     client,
-				Kube:              nil,
+				Plural: pluralclient.Plural{
+					ConsoleClient: client,
+				},
 				HelmConfiguration: nil,
 			})
 			app.HelpName = plural.ApplicationName
@@ -116,9 +120,9 @@ func TestListCDRepositories(t *testing.T) {
 			client := mocks.NewConsoleClient(t)
 			client.On("ListRepositories").Return(test.result, nil)
 			app := plural.CreateNewApp(&plural.Plural{
-				Client:            nil,
-				ConsoleClient:     client,
-				Kube:              nil,
+				Plural: pluralclient.Plural{
+					ConsoleClient: client,
+				},
 				HelmConfiguration: nil,
 			})
 			app.HelpName = plural.ApplicationName
@@ -156,9 +160,9 @@ func TestListCDServices(t *testing.T) {
 			client := mocks.NewConsoleClient(t)
 			client.On("ListClusterServices", mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(test.result, nil)
 			app := plural.CreateNewApp(&plural.Plural{
-				Client:            nil,
-				ConsoleClient:     client,
-				Kube:              nil,
+				Plural: pluralclient.Plural{
+					ConsoleClient: client,
+				},
 				HelmConfiguration: nil,
 			})
 			app.HelpName = plural.ApplicationName
@@ -174,4 +178,24 @@ func TestListCDServices(t *testing.T) {
 			}
 		})
 	}
+}
+
+func captureStdout(app *cli.App, arg []string) (string, error) {
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := app.Run(arg)
+	if err != nil {
+		return "", err
+	}
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }

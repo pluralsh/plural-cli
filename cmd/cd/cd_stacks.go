@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/samber/lo"
@@ -24,7 +25,7 @@ func (p *Plural) cdStacksCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "gen-backend",
-			Action: latestVersion(p.handleGenerateBackend),
+			Action: common.LatestVersion(p.handleGenerateBackend),
 			Usage:  "generate '_override.tf' to configure a custom terraform backend",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "address", Usage: "terraform backend address", Required: false},

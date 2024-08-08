@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -20,7 +22,7 @@ func (p *Plural) reposCommands() []cli.Command {
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "APP",
-			Action:    latestVersion(requireArgs(p.handleUnlockRepo, []string{"APP"})),
+			Action:    common.LatestVersion(requireArgs(p.handleUnlockRepo, []string{"APP"})),
 		},
 		{
 			Name:      "release",
@@ -32,7 +34,7 @@ func (p *Plural) reposCommands() []cli.Command {
 					Usage: "tag name for a given release channel, eg stable, warm, dev, prod",
 				},
 			},
-			Action: latestVersion(requireArgs(p.handleRelease, []string{"APP"})),
+			Action: common.LatestVersion(requireArgs(p.handleRelease, []string{"APP"})),
 		},
 		{
 			Name:  "reinstall",
@@ -48,7 +50,7 @@ func (p *Plural) reposCommands() []cli.Command {
 		{
 			Name:   "reset",
 			Usage:  "eliminates your current plural installation set, to change cloud provider or eject from plural",
-			Action: latestVersion(p.handleResetInstallations),
+			Action: common.LatestVersion(p.handleResetInstallations),
 		},
 		{
 			Name:   "synced",
@@ -59,7 +61,7 @@ func (p *Plural) reposCommands() []cli.Command {
 			Name:      "uninstall",
 			Usage:     "uninstall an app from the plural api",
 			ArgsUsage: "APP",
-			Action:    latestVersion(requireArgs(p.handleUninstall, []string{"APP"})),
+			Action:    common.LatestVersion(requireArgs(p.handleUninstall, []string{"APP"})),
 		},
 		{
 			Name:      "list",
@@ -75,7 +77,7 @@ func (p *Plural) reposCommands() []cli.Command {
 					Usage: "format to print the repositories out, eg csv or default is table",
 				},
 			},
-			Action: latestVersion(p.handleListRepositories),
+			Action: common.LatestVersion(p.handleListRepositories),
 		},
 	}
 }

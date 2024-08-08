@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -15,18 +16,18 @@ func configCommands() []cli.Command {
 			Name:      "amend",
 			Usage:     "modify config",
 			ArgsUsage: "[key] [value]",
-			Action:    latestVersion(handleAmend),
+			Action:    common.LatestVersion(handleAmend),
 		},
 		{
 			Name:      "read",
 			Usage:     "dumps config",
 			ArgsUsage: "",
-			Action:    latestVersion(handleRead),
+			Action:    common.LatestVersion(handleRead),
 		},
 		{
 			Name:   "import",
 			Usage:  "imports a new config from a given token",
-			Action: latestVersion(handleConfigImport),
+			Action: common.LatestVersion(handleConfigImport),
 		},
 	}
 }
@@ -37,25 +38,25 @@ func profileCommands() []cli.Command {
 			Name:      "use",
 			Usage:     "moves the config in PROFILE to the current config",
 			ArgsUsage: "PROFILE",
-			Action:    latestVersion(handleUseProfile),
+			Action:    common.LatestVersion(handleUseProfile),
 		},
 		{
 			Name:      "save",
 			Usage:     "saves the current config as PROFILE",
 			ArgsUsage: "PROFILE",
-			Action:    latestVersion(handleSaveProfile),
+			Action:    common.LatestVersion(handleSaveProfile),
 		},
 		{
 			Name:      "show",
 			Usage:     "displays the configuration for the current profile",
 			ArgsUsage: "PROFILE",
-			Action:    latestVersion(handleRead),
+			Action:    common.LatestVersion(handleRead),
 		},
 		{
 			Name:      "list",
 			Usage:     "lists all saved profiles",
 			ArgsUsage: "",
-			Action:    latestVersion(listProfiles),
+			Action:    common.LatestVersion(listProfiles),
 		},
 	}
 }

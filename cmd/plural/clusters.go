@@ -2,6 +2,7 @@ package plural
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"
@@ -24,12 +25,12 @@ func (p *Plural) clusterCommands() []cli.Command {
 		{
 			Name:   "list",
 			Usage:  "lists clusters accessible to your user",
-			Action: latestVersion(p.listClusters),
+			Action: common.LatestVersion(p.listClusters),
 		},
 		{
 			Name:   "transfer",
 			Usage:  "transfers ownership of the current cluster to another",
-			Action: latestVersion(rooted(p.transferOwnership)),
+			Action: common.LatestVersion(rooted(p.transferOwnership)),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "email",
@@ -46,7 +47,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 					Usage: "the id of the source cluster",
 				},
 			},
-			Action: latestVersion(p.showCluster),
+			Action: common.LatestVersion(p.showCluster),
 		},
 		{
 			Name:  "depend",
@@ -61,31 +62,31 @@ func (p *Plural) clusterCommands() []cli.Command {
 					Usage: "the id of the cluster waiting for promotion",
 				},
 			},
-			Action: latestVersion(p.dependCluster),
+			Action: common.LatestVersion(p.dependCluster),
 		},
 		{
 			Name:   "promote",
 			Usage:  "promote pending upgrades to your cluster",
-			Action: latestVersion(p.promoteCluster),
+			Action: common.LatestVersion(p.promoteCluster),
 		},
 		{
 			Name:      "wait",
 			Usage:     "waits on a cluster until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "mpwait",
 			Usage:     "waits on a machine pool until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:     "migrate",
 			Usage:    "migrate to Cluster API",
-			Action:   latestVersion(rooted(initKubeconfig(p.handleMigration))),
+			Action:   common.LatestVersion(rooted(initKubeconfig(p.handleMigration))),
 			Category: "Publishing",
 			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
@@ -216,7 +217,7 @@ func (p *Plural) transferOwnership(c *cli.Context) error {
 		return err
 	}
 
-	if err := p.assumeServiceAccount(config.Read(), man); err != nil {
+	if err := p.AssumeServiceAccount(config.Read(), man); err != nil {
 		return err
 	}
 

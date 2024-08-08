@@ -3,6 +3,8 @@ package plural
 import (
 	"path/filepath"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/pluralsh/plural-cli/pkg/output"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
@@ -15,7 +17,7 @@ func outputCommands() []cli.Command {
 			Name:      "terraform",
 			Usage:     "generates terraform output",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(handleTerraformOutput),
+			Action:    common.LatestVersion(handleTerraformOutput),
 		},
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/helm"
@@ -22,25 +24,25 @@ func (p *Plural) pushCommands() []cli.Command {
 			Name:      "terraform",
 			Usage:     "pushes a terraform module",
 			ArgsUsage: "path/to/module REPO",
-			Action:    latestVersion(p.handleTerraformUpload),
+			Action:    common.LatestVersion(p.handleTerraformUpload),
 		},
 		{
 			Name:      "helm",
 			Usage:     "pushes a helm chart",
 			ArgsUsage: "path/to/chart REPO",
-			Action:    latestVersion(handleHelmUpload),
+			Action:    common.LatestVersion(handleHelmUpload),
 		},
 		{
 			Name:      "recipe",
 			Usage:     "pushes a recipe",
 			ArgsUsage: "path/to/recipe.yaml REPO",
-			Action:    latestVersion(p.handleRecipeUpload),
+			Action:    common.LatestVersion(p.handleRecipeUpload),
 		},
 		{
 			Name:      "artifact",
 			Usage:     "creates an artifact for the repo",
 			ArgsUsage: "path/to/def.yaml REPO",
-			Action:    latestVersion(p.handleArtifact),
+			Action:    common.LatestVersion(p.handleArtifact),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "platform",
@@ -58,7 +60,7 @@ func (p *Plural) pushCommands() []cli.Command {
 			Name:      "crd",
 			Usage:     "registers a new crd for a chart",
 			ArgsUsage: "path/to/def.yaml REPO CHART",
-			Action:    latestVersion(p.createCrd),
+			Action:    common.LatestVersion(p.createCrd),
 		},
 	}
 }

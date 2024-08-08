@@ -1,4 +1,4 @@
-package plural
+package common
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ var (
 	Date    = ""
 )
 
-func versionValid(vsn string) bool {
+func VersionValid(vsn string) bool {
 	current := Version
 	if !strings.HasPrefix(current, "v") {
 		current = fmt.Sprintf("v%s", current)
@@ -46,7 +46,7 @@ func checkRecency() error {
 	return nil
 }
 
-func versionInfo(c *cli.Context) error {
+func VersionInfo(_ *cli.Context) error {
 	fmt.Println("PLURAL CLI:")
 	fmt.Printf("   version\t%s\n", Version)
 	fmt.Printf("   git commit\t%s\n", Commit)

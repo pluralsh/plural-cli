@@ -3,6 +3,8 @@ package plural
 import (
 	"os"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
@@ -16,7 +18,7 @@ func shellCommands() []cli.Command {
 		{
 			Name:   "sync",
 			Usage:  "syncs the setup in your cloud shell locally",
-			Action: latestVersion(handleShellSync),
+			Action: common.LatestVersion(handleShellSync),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "endpoint",
@@ -31,7 +33,7 @@ func shellCommands() []cli.Command {
 		{
 			Name:   "purge",
 			Usage:  "deletes your cloud shell",
-			Action: latestVersion(handleShellPurge),
+			Action: common.LatestVersion(handleShellPurge),
 		},
 	}
 }

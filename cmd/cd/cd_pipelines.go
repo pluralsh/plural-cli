@@ -1,6 +1,7 @@
-package plural
+package cd
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"io"
 	"os"
 
@@ -21,7 +22,7 @@ func (p *Plural) pipelineCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "create",
-			Action: latestVersion(requireArgs(p.handleCreatePipeline, []string{})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleCreatePipeline, []string{})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "file",

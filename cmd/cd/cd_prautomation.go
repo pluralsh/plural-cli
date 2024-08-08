@@ -1,6 +1,7 @@
-package plural
+package cd
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"io"
 	"os"
 
@@ -21,7 +22,7 @@ func (p *Plural) cdPrAutomationsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "create",
-			Action:    latestVersion(requireArgs(p.handleCreatePrAutomation, []string{"ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreatePrAutomation, []string{"ID"})),
 			Usage:     "create PR automation",
 			ArgsUsage: "ID",
 			Flags: []cli.Flag{

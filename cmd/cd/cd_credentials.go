@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pkg/errors"
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -22,13 +23,13 @@ func (p *Plural) cdCredentialsCommands() []cli.Command {
 		{
 			Name:      "create",
 			ArgsUsage: "PROVIDER_NAME",
-			Action:    latestVersion(requireArgs(p.handleCreateProviderCredentials, []string{"PROVIDER_NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateProviderCredentials, []string{"PROVIDER_NAME"})),
 			Usage:     "create provider credentials",
 		},
 		{
 			Name:      "delete",
 			ArgsUsage: "ID",
-			Action:    latestVersion(requireArgs(p.handleDeleteProviderCredentials, []string{"ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteProviderCredentials, []string{"ID"})),
 			Usage:     "delete provider credentials",
 		},
 	}

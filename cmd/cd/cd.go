@@ -1,19 +1,21 @@
-package plural
+package cd
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/yaml"
-
 	"github.com/pluralsh/plural-cli/pkg/cd"
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -23,6 +25,39 @@ func init() {
 
 var consoleToken string
 var consoleURL string
+
+type Plural struct {
+	client.Plural
+	HelmConfiguration *action.Configuration
+}
+
+func Command(clients client.Plural, helmConfiguration *action.Configuration) cli.Command {
+	plural := Plural{
+		Plural:            clients,
+		HelmConfiguration: helmConfiguration,
+	}
+	return cli.Command{
+		Name:        "deployments",
+		Aliases:     []string{"cd"},
+		Usage:       "view and manage plural deployments",
+		Subcommands: plural.cdCommands(),
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:        "token",
+				Usage:       "console token",
+				EnvVar:      "PLURAL_CONSOLE_TOKEN",
+				Destination: &consoleToken,
+			},
+			cli.StringFlag{
+				Name:        "url",
+				Usage:       "console url address",
+				EnvVar:      "PLURAL_CONSOLE_URL",
+				Destination: &consoleURL,
+			},
+		},
+		Category: "CD",
+	}
+}
 
 func (p *Plural) cdCommands() []cli.Command {
 	return []cli.Command{
@@ -124,7 +159,7 @@ func (p *Plural) doInstallOperator(url, token, values string) error {
 	if err != nil {
 		return err
 	}
-	if alreadyExists && !confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+	if alreadyExists && !common.Confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
 		utils.Success("deployment operator is already installed, skip installation\n")
 		return nil
 	}
@@ -187,7 +222,7 @@ func confirmCluster(url, token string) (bool, error) {
 	if clusterFragment.Provider != nil {
 		provider = clusterFragment.Provider.Name
 	}
-	return confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
+	return common.Confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
 }
 
 func (p *Plural) handleCdLogin(c *cli.Context) (err error) {

@@ -1,6 +1,7 @@
 package plural
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/logs"
 	"github.com/urfave/cli"
@@ -12,13 +13,13 @@ func (p *Plural) logsCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(initKubeconfig(requireArgs(p.handleLogsList, []string{"REPO"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleLogsList, []string{"REPO"}))),
 		},
 		{
 			Name:      "tail",
 			Usage:     "execs the specific logtail",
 			ArgsUsage: "REPO NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(p.handleLogTail, []string{"REPO", "NAME"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleLogTail, []string{"REPO", "NAME"}))),
 		},
 	}
 }

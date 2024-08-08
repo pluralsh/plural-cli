@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -50,7 +52,9 @@ func TestListArtifacts(t *testing.T) {
 			if test.expectedError == "" {
 				client.On("ListArtifacts", mock.AnythingOfType("string")).Return(test.artifacts, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -113,7 +117,9 @@ func TestGetInstallations(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
 			client.On("GetInstallations").Return(test.installations, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -161,7 +167,9 @@ func TestGetCharts(t *testing.T) {
 			if test.expectedError == "" {
 				client.On("GetCharts", mock.AnythingOfType("string")).Return(test.charts, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -220,7 +228,9 @@ func TestGetTerraform(t *testing.T) {
 				client.On("GetTerraform", mock.AnythingOfType("string")).Return(test.terraform, nil)
 			}
 
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -276,7 +286,9 @@ func TestGetVersons(t *testing.T) {
 			if test.expectedError == "" {
 				client.On("GetVersions", mock.AnythingOfType("string")).Return(test.versions, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -344,7 +356,9 @@ func TestGetChartInstallations(t *testing.T) {
 			if test.expectedError == "" {
 				client.On("GetChartInstallations", mock.AnythingOfType("string")).Return(test.chartInstallations, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)
@@ -406,7 +420,9 @@ func TestGetTerraformInstallations(t *testing.T) {
 			if test.expectedError == "" {
 				client.On("GetTerraformInstallations", mock.AnythingOfType("string")).Return(test.terraformInstallations, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
 			res, err := captureStdout(app, os.Args)

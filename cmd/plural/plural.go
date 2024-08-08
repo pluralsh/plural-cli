@@ -1,16 +1,12 @@
 package plural
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/cmd/cd"
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
-	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/exp"
-	"github.com/pluralsh/plural-cli/pkg/kubernetes"
-	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
@@ -23,78 +19,8 @@ func init() {
 const ApplicationName = "plural"
 
 type Plural struct {
-	api.Client
-	ConsoleClient console.ConsoleClient
-	kubernetes.Kube
+	client.Plural
 	HelmConfiguration *action.Configuration
-}
-
-func (p *Plural) InitKube() error {
-	if p.Kube == nil {
-		kube, err := kubernetes.Kubernetes()
-		if err != nil {
-			return err
-		}
-		p.Kube = kube
-	}
-	return nil
-}
-
-func (p *Plural) InitConsoleClient(token, url string) error {
-	if p.ConsoleClient == nil {
-		if token == "" {
-			conf := console.ReadConfig()
-			if conf.Token == "" {
-				return fmt.Errorf("you have not set up a console login, you can run `plural cd login` to save your credentials")
-			}
-
-			token = conf.Token
-			url = conf.Url
-		}
-		consoleClient, err := console.NewConsoleClient(token, url)
-		if err != nil {
-			return err
-		}
-		p.ConsoleClient = consoleClient
-	}
-	return nil
-}
-
-func (p *Plural) assumeServiceAccount(conf config.Config, man *manifest.ProjectManifest) error {
-	owner := man.Owner
-	jwt, email, err := api.FromConfig(&conf).ImpersonateServiceAccount(owner.Email)
-	if err != nil {
-		utils.Error("You (%s) are not the owner of this repo %s, %v \n", conf.Email, owner.Email, api.GetErrorResponse(err, "ImpersonateServiceAccount"))
-		return err
-	}
-	conf.Email = email
-	conf.Token = jwt
-	p.Client = api.FromConfig(&conf)
-	accessToken, err := p.GrabAccessToken()
-	if err != nil {
-		utils.Error("failed to create access token, bailing")
-		return api.GetErrorResponse(err, "GrabAccessToken")
-	}
-	conf.Token = accessToken
-	config.SetConfig(&conf)
-	return nil
-}
-
-func (p *Plural) InitPluralClient() {
-	if p.Client == nil {
-		if project, err := manifest.FetchProject(); err == nil && config.Exists() {
-			conf := config.Read()
-			if owner := project.Owner; owner != nil && conf.Email != owner.Email {
-				utils.LogInfo().Printf("Trying to impersonate service account: %s \n", owner.Email)
-				if err := p.assumeServiceAccount(conf, project); err != nil {
-					os.Exit(1)
-				}
-				return
-			}
-		}
-
-		p.Client = api.NewClient()
-	}
 }
 
 func (p *Plural) getCommands() []cli.Command {
@@ -103,7 +29,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:    "version",
 			Aliases: []string{"v", "vsn"},
 			Usage:   "Gets cli version info",
-			Action:  versionInfo,
+			Action:  common.VersionInfo,
 		},
 		{
 			Name:  "up",
@@ -126,12 +52,12 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "commits your changes with this message",
 				},
 			},
-			Action: latestVersion(p.handleUp),
+			Action: common.LatestVersion(p.handleUp),
 		},
 		{
 			Name:   "down",
 			Usage:  "destroys your management cluster and any apps installed on it",
-			Action: latestVersion(p.handleDown),
+			Action: common.LatestVersion(p.handleDown),
 		},
 		{
 			Name:  "init",
@@ -150,7 +76,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "whether to ignore preflight check failures prior to init",
 				},
 			},
-			Action: tracked(latestVersion(p.handleInit), "cli.init"),
+			Action: tracked(common.LatestVersion(p.handleInit), "cli.init"),
 		},
 		{
 			Name:    "build",
@@ -166,13 +92,13 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "force workspace to build even if remote is out of sync",
 				},
 			},
-			Action: tracked(rooted(latestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
+			Action: tracked(rooted(common.LatestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
 		},
 		{
 			Name:      "info",
 			Usage:     "Get information for your installation of APP",
 			ArgsUsage: "APP",
-			Action:    latestVersion(owned(rooted(p.info))),
+			Action:    common.LatestVersion(owned(rooted(p.info))),
 		},
 		{
 			Name:      "deploy",
@@ -209,14 +135,14 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "use force push when pushing to git",
 				},
 			},
-			Action: tracked(latestVersion(owned(rooted(p.deploy))), "cli.deploy"),
+			Action: tracked(common.LatestVersion(owned(rooted(p.deploy))), "cli.deploy"),
 		},
 		{
 			Name:      "diff",
 			Aliases:   []string{"df"},
 			Usage:     "diffs the state of the current workspace with the deployed version and dumps results to diffs/",
 			ArgsUsage: "APP",
-			Action:    latestVersion(handleDiff),
+			Action:    common.LatestVersion(handleDiff),
 		},
 		{
 			Name:      "clone",
@@ -227,28 +153,28 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "create",
 			Usage:    "scaffolds the resources needed to create a new plural repository",
-			Action:   latestVersion(handleScaffold),
+			Action:   common.LatestVersion(handleScaffold),
 			Category: "Workspace",
 		},
 		{
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(initKubeconfig(requireArgs(handleWatch, []string{"REPO"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleWatch, []string{"REPO"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "wait",
 			Usage:     "waits on applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(handleWait, []string{"REPO"})),
+			Action:    common.LatestVersion(requireArgs(handleWait, []string{"REPO"})),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "info",
 			Usage:     "generates a console dashboard for the namespace of this repo",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(requireArgs(handleInfo, []string{"REPO"})),
+			Action:    common.LatestVersion(requireArgs(handleInfo, []string{"REPO"})),
 			Category:  "Debugging",
 		},
 		{
@@ -260,7 +186,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "pluralfile to use",
 				},
 			},
-			Action:   latestVersion(apply),
+			Action:   common.LatestVersion(apply),
 			Category: "Publishing",
 		},
 		{
@@ -268,14 +194,14 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:   []string{"b"},
 			Usage:     "redeploys the charts in a workspace",
 			ArgsUsage: "APP",
-			Action:    latestVersion(initKubeconfig(owned(p.bounce))),
+			Action:    common.LatestVersion(initKubeconfig(owned(p.bounce))),
 		},
 		{
 			Name:     "readme",
 			Aliases:  []string{"b"},
 			Usage:    "generates the readme for your installation repo",
 			Category: "Workspace",
-			Action:   latestVersion(downloadReadme),
+			Action:   common.LatestVersion(downloadReadme),
 		},
 		{
 			Name:      "destroy",
@@ -300,7 +226,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "tear down the entire cluster gracefully in one go",
 				},
 			},
-			Action: tracked(latestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
+			Action: tracked(common.LatestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
 		},
 		{
 			Name:      "upgrade",
@@ -312,7 +238,7 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "file containing upgrade contents, use - for stdin",
 				},
 			},
-			Action: latestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
+			Action: common.LatestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
 		},
 		{
 			Name:        "auth",
@@ -323,12 +249,12 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "preflights",
 			Usage:    "runs provider preflight checks",
 			Category: "Workspace",
-			Action:   latestVersion(preflights),
+			Action:   common.LatestVersion(preflights),
 		},
 		{
 			Name:   "login",
 			Usage:  "logs into plural and saves credentials to the current config profile",
-			Action: latestVersion(handleLogin),
+			Action: common.LatestVersion(handleLogin),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "endpoint",
@@ -344,19 +270,19 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "import",
 			Usage:    "imports plural config from another file",
-			Action:   latestVersion(handleImport),
+			Action:   common.LatestVersion(handleImport),
 			Category: "User Profile",
 		},
 		{
 			Name:     "repair",
 			Usage:    "commits any new encrypted changes in your local workspace automatically",
-			Action:   latestVersion(handleRepair),
+			Action:   common.LatestVersion(handleRepair),
 			Category: "Workspace",
 		},
 		{
 			Name:     "serve",
 			Usage:    "launch the server",
-			Action:   latestVersion(handleServe),
+			Action:   common.LatestVersion(handleServe),
 			Category: "Workspace",
 		},
 		{
@@ -385,7 +311,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "test",
 			Usage:    "validate a values templace",
-			Action:   latestVersion(testTemplate),
+			Action:   common.LatestVersion(testTemplate),
 			Category: "Publishing",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -484,27 +410,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Debugging",
 		},
 		{
-			Name:        "deployments",
-			Aliases:     []string{"cd"},
-			Usage:       "view and manage plural deployments",
-			Subcommands: p.cdCommands(),
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:        "token",
-					Usage:       "console token",
-					EnvVar:      "PLURAL_CONSOLE_TOKEN",
-					Destination: &consoleToken,
-				},
-				cli.StringFlag{
-					Name:        "url",
-					Usage:       "console url address",
-					EnvVar:      "PLURAL_CONSOLE_URL",
-					Destination: &consoleURL,
-				},
-			},
-			Category: "CD",
-		},
-		{
 			Name:        "pull-requests",
 			Aliases:     []string{"pr"},
 			Usage:       "Generate and manage pull requests",
@@ -521,13 +426,13 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "the values file",
 				},
 			},
-			Action:   latestVersion(handleHelmTemplate),
+			Action:   common.LatestVersion(handleHelmTemplate),
 			Category: "Publishing",
 		},
 		{
 			Name:     "changed",
 			Usage:    "shows repos with pending changes",
-			Action:   latestVersion(diffed),
+			Action:   common.LatestVersion(diffed),
 			Category: "Workspace",
 		},
 		{
@@ -571,12 +476,19 @@ func globalFlags() []cli.Flag {
 }
 
 func CreateNewApp(plural *Plural) *cli.App {
+	if plural == nil {
+		plural = &Plural{}
+	}
 	app := cli.NewApp()
 	app.Name = ApplicationName
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
 	app.Flags = globalFlags()
-	app.Commands = plural.getCommands()
+	commands := []cli.Command{
+		cd.Command(plural.Plural, plural.HelmConfiguration),
+	}
+	commands = append(commands, plural.getCommands()...)
+	app.Commands = commands
 	links := linkCommands()
 	app.Commands = append(app.Commands, links...)
 

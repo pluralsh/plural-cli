@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/helm"
@@ -21,7 +23,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 		{
 			Name:   "kube-init",
 			Usage:  "generates kubernetes credentials for this subworkspace",
-			Action: latestVersion(kubeInit),
+			Action: common.LatestVersion(kubeInit),
 		},
 		{
 			Name:      "readme",
@@ -33,7 +35,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "output to stdout instead of to a file",
 				},
 			},
-			Action: latestVersion(func(c *cli.Context) error { return appReadme(c.Args().Get(0), c.Bool("dry-run")) }),
+			Action: common.LatestVersion(func(c *cli.Context) error { return appReadme(c.Args().Get(0), c.Bool("dry-run")) }),
 		},
 		{
 			Name:      "helm",
@@ -57,43 +59,43 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: latestVersion(initKubeconfig(p.bounceHelm)),
+			Action: common.LatestVersion(initKubeconfig(p.bounceHelm)),
 		},
 		{
 			Name:      "helm-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(p.diffHelm),
+			Action:    common.LatestVersion(p.diffHelm),
 		},
 		{
 			Name:      "helm-deps",
 			Usage:     "updates the helm dependencies for this workspace",
 			ArgsUsage: "PATH",
-			Action:    latestVersion(updateDeps),
+			Action:    common.LatestVersion(updateDeps),
 		},
 		{
 			Name:      "terraform-diff",
 			Usage:     "diffs the helm release for this subworkspace",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(p.diffTerraform),
+			Action:    common.LatestVersion(p.diffTerraform),
 		},
 		{
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(initKubeconfig(p.createCrds)),
+			Action:    common.LatestVersion(initKubeconfig(p.createCrds)),
 		},
 		{
 			Name:      "helm-template",
 			Usage:     "templates the helm values to stdout",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(requireArgs(p.templateHelm, []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(p.templateHelm, []string{"NAME"})),
 		},
 		{
 			Name:      "helm-mapkubeapis",
 			Usage:     "updates in-place Helm release metadata that contains deprecated or removed Kubernetes APIs to a new instance with supported Kubernetes APIs",
 			ArgsUsage: "NAME",
-			Action:    latestVersion(requireArgs(p.mapkubeapis, []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(p.mapkubeapis, []string{"NAME"})),
 		},
 	}
 }

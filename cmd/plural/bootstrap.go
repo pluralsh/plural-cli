@@ -3,6 +3,7 @@ package plural
 import (
 	"context"
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"os"
 	"path"
 	"strings"
@@ -76,7 +77,7 @@ func (p *Plural) namespaceCommands() []cli.Command {
 					Usage: "skip creating when namespace exists",
 				},
 			},
-			Action: latestVersion(initKubeconfig(requireArgs(p.handleCreateNamespace, []string{"NAME"}))),
+			Action: common.LatestVersion(initKubeconfig(requireArgs(p.handleCreateNamespace, []string{"NAME"}))),
 		},
 	}
 }
@@ -97,13 +98,13 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 					Usage: "skip creating when cluster exists",
 				},
 			},
-			Action: latestVersion(requireKind(requireArgs(handleCreateCluster, []string{"NAME"}))),
+			Action: common.LatestVersion(requireKind(requireArgs(handleCreateCluster, []string{"NAME"}))),
 		},
 		{
 			Name:      "delete",
 			ArgsUsage: "NAME",
 			Usage:     "Deletes bootstrap cluster",
-			Action:    latestVersion(requireKind(requireArgs(handleDeleteCluster, []string{"NAME"}))),
+			Action:    common.LatestVersion(requireKind(requireArgs(handleDeleteCluster, []string{"NAME"}))),
 		},
 		{
 			Name:  "move",
@@ -126,13 +127,13 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 					Usage: "Context to be used within the kubeconfig file for the destination management cluster. If empty, current context will be used.",
 				},
 			},
-			Action: latestVersion(p.handleMoveCluster),
+			Action: common.LatestVersion(p.handleMoveCluster),
 		},
 		{
 			Name:      "destroy-cluster-api",
 			ArgsUsage: "NAME",
 			Usage:     "Destroy cluster API",
-			Action:    latestVersion(requireArgs(p.handleDestroyClusterAPI, []string{"NAME"})),
+			Action:    common.LatestVersion(requireArgs(p.handleDestroyClusterAPI, []string{"NAME"})),
 		},
 	}
 }

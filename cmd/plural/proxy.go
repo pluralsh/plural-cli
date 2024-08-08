@@ -1,6 +1,7 @@
 package plural
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/proxy"
 	"github.com/urfave/cli"
@@ -12,13 +13,13 @@ func (p *Plural) proxyCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
 			ArgsUsage: "REPO",
-			Action:    latestVersion(initKubeconfig(requireArgs(p.handleProxyList, []string{"REPO"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleProxyList, []string{"REPO"}))),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
 			ArgsUsage: "REPO NAME",
-			Action:    latestVersion(initKubeconfig(requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
+			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
 		},
 	}
 }

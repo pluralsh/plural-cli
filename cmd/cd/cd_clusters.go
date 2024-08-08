@@ -1,4 +1,4 @@
-package plural
+package cd
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/cd"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes/config"
@@ -39,12 +40,12 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "list",
-			Action: latestVersion(p.handleListClusters),
+			Action: common.LatestVersion(p.handleListClusters),
 			Usage:  "list clusters",
 		},
 		{
 			Name:      "describe",
-			Action:    latestVersion(requireArgs(p.handleDescribeCluster, []string{"CLUSTER_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeCluster, []string{"CLUSTER_ID"})),
 			Usage:     "describe cluster",
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
@@ -53,7 +54,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:      "update",
-			Action:    latestVersion(requireArgs(p.handleUpdateCluster, []string{"CLUSTER_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCluster, []string{"CLUSTER_ID"})),
 			Usage:     "update cluster",
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
@@ -64,7 +65,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:      "delete",
-			Action:    latestVersion(requireArgs(p.handleDeleteCluster, []string{"CLUSTER_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteCluster, []string{"CLUSTER_ID"})),
 			Usage:     "deregisters a cluster in plural cd, and drains all services (unless --soft is specified)",
 			ArgsUsage: "CLUSTER_ID",
 			Flags: []cli.Flag{
@@ -77,13 +78,13 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		{
 			Name:      "get-credentials",
 			Aliases:   []string{"kubeconfig"},
-			Action:    latestVersion(requireArgs(p.handleGetClusterCredentials, []string{"CLUSTER_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleGetClusterCredentials, []string{"CLUSTER_ID"})),
 			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
 			ArgsUsage: "CLUSTER_ID",
 		},
 		{
 			Name:      "create",
-			Action:    latestVersion(requireArgs(p.handleCreateCluster, []string{"CLUSTER_NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateCluster, []string{"CLUSTER_NAME"})),
 			Usage:     "create cluster",
 			ArgsUsage: "CLUSTER_NAME",
 			Flags: []cli.Flag{
@@ -93,7 +94,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:   "bootstrap",
-			Action: latestVersion(p.handleClusterBootstrap),
+			Action: common.LatestVersion(p.handleClusterBootstrap),
 			Usage:  "creates a new BYOK cluster and installs the agent onto it using the current kubeconfig",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
@@ -108,7 +109,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:   "reinstall",
-			Action: latestVersion(p.handleClusterReinstall),
+			Action: common.LatestVersion(p.handleClusterReinstall),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 			},
@@ -450,7 +451,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	existing, err := p.ConsoleClient.CreateCluster(attrs)
 	if err != nil {
-		if errors.Like(err, "handle") && affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+		if errors.Like(err, "handle") && common.Affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
 			handle := lo.ToPtr(attrs.Name)
 			if attrs.Handle != nil {
 				handle = attrs.Handle

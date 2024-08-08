@@ -1,7 +1,8 @@
-package plural
+package cd
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -27,7 +28,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		{
 			Name:      "list",
 			ArgsUsage: "CLUSTER_ID",
-			Action:    latestVersion(requireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
 			Usage:     "list cluster services",
 		},
 		{
@@ -48,13 +49,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				},
 				cli.StringFlag{Name: "config-file", Usage: "path for configuration file"},
 			},
-			Action: latestVersion(requireArgs(p.handleCreateClusterService, []string{"CLUSTER_ID"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"CLUSTER_ID"})),
 			Usage:  "create cluster service",
 		},
 		{
 			Name:      "update",
 			ArgsUsage: "SERVICE_ID",
-			Action:    latestVersion(requireArgs(p.handleUpdateClusterService, []string{"SERVICE_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateClusterService, []string{"SERVICE_ID"})),
 			Usage:     "update cluster service",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "version", Usage: "service version"},
@@ -76,7 +77,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		{
 			Name:      "clone",
 			ArgsUsage: "CLUSTER SERVICE",
-			Action:    latestVersion(requireArgs(p.handleCloneClusterService, []string{"CLUSTER", "SERVICE"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCloneClusterService, []string{"CLUSTER", "SERVICE"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "the name for the cloned service", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "the namespace for this cloned service", Required: true},
@@ -90,7 +91,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		{
 			Name:      "describe",
 			ArgsUsage: "SERVICE_ID",
-			Action:    latestVersion(requireArgs(p.handleDescribeClusterService, []string{"SERVICE_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeClusterService, []string{"SERVICE_ID"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "o", Usage: "output format"},
 			},
@@ -117,13 +118,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		{
 			Name:      "delete",
 			ArgsUsage: "SERVICE_ID",
-			Action:    latestVersion(requireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
 			Usage:     "delete cluster service",
 		},
 		{
 			Name:      "kick",
 			ArgsUsage: "SERVICE_ID",
-			Action:    latestVersion(requireArgs(p.handleKickClusterService, []string{"SERVICE_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"SERVICE_ID"})),
 			Usage:     "force sync cluster service",
 		},
 	}

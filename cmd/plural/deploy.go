@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/application"
@@ -135,7 +137,7 @@ func (p *Plural) doBuild(installation *api.Installation, force bool) error {
 	}
 
 	vsn, ok := workspace.RequiredCliVsn()
-	if ok && !versionValid(vsn) {
+	if ok && !common.VersionValid(vsn) {
 		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
 	}
 
