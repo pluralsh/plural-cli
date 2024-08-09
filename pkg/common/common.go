@@ -2,13 +2,20 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
 	"github.com/pkg/browser"
+	cmdcrypto "github.com/pluralsh/plural-cli/cmd/crypto"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
+	"github.com/pluralsh/plural-cli/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/server"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 	"github.com/urfave/cli"
 
@@ -141,4 +148,86 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context, persist b
 
 	conf.Token = accessToken
 	return conf.Flush()
+}
+func Preflights(c *cli.Context) error {
+	_, err := RunPreflights()
+	return err
+}
+
+func RunPreflights() (provider.Provider, error) {
+	prov, err := provider.GetProvider()
+	if err != nil {
+		return prov, err
+	}
+
+	for _, pre := range prov.Preflights() {
+		if err := pre.Validate(); err != nil {
+			return prov, err
+		}
+	}
+
+	return prov, nil
+}
+
+func HandleClone(c *cli.Context) error {
+	url := c.Args().Get(0)
+	cmd := exec.Command("git", "clone", url)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	repo := git.RepoName(url)
+	_ = os.Chdir(repo)
+	if err := cmdcrypto.CryptoInit(c); err != nil {
+		return err
+	}
+
+	if err := cmdcrypto.HandleUnlock(c); err != nil {
+		return err
+	}
+
+	utils.Success("Your repo has been cloned and decrypted, cd %s to start working\n", repo)
+	return nil
+}
+
+func DownloadReadme(c *cli.Context) error {
+	return wkspace.DownloadReadme()
+}
+
+func HandleImport(c *cli.Context) error {
+	dir, err := filepath.Abs(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
+
+	conf := config.Import(pathing.SanitizeFilepath(filepath.Join(dir, "config.yml")))
+	if err := conf.Flush(); err != nil {
+		return err
+	}
+
+	if err := cmdcrypto.CryptoInit(c); err != nil {
+		return err
+	}
+
+	data, err := os.ReadFile(pathing.SanitizeFilepath(filepath.Join(dir, "key")))
+	if err != nil {
+		return err
+	}
+
+	key, err := crypto.Import(data)
+	if err != nil {
+		return err
+	}
+	if err := key.Flush(); err != nil {
+		return err
+	}
+
+	utils.Success("Workspace properly imported\n")
+	return nil
+}
+
+func HandleServe(c *cli.Context) error {
+	return server.Run()
 }

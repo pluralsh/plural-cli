@@ -9,11 +9,14 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/cd"
 	"github.com/pluralsh/plural-cli/cmd/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/crypto"
+	"github.com/pluralsh/plural-cli/cmd/init"
 	"github.com/pluralsh/plural-cli/cmd/link"
 	"github.com/pluralsh/plural-cli/cmd/log"
+	"github.com/pluralsh/plural-cli/cmd/ops"
 	"github.com/pluralsh/plural-cli/cmd/output"
 	"github.com/pluralsh/plural-cli/cmd/pr"
 	"github.com/pluralsh/plural-cli/cmd/profile"
+	"github.com/pluralsh/plural-cli/cmd/proxy"
 	"github.com/pluralsh/plural-cli/cmd/stack"
 	"github.com/pluralsh/plural-cli/cmd/vpn"
 	"github.com/pluralsh/plural-cli/cmd/workspace"
@@ -73,25 +76,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:   "down",
 			Usage:  "destroys your management cluster and any apps installed on it",
 			Action: common.LatestVersion(p.handleDown),
-		},
-		{
-			Name:  "init",
-			Usage: "initializes plural within a git repo",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "endpoint",
-					Usage: "the endpoint for the plural installation you're working with",
-				},
-				cli.StringFlag{
-					Name:  "service-account",
-					Usage: "email for the service account you'd like to use for this workspace",
-				},
-				cli.BoolFlag{
-					Name:  "ignore-preflights",
-					Usage: "whether to ignore preflight check failures prior to init",
-				},
-			},
-			Action: tracked(common.LatestVersion(p.handleInit), "cli.init"),
 		},
 		{
 			Name:    "build",
@@ -163,7 +147,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:      "clone",
 			Usage:     "clones and decrypts a plural repo",
 			ArgsUsage: "URL",
-			Action:    handleClone,
+			Action:    common.HandleClone,
 		},
 		{
 			Name:     "create",
@@ -216,7 +200,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Aliases:  []string{"b"},
 			Usage:    "generates the readme for your installation repo",
 			Category: "Workspace",
-			Action:   common.LatestVersion(downloadReadme),
+			Action:   common.LatestVersion(common.DownloadReadme),
 		},
 		{
 			Name:      "destroy",
@@ -259,7 +243,7 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:     "preflights",
 			Usage:    "runs provider preflight checks",
 			Category: "Workspace",
-			Action:   common.LatestVersion(preflights),
+			Action:   common.LatestVersion(common.Preflights),
 		},
 		{
 			Name:   "login",
@@ -280,7 +264,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "import",
 			Usage:    "imports plural config from another file",
-			Action:   common.LatestVersion(handleImport),
+			Action:   common.LatestVersion(common.HandleImport),
 			Category: "User Profile",
 		},
 		{
@@ -292,7 +276,7 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "serve",
 			Usage:    "launch the server",
-			Action:   common.LatestVersion(handleServe),
+			Action:   common.LatestVersion(common.HandleServe),
 			Category: "Workspace",
 		},
 		{
@@ -320,12 +304,6 @@ func (p *Plural) getCommands() []cli.Command {
 			},
 		},
 		{
-			Name:        "proxy",
-			Usage:       "proxies into running processes in your cluster",
-			Subcommands: p.proxyCommands(),
-			Category:    "Debugging",
-		},
-		{
 			Name:        "push",
 			Usage:       "utilities for pushing tf or helm packages",
 			Subcommands: p.pushCommands(),
@@ -335,12 +313,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Name:        "packages",
 			Usage:       "Commands for managing your installed packages",
 			Subcommands: p.packagesCommands(),
-		},
-		{
-			Name:        "ops",
-			Usage:       "Commands for simplifying cluster operations",
-			Subcommands: p.opsCommands(),
-			Category:    "Debugging",
 		},
 		{
 			Name:    "template",
@@ -413,10 +385,13 @@ func CreateNewApp(plural *Plural) *cli.App {
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
 		output.Command(),
+		ops.Command(plural.Plural),
 		profile.Command(),
 		pr.Command(),
+		proxy.Command(plural.Plural),
 		stack.Command(plural.Plural),
 		log.Command(plural.Plural),
+		init.Command(plural.Plural),
 		workspace.Command(plural.Plural, plural.HelmConfiguration),
 		vpn.Command(plural.Plural),
 	}

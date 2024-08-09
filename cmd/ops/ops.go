@@ -1,7 +1,8 @@
-package plural
+package ops
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -11,18 +12,34 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "ops",
+		Usage:       "Commands for simplifying cluster operations",
+		Subcommands: p.opsCommands(),
+		Category:    "Debugging",
+	}
+}
+
 func (p *Plural) opsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
 			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(initKubeconfig(p.handleTerminateNode)),
+			Action:    common.LatestVersion(common.InitKubeconfig(p.handleTerminateNode)),
 		},
 		{
 			Name:   "cluster",
 			Usage:  "list the nodes in your cluster",
-			Action: common.LatestVersion(initKubeconfig(p.handleListNodes)),
+			Action: common.LatestVersion(common.InitKubeconfig(p.handleListNodes)),
 		},
 	}
 }

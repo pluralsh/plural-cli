@@ -1,11 +1,28 @@
-package plural
+package proxy
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/proxy"
 	"github.com/urfave/cli"
 )
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "proxy",
+		Usage:       "proxies into running processes in your cluster",
+		Subcommands: p.proxyCommands(),
+		Category:    "Debugging",
+	}
+}
 
 func (p *Plural) proxyCommands() []cli.Command {
 	return []cli.Command{
@@ -13,13 +30,13 @@ func (p *Plural) proxyCommands() []cli.Command {
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleProxyList, []string{"REPO"}))),
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyList, []string{"REPO"}))),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
 			ArgsUsage: "REPO NAME",
-			Action:    common.LatestVersion(initKubeconfig(requireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
 		},
 	}
 }
