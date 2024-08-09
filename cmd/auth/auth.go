@@ -1,7 +1,8 @@
-package plural
+package auth
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"strings"
 
 	"github.com/pluralsh/gqlclient"
@@ -10,6 +11,21 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "auth",
+		Usage:       "Handles authentication to the plural api",
+		Subcommands: p.authCommands(),
+	}
+}
 
 func (p *Plural) authCommands() []cli.Command {
 	return []cli.Command{

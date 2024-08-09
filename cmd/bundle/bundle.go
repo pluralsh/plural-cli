@@ -1,9 +1,10 @@
-package plural
+package bundle
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/common"
 
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -12,13 +13,28 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "bundle",
+		Usage:       "Commands for installing and discovering installation bundles",
+		Subcommands: p.bundleCommands(),
+	}
+}
+
 func (p *Plural) bundleCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(rooted(requireArgs(p.bundleList, []string{"repo"}))),
+			Action:    common.LatestVersion(common.Rooted(common.RequireArgs(p.bundleList, []string{"repo"}))),
 		},
 		{
 			Name:      "install",
@@ -30,35 +46,7 @@ func (p *Plural) bundleCommands() []cli.Command {
 					Usage: "re-enter the configuration for this bundle",
 				},
 			},
-			Action: tracked(common.LatestVersion(rooted(p.bundleInstall)), "bundle.install"),
-		},
-	}
-}
-
-func (p *Plural) stackCommands() []cli.Command {
-	return []cli.Command{
-		{
-			Name:      "install",
-			Usage:     "installs a plural stack for your current provider",
-			ArgsUsage: "NAME",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "refresh",
-					Usage: "re-enter the configuration for all bundles",
-				},
-			},
-			Action: tracked(common.LatestVersion(rooted(requireArgs(p.stackInstall, []string{"stack-name"}))), "stack.install"),
-		},
-		{
-			Name:  "list",
-			Usage: "lists stacks to potentially install",
-			Flags: []cli.Flag{
-				cli.BoolTFlag{
-					Name:  "account",
-					Usage: "only list stacks within your account",
-				},
-			},
-			Action: common.LatestVersion(rooted(p.stackList)),
+			Action: common.Tracked(common.LatestVersion(common.Rooted(p.bundleInstall)), "bundle.install"),
 		},
 	}
 }
@@ -106,32 +94,6 @@ func (p *Plural) bundleInstall(c *cli.Context) (err error) {
 	err = bundle.Install(p.Client, repo, bdl, c.Bool("refresh"))
 	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
 	return
-}
-
-func (p *Plural) stackInstall(c *cli.Context) (err error) {
-	name := c.Args().Get(0)
-	man, err := manifest.FetchProject()
-	if err != nil {
-		return
-	}
-
-	p.InitPluralClient()
-	err = bundle.Stack(p.Client, name, man.Provider, c.Bool("refresh"))
-	utils.Note("To edit the configuration you've just entered, edit the context.yaml file at the root of your repo, or run with the --refresh flag\n")
-	return
-}
-
-func (p *Plural) stackList(c *cli.Context) (err error) {
-	p.InitPluralClient()
-	stacks, err := p.ListStacks(c.Bool("account"))
-	if err != nil {
-		return api.GetErrorResponse(err, "ListStacks")
-	}
-
-	headers := []string{"Name", "Description", "Featured"}
-	return utils.PrintTable(stacks, headers, func(s *api.Stack) ([]string, error) {
-		return []string{s.Name, s.Description, fmt.Sprintf("%v", s.Featured)}, nil
-	})
 }
 
 func (p *Plural) listRecipes(repo string) (res []*api.Recipe, err error) {

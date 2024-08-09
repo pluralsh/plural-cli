@@ -1,7 +1,8 @@
-package plural
+package vpn
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,6 +28,22 @@ const (
 	wireguardNotInstalledError = "wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "vpn",
+		Usage:       "interacting with the plural vpn",
+		Subcommands: p.vpnCommands(),
+		Category:    "Workspace",
+	}
+}
+
 func (p *Plural) vpnCommands() []cli.Command {
 	return []cli.Command{
 		{
@@ -48,7 +65,7 @@ func (p *Plural) vpnCommands() []cli.Command {
 			Name:      "client-config",
 			ArgsUsage: "NAME",
 			Usage:     "get the config for a vpn client for a server",
-			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerConfig))), []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerConfig))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -68,12 +85,12 @@ func (p *Plural) vpnListCommands() []cli.Command {
 		{
 			Name:   "servers",
 			Usage:  "lists vpn servers",
-			Action: common.LatestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardServerList)))),
+			Action: common.LatestVersion(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardServerList)))),
 		},
 		{
 			Name:   "clients",
 			Usage:  "lists vpn clients for a server",
-			Action: common.LatestVersion(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerList)))),
+			Action: common.LatestVersion(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerList)))),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -90,7 +107,7 @@ func (p *Plural) vpnCreateCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "create a new vpn client for a server",
-			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -107,7 +124,7 @@ func (p *Plural) vpnDeleteCommands() []cli.Command {
 			Name:      "client",
 			ArgsUsage: "NAME",
 			Usage:     "delete a vpn client for a server",
-			Action:    common.LatestVersion(requireArgs(highlighted(p.vpnInstalled(initKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",

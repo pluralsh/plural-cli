@@ -1,13 +1,29 @@
-package plural
+package api
 
 import (
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
-
-	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/utils"
 )
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	plural := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "api",
+		Usage:       "inspect the plural api",
+		Subcommands: plural.apiCommands(),
+		Category:    "API",
+	}
+}
 
 func (p *Plural) apiCommands() []cli.Command {
 	return []cli.Command{
@@ -25,39 +41,39 @@ func (p *Plural) apiCommands() []cli.Command {
 					Name:      "charts",
 					Usage:     "lists charts for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleCharts, []string{"REPO_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleCharts, []string{"REPO_ID"})),
 				},
 				{
 					Name:      "terraform",
 					Usage:     "lists terraform modules for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleTerraforma, []string{"REPO_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleTerraforma, []string{"REPO_ID"})),
 				},
 				{
 					Name:      "versions",
 					Usage:     "lists versions of a chart",
 					ArgsUsage: "CHART_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleVersions, []string{"CHART_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleVersions, []string{"CHART_ID"})),
 				},
 				{
 					Name:      "chartinstallations",
 					Aliases:   []string{"ci"},
 					Usage:     "lists chart installations for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleChartInstallations, []string{"REPO_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleChartInstallations, []string{"REPO_ID"})),
 				},
 				{
 					Name:      "terraforminstallations",
 					Aliases:   []string{"ti"},
 					Usage:     "lists terraform installations for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleTerraformInstallations, []string{"REPO_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleTerraformInstallations, []string{"REPO_ID"})),
 				},
 				{
 					Name:      "artifacts",
 					Usage:     "Lists artifacts for a repository",
 					ArgsUsage: "REPO_ID",
-					Action:    common.LatestVersion(requireArgs(p.handleArtifacts, []string{"REPO_ID"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleArtifacts, []string{"REPO_ID"})),
 				},
 			},
 		},

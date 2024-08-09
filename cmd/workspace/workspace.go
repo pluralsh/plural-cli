@@ -1,4 +1,4 @@
-package plural
+package workspace
 
 import (
 	"fmt"
@@ -6,17 +6,37 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/helm"
 	"github.com/pluralsh/plural-cli/pkg/provider"
-	"github.com/pluralsh/plural-cli/pkg/scaffold"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
+
+type Plural struct {
+	client.Plural
+	HelmConfiguration *action.Configuration
+}
+
+func Command(clients client.Plural, helmConfiguration *action.Configuration) cli.Command {
+	p := Plural{
+		Plural:            clients,
+		HelmConfiguration: helmConfiguration,
+	}
+	return cli.Command{
+		Name:        "workspace",
+		Aliases:     []string{"wkspace"},
+		Usage:       "Commands for managing installations in your workspace",
+		Subcommands: p.workspaceCommands(),
+		Category:    "Workspace",
+	}
+}
 
 func (p *Plural) workspaceCommands() []cli.Command {
 	return []cli.Command{
@@ -35,7 +55,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "output to stdout instead of to a file",
 				},
 			},
-			Action: common.LatestVersion(func(c *cli.Context) error { return appReadme(c.Args().Get(0), c.Bool("dry-run")) }),
+			Action: common.LatestVersion(func(c *cli.Context) error { return common.AppReadme(c.Args().Get(0), c.Bool("dry-run")) }),
 		},
 		{
 			Name:      "helm",
@@ -59,7 +79,7 @@ func (p *Plural) workspaceCommands() []cli.Command {
 					Usage: "have helm wait until all pods are in ready state",
 				},
 			},
-			Action: common.LatestVersion(initKubeconfig(p.bounceHelm)),
+			Action: common.LatestVersion(common.InitKubeconfig(p.bounceHelm)),
 		},
 		{
 			Name:      "helm-diff",
@@ -83,19 +103,19 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Name:      "crds",
 			Usage:     "installs the crds for this repo",
 			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(initKubeconfig(p.createCrds)),
+			Action:    common.LatestVersion(common.InitKubeconfig(p.createCrds)),
 		},
 		{
 			Name:      "helm-template",
 			Usage:     "templates the helm values to stdout",
 			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(requireArgs(p.templateHelm, []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.templateHelm, []string{"NAME"})),
 		},
 		{
 			Name:      "helm-mapkubeapis",
 			Usage:     "updates in-place Helm release metadata that contains deprecated or removed Kubernetes APIs to a new instance with supported Kubernetes APIs",
 			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(requireArgs(p.mapkubeapis, []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.mapkubeapis, []string{"NAME"})),
 		},
 	}
 }
@@ -219,14 +239,4 @@ func (p *Plural) mapkubeapis(c *cli.Context) error {
 	}
 
 	return minimal.MapKubeApis()
-}
-
-func appReadme(name string, dryRun bool) error {
-	repoRoot, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Join(repoRoot, name, "helm", name)
-	return scaffold.Readme(dir, dryRun)
 }

@@ -1,6 +1,8 @@
-package plural_test
+package log_test
 
 import (
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"os"
 	"testing"
 
@@ -34,10 +36,15 @@ func TestLogsList(t *testing.T) {
 			if test.expectedError == "" {
 				kube.On("LogTailList", mock.AnythingOfType("string")).Return(&v1alpha1.LogTailList{Items: []v1alpha1.LogTail{}}, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client, Kube: kube})
+			app := plural.CreateNewApp(&plural.Plural{
+				Plural: pluralclient.Plural{
+					Client: client,
+					Kube:   kube,
+				},
+			})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			_, err := captureStdout(app, os.Args)
+			_, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, test.expectedError, err.Error())
 			} else {

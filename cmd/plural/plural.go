@@ -1,10 +1,20 @@
 package plural
 
 import (
+	"github.com/pluralsh/plural-cli/cmd/api"
+	"github.com/pluralsh/plural-cli/cmd/auth"
+	"github.com/pluralsh/plural-cli/cmd/bootstrap"
+	"github.com/pluralsh/plural-cli/cmd/bundle"
 	"github.com/pluralsh/plural-cli/cmd/cd"
+	"github.com/pluralsh/plural-cli/cmd/config"
+	"github.com/pluralsh/plural-cli/cmd/log"
+	"github.com/pluralsh/plural-cli/cmd/profile"
+	"github.com/pluralsh/plural-cli/cmd/stack"
+	"github.com/pluralsh/plural-cli/cmd/vpn"
+	"github.com/pluralsh/plural-cli/cmd/workspace"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
-	"github.com/pluralsh/plural-cli/pkg/config"
+	conf "github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/exp"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -241,11 +251,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Action: common.LatestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
 		},
 		{
-			Name:        "auth",
-			Usage:       "Handles authentication to the plural api",
-			Subcommands: p.authCommands(),
-		},
-		{
 			Name:     "preflights",
 			Usage:    "runs provider preflight checks",
 			Category: "Workspace",
@@ -292,11 +297,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Workspace",
 		},
 		{
-			Name:        "clusters",
-			Usage:       "commands related to managing plural clusters",
-			Subcommands: p.clusterCommands(),
-		},
-		{
 			Name:        "repos",
 			Usage:       "view and manage plural repositories",
 			Subcommands: p.reposCommands(),
@@ -339,52 +339,10 @@ func (p *Plural) getCommands() []cli.Command {
 			Category:    "Publishing",
 		},
 		{
-			Name:        "api",
-			Usage:       "inspect the plural api",
-			Subcommands: p.apiCommands(),
-			Category:    "API",
-		},
-		{
-			Name:        "config",
-			Aliases:     []string{"conf"},
-			Usage:       "reads/modifies cli configuration",
-			Subcommands: configCommands(),
-			Category:    "User Profile",
-		},
-		{
-			Name:        "workspace",
-			Aliases:     []string{"wkspace"},
-			Usage:       "Commands for managing installations in your workspace",
-			Subcommands: p.workspaceCommands(),
-			Category:    "Workspace",
-		},
-		{
-			Name:        "profile",
-			Usage:       "Commands for managing config profiles for plural",
-			Subcommands: profileCommands(),
-			Category:    "User Profile",
-		},
-		{
 			Name:        "output",
 			Usage:       "Commands for generating outputs from supported tools",
 			Subcommands: outputCommands(),
 			Category:    "Workspace",
-		},
-		{
-			Name:        "logs",
-			Usage:       "Commands for tailing logs for specific apps",
-			Subcommands: p.logsCommands(),
-			Category:    "Debugging",
-		},
-		{
-			Name:        "bundle",
-			Usage:       "Commands for installing and discovering installation bundles",
-			Subcommands: p.bundleCommands(),
-		},
-		{
-			Name:        "stack",
-			Usage:       "Commands for installing and discovering plural stacks",
-			Subcommands: p.stackCommands(),
 		},
 		{
 			Name:        "packages",
@@ -396,12 +354,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:       "Commands for simplifying cluster operations",
 			Subcommands: p.opsCommands(),
 			Category:    "Debugging",
-		},
-		{
-			Name:        "vpn",
-			Usage:       "interacting with the plural vpn",
-			Subcommands: p.vpnCommands(),
-			Category:    "Workspace",
 		},
 		{
 			Name:     "ai",
@@ -435,13 +387,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   common.LatestVersion(diffed),
 			Category: "Workspace",
 		},
-		{
-			Name:        "bootstrap",
-			Usage:       "Commands for bootstrapping cluster",
-			Subcommands: p.bootstrapCommands(),
-			Category:    "Bootstrap",
-			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
-		},
 		p.uiCommands(),
 	}
 }
@@ -452,7 +397,7 @@ func globalFlags() []cli.Flag {
 			Name:        "profile-file",
 			Usage:       "configure your config.yml profile `FILE`",
 			EnvVar:      "PLURAL_PROFILE_FILE",
-			Destination: &config.ProfileFile,
+			Destination: &conf.ProfileFile,
 		},
 		cli.StringFlag{
 			Name:        "encryption-key-file",
@@ -485,7 +430,17 @@ func CreateNewApp(plural *Plural) *cli.App {
 	app.EnableBashCompletion = true
 	app.Flags = globalFlags()
 	commands := []cli.Command{
+		api.Command(plural.Plural),
+		auth.Command(plural.Plural),
+		bootstrap.Command(plural.Plural),
+		bundle.Command(plural.Plural),
 		cd.Command(plural.Plural, plural.HelmConfiguration),
+		config.Command(),
+		profile.Command(),
+		stack.Command(plural.Plural),
+		log.Command(plural.Plural),
+		workspace.Command(plural.Plural, plural.HelmConfiguration),
+		vpn.Command(plural.Plural),
 	}
 	commands = append(commands, plural.getCommands()...)
 	app.Commands = commands

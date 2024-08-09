@@ -1,17 +1,16 @@
-package plural_test
+package api_test
 
 import (
 	"os"
 	"testing"
 
-	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestListArtifacts(t *testing.T) {
@@ -57,7 +56,7 @@ func TestListArtifacts(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
@@ -122,7 +121,7 @@ func TestGetInstallations(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 
 			assert.Equal(t, test.expectedResponse, res)
@@ -172,7 +171,7 @@ func TestGetCharts(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
@@ -233,7 +232,7 @@ func TestGetTerraform(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
@@ -291,7 +290,7 @@ func TestGetVersons(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
@@ -361,7 +360,7 @@ func TestGetChartInstallations(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
@@ -425,7 +424,7 @@ func TestGetTerraformInstallations(t *testing.T) {
 			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {

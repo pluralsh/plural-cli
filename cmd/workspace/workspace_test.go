@@ -1,10 +1,12 @@
-package plural_test
+package workspace_test
 
 import (
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
@@ -101,10 +103,10 @@ func TestHelmCommands(t *testing.T) {
 				assert.NoError(t, err)
 			}()
 
-			app := plural.CreateNewApp(&plural.Plural{Client: nil, HelmConfiguration: actionConfig})
+			app := plural.CreateNewApp(&plural.Plural{HelmConfiguration: actionConfig})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			output, err := captureStdout(app, os.Args)
+			output, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 			if test.expectedOutput != "" {
 				expected, err := utils.ReadFile(test.expectedOutput)

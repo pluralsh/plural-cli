@@ -1,7 +1,9 @@
-package plural
+package clusters
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/urfave/cli"
@@ -20,6 +22,21 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "clusters",
+		Usage:       "commands related to managing plural clusters",
+		Subcommands: p.clusterCommands(),
+	}
+}
+
 func (p *Plural) clusterCommands() []cli.Command {
 	return []cli.Command{
 		{
@@ -30,7 +47,7 @@ func (p *Plural) clusterCommands() []cli.Command {
 		{
 			Name:   "transfer",
 			Usage:  "transfers ownership of the current cluster to another",
-			Action: common.LatestVersion(rooted(p.transferOwnership)),
+			Action: common.LatestVersion(common.Rooted(p.transferOwnership)),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "email",
@@ -73,20 +90,20 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Name:      "wait",
 			Usage:     "waits on a cluster until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
-			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(handleClusterWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "mpwait",
 			Usage:     "waits on a machine pool until it becomes ready",
 			ArgsUsage: "NAMESPACE NAME",
-			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:     "migrate",
 			Usage:    "migrate to Cluster API",
-			Action:   common.LatestVersion(rooted(initKubeconfig(p.handleMigration))),
+			Action:   common.LatestVersion(common.Rooted(common.InitKubeconfig(p.handleMigration))),
 			Category: "Publishing",
 			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
@@ -114,7 +131,7 @@ func (p *Plural) handleMigration(_ *cli.Context) error {
 		return nil
 	}
 
-	return bootstrap.MigrateCluster(RunPlural)
+	return bootstrap.MigrateCluster(plural.RunPlural)
 }
 
 func awsAuthCommands() []cli.Command {

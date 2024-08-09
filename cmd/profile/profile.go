@@ -1,7 +1,6 @@
-package plural
+package profile
 
 import (
-	"io"
 	"os"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -10,25 +9,12 @@ import (
 	"github.com/urfave/cli"
 )
 
-func configCommands() []cli.Command {
-	return []cli.Command{
-		{
-			Name:      "amend",
-			Usage:     "modify config",
-			ArgsUsage: "[key] [value]",
-			Action:    common.LatestVersion(handleAmend),
-		},
-		{
-			Name:      "read",
-			Usage:     "dumps config",
-			ArgsUsage: "",
-			Action:    common.LatestVersion(handleRead),
-		},
-		{
-			Name:   "import",
-			Usage:  "imports a new config from a given token",
-			Action: common.LatestVersion(handleConfigImport),
-		},
+func Command() cli.Command {
+	return cli.Command{
+		Name:        "profile",
+		Usage:       "Commands for managing config profiles for plural",
+		Subcommands: profileCommands(),
+		Category:    "User Profile",
 	}
 }
 
@@ -61,30 +47,6 @@ func profileCommands() []cli.Command {
 	}
 }
 
-func handleAmend(c *cli.Context) error {
-	return config.Amend(c.Args().Get(0), c.Args().Get(1))
-}
-
-func handleRead(c *cli.Context) error {
-	conf := config.Read()
-	d, err := conf.Marshal()
-	if err != nil {
-		return err
-	}
-
-	os.Stdout.Write(d)
-	return nil
-}
-
-func handleConfigImport(c *cli.Context) error {
-	data, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return err
-	}
-
-	return config.FromToken(string(data))
-}
-
 func handleUseProfile(c *cli.Context) error {
 	return config.Profile(c.Args().Get(0))
 }
@@ -104,4 +66,15 @@ func listProfiles(c *cli.Context) error {
 	return utils.PrintTable(profiles, headers, func(profile *config.VersionedConfig) ([]string, error) {
 		return []string{profile.Metadata.Name, profile.Spec.Email, profile.Spec.BaseUrl()}, nil
 	})
+}
+
+func handleRead(c *cli.Context) error {
+	conf := config.Read()
+	d, err := conf.Marshal()
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(d)
+	return nil
 }

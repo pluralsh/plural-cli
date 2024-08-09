@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/polly/algorithms"
 	"os"
 
@@ -15,6 +16,12 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/urfave/cli"
 )
+
+func init() {
+	bootstrapMode = false
+}
+
+var bootstrapMode bool
 
 func RequireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
@@ -162,6 +169,40 @@ func LatestVersion(fn func(*cli.Context) error) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		if os.Getenv("PLURAL_CONSOLE") != "1" && os.Getenv("CLOUD_SHELL") != "1" && algorithms.Coinflip(1, 5) {
 			utils.CheckLatestVersion(Version)
+		}
+
+		return fn(c)
+	}
+}
+
+func InitKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		_, found := utils.ProjectRoot()
+		if found {
+			prov, err := provider.GetProvider()
+			if err != nil {
+				return err
+			}
+			if bootstrapMode {
+				prov = &provider.KINDProvider{Clust: "bootstrap"}
+			}
+			if err := prov.KubeConfig(); err != nil {
+				return err
+			}
+			utils.LogInfo().Println("init", prov.Name(), "provider")
+		} else {
+			utils.LogInfo().Println("not found provider")
+		}
+
+		return fn(c)
+	}
+}
+
+func RequireKind(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		exists, _ := utils.Which("kind")
+		if !exists {
+			return fmt.Errorf("The kind CLI is not installed")
 		}
 
 		return fn(c)

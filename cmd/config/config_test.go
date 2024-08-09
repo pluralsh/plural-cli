@@ -1,4 +1,4 @@
-package plural_test
+package config_test
 
 import (
 	"bytes"

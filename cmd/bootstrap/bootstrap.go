@@ -1,13 +1,16 @@
-package plural
+package bootstrap
 
 import (
 	"context"
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/exp"
 
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
@@ -50,6 +53,23 @@ nodes:
       containerPath: /var/run/docker.sock`
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "bootstrap",
+		Usage:       "Commands for bootstrapping cluster",
+		Subcommands: p.bootstrapCommands(),
+		Category:    "Bootstrap",
+		Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
+	}
+}
+
 func (p *Plural) bootstrapCommands() []cli.Command {
 	return []cli.Command{
 		{
@@ -77,7 +97,7 @@ func (p *Plural) namespaceCommands() []cli.Command {
 					Usage: "skip creating when namespace exists",
 				},
 			},
-			Action: common.LatestVersion(initKubeconfig(requireArgs(p.handleCreateNamespace, []string{"NAME"}))),
+			Action: common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleCreateNamespace, []string{"NAME"}))),
 		},
 	}
 }
@@ -98,13 +118,13 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 					Usage: "skip creating when cluster exists",
 				},
 			},
-			Action: common.LatestVersion(requireKind(requireArgs(handleCreateCluster, []string{"NAME"}))),
+			Action: common.LatestVersion(common.RequireKind(common.RequireArgs(handleCreateCluster, []string{"NAME"}))),
 		},
 		{
 			Name:      "delete",
 			ArgsUsage: "NAME",
 			Usage:     "Deletes bootstrap cluster",
-			Action:    common.LatestVersion(requireKind(requireArgs(handleDeleteCluster, []string{"NAME"}))),
+			Action:    common.LatestVersion(common.RequireKind(common.RequireArgs(handleDeleteCluster, []string{"NAME"}))),
 		},
 		{
 			Name:  "move",
@@ -133,7 +153,7 @@ func (p *Plural) bootstrapClusterCommands() []cli.Command {
 			Name:      "destroy-cluster-api",
 			ArgsUsage: "NAME",
 			Usage:     "Destroy cluster API",
-			Action:    common.LatestVersion(requireArgs(p.handleDestroyClusterAPI, []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDestroyClusterAPI, []string{"NAME"})),
 		},
 	}
 }

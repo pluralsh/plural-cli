@@ -1,4 +1,4 @@
-package plural_test
+package bundle_test
 
 import (
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"

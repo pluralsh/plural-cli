@@ -1,4 +1,4 @@
-package plural_test
+package vpn_test
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 
 	"github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	vpnv1alpha1 "github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
 	"github.com/stretchr/testify/assert"
@@ -60,10 +62,15 @@ func TestServerList(t *testing.T) {
 			kube := mocks.NewKube(t)
 			client.On("GetInstallation", "wireguard").Return(test.installation, nil)
 			kube.On("WireguardServerList", "wireguard").Return(test.servers, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client, Kube: kube})
+			app := plural.CreateNewApp(&plural.Plural{
+				Plural: pluralclient.Plural{
+					Client: client,
+					Kube:   kube,
+				},
+			})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResponse, res)
 
@@ -200,10 +207,15 @@ func TestClientList(t *testing.T) {
 			kube := mocks.NewKube(t)
 			client.On("GetInstallation", "wireguard").Return(test.installation, nil)
 			kube.On("WireguardPeerList", "wireguard").Return(test.peers, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client, Kube: kube})
+			app := plural.CreateNewApp(&plural.Plural{
+				Plural: pluralclient.Plural{
+					Client: client,
+					Kube:   kube,
+				},
+			})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResponse, res)
 
@@ -327,10 +339,15 @@ func TestClientCreate(t *testing.T) {
 				kube.On("WireguardServer", "wireguard", mock.AnythingOfType("string")).Return(test.server, nil)
 				kube.On("WireguardPeerCreate", "wireguard", mock.AnythingOfType("*v1alpha1.WireguardPeer")).Return(test.peer, nil)
 			}
-			app := plural.CreateNewApp(&plural.Plural{Client: client, Kube: kube})
+			app := plural.CreateNewApp(&plural.Plural{
+				Plural: pluralclient.Plural{
+					Client: client,
+					Kube:   kube,
+				},
+			})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			if test.expectedError != "" {
 				assert.Equal(t, err.Error(), test.expectedError)
 			} else {
