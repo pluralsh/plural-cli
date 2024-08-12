@@ -156,16 +156,16 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	}
 
 	// TODO fix for clusterAPI
-	//if repo == Bootstrap && clusterAPI {
+	// if repo == Bootstrap && clusterAPI {
 	//	if err = bootstrap.DestroyCluster(workspace.Destroy, plural.RunPlural); err != nil {
 	//		return err
 	//	}
 	//
-	//} else {
+	// } else {
 	//	if err := workspace.Destroy(); err != nil {
 	//		return err
 	//	}
-	//}
+	// }
 
 	if err := workspace.Destroy(); err != nil {
 		return err

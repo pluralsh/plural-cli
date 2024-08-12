@@ -1,11 +1,12 @@
 package common
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/pluralsh/plural-cli/pkg/pluralfile"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/urfave/cli"
-	"os"
-	"path/filepath"
 )
 
 func Apply(c *cli.Context) error {

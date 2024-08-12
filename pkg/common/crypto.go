@@ -1,12 +1,13 @@
 package common
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/urfave/cli"
-	"os"
-	"path/filepath"
 )
 
 const (

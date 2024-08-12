@@ -3,10 +3,8 @@ package shell
 import (
 	"os"
 
-	"github.com/pluralsh/plural-cli/pkg/common"
-
-	"github.com/pluralsh/plural-cli/cmd/crypto"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	pkgcrypto "github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -74,11 +72,11 @@ func handleShellSync(c *cli.Context) error {
 	if err := os.Chdir(dir); err != nil {
 		return err
 	}
-	if err := crypto.CryptoInit(c); err != nil {
+	if err := common.CryptoInit(c); err != nil {
 		return err
 	}
 
-	return crypto.HandleUnlock(c)
+	return common.HandleUnlock(c)
 }
 
 var destoryShellConfirm = "Are you sure you want to destroy your cloud shell (you should either `plural destroy` anything deployed or `plural shell sync` to sync the contents locally)?"

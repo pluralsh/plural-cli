@@ -2,8 +2,9 @@ package cd
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/cd/template"

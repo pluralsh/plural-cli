@@ -1,9 +1,10 @@
 package proxy_test
 
 import (
-	clientcmd "github.com/pluralsh/plural-cli/pkg/client"
 	"os"
 	"testing"
+
+	clientcmd "github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 

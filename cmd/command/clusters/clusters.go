@@ -2,7 +2,7 @@ package clusters
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/cmd/plural"
+
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -10,12 +10,9 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap"
 	"github.com/pluralsh/plural-cli/pkg/bootstrap/aws"
-	"github.com/pluralsh/plural-cli/pkg/bootstrap/validation"
 	"github.com/pluralsh/plural-cli/pkg/cluster"
 	"github.com/pluralsh/plural-cli/pkg/config"
-	"github.com/pluralsh/plural-cli/pkg/exp"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/machinepool"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
@@ -100,13 +97,13 @@ func (p *Plural) clusterCommands() []cli.Command {
 			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(handleMPWait, []string{"NAMESPACE", "NAME"}))),
 			Category:  "Debugging",
 		},
-		{
-			Name:     "migrate",
-			Usage:    "migrate to Cluster API",
-			Action:   common.LatestVersion(common.Rooted(common.InitKubeconfig(p.handleMigration))),
-			Category: "Publishing",
-			Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
-		},
+		// {
+		//	Name:     "migrate",
+		//	Usage:    "migrate to Cluster API",
+		//	Action:   common.LatestVersion(common.Rooted(common.InitKubeconfig(p.handleMigration))),
+		//	Category: "Publishing",
+		//	Hidden:   !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
+		// },
 		{
 			Name:        "aws-auth",
 			Usage:       "fetches the current state of your aws auth config map",
@@ -115,24 +112,24 @@ func (p *Plural) clusterCommands() []cli.Command {
 	}
 }
 
-func (p *Plural) handleMigration(_ *cli.Context) error {
-	p.InitPluralClient()
-	if err := validation.ValidateMigration(p); err != nil {
-		return err
-	}
-
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
-	if project.ClusterAPI {
-		utils.Success("Cluster already migrated.\n")
-		return nil
-	}
-
-	return bootstrap.MigrateCluster(plural.RunPlural)
-}
+// func (p *Plural) handleMigration(_ *cli.Context) error {
+//	p.InitPluralClient()
+//	if err := validation.ValidateMigration(p); err != nil {
+//		return err
+//	}
+//
+//	project, err := manifest.FetchProject()
+//	if err != nil {
+//		return err
+//	}
+//
+//	if project.ClusterAPI {
+//		utils.Success("Cluster already migrated.\n")
+//		return nil
+//	}
+//
+//	return bootstrap.MigrateCluster(plural.RunPlural)
+// }
 
 func awsAuthCommands() []cli.Command {
 	return []cli.Command{
@@ -153,7 +150,7 @@ func awsAuthCommands() []cli.Command {
 	}
 }
 
-func handleAwsAuth(c *cli.Context) error {
+func handleAwsAuth(_ *cli.Context) error {
 	auth, err := aws.FetchAuth()
 	if err != nil {
 		return err
@@ -254,7 +251,7 @@ func (p *Plural) transferOwnership(c *cli.Context) error {
 	}
 
 	utils.Highlight("deploying rebuilt applications\n")
-	if err := p.deploy(c); err != nil {
+	if err := p.Deploy(c); err != nil {
 		return err
 	}
 

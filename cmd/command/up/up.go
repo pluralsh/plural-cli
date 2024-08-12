@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/up"

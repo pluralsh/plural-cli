@@ -2,12 +2,13 @@ package crypto_test
 
 import (
 	"encoding/base64"
-	"github.com/pluralsh/plural-cli/cmd/crypto"
-	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/pluralsh/plural-cli/cmd/command/crypto"
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -298,13 +299,13 @@ func TestCheckGitCrypt(t *testing.T) {
 			_, err = git.Init()
 			assert.NoError(t, err)
 
-			gitAttributes := path.Join(dir, crypto.GitAttributesFile)
-			gitIgnore := path.Join(dir, crypto.GitIgnoreFile)
+			gitAttributes := path.Join(dir, common.GitAttributesFile)
+			gitIgnore := path.Join(dir, common.GitIgnoreFile)
 
 			if test.createFiles {
-				err = utils.WriteFile(gitIgnore, []byte(crypto.Gitignore+"some extra"))
+				err = utils.WriteFile(gitIgnore, []byte(common.Gitignore+"some extra"))
 				assert.NoError(t, err)
-				err = utils.WriteFile(gitAttributes, []byte(crypto.Gitattributes+"abc"))
+				err = utils.WriteFile(gitAttributes, []byte(common.Gitattributes+"abc"))
 				assert.NoError(t, err)
 			}
 
@@ -318,11 +319,11 @@ func TestCheckGitCrypt(t *testing.T) {
 
 			attributes, err := utils.ReadFile(gitAttributes)
 			assert.NoError(t, err)
-			assert.Equal(t, attributes, crypto.Gitattributes)
+			assert.Equal(t, attributes, common.Gitattributes)
 
 			ignore, err := utils.ReadFile(gitIgnore)
 			assert.NoError(t, err)
-			assert.Equal(t, ignore, crypto.Gitignore)
+			assert.Equal(t, ignore, common.Gitignore)
 		})
 	}
 }

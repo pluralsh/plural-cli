@@ -3,6 +3,7 @@ package cd
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/pluralsh/plural-cli/pkg/common"
 
 	gqlclient "github.com/pluralsh/console/go/client"

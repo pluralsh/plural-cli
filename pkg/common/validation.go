@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils/errors"
 	"github.com/pluralsh/polly/algorithms"
-	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"

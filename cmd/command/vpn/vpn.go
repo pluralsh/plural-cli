@@ -2,10 +2,11 @@ package vpn
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/client"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 

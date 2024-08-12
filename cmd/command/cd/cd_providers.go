@@ -2,9 +2,10 @@ package cd
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"strconv"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console/go/client"

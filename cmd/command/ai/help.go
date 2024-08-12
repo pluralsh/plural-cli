@@ -2,8 +2,9 @@ package ai
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/client"
 	"time"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"

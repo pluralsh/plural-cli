@@ -1,10 +1,11 @@
 package log_test
 
 import (
-	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"os"
 	"testing"
+
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	plural "github.com/pluralsh/plural-cli/cmd/plural"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"

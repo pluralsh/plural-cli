@@ -1,9 +1,10 @@
 package cd
 
 import (
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"io"
 	"os"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"

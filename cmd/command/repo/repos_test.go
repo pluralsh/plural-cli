@@ -4,6 +4,10 @@ import (
 	"os"
 	"testing"
 
+	clientcmd "github.com/pluralsh/plural-cli/pkg/client"
+
+	"github.com/pluralsh/plural-cli/pkg/common"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -55,10 +59,12 @@ func TestListRepositories(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			client := mocks.NewClient(t)
 			client.On("ListRepositories", mock.AnythingOfType("string")).Return(test.repos, nil)
-			app := plural.CreateNewApp(&plural.Plural{Client: client})
+			app := plural.CreateNewApp(&plural.Plural{Plural: clientcmd.Plural{
+				Client: client,
+			}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResponse, res)
 		})

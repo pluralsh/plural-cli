@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/up"
 	"os/exec"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/up"
 
 	tm "github.com/buger/goterm"
 	"github.com/urfave/cli"

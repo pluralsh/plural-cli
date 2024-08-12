@@ -2,14 +2,13 @@ package auth
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/client"
 	"strings"
 
 	"github.com/pluralsh/gqlclient"
-	"github.com/urfave/cli"
-
+	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 type Plural struct {

@@ -1,9 +1,11 @@
 package bundle_test
 
 import (
-	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"os"
 	"testing"
+
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -63,7 +65,7 @@ func TestBundleList(t *testing.T) {
 			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 
 			assert.Equal(t, test.expectedResponse, res)
@@ -89,7 +91,7 @@ func TestBundleInstallNoGitRootDirectory(t *testing.T) {
 			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			_, err := captureStdout(app, os.Args)
+			_, err := common.CaptureStdout(app, os.Args)
 
 			assert.Error(t, err)
 			assert.Equal(t, test.expectedResponse, err.Error())
@@ -150,7 +152,7 @@ func TestBundleInstall(t *testing.T) {
 			app := plural.CreateNewApp(&plural.Plural{Plural: pluralclient.Plural{Client: client}})
 			app.HelpName = plural.ApplicationName
 			os.Args = test.args
-			res, err := captureStdout(app, os.Args)
+			res, err := common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResponse, res)
 		})

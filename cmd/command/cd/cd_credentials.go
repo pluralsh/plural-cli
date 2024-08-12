@@ -2,6 +2,7 @@ package cd
 
 import (
 	"fmt"
+
 	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pkg/errors"

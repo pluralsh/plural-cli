@@ -2,10 +2,9 @@ package ops
 
 import (
 	"fmt"
+
 	"github.com/pluralsh/plural-cli/pkg/client"
-
 	"github.com/pluralsh/plural-cli/pkg/common"
-
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
