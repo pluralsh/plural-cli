@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/utils/errors"
 	"github.com/pluralsh/polly/algorithms"
 	"os"
 
@@ -18,10 +19,10 @@ import (
 )
 
 func init() {
-	bootstrapMode = false
+	BootstrapMode = false
 }
 
-var bootstrapMode bool
+var BootstrapMode bool
 
 func RequireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
@@ -183,7 +184,7 @@ func InitKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
 			if err != nil {
 				return err
 			}
-			if bootstrapMode {
+			if BootstrapMode {
 				prov = &provider.KINDProvider{Clust: "bootstrap"}
 			}
 			if err := prov.KubeConfig(); err != nil {
@@ -203,6 +204,39 @@ func RequireKind(fn func(*cli.Context) error) func(*cli.Context) error {
 		exists, _ := utils.Which("kind")
 		if !exists {
 			return fmt.Errorf("The kind CLI is not installed")
+		}
+
+		return fn(c)
+	}
+}
+
+func CommitMsg(c *cli.Context) string {
+	if commit := c.String("commit"); commit != "" {
+		return commit
+	}
+
+	if !c.Bool("silence") {
+		var commit string
+		if err := survey.AskOne(&survey.Input{Message: "Enter a commit message (empty to not commit right now)"}, &commit); err != nil {
+			return ""
+		}
+		return commit
+	}
+
+	return ""
+}
+
+func UpstreamSynced(fn func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		changed, sha, err := git.HasUpstreamChanges()
+		if err != nil {
+			utils.LogError().Println(err)
+			return errors.ErrorWrap(ErrNoGit, "Failed to get git information")
+		}
+
+		force := c.Bool("force")
+		if !changed && !force {
+			return errors.ErrorWrap(ErrRemoteDiff, fmt.Sprintf("Expecting HEAD at commit=%s", sha))
 		}
 
 		return fn(c)

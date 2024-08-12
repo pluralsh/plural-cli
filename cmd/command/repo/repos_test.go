@@ -1,4 +1,4 @@
-package plural_test
+package repo_test
 
 import (
 	"os"

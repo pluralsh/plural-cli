@@ -1,8 +1,10 @@
-package plural
+package repo
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -16,13 +18,41 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "repos",
+		Usage:       "view and manage plural repositories",
+		Subcommands: p.reposCommands(),
+		Category:    "API",
+	}
+}
+
+func APICommand(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "apps",
+		Usage:       "view and manage plural repositories",
+		Subcommands: p.reposCommands(),
+		Category:    "API",
+	}
+}
+
 func (p *Plural) reposCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
 			ArgsUsage: "APP",
-			Action:    common.LatestVersion(requireArgs(p.handleUnlockRepo, []string{"APP"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUnlockRepo, []string{"APP"})),
 		},
 		{
 			Name:      "release",
@@ -34,7 +64,7 @@ func (p *Plural) reposCommands() []cli.Command {
 					Usage: "tag name for a given release channel, eg stable, warm, dev, prod",
 				},
 			},
-			Action: common.LatestVersion(requireArgs(p.handleRelease, []string{"APP"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleRelease, []string{"APP"})),
 		},
 		{
 			Name:  "reinstall",
@@ -61,7 +91,7 @@ func (p *Plural) reposCommands() []cli.Command {
 			Name:      "uninstall",
 			Usage:     "uninstall an app from the plural api",
 			ArgsUsage: "APP",
-			Action:    common.LatestVersion(requireArgs(p.handleUninstall, []string{"APP"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUninstall, []string{"APP"})),
 		},
 		{
 			Name:      "list",
@@ -177,7 +207,7 @@ func (p *Plural) handleMarkSynced(c *cli.Context) error {
 func (p *Plural) handleResetInstallations(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	if !confirm(fmt.Sprintf("Are you sure you want to reset installations for %s?  This will also wipe all oidc providers and any other associated state in the plural api", conf.Email), "PLURAL_REPOS_RESET_CONFIRM") {
+	if !common.Confirm(fmt.Sprintf("Are you sure you want to reset installations for %s?  This will also wipe all oidc providers and any other associated state in the plural api", conf.Email), "PLURAL_REPOS_RESET_CONFIRM") {
 		return nil
 	}
 

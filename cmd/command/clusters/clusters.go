@@ -248,7 +248,7 @@ func (p *Plural) transferOwnership(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doBuild(installation, false); err != nil {
+		if err := common.DoBuild(p.Client, installation, false); err != nil {
 			return err
 		}
 	}

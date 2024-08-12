@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
-	cmdcrypto "github.com/pluralsh/plural-cli/cmd/crypto"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
@@ -180,11 +179,11 @@ func HandleClone(c *cli.Context) error {
 
 	repo := git.RepoName(url)
 	_ = os.Chdir(repo)
-	if err := cmdcrypto.CryptoInit(c); err != nil {
+	if err := CryptoInit(c); err != nil {
 		return err
 	}
 
-	if err := cmdcrypto.HandleUnlock(c); err != nil {
+	if err := HandleUnlock(c); err != nil {
 		return err
 	}
 
@@ -207,7 +206,7 @@ func HandleImport(c *cli.Context) error {
 		return err
 	}
 
-	if err := cmdcrypto.CryptoInit(c); err != nil {
+	if err := CryptoInit(c); err != nil {
 		return err
 	}
 

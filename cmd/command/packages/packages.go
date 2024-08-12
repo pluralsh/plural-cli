@@ -1,8 +1,10 @@
-package plural
+package packages
 
 import (
 	"fmt"
 	"os"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -15,25 +17,40 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "packages",
+		Usage:       "Commands for managing your installed packages",
+		Subcommands: p.packagesCommands(),
+	}
+}
+
 func (p *Plural) packagesCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "install",
 			Usage:     "installs a package at a specific version",
 			ArgsUsage: "helm|terraform REPO NAME VSN",
-			Action:    affirmed(requireArgs(p.installPackage, []string{"TYPE", "REPO", "NAME", "VERSION"}), "Are you sure you want to install this package?", "PLURAL_PACKAGES_INSTALL"),
+			Action:    common.Affirmed(common.RequireArgs(p.installPackage, []string{"TYPE", "REPO", "NAME", "VERSION"}), "Are you sure you want to install this package?", "PLURAL_PACKAGES_INSTALL"),
 		},
 		{
 			Name:      "uninstall",
 			Usage:     "uninstall a helm or terraform package",
 			ArgsUsage: "helm|terraform REPO NAME",
-			Action:    common.LatestVersion(affirmed(requireArgs(rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
+			Action:    common.LatestVersion(common.Affirmed(common.RequireArgs(common.Rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
 		},
 		{
 			Name:      "list",
 			Usage:     "lists the packages installed for a given repo",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(requireArgs(rooted(p.listPackages), []string{"REPO"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Rooted(p.listPackages), []string{"REPO"})),
 		},
 		{
 			Name:        "show",
@@ -49,13 +66,13 @@ func (p *Plural) showCommands() []cli.Command {
 			Name:      "helm",
 			Usage:     "list versions for a helm chart",
 			ArgsUsage: "REPO NAME",
-			Action:    requireArgs(p.showHelm, []string{"REPO", "NAME"}),
+			Action:    common.RequireArgs(p.showHelm, []string{"REPO", "NAME"}),
 		},
 		{
 			Name:      "terraform",
 			Usage:     "list versions for a terraform module",
 			ArgsUsage: "REPO NAME",
-			Action:    requireArgs(p.showTerraform, []string{"REPO", "NAME"}),
+			Action:    common.RequireArgs(p.showTerraform, []string{"REPO", "NAME"}),
 		},
 	}
 }

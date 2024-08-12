@@ -1,7 +1,8 @@
-package plural
+package common
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/up"
 	"os/exec"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 	"sigs.k8s.io/application/api/v1beta1"
 )
 
-func handleWatch(c *cli.Context) error {
+func HandleWatch(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	kubeConf, err := kubernetes.KubeConfig()
 	if err != nil {
@@ -36,7 +37,7 @@ func handleWatch(c *cli.Context) error {
 	}, timeout)
 }
 
-func handleWait(c *cli.Context) error {
+func HandleWait(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	kubeConf, err := kubernetes.KubeConfig()
 	if err != nil {
@@ -46,7 +47,7 @@ func handleWait(c *cli.Context) error {
 	return application.Wait(kubeConf, repo)
 }
 
-func handleInfo(c *cli.Context) error {
+func HandleInfo(c *cli.Context) error {
 	repo := c.Args().Get(0)
 	conf := config.Read()
 
@@ -62,4 +63,17 @@ func handleInfo(c *cli.Context) error {
 
 	cmd := exec.Command("k9s", "-n", conf.Namespace(repo))
 	return cmd.Run()
+}
+
+func HandleDown(_ *cli.Context) error {
+	if !Affirm(AffirmDown, "PLURAL_DOWN_AFFIRM_DESTROY") {
+		return fmt.Errorf("cancelled destroy")
+	}
+
+	ctx, err := up.Build()
+	if err != nil {
+		return err
+	}
+
+	return ctx.Destroy()
 }

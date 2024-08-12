@@ -1,25 +1,35 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural-cli/cmd/ai"
-	"github.com/pluralsh/plural-cli/cmd/api"
-	"github.com/pluralsh/plural-cli/cmd/auth"
-	"github.com/pluralsh/plural-cli/cmd/bootstrap"
-	"github.com/pluralsh/plural-cli/cmd/bundle"
-	"github.com/pluralsh/plural-cli/cmd/cd"
-	"github.com/pluralsh/plural-cli/cmd/config"
-	cryptocmd "github.com/pluralsh/plural-cli/cmd/crypto"
-	"github.com/pluralsh/plural-cli/cmd/init"
-	"github.com/pluralsh/plural-cli/cmd/link"
-	"github.com/pluralsh/plural-cli/cmd/log"
-	"github.com/pluralsh/plural-cli/cmd/ops"
-	"github.com/pluralsh/plural-cli/cmd/output"
-	"github.com/pluralsh/plural-cli/cmd/pr"
-	"github.com/pluralsh/plural-cli/cmd/profile"
-	"github.com/pluralsh/plural-cli/cmd/proxy"
-	"github.com/pluralsh/plural-cli/cmd/stack"
-	"github.com/pluralsh/plural-cli/cmd/vpn"
-	"github.com/pluralsh/plural-cli/cmd/workspace"
+	"github.com/pluralsh/plural-cli/cmd/command/ai"
+	"github.com/pluralsh/plural-cli/cmd/command/api"
+	"github.com/pluralsh/plural-cli/cmd/command/auth"
+	"github.com/pluralsh/plural-cli/cmd/command/bootstrap"
+	"github.com/pluralsh/plural-cli/cmd/command/bounce"
+	"github.com/pluralsh/plural-cli/cmd/command/buildcmd"
+	"github.com/pluralsh/plural-cli/cmd/command/bundle"
+	"github.com/pluralsh/plural-cli/cmd/command/cd"
+	"github.com/pluralsh/plural-cli/cmd/command/clusters"
+	"github.com/pluralsh/plural-cli/cmd/command/config"
+	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
+	"github.com/pluralsh/plural-cli/cmd/command/deploy"
+	"github.com/pluralsh/plural-cli/cmd/command/destroy"
+	"github.com/pluralsh/plural-cli/cmd/command/info"
+	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
+	"github.com/pluralsh/plural-cli/cmd/command/link"
+	"github.com/pluralsh/plural-cli/cmd/command/log"
+	"github.com/pluralsh/plural-cli/cmd/command/ops"
+	"github.com/pluralsh/plural-cli/cmd/command/output"
+	"github.com/pluralsh/plural-cli/cmd/command/pr"
+	"github.com/pluralsh/plural-cli/cmd/command/profile"
+	"github.com/pluralsh/plural-cli/cmd/command/proxy"
+	"github.com/pluralsh/plural-cli/cmd/command/push"
+	"github.com/pluralsh/plural-cli/cmd/command/repo"
+	"github.com/pluralsh/plural-cli/cmd/command/stack"
+	"github.com/pluralsh/plural-cli/cmd/command/up"
+	"github.com/pluralsh/plural-cli/cmd/command/upgrade"
+	"github.com/pluralsh/plural-cli/cmd/command/vpn"
+	"github.com/pluralsh/plural-cli/cmd/command/workspace"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	conf "github.com/pluralsh/plural-cli/pkg/config"
@@ -50,98 +60,16 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:  common.VersionInfo,
 		},
 		{
-			Name:  "up",
-			Usage: "sets up your repository and an initial management cluster",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "endpoint",
-					Usage: "the endpoint for the plural installation you're working with",
-				},
-				cli.StringFlag{
-					Name:  "service-account",
-					Usage: "email for the service account you'd like to use for this workspace",
-				},
-				cli.BoolFlag{
-					Name:  "ignore-preflights",
-					Usage: "whether to ignore preflight check failures prior to init",
-				},
-				cli.StringFlag{
-					Name:  "commit",
-					Usage: "commits your changes with this message",
-				},
-			},
-			Action: common.LatestVersion(p.handleUp),
-		},
-		{
 			Name:   "down",
 			Usage:  "destroys your management cluster and any apps installed on it",
-			Action: common.LatestVersion(p.handleDown),
-		},
-		{
-			Name:    "build",
-			Aliases: []string{"bld"},
-			Usage:   "builds your workspace",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "only",
-					Usage: "repository to (re)build",
-				},
-				cli.BoolFlag{
-					Name:  "force",
-					Usage: "force workspace to build even if remote is out of sync",
-				},
-			},
-			Action: tracked(rooted(common.LatestVersion(owned(upstreamSynced(p.build)))), "cli.build"),
-		},
-		{
-			Name:      "info",
-			Usage:     "Get information for your installation of APP",
-			ArgsUsage: "APP",
-			Action:    common.LatestVersion(owned(rooted(p.info))),
-		},
-		{
-			Name:      "deploy",
-			Aliases:   []string{"d"},
-			Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
-			ArgsUsage: "Workspace",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "silence",
-					Usage: "don't display notes for deployed apps",
-				},
-				cli.BoolFlag{
-					Name:  "verbose",
-					Usage: "show all command output during execution",
-				},
-				cli.BoolFlag{
-					Name:  "ignore-console",
-					Usage: "don't deploy the plural console",
-				},
-				cli.BoolFlag{
-					Name:  "all",
-					Usage: "deploy all repos irregardless of changes",
-				},
-				cli.StringFlag{
-					Name:  "commit",
-					Usage: "commits your changes with this message",
-				},
-				cli.StringSliceFlag{
-					Name:  "from",
-					Usage: "deploys only this application and its dependencies",
-				},
-				cli.BoolFlag{
-					Name:  "force",
-					Usage: "use force push when pushing to git",
-				},
-			},
-			Action: tracked(common.LatestVersion(owned(rooted(p.deploy))), "cli.deploy"),
+			Action: common.LatestVersion(common.HandleDown),
 		},
 		{
 			Name:      "diff",
 			Aliases:   []string{"df"},
 			Usage:     "diffs the state of the current workspace with the deployed version and dumps results to diffs/",
 			ArgsUsage: "APP",
-			Action:    common.LatestVersion(handleDiff),
+			Action:    common.LatestVersion(common.HandleDiff),
 		},
 		{
 			Name:      "clone",
@@ -152,28 +80,28 @@ func (p *Plural) getCommands() []cli.Command {
 		{
 			Name:     "create",
 			Usage:    "scaffolds the resources needed to create a new plural repository",
-			Action:   common.LatestVersion(handleScaffold),
+			Action:   common.LatestVersion(common.HandleScaffold),
 			Category: "Workspace",
 		},
 		{
 			Name:      "watch",
 			Usage:     "watches applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(initKubeconfig(requireArgs(handleWatch, []string{"REPO"}))),
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(common.HandleWatch, []string{"REPO"}))),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "wait",
 			Usage:     "waits on applications until they become ready",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(requireArgs(handleWait, []string{"REPO"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.HandleWait, []string{"REPO"})),
 			Category:  "Debugging",
 		},
 		{
 			Name:      "info",
 			Usage:     "generates a console dashboard for the namespace of this repo",
 			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(requireArgs(handleInfo, []string{"REPO"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.HandleInfo, []string{"REPO"})),
 			Category:  "Debugging",
 		},
 		{
@@ -185,59 +113,16 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "pluralfile to use",
 				},
 			},
-			Action:   common.LatestVersion(apply),
+			Action:   common.LatestVersion(common.Apply),
 			Category: "Publishing",
 		},
-		{
-			Name:      "bounce",
-			Aliases:   []string{"b"},
-			Usage:     "redeploys the charts in a workspace",
-			ArgsUsage: "APP",
-			Action:    common.LatestVersion(initKubeconfig(owned(p.bounce))),
-		},
+
 		{
 			Name:     "readme",
 			Aliases:  []string{"b"},
 			Usage:    "generates the readme for your installation repo",
 			Category: "Workspace",
 			Action:   common.LatestVersion(common.DownloadReadme),
-		},
-		{
-			Name:      "destroy",
-			Aliases:   []string{"d"},
-			Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
-			ArgsUsage: "APP",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "from",
-					Usage: "where to start your deploy command (useful when restarting interrupted destroys)",
-				},
-				cli.StringFlag{
-					Name:  "commit",
-					Usage: "commits your changes with this message",
-				},
-				cli.BoolFlag{
-					Name:  "force",
-					Usage: "use force push when pushing to git",
-				},
-				cli.BoolFlag{
-					Name:  "all",
-					Usage: "tear down the entire cluster gracefully in one go",
-				},
-			},
-			Action: tracked(common.LatestVersion(owned(upstreamSynced(p.destroy))), "cli.destroy"),
-		},
-		{
-			Name:      "upgrade",
-			Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
-			ArgsUsage: "QUEUE REPO",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "f",
-					Usage: "file containing upgrade contents, use - for stdin",
-				},
-			},
-			Action: common.LatestVersion(requireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
 		},
 		{
 			Name:     "preflights",
@@ -280,21 +165,9 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Workspace",
 		},
 		{
-			Name:        "repos",
-			Usage:       "view and manage plural repositories",
-			Subcommands: p.reposCommands(),
-			Category:    "API",
-		},
-		{
-			Name:        "apps",
-			Usage:       "view and manage plural repositories",
-			Subcommands: p.reposCommands(),
-			Category:    "API",
-		},
-		{
 			Name:     "test",
 			Usage:    "validate a values templace",
-			Action:   common.LatestVersion(testTemplate),
+			Action:   common.LatestVersion(common.TestTemplate),
 			Category: "Publishing",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -302,17 +175,6 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "Determines the template type. Go template by default",
 				},
 			},
-		},
-		{
-			Name:        "push",
-			Usage:       "utilities for pushing tf or helm packages",
-			Subcommands: p.pushCommands(),
-			Category:    "Publishing",
-		},
-		{
-			Name:        "packages",
-			Usage:       "Commands for managing your installed packages",
-			Subcommands: p.packagesCommands(),
 		},
 		{
 			Name:    "template",
@@ -324,16 +186,15 @@ func (p *Plural) getCommands() []cli.Command {
 					Usage: "the values file",
 				},
 			},
-			Action:   common.LatestVersion(handleHelmTemplate),
+			Action:   common.LatestVersion(common.HandleHelmTemplate),
 			Category: "Publishing",
 		},
 		{
 			Name:     "changed",
 			Usage:    "shows repos with pending changes",
-			Action:   common.LatestVersion(diffed),
+			Action:   common.LatestVersion(common.Diffed),
 			Category: "Workspace",
 		},
-		p.uiCommands(),
 	}
 }
 
@@ -360,7 +221,7 @@ func globalFlags() []cli.Flag {
 		cli.BoolFlag{
 			Name:        "bootstrap",
 			Usage:       "enable bootstrap mode",
-			Destination: &bootstrapMode,
+			Destination: &common.BootstrapMode,
 			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 	}
@@ -380,18 +241,29 @@ func CreateNewApp(plural *Plural) *cli.App {
 		auth.Command(plural.Plural),
 		ai.Command(plural.Plural),
 		bootstrap.Command(plural.Plural),
+		bounce.Command(plural.Plural),
 		bundle.Command(plural.Plural),
+		buildcmd.Command(plural.Plural),
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
+		clusters.Command(plural.Plural),
+		deploy.Command(plural.Plural),
+		destroy.Command(plural.Plural),
 		output.Command(),
 		ops.Command(plural.Plural),
 		profile.Command(),
 		pr.Command(),
 		proxy.Command(plural.Plural),
+		push.Command(plural.Plural),
+		repo.Command(plural.Plural),
+		repo.APICommand(plural.Plural),
 		stack.Command(plural.Plural),
 		log.Command(plural.Plural),
-		init.Command(plural.Plural),
+		info.Command(plural.Plural),
+		cmdinit.Command(plural.Plural),
+		up.Command(plural.Plural),
+		upgrade.Command(plural.Plural),
 		workspace.Command(plural.Plural, plural.HelmConfiguration),
 		vpn.Command(plural.Plural),
 	}

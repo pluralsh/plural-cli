@@ -1,4 +1,4 @@
-package plural
+package common
 
 import (
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func handleScaffold(c *cli.Context) error {
+func HandleScaffold(c *cli.Context) error {
 	client := api.NewClient()
 	return scaffold.ApplicationScaffold(client)
 }

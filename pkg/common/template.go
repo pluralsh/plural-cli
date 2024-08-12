@@ -1,4 +1,4 @@
-package plural
+package common
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func testTemplate(c *cli.Context) error {
+func TestTemplate(c *cli.Context) error {
 	conf := config.Read()
 	client := api.NewClient()
 	installations, _ := client.GetInstallations()

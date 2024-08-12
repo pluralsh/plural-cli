@@ -3,13 +3,14 @@ package crypto
 import (
 	"bytes"
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/client"
-	"github.com/pluralsh/plural-cli/pkg/common"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/AlecAivazis/survey/v2"
 
@@ -20,45 +21,9 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 var prefix = []byte("CHARTMART-ENCRYPTED")
-
-const (
-	GitAttributesFile = ".gitattributes"
-	GitIgnoreFile     = ".gitignore"
-)
-
-const Gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
-/**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
-/**/helm/**/README.md* filter=plural-crypt diff=plural-crypt
-/**/helm/**/default-values.yaml* filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf* filter=plural-crypt diff=plural-crypt
-/**/manifest.yaml filter=plural-crypt diff=plural-crypt
-/**/output.yaml filter=plural-crypt diff=plural-crypt
-/diffs/**/* filter=plural-crypt diff=plural-crypt
-context.yaml filter=plural-crypt diff=plural-crypt
-workspace.yaml filter=plural-crypt diff=plural-crypt
-context.yaml* filter=plural-crypt diff=plural-crypt
-workspace.yaml* filter=plural-crypt diff=plural-crypt
-helm-values/*.yaml filter=plural-crypt diff=plural-crypt
-.env filter=plural-crypt diff=plural-crypt
-.gitattributes !filter !diff
-`
-
-const Gitignore = `/**/.terraform
-/**/.terraform*
-/**/terraform.tfstate*
-/bin
-*~
-.idea
-*.swp
-*.swo
-.DS_STORE
-.vscode
-`
 
 type Plural struct {
 	client.Plural
@@ -94,12 +59,12 @@ func (p *Plural) cryptoCommands() []cli.Command {
 		{
 			Name:   "init",
 			Usage:  "initializes git filters for you",
-			Action: CryptoInit,
+			Action: common.CryptoInit,
 		},
 		{
 			Name:   "unlock",
 			Usage:  "auto-decrypts all affected files in the repo",
-			Action: HandleUnlock,
+			Action: common.HandleUnlock,
 		},
 		{
 			Name:   "import",
@@ -273,10 +238,10 @@ func handleDecrypt(c *cli.Context) error {
 // CheckGitCrypt method checks if the .gitattributes and .gitignore files exist and have desired content.
 // Some old repos can have fewer files to encrypt and must be updated.
 func CheckGitCrypt(c *cli.Context) error {
-	if !utils.Exists(GitAttributesFile) || !utils.Exists(GitIgnoreFile) {
-		return CryptoInit(c)
+	if !utils.Exists(common.GitAttributesFile) || !utils.Exists(common.GitIgnoreFile) {
+		return common.CryptoInit(c)
 	}
-	toCompare := map[string]string{GitAttributesFile: Gitattributes, GitIgnoreFile: Gitignore}
+	toCompare := map[string]string{common.GitAttributesFile: common.Gitattributes, common.GitIgnoreFile: common.Gitignore}
 
 	for file, content := range toCompare {
 		equal, err := utils.CompareFileContent(file, content)
@@ -284,38 +249,11 @@ func CheckGitCrypt(c *cli.Context) error {
 			return err
 		}
 		if !equal {
-			return CryptoInit(c)
+			return common.CryptoInit(c)
 		}
 	}
 
 	return nil
-}
-
-func CryptoInit(c *cli.Context) error {
-	encryptConfig := [][]string{
-		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
-		{"filter.plural-crypt.clean", "plural crypto encrypt"},
-		{"filter.plural-crypt.required", "true"},
-		{"diff.plural-crypt.textconv", "plural crypto decrypt"},
-	}
-
-	utils.Highlight("Creating git encryption filters\n")
-	for _, conf := range encryptConfig {
-		if err := common.GitConfig(conf[0], conf[1]); err != nil {
-			return err
-		}
-	}
-
-	if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
-		return err
-	}
-
-	if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
-		return err
-	}
-
-	_, err := crypto.Build()
-	return err
 }
 
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
@@ -341,40 +279,6 @@ func (p *Plural) handleSetupKeys(c *cli.Context) error {
 	}
 
 	utils.Success("Public key uploaded successfully\n")
-	return nil
-}
-
-func HandleUnlock(c *cli.Context) error {
-	_, err := crypto.Build()
-	if err != nil {
-		return err
-	}
-
-	repoRoot, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	// fixes Invalid cross-device link when using os.Rename
-	gitIndexDir, err := filepath.Abs(filepath.Join(repoRoot, ".git"))
-	if err != nil {
-		return err
-	}
-	gitIndex := filepath.Join(gitIndexDir, "index")
-	dump, err := os.CreateTemp(gitIndexDir, "index.bak")
-	if err != nil {
-		return err
-	}
-	if err := os.Rename(gitIndex, dump.Name()); err != nil {
-		return err
-	}
-
-	if err := common.GitCommand("checkout", "HEAD", "--", repoRoot).Run(); err != nil {
-		_ = os.Rename(dump.Name(), gitIndex)
-		return common.ErrUnlock
-	}
-
-	os.Remove(dump.Name())
 	return nil
 }
 

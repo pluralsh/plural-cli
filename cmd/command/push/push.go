@@ -1,22 +1,39 @@
-package plural
+package push
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/plural-cli/pkg/client"
+
 	"github.com/pluralsh/plural-cli/pkg/common"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/helm"
-	"github.com/pluralsh/plural-cli/pkg/pluralfile"
 	scftmpl "github.com/pluralsh/plural-cli/pkg/scaffold/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"
 )
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
+	return cli.Command{
+		Name:        "push",
+		Usage:       "utilities for pushing tf or helm packages",
+		Subcommands: p.pushCommands(),
+		Category:    "Publishing",
+	}
+}
 
 func (p *Plural) pushCommands() []cli.Command {
 	return []cli.Command{
@@ -65,62 +82,10 @@ func (p *Plural) pushCommands() []cli.Command {
 	}
 }
 
-func apply(c *cli.Context) error {
-	path, _ := os.Getwd()
-	var file = pathing.SanitizeFilepath(filepath.Join(path, "Pluralfile"))
-	if c.IsSet("file") {
-		file, _ = filepath.Abs(c.String("file"))
-	}
-
-	if err := os.Chdir(filepath.Dir(file)); err != nil {
-		return err
-	}
-
-	plrl, err := pluralfile.Parse(file)
-	if err != nil {
-		return err
-	}
-
-	lock, err := plrl.Lock(file)
-	if err != nil {
-		return err
-	}
-	return plrl.Execute(file, lock)
-}
-
 func (p *Plural) handleTerraformUpload(c *cli.Context) error {
 	p.InitPluralClient()
 	_, err := p.UploadTerraform(c.Args().Get(0), c.Args().Get(1))
 	return api.GetErrorResponse(err, "UploadTerraform")
-}
-
-func handleHelmTemplate(c *cli.Context) error {
-	path := c.String("values")
-	f, err := scftmpl.TmpValuesFile(path)
-	if err != nil {
-		return err
-	}
-
-	defer func(name string) {
-		_ = os.Remove(name)
-	}(f.Name())
-
-	name := "default"
-	namespace := "default"
-	actionConfig, err := helm.GetActionConfig(namespace)
-	if err != nil {
-		return err
-	}
-	values, err := getValues(f.Name())
-	if err != nil {
-		return err
-	}
-	res, err := helm.Template(actionConfig, name, namespace, c.Args().Get(0), false, false, values)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(res))
-	return nil
 }
 
 func handleHelmUpload(c *cli.Context) error {
