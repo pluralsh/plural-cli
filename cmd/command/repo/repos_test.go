@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 )

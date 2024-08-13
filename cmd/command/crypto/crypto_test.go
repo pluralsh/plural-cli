@@ -10,7 +10,7 @@ import (
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
-	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	pluraltest "github.com/pluralsh/plural-cli/pkg/test"

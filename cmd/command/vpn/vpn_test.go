@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"

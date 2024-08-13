@@ -7,7 +7,7 @@ import (
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
-	plural "github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	"github.com/stretchr/testify/assert"

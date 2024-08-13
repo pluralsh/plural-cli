@@ -8,7 +8,7 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
-	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -35,7 +35,7 @@ func TestHelmCommands(t *testing.T) {
 		_ = os.RemoveAll(path)
 		_ = os.Chdir(currentDir)
 	}(dir, currentDir)
-	tFiles, err := filepath.Abs("../../pkg/test/helm")
+	tFiles, err := filepath.Abs("../../../pkg/test/helm")
 	assert.NoError(t, err)
 	err = utils.CopyDir(tFiles, filepath.Join(dir, subchart))
 	assert.NoError(t, err)

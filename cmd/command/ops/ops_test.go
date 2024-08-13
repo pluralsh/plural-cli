@@ -6,7 +6,7 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
-	"github.com/pluralsh/plural-cli/cmd/plural"
+	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	clientcmd "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
