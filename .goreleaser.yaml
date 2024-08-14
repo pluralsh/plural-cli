@@ -11,6 +11,7 @@ before:
 
 builds:
   - id: plural-cli
+    main: ./cmd/plural
     targets:
       - linux_amd64
       - linux_arm64
