@@ -15,7 +15,6 @@ COPY go.sum go.sum
 RUN go mod download
 
 # Copy the go source
-COPY main.go main.go
 COPY cmd/ cmd/
 COPY pkg/ pkg/
 
@@ -30,7 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     -X "github.com/pluralsh/plural-cli/cmd/plural.Version=${APP_VSN}" \
     -X "github.com/pluralsh/plural-cli/cmd/plural.Commit=${APP_COMMIT}" \
     -X "github.com/pluralsh/plural-cli/cmd/plural.Date=${APP_DATE}"' \
-    -o plural .
+    -o plural ./cmd/plural
 
 FROM golang:1.20-alpine3.17
 

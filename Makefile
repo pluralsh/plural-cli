@@ -39,15 +39,15 @@ git-push:
 
 .PHONY: install
 install:
-	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural .
+	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
-	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
 
 .PHONY: build-cli-ui
 build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
-	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
 
 .PHONY: build-web
 build-web: ## Build just the embedded UI
@@ -70,7 +70,7 @@ generate-bindings: build-web ## Generate backend bindings for the embedded UI
 
 .PHONY: release
 release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) .
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
 
 .PHONY: setup
 setup: ## sets up your local env (for mac only)
@@ -159,7 +159,7 @@ setup-tests:
 
 .PHONY: test
 test: setup-tests
-	gotestsum --format testname -- -v -race ./pkg/... ./cmd/...
+	gotestsum --format testname -- -v -race ./pkg/... ./cmd/command/...
 
 .PHONY: format
 format: # formats all go code to prep for linting
