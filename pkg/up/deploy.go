@@ -29,6 +29,21 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
+	if ctx.ImportCluster != nil {
+		prov := ctx.Provider.Name()
+		if err := ctx.templateFrom(fmt.Sprintf("./bootstrap/templates/setup/mgmt/%s.tf", prov), "terraform/mgmt/plural.tf"); err != nil {
+			return err
+		}
+
+		if err := runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/mgmt", cmd: "import", args: []string{"plural_cluster.mgmt", *ctx.ImportCluster}},
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		}); err != nil {
+			return err
+		}
+	}
+
 	stateCmd := &terraformCmd{dir: "./terraform/mgmt"}
 	outs, err := stateCmd.outputs()
 	if err != nil {
@@ -41,13 +56,15 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
-	subdomain := ctx.Manifest.Network.Subdomain
-	if err := testDns(fmt.Sprintf("console.%s", subdomain)); err != nil {
-		return err
-	}
+	if !ctx.Cloud {
+		subdomain := ctx.Manifest.Network.Subdomain
+		if err := testDns(fmt.Sprintf("console.%s", subdomain)); err != nil {
+			return err
+		}
 
-	if err := ping(fmt.Sprintf("https://console.%s", subdomain)); err != nil {
-		return err
+		if err := ping(fmt.Sprintf("https://console.%s", subdomain)); err != nil {
+			return err
+		}
 	}
 
 	if err := commit(); err != nil {

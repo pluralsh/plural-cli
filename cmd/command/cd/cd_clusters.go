@@ -148,6 +148,19 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 	})
 }
 
+func (p *Plural) GetClusterId(handle string) (string, string, error) {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return "", "", err
+	}
+
+	existing, err := p.ConsoleClient.GetCluster(nil, lo.ToPtr(handle))
+	if err != nil {
+		return "", "", err
+	}
+
+	return existing.ID, existing.Name, nil
+}
+
 func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -394,10 +407,10 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	}
 
 	id, name := getIdAndName(c.Args().Get(0))
-	return p.reinstallOperator(c, id, name)
+	return p.ReinstallOperator(c, id, name)
 }
 
-func (p *Plural) reinstallOperator(c *cli.Context, id, handle *string) error {
+func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
 	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
 	if err != nil {
 		return err
@@ -456,7 +469,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 			if attrs.Handle != nil {
 				handle = attrs.Handle
 			}
-			return p.reinstallOperator(c, nil, handle)
+			return p.ReinstallOperator(c, nil, handle)
 		}
 
 		return err

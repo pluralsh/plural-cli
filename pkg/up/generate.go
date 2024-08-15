@@ -12,6 +12,8 @@ type templatePair struct {
 	from      string
 	to        string
 	overwrite bool
+	cloud     bool
+	cloudless bool
 }
 
 func (ctx *Context) Cleanup() {
@@ -21,7 +23,7 @@ func (ctx *Context) Cleanup() {
 
 func (ctx *Context) Generate() error {
 	if !utils.Exists("./bootstrap") {
-		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "main"); err != nil {
+		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "cloud-up"); err != nil {
 			return err
 		}
 	}
@@ -33,8 +35,9 @@ func (ctx *Context) Generate() error {
 		{from: "./bootstrap/helm/flux.yaml", to: "./helm-values/flux.yaml", overwrite: true},
 		{from: fmt.Sprintf("./bootstrap/templates/providers/bootstrap/%s.tf", prov), to: "terraform/mgmt/provider.tf"},
 		{from: fmt.Sprintf("./bootstrap/templates/setup/providers/%s.tf", prov), to: "terraform/mgmt/mgmt.tf"},
-		{from: "./bootstrap/templates/setup/console.tf", to: "terraform/mgmt/console.tf"},
-		{from: fmt.Sprintf("./bootstrap/templates/providers/apps/%s.tf", prov), to: "terraform/apps/provider.tf"},
+		{from: "./bootstrap/templates/setup/console.tf", to: "terraform/mgmt/console.tf", cloudless: true},
+		{from: fmt.Sprintf("./bootstrap/templates/providers/apps/%s.tf", prov), to: "terraform/apps/provider.tf", cloudless: true},
+		{from: "./bootstrap/templates/providers/apps/cloud.tf", to: "terraform/apps/provider.tf", cloud: true},
 		{from: "./bootstrap/templates/setup/cd.tf", to: "terraform/apps/cd.tf"},
 		{from: "./bootstrap/README.md", to: "README.md", overwrite: true},
 	}
@@ -42,6 +45,14 @@ func (ctx *Context) Generate() error {
 	for _, tpl := range tpls {
 		if utils.Exists(tpl.to) && !tpl.overwrite {
 			fmt.Printf("%s already exists, skipping for now...\n", tpl.to)
+			continue
+		}
+
+		if tpl.cloudless && ctx.Cloud {
+			continue
+		}
+
+		if tpl.cloud && !ctx.Cloud {
 			continue
 		}
 
@@ -53,7 +64,6 @@ func (ctx *Context) Generate() error {
 	copies := []templatePair{
 		{from: "./bootstrap/terraform/modules/clusters", to: "terraform/modules/clusters"},
 		{from: fmt.Sprintf("./bootstrap/terraform/clouds/%s", prov), to: "terraform/mgmt/cluster"},
-		{from: "./bootstrap/apps/repositories", to: "apps/repositories"},
 		{from: "./bootstrap/apps/services", to: "apps/services"},
 		{from: "./bootstrap/templates", to: "templates"},
 	}
@@ -65,6 +75,13 @@ func (ctx *Context) Generate() error {
 
 		if err := utils.CopyDir(copy.from, copy.to); err != nil {
 			return err
+		}
+	}
+
+	if ctx.Cloud {
+		toRemove := []string{"apps/services/console.yaml", "apps/services/flux.yaml"}
+		for _, f := range toRemove {
+			os.Remove(f)
 		}
 	}
 

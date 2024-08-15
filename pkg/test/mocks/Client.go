@@ -616,6 +616,36 @@ func (_m *Client) GetCharts(repoId string) ([]*api.Chart, error) {
 	return r0, r1
 }
 
+// GetConsoleInstances provides a mock function with given fields:
+func (_m *Client) GetConsoleInstances() ([]*gqlclient.ConsoleInstanceFragment, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConsoleInstances")
+	}
+
+	var r0 []*gqlclient.ConsoleInstanceFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func() ([]*gqlclient.ConsoleInstanceFragment, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() []*gqlclient.ConsoleInstanceFragment); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*gqlclient.ConsoleInstanceFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetEabCredential provides a mock function with given fields: cluster, provider
 func (_m *Client) GetEabCredential(cluster string, provider string) (*api.EabCredential, error) {
 	ret := _m.Called(cluster, provider)
@@ -1807,6 +1837,24 @@ func (_m *Client) UnlockRepository(name string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
 		r0 = rf(name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateConsoleInstance provides a mock function with given fields: id, attrs
+func (_m *Client) UpdateConsoleInstance(id string, attrs gqlclient.ConsoleInstanceUpdateAttributes) error {
+	ret := _m.Called(id, attrs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateConsoleInstance")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, gqlclient.ConsoleInstanceUpdateAttributes) error); ok {
+		r0 = rf(id, attrs)
 	} else {
 		r0 = ret.Error(0)
 	}

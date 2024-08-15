@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/samber/lo"
 
 	"github.com/mitchellh/go-homedir"
 )
@@ -20,9 +21,12 @@ type Context struct {
 	Provider       provider.Provider
 	Manifest       *manifest.ProjectManifest
 	Config         *config.Config
+	Cloud          bool
 	RepoUrl        string
 	StacksIdentity string
 	Delims         *delims
+	ImportCluster  *string
+	CloudCluster   string
 }
 
 type delims struct {
@@ -41,6 +45,10 @@ func (ctx *Context) identifier() string {
 
 func (ctx *Context) changeDelims() {
 	ctx.Delims = &delims{"[[", "]]"}
+}
+
+func (ctx *Context) SetImportCluster(id string) {
+	ctx.ImportCluster = lo.ToPtr(id)
 }
 
 func (ctx *Context) Backfill() error {
@@ -71,7 +79,7 @@ func (ctx *Context) Backfill() error {
 	return nil
 }
 
-func Build() (*Context, error) {
+func Build(cloud bool) (*Context, error) {
 	projPath, _ := filepath.Abs("workspace.yaml")
 	project, err := manifest.ReadProject(projPath)
 	if err != nil {
@@ -88,6 +96,7 @@ func Build() (*Context, error) {
 		Provider: prov,
 		Config:   &conf,
 		Manifest: project,
+		Cloud:    cloud,
 	}, nil
 }
 

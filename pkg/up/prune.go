@@ -9,6 +9,10 @@ import (
 )
 
 func (ctx *Context) Prune() error {
+	if ctx.Cloud {
+		return nil
+	}
+
 	utils.Highlight("\nCleaning up unneeded resources...\n\n")
 	repoRoot, err := git.Root()
 	if err != nil {

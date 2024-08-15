@@ -106,7 +106,7 @@ func (p *Plural) cdCommands() []cli.Command {
 		},
 		{
 			Name:   "login",
-			Action: p.handleCdLogin,
+			Action: p.HandleCdLogin,
 			Usage:  "logs into your plural console",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url"},
@@ -224,7 +224,17 @@ func confirmCluster(url, token string) (bool, error) {
 	return common.Confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
 }
 
-func (p *Plural) handleCdLogin(c *cli.Context) (err error) {
+func (p *Plural) HandleCdLogin(c *cli.Context) (err error) {
+	prior := console.ReadConfig()
+	if prior.Url != "" {
+		if common.Affirm(
+			fmt.Sprintf("You've already configured your console at %s, continue using those credentials?", prior.Url),
+			"PLURAL_CD_USE_EXISTING_CREDENTIALS",
+		) {
+			return
+		}
+	}
+
 	url := c.String("url")
 	if url == "" {
 		url, err = utils.ReadLine("Enter the url of your console: ")

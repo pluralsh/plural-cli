@@ -71,7 +71,7 @@ func HandleDown(_ *cli.Context) error {
 		return fmt.Errorf("cancelled destroy")
 	}
 
-	ctx, err := up.Build()
+	ctx, err := up.Build(false)
 	if err != nil {
 		return err
 	}

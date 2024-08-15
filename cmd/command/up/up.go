@@ -3,11 +3,13 @@ package up
 import (
 	"fmt"
 
+	"github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/samber/lo"
 	"github.com/urfave/cli"
 )
 
@@ -35,6 +37,10 @@ func Command(clients client.Plural) cli.Command {
 				Name:  "ignore-preflights",
 				Usage: "whether to ignore preflight check failures prior to init",
 			},
+			cli.BoolFlag{
+				Name:  "cloud",
+				Usage: "Whether you're provisioning against a cloud-hosted Plural Console",
+			},
 			cli.StringFlag{
 				Name:  "commit",
 				Usage: "commits your changes with this message",
@@ -51,14 +57,36 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 	p.InitPluralClient()
 
+	cd := &cd.Plural{Plural: p.Plural}
+
+	if c.Bool("cloud") {
+		if err := cd.HandleCdLogin(c); err != nil {
+			return err
+		}
+
+		if err := p.backfillEncryption(); err != nil {
+			return err
+		}
+	}
+
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
 
-	ctx, err := up.Build()
+	ctx, err := up.Build(c.Bool("cloud"))
 	if err != nil {
 		return err
+	}
+
+	if c.Bool("cloud") {
+		id, name, err := cd.GetClusterId("mgmt")
+		if err != nil {
+			return err
+		}
+
+		ctx.ImportCluster = lo.ToPtr(id)
+		ctx.CloudCluster = name
 	}
 
 	if err := ctx.Backfill(); err != nil {

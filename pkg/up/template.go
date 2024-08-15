@@ -49,6 +49,9 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		"Identifier":     ctx.identifier(),
 		"Acme":           eabCredential,
 		"StacksIdentity": ctx.StacksIdentity,
+		"RequireDB":      !ctx.Cloud,
+		"CloudCluster":   ctx.CloudCluster,
+		"Cloud":          ctx.Cloud,
 	}
 
 	tpl := template.New("tpl")
