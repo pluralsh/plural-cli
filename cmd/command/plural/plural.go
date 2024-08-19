@@ -253,7 +253,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		output.Command(),
 		ops.Command(plural.Plural),
 		profile.Command(),
-		pr.Command(),
+		pr.Command(plural.Plural),
 		proxy.Command(plural.Plural),
 		push.Command(plural.Plural),
 		repo.Command(plural.Plural),
