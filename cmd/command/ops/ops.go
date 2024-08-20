@@ -8,7 +8,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
-	v1 "k8s.io/api/core/v1"
 )
 
 type Plural struct {
@@ -43,6 +42,17 @@ func (p *Plural) opsCommands() []cli.Command {
 	}
 }
 
+func (p *Plural) handleListNodes(c *cli.Context) error {
+	if err := p.InitKube(); err != nil {
+		return err
+	}
+	nodes, err := p.Nodes()
+	if err != nil {
+		return err
+	}
+	return common.PrintListNodes(nodes)
+}
+
 func (p *Plural) handleTerminateNode(c *cli.Context) error {
 	name := c.Args().Get(0)
 	provider, err := getProvider()
@@ -58,30 +68,6 @@ func (p *Plural) handleTerminateNode(c *cli.Context) error {
 	}
 
 	return provider.Decommision(node)
-}
-
-func (p *Plural) handleListNodes(cli *cli.Context) error {
-	if err := p.InitKube(); err != nil {
-		return err
-	}
-	nodes, err := p.Nodes()
-	if err != nil {
-		return err
-	}
-
-	headers := []string{"Name", "CPU", "Memory", "Region", "Zone"}
-	return utils.PrintTable(nodes.Items, headers, func(node v1.Node) ([]string, error) {
-		status := node.Status
-		labels := node.ObjectMeta.Labels
-		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
-		return []string{
-			node.Name,
-			cpu.String(),
-			mem.String(),
-			labels["topology.kubernetes.io/region"],
-			labels["topology.kubernetes.io/zone"],
-		}, nil
-	})
 }
 
 func getProvider() (provider.Provider, error) {

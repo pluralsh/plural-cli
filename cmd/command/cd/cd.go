@@ -32,15 +32,11 @@ type Plural struct {
 }
 
 func Command(clients client.Plural, helmConfiguration *action.Configuration) cli.Command {
-	plural := Plural{
-		Plural:            clients,
-		HelmConfiguration: helmConfiguration,
-	}
 	return cli.Command{
 		Name:        "deployments",
 		Aliases:     []string{"cd"},
 		Usage:       "view and manage plural deployments",
-		Subcommands: plural.cdCommands(),
+		Subcommands: Commands(clients, helmConfiguration),
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "token",
@@ -59,7 +55,11 @@ func Command(clients client.Plural, helmConfiguration *action.Configuration) cli
 	}
 }
 
-func (p *Plural) cdCommands() []cli.Command {
+func Commands(clients client.Plural, helmConfiguration *action.Configuration) []cli.Command {
+	p := Plural{
+		HelmConfiguration: helmConfiguration,
+		Plural:            clients,
+	}
 	return []cli.Command{
 		p.cdProviders(),
 		p.cdCredentials(),
