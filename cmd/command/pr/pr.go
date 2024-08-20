@@ -1,21 +1,57 @@
 package pr
 
 import (
+	"io"
+	"os"
+
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/pr"
+	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/samber/lo"
 	"github.com/urfave/cli"
 )
 
-func Command() cli.Command {
+func init() {
+	consoleToken = ""
+	consoleURL = ""
+}
+
+var consoleToken string
+var consoleURL string
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
 	return cli.Command{
 		Name:        "pull-requests",
 		Aliases:     []string{"pr"},
 		Usage:       "Generate and manage pull requests",
-		Subcommands: prCommands(),
+		Subcommands: p.prCommands(),
 		Category:    "CD",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:        "token",
+				Usage:       "console token",
+				EnvVar:      "PLURAL_CONSOLE_TOKEN",
+				Destination: &consoleToken,
+			},
+			cli.StringFlag{
+				Name:        "url",
+				Usage:       "console url address",
+				EnvVar:      "PLURAL_CONSOLE_URL",
+				Destination: &consoleURL,
+			},
+		},
 	}
 }
 
-func prCommands() []cli.Command {
+func (p *Plural) prCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "template",
@@ -34,6 +70,16 @@ func prCommands() []cli.Command {
 				},
 			},
 		},
+		{
+			Name:      "create",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreatePrAutomation, []string{"ID"})),
+			Usage:     "create PR automation",
+			ArgsUsage: "ID",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "context", Usage: "JSON blob string"},
+				cli.StringFlag{Name: "branch", Usage: "branch name"},
+			},
+		},
 	}
 }
 
@@ -48,4 +94,34 @@ func handlePrTemplate(c *cli.Context) error {
 	}
 
 	return pr.Apply(template)
+}
+
+func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+	var branch, context *string
+
+	id := c.Args().Get(0)
+	if c := c.String("context"); c != "" {
+		if c == "-" {
+			bytes, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				return err
+			}
+			context = lo.ToPtr(string(bytes))
+		}
+	}
+
+	if b := c.String("branch"); b != "" {
+		branch = &b
+	}
+
+	pr, err := p.ConsoleClient.CreatePullRequest(id, branch, context)
+	if err != nil {
+		return err
+	}
+
+	utils.Success("PR %s created successfully\n", pr.ID)
+	return nil
 }
