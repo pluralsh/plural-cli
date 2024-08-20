@@ -35,22 +35,6 @@ func (p *Plural) managementCommands() []cli.Command {
 			Usage:  "list the nodes in your cluster",
 			Action: common.LatestVersion(common.InitKubeconfig(p.handleListNodes)),
 		},
-		{
-			Name:   "login",
-			Usage:  "logs into plural and saves credentials to the current config profile",
-			Action: common.LatestVersion(common.HandleLogin),
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "endpoint",
-					Usage: "the endpoint for the plural installation you're working with",
-				},
-				cli.StringFlag{
-					Name:  "service-account",
-					Usage: "email for the service account you'd like to use for this workspace",
-				},
-			},
-			Category: "User Profile",
-		},
 	}
 }
 func (p *Plural) handleListNodes(c *cli.Context) error {

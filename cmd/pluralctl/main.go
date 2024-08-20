@@ -4,8 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
+
+	"github.com/fatih/color"
 	"github.com/pluralsh/plural-cli/cmd/command/clone"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
@@ -65,6 +66,7 @@ func main() {
 	commands := []cli.Command{
 		cryptocmd.Command(plural.Plural),
 		clone.Command(),
+		cd.Command(plural.Plural, plural.HelmConfiguration),
 		up.Command(plural.Plural),
 		down.Command(),
 		pr.Command(),
@@ -73,7 +75,6 @@ func main() {
 		profile.Command(),
 		version.Command(),
 	}
-	commands = append(commands, cd.Commands(plural.Plural, plural.HelmConfiguration)...)
 	app.Commands = commands
 	if os.Getenv("ENABLE_COLOR") != "" {
 		color.NoColor = false
