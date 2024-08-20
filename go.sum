@@ -1888,8 +1888,6 @@ github.com/pluralsh/console/go/client v1.5.0 h1:O5pHJUXqBJWUt66MiCRlyatarNFQGy1F
 github.com/pluralsh/console/go/client v1.5.0/go.mod h1:lpoWASYsM9keNePS3dpFiEisUHEfObIVlSL3tzpKn8k=
 github.com/pluralsh/controller-reconcile-helper v0.0.4 h1:1o+7qYSyoeqKFjx+WgQTxDz4Q2VMpzprJIIKShxqG0E=
 github.com/pluralsh/controller-reconcile-helper v0.0.4/go.mod h1:AfY0gtteD6veBjmB6jiRx/aR4yevEf6K0M13/pGan/s=
-github.com/pluralsh/gqlclient v1.12.1 h1:JDOkP9jjqkPdTYdpH5hooG4F8T6FDH90XfipeXJmJFY=
-github.com/pluralsh/gqlclient v1.12.1/go.mod h1:OEjN9L63x8m3A3eQBv5kVkFgiY9fp2aZ0cgOF0uII58=
 github.com/pluralsh/gqlclient v1.12.2 h1:BrEFAASktf4quFw57CIaLAd+NZUTLhG08fe6tnhBQN4=
 github.com/pluralsh/gqlclient v1.12.2/go.mod h1:OEjN9L63x8m3A3eQBv5kVkFgiY9fp2aZ0cgOF0uII58=
 github.com/pluralsh/helm-docs v1.11.3-0.20230914191425-6d14ebab8817 h1:J7SGxH6nJGdRoNtqdzhyr2VMpbl4asolul7xqqW++EA=
