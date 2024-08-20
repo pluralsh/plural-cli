@@ -9,11 +9,13 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/buildcmd"
 	"github.com/pluralsh/plural-cli/cmd/command/bundle"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
+	"github.com/pluralsh/plural-cli/cmd/command/clone"
 	"github.com/pluralsh/plural-cli/cmd/command/clusters"
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/deploy"
 	"github.com/pluralsh/plural-cli/cmd/command/destroy"
+	"github.com/pluralsh/plural-cli/cmd/command/down"
 	"github.com/pluralsh/plural-cli/cmd/command/info"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
 	"github.com/pluralsh/plural-cli/cmd/command/link"
@@ -28,6 +30,7 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/stack"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
 	"github.com/pluralsh/plural-cli/cmd/command/upgrade"
+	"github.com/pluralsh/plural-cli/cmd/command/version"
 	"github.com/pluralsh/plural-cli/cmd/command/vpn"
 	"github.com/pluralsh/plural-cli/cmd/command/workspace"
 	"github.com/pluralsh/plural-cli/pkg/client"
@@ -54,28 +57,11 @@ type Plural struct {
 func (p *Plural) getCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:    "version",
-			Aliases: []string{"v", "vsn"},
-			Usage:   "Gets cli version info",
-			Action:  common.VersionInfo,
-		},
-		{
-			Name:   "down",
-			Usage:  "destroys your management cluster and any apps installed on it",
-			Action: common.LatestVersion(common.HandleDown),
-		},
-		{
 			Name:      "diff",
 			Aliases:   []string{"df"},
 			Usage:     "diffs the state of the current workspace with the deployed version and dumps results to diffs/",
 			ArgsUsage: "APP",
 			Action:    common.LatestVersion(common.HandleDiff),
-		},
-		{
-			Name:      "clone",
-			Usage:     "clones and decrypts a plural repo",
-			ArgsUsage: "URL",
-			Action:    common.HandleClone,
 		},
 		{
 			Name:     "create",
@@ -248,8 +234,10 @@ func CreateNewApp(plural *Plural) *cli.App {
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
 		clusters.Command(plural.Plural),
+		clone.Command(),
 		deploy.Command(plural.Plural),
 		destroy.Command(plural.Plural),
+		down.Command(),
 		output.Command(),
 		ops.Command(plural.Plural),
 		profile.Command(),
@@ -266,6 +254,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		upgrade.Command(plural.Plural),
 		workspace.Command(plural.Plural, plural.HelmConfiguration),
 		vpn.Command(plural.Plural),
+		version.Command(),
 	}
 	commands = append(commands, plural.getCommands()...)
 	app.Commands = commands
