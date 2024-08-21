@@ -10,7 +10,8 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/osteele/liquid"
+	pollytemplate "github.com/pluralsh/polly/template"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/config"
@@ -20,10 +21,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
-)
-
-var (
-	liquidEngine = liquid.NewEngine()
 )
 
 const (
@@ -241,7 +238,7 @@ func CreateControlPlane(conf config.Config) (string, error) {
 		"configuration": configuration,
 	}
 
-	res, err := liquidEngine.ParseAndRender(tpl, bindings)
+	res, err := pollytemplate.RenderLiquid(tpl, bindings)
 	return string(res), err
 }
 
