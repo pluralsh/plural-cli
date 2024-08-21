@@ -3,6 +3,7 @@ package up
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -21,25 +22,29 @@ func (ctx *Context) Cleanup() {
 	_ = os.RemoveAll("./bootstrap")
 }
 
-func (ctx *Context) Generate() error {
-	if !utils.Exists("./bootstrap") {
-		if err := git.BranchedSubmodule("https://github.com/pluralsh/bootstrap.git", "cloud-up"); err != nil {
-			return err
-		}
+func (ctx *Context) Generate() (dir string, err error) {
+	dir, err = os.MkdirTemp("", "sampledir")
+	ctx.dir = dir
+	if err != nil {
+		return
+	}
+
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "more-up-improvements", dir); err != nil {
+		return
 	}
 
 	prov := ctx.Provider.Name()
 	tpls := []templatePair{
-		{from: "./bootstrap/charts/runtime/values.yaml.tpl", to: "./helm-values/runtime.yaml", overwrite: true},
-		{from: "./bootstrap/helm/certmanager.yaml", to: "./helm-values/certmanager.yaml", overwrite: true},
-		{from: "./bootstrap/helm/flux.yaml", to: "./helm-values/flux.yaml", overwrite: true},
-		{from: fmt.Sprintf("./bootstrap/templates/providers/bootstrap/%s.tf", prov), to: "terraform/mgmt/provider.tf"},
-		{from: fmt.Sprintf("./bootstrap/templates/setup/providers/%s.tf", prov), to: "terraform/mgmt/mgmt.tf"},
-		{from: "./bootstrap/templates/setup/console.tf", to: "terraform/mgmt/console.tf", cloudless: true},
-		{from: fmt.Sprintf("./bootstrap/templates/providers/apps/%s.tf", prov), to: "terraform/apps/provider.tf", cloudless: true},
-		{from: "./bootstrap/templates/providers/apps/cloud.tf", to: "terraform/apps/provider.tf", cloud: true},
-		{from: "./bootstrap/templates/setup/cd.tf", to: "terraform/apps/cd.tf"},
-		{from: "./bootstrap/README.md", to: "README.md", overwrite: true},
+		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./helm-values/runtime.yaml", overwrite: true},
+		{from: ctx.path("helm/certmanager.yaml"), to: "./helm-values/certmanager.yaml", overwrite: true},
+		{from: ctx.path("helm/flux.yaml"), to: "./helm-values/flux.yaml", overwrite: true},
+		{from: ctx.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
+		{from: ctx.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
+		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
+		{from: ctx.path(fmt.Sprintf("templates/providers/apps/%s.tf", prov)), to: "terraform/apps/provider.tf", cloudless: true},
+		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf", cloud: true},
+		{from: ctx.path("templates/setup/cd.tf"), to: "terraform/apps/cd.tf"},
+		{from: ctx.path("README.md"), to: "README.md", overwrite: true},
 	}
 
 	for _, tpl := range tpls {
@@ -56,16 +61,16 @@ func (ctx *Context) Generate() error {
 			continue
 		}
 
-		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
-			return err
+		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			return
 		}
 	}
 
 	copies := []templatePair{
-		{from: "./bootstrap/terraform/modules/clusters", to: "terraform/modules/clusters"},
-		{from: fmt.Sprintf("./bootstrap/terraform/clouds/%s", prov), to: "terraform/mgmt/cluster"},
-		{from: "./bootstrap/apps/services", to: "apps/services"},
-		{from: "./bootstrap/templates", to: "templates"},
+		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
+		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
+		{from: ctx.path("setup"), to: "setup"},
+		{from: ctx.path("templates"), to: "templates"},
 	}
 
 	for _, copy := range copies {
@@ -73,13 +78,13 @@ func (ctx *Context) Generate() error {
 			continue
 		}
 
-		if err := utils.CopyDir(copy.from, copy.to); err != nil {
-			return err
+		if err = utils.CopyDir(copy.from, copy.to); err != nil {
+			return
 		}
 	}
 
 	if ctx.Cloud {
-		toRemove := []string{"apps/services/console.yaml", "apps/services/flux.yaml"}
+		toRemove := []string{"setup/console.yaml", "setup/flux.yaml"}
 		for _, f := range toRemove {
 			os.Remove(f)
 		}
@@ -87,23 +92,23 @@ func (ctx *Context) Generate() error {
 
 	ctx.changeDelims()
 	overwrites := []templatePair{
-		{from: "apps/services/setup.yaml", to: "apps/services/setup.yaml"},
-		{from: "apps/services/pr-automation/cluster-creator.yaml", to: "apps/services/pr-automation/cluster-creator.yaml"},
+		{from: "setup/setup.yaml", to: "setup/setup.yaml"},
+		{from: "setup/pr-automation/cluster-creator.yaml", to: "setup/pr-automation/cluster-creator.yaml"},
 	}
 
 	for _, tpl := range overwrites {
-		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
-			return err
+		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 func (ctx *Context) afterSetup() error {
 	prov := ctx.Provider.Name()
 	overwrites := []templatePair{
-		{from: fmt.Sprintf("./bootstrap/templates/setup/stacks/%s.yaml", prov), to: "apps/services/stacks/serviceaccount.yaml"},
+		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "setup/stacks/serviceaccount.yaml"},
 	}
 
 	ctx.Delims = nil
@@ -114,4 +119,8 @@ func (ctx *Context) afterSetup() error {
 	}
 
 	return nil
+}
+
+func (ctx *Context) path(p string) string {
+	return filepath.Join(ctx.dir, p)
 }

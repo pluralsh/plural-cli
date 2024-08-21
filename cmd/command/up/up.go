@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
@@ -93,7 +94,9 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	if err := ctx.Generate(); err != nil {
+	dir, err := ctx.Generate()
+	defer func() { os.RemoveAll(dir) }()
+	if err != nil {
 		return err
 	}
 

@@ -31,7 +31,7 @@ func (ctx *Context) Deploy(commit func() error) error {
 
 	if ctx.ImportCluster != nil {
 		prov := ctx.Provider.Name()
-		if err := ctx.templateFrom(fmt.Sprintf("./bootstrap/templates/setup/mgmt/%s.tf", prov), "terraform/mgmt/plural.tf"); err != nil {
+		if err := ctx.templateFrom(ctx.path(fmt.Sprintf("templates/setup/mgmt/%s.tf", prov)), "terraform/mgmt/plural.tf"); err != nil {
 			return err
 		}
 

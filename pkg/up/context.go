@@ -27,6 +27,7 @@ type Context struct {
 	Delims         *delims
 	ImportCluster  *string
 	CloudCluster   string
+	dir            string
 }
 
 type delims struct {
