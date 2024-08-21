@@ -52,7 +52,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/osteele/liquid v1.4.0
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.16
@@ -227,6 +226,7 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 // indirect
 	github.com/onsi/gomega v1.32.0 // indirect
 	github.com/orcaman/concurrent-map v1.0.0 // indirect
+	github.com/osteele/liquid v1.4.0 // indirect
 	github.com/osteele/tuesday v1.0.3 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
