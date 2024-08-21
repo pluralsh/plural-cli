@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -19,14 +19,14 @@ var (
 )
 
 type VersionedConfig struct {
-	ApiVersion string  `yaml:"apiVersion"`
-	Kind       string  `yaml:"kind"`
-	Spec       *Config `yaml:"spec"`
+	ApiVersion string  `json:"apiVersion"`
+	Kind       string  `json:"kind"`
+	Spec       *Config `json:"spec"`
 }
 
 type Config struct {
-	Url   string `yaml:"url"`
-	Token string `yaml:"token"`
+	Url   string `json:"url"`
+	Token string `json:"token"`
 }
 
 func configFile() string {
