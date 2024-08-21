@@ -4,18 +4,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/osteele/liquid"
-)
-
-var (
-	liquidEngine = liquid.NewEngine()
+	"github.com/pluralsh/polly/template"
 )
 
 func templateReplacement(data []byte, ctx map[string]interface{}) ([]byte, error) {
 	bindings := map[string]interface{}{
 		"context": ctx,
 	}
-	return liquidEngine.ParseAndRender(data, bindings)
+	return template.RenderLiquid(data, bindings)
 }
 
 func replaceTo(from, to string, rep func(data []byte) ([]byte, error)) error {
