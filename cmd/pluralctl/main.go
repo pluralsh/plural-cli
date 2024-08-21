@@ -69,7 +69,7 @@ func main() {
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		up.Command(plural.Plural),
 		down.Command(),
-		pr.Command(),
+		pr.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
 		mgmt.Command(plural.Plural),
 		profile.Command(),
