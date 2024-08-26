@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+
 	consoleclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/api"
 )
