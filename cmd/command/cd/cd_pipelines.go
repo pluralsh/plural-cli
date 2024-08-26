@@ -1,6 +1,7 @@
 package cd
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -33,9 +34,9 @@ func (p *Plural) pipelineCommands() []cli.Command {
 		},
 		{
 			Name:      "context",
-			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_CONTEXT_ID"})),
 			Usage:     "update pipeline context",
-			ArgsUsage: "PIPELINE_NAME",
+			ArgsUsage: "PIPELINE_CONTEXT_ID",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
 					Name:     "set",
@@ -84,7 +85,11 @@ func (p *Plural) handlePipelineContext(c *cli.Context) error {
 		return err
 	}
 
-	pipelineName := c.Args().Get(0)
+	pipelineContextID := c.Args().Get(0)
+	pipelineContext, err := p.ConsoleClient.GetPipelineContext(pipelineContextID)
+	if err != nil {
+		return err
+	}
 
 	var setArgs []string
 	if c.IsSet("set") {
@@ -92,7 +97,8 @@ func (p *Plural) handlePipelineContext(c *cli.Context) error {
 	}
 
 	// TODO
+	fmt.Println(pipelineContext)
 
-	utils.Success("Pipeline %s updated successfully\n", pipelineName)
+	utils.Success("Pipeline context %s updated successfully\n", pipelineContextID)
 	return nil
 }

@@ -43,6 +43,7 @@ type ConsoleClient interface {
 	CreateProviderCredentials(name string, attr consoleclient.ProviderCredentialAttributes) (*consoleclient.CreateProviderCredential, error)
 	DeleteProviderCredentials(id string) (*consoleclient.DeleteProviderCredential, error)
 	SavePipeline(name string, attrs consoleclient.PipelineAttributes) (*consoleclient.PipelineFragment, error)
+	GetPipelineContext(id string) (*consoleclient.PipelineContextFragment, error)
 	CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error)
 	CreateProvider(attr consoleclient.ClusterProviderAttributes) (*consoleclient.CreateClusterProvider, error)
 	MyCluster() (*consoleclient.MyCluster, error)

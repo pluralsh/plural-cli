@@ -53,6 +53,15 @@ func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttrib
 	return result.SavePipeline, nil
 }
 
+func (c *consoleClient) GetPipelineContext(id string) (*gqlclient.PipelineContextFragment, error) {
+	result, err := c.client.GetPipelineContext(c.ctx, id)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetPipelineContext")
+	}
+
+	return result.PipelineContext, nil
+}
+
 func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes, error) {
 	var pipe Pipeline
 	if err := yaml.Unmarshal(input, &pipe); err != nil {
