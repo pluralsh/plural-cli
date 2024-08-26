@@ -152,7 +152,7 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	existing, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	existing, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (p *Plural) handleDeleteCluster(c *cli.Context) error {
 		return err
 	}
 
-	existing, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	existing, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
 		return err
 	}
 
-	cluster, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	cluster, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -339,16 +339,6 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 	return nil
 }
 
-func getIdAndName(input string) (id, name *string) {
-	if strings.HasPrefix(input, "@") {
-		h := strings.Trim(input, "@")
-		name = &h
-	} else {
-		id = &input
-	}
-	return
-}
-
 func (p *Plural) handleCreateProvider(existingProviders []string) (*gqlclient.CreateClusterProvider, error) {
 	provider := ""
 	var resp struct {
@@ -393,7 +383,7 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 		return err
 	}
 
-	id, name := getIdAndName(c.Args().Get(0))
+	id, name := common.GetIdAndName(c.Args().Get(0))
 	return p.reinstallOperator(c, id, name)
 }
 
