@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"k8s.io/helm/pkg/strvals"
 
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -40,7 +41,7 @@ func (p *Plural) pipelineCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
 					Name:     "set",
-					Usage:    "key-value pairs to put in the context, i.e. key.subkey=value",
+					Usage:    "key-value pairs to put in the context, dot notation is supported, i.e. key.subkey=value",
 					Required: true,
 				},
 			},
@@ -85,8 +86,8 @@ func (p *Plural) handlePipelineContext(c *cli.Context) error {
 		return err
 	}
 
-	pipelineContextID := c.Args().Get(0)
-	pipelineContext, err := p.ConsoleClient.GetPipelineContext(pipelineContextID)
+	id := c.Args().Get(0)
+	context, err := p.ConsoleClient.GetPipelineContext(id)
 	if err != nil {
 		return err
 	}
@@ -96,9 +97,15 @@ func (p *Plural) handlePipelineContext(c *cli.Context) error {
 		setArgs = append(setArgs, c.StringSlice("set")...)
 	}
 
-	// TODO
-	fmt.Println(pipelineContext)
+	for _, arg := range setArgs {
+		if err := strvals.ParseInto(arg, context.Context); err != nil {
+			return err
+		}
+	}
 
-	utils.Success("Pipeline context %s updated successfully\n", pipelineContextID)
+	// TODO: Save.
+	fmt.Println(context)
+
+	utils.Success("Pipeline context %s updated successfully\n", id)
 	return nil
 }
