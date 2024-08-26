@@ -38,8 +38,6 @@ func (ctx *Context) template(tmplate string) (string, error) {
 	values := map[string]interface{}{
 		"Cluster":        cluster,
 		"Provider":       provider,
-		"Subdomain":      ctx.Manifest.Network.Subdomain,
-		"Network":        ctx.Manifest.Network,
 		"Bucket":         ctx.Provider.Bucket(),
 		"Project":        ctx.Provider.Project(),
 		"Region":         ctx.Provider.Region(),
@@ -52,6 +50,10 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		"RequireDB":      !ctx.Cloud,
 		"CloudCluster":   ctx.CloudCluster,
 		"Cloud":          ctx.Cloud,
+	}
+	if ctx.Manifest.Network != nil {
+		values["Subdomain"] = ctx.Manifest.Network.Subdomain
+		values["Network"] = ctx.Manifest.Network
 	}
 
 	tpl := template.New("tpl")

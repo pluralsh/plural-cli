@@ -149,11 +149,12 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context, persist b
 	return conf.Flush()
 }
 func Preflights(c *cli.Context) error {
-	_, err := RunPreflights()
+	_, err := RunPreflights(c)
 	return err
 }
 
-func RunPreflights() (provider.Provider, error) {
+func RunPreflights(c *cli.Context) (provider.Provider, error) {
+	provider.SetCloudFlag(c.Bool("cloud"))
 	prov, err := provider.GetProvider()
 	if err != nil {
 		return prov, err

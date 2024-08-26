@@ -30,6 +30,9 @@ func (p *Plural) backfillEncryption() error {
 			id = inst.ID
 		}
 	}
+	if id == "" {
+		return fmt.Errorf("Your configuration doesn't match to any existing Plural Console")
+	}
 
 	prov, err := crypto.Build()
 	if err != nil {
