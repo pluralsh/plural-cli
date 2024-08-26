@@ -19,8 +19,6 @@ const Gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-c
 /**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
 /**/helm/**/README.md* filter=plural-crypt diff=plural-crypt
 /**/helm/**/default-values.yaml* filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf* filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
 /**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
