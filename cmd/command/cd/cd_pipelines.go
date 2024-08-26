@@ -31,6 +31,19 @@ func (p *Plural) pipelineCommands() []cli.Command {
 				},
 			},
 		},
+		{
+			Name:      "context",
+			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_NAME"})),
+			Usage:     "update pipeline context",
+			ArgsUsage: "PIPELINE_NAME",
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:     "set",
+					Usage:    "key-value pairs to put in the context, i.e. key.subkey=value",
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
@@ -63,5 +76,23 @@ func (p *Plural) handleCreatePipeline(c *cli.Context) error {
 	}
 
 	utils.Success("Pipeline %s created successfully\n", pipe.Name)
+	return nil
+}
+
+func (p *Plural) handlePipelineContext(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	pipelineName := c.Args().Get(0)
+
+	var setArgs []string
+	if c.IsSet("set") {
+		setArgs = append(setArgs, c.StringSlice("set")...)
+	}
+
+	// TODO
+
+	utils.Success("Pipeline %s updated successfully\n", pipelineName)
 	return nil
 }
