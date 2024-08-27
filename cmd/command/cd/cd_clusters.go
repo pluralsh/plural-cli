@@ -397,7 +397,7 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	}
 
 	id, name := common.GetIdAndName(c.Args().Get(0))
-	return p.reinstallOperator(c, id, name)
+	return p.ReinstallOperator(c, id, name)
 }
 
 func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
