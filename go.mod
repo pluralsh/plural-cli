@@ -55,8 +55,8 @@ require (
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pluralsh/cluster-api-migration v0.2.16
-	github.com/pluralsh/console/go/client v1.5.0
-	github.com/pluralsh/gqlclient v1.12.1
+	github.com/pluralsh/console/go/client v1.12.0
+	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.1.8
 	github.com/pluralsh/terraform-delinker v0.0.2

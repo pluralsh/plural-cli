@@ -183,7 +183,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Context:  prov.Context(),
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
-	prov.writer = projectManifest.Configure()
+	prov.writer = projectManifest.Configure(cloudFlag)
 	prov.bucket = projectManifest.Bucket
 	return
 }

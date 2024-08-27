@@ -16,6 +16,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
+var cloudFlag bool
+
 type Provider interface {
 	Name() string
 	Cluster() string
@@ -98,6 +100,10 @@ func GetProvider() (Provider, error) {
 	}
 	utils.Success("Using provider %s\n", provider)
 	return New(provider)
+}
+
+func SetCloudFlag(cloud bool) {
+	cloudFlag = cloud
 }
 
 func FromManifest(man *manifest.ProjectManifest) (Provider, error) {

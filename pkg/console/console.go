@@ -90,6 +90,8 @@ func NormalizeExtUrl(uri string) string {
 		uri = fmt.Sprintf("https://%s", uri)
 	}
 
+	uri = strings.TrimSuffix(uri, "/")
+
 	parsed, err := url.Parse(uri)
 	if err != nil {
 		panic(err)
@@ -105,6 +107,8 @@ func NormalizeUrl(url string) string {
 	if !strings.HasSuffix(url, "/gql") {
 		url = fmt.Sprintf("%s/gql", url)
 	}
+
+	url = strings.TrimSuffix(url, "/")
 
 	return url
 }
