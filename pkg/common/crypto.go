@@ -58,12 +58,16 @@ func CryptoInit(c *cli.Context) error {
 		}
 	}
 
-	if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
-		return err
+	if !utils.Exists(GitAttributesFile) {
+		if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
+			return err
+		}
 	}
 
-	if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
-		return err
+	if !utils.Exists(GitIgnoreFile) {
+		if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
+			return err
+		}
 	}
 
 	_, err := crypto.Build()
