@@ -7,6 +7,9 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
 
 	"github.com/fatih/color"
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural-cli/cmd/command/clone"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
@@ -20,8 +23,6 @@ import (
 	conf "github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 const ApplicationName = "pluralctl"

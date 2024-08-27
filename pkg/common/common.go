@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/browser"
@@ -230,4 +231,14 @@ func HandleImport(c *cli.Context) error {
 
 func HandleServe(c *cli.Context) error {
 	return server.Run()
+}
+
+func GetIdAndName(input string) (id, name *string) {
+	if strings.HasPrefix(input, "@") {
+		h := strings.Trim(input, "@")
+		name = &h
+	} else {
+		id = &input
+	}
+	return
 }

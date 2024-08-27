@@ -135,7 +135,7 @@ func (p *Plural) handleListClusterServices(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	sd, err := p.ConsoleClient.ListClusterServices(getIdAndName(c.Args().Get(0)))
+	sd, err := p.ConsoleClient.ListClusterServices(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (p *Plural) handleCreateClusterService(c *cli.Context) error {
 		}
 	}
 
-	clusterId, clusterName := getIdAndName(c.Args().Get(0))
+	clusterId, clusterName := common.GetIdAndName(c.Args().Get(0))
 	sd, err := p.ConsoleClient.CreateClusterService(clusterId, clusterName, attributes)
 	if err != nil {
 		return err
@@ -283,7 +283,7 @@ func (p *Plural) handleCloneClusterService(c *cli.Context) error {
 		return err
 	}
 
-	cluster, err := p.ConsoleClient.GetCluster(getIdAndName(c.Args().Get(0)))
+	cluster, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
 	if err != nil {
 		return err
 	}
