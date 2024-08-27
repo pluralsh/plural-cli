@@ -1,10 +1,11 @@
 package cd
 
 import (
-	"fmt"
+	"encoding/json"
 	"io"
 	"os"
 
+	"github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"k8s.io/helm/pkg/strvals"
 
@@ -35,9 +36,9 @@ func (p *Plural) pipelineCommands() []cli.Command {
 		},
 		{
 			Name:      "context",
-			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_CONTEXT_ID"})),
-			Usage:     "update pipeline context",
-			ArgsUsage: "PIPELINE_CONTEXT_ID",
+			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_ID"})),
+			Usage:     "set pipeline context",
+			ArgsUsage: "PIPELINE_ID",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
 					Name:     "set",
@@ -86,26 +87,30 @@ func (p *Plural) handlePipelineContext(c *cli.Context) error {
 		return err
 	}
 
-	id := c.Args().Get(0)
-	context, err := p.ConsoleClient.GetPipelineContext(id)
-	if err != nil {
-		return err
-	}
-
 	var setArgs []string
 	if c.IsSet("set") {
 		setArgs = append(setArgs, c.StringSlice("set")...)
 	}
 
+	context := map[string]any{}
 	for _, arg := range setArgs {
-		if err := strvals.ParseInto(arg, context.Context); err != nil {
+		if err := strvals.ParseInto(arg, context); err != nil {
 			return err
 		}
 	}
 
-	// TODO: Save.
-	fmt.Println(context)
+	data, err := json.Marshal(context)
+	if err != nil {
+		return err
+	}
 
-	utils.Success("Pipeline context %s updated successfully\n", id)
+	id := c.Args().Get(0)
+	attrs := client.PipelineContextAttributes{Context: string(data)}
+	_, err = p.ConsoleClient.CreatePipelineContext(id, attrs)
+	if err != nil {
+		return err
+	}
+
+	utils.Success("Pipeline %s context set successfully\n", id)
 	return nil
 }
