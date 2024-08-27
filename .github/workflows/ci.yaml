@@ -19,16 +19,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-region: us-east-2
-      #     role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-      #     role-session-name: PluralCLI
-      # - name: setup kubectl
-      #   uses: azure/setup-kubectl@v3
-      # - name: Get EKS credentials
-      #   run: aws eks update-kubeconfig --name pluraldev
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -41,34 +31,6 @@ jobs:
             type=sha
             type=ref,event=pr
             type=ref,event=branch
-      # - name: Set up Docker Buildx
-      #   id: builder
-      #   uses: docker/setup-buildx-action@v3
-      #   with:
-      #     # cleanup: true
-      #     # driver: kubernetes
-      #     platforms: linux/amd64
-      #     driver-opts: |
-      #       namespace=buildx
-      #       requests.cpu=1.5
-      #       requests.memory=3.5Gi
-      #       "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
-      #       "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
-      # - name: Append ARM buildx builder from AWS
-      #   run: |
-      #     docker buildx create \
-      #       --append \
-      #       --bootstrap \
-      #       --name ${{ steps.builder.outputs.name }} \
-      #       --driver=kubernetes \
-      #       --platform linux/arm64 \
-      #       --node=${{ steps.builder.outputs.name }}-arm64 \
-      #       --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-      #       --driver-opt namespace=buildx \
-      #       --driver-opt requests.cpu=1.5 \
-      #       --driver-opt requests.memory=3.5Gi \
-      #       '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
-      #       '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -136,16 +98,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: setup kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Get EKS credentials
-        run: aws eks update-kubeconfig --name pluraldev
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -158,34 +110,10 @@ jobs:
             type=sha
             type=ref,event=pr
             type=ref,event=branch
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        id: builder
         uses: docker/setup-buildx-action@v3
-        with:
-          cleanup: true
-          driver: kubernetes
-          platforms: linux/amd64
-          driver-opts: |
-            namespace=buildx
-            requests.cpu=1.5
-            requests.memory=3.5Gi
-            "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
-            "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
-      - name: Append ARM buildx builder from AWS
-        run: |
-          docker buildx create \
-            --append \
-            --bootstrap \
-            --name ${{ steps.builder.outputs.name }} \
-            --driver=kubernetes \
-            --platform linux/arm64 \
-            --node=${{ steps.builder.outputs.name }}-arm64 \
-            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-            --driver-opt namespace=buildx \
-            --driver-opt requests.cpu=1.5 \
-            --driver-opt requests.memory=3.5Gi \
-            '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
-            '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -225,19 +153,6 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        if: always()
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: Manually cleanup buildx
-        if: always()
-        run: |
-          docker buildx stop ${{ steps.builder.outputs.name }}
-          sleep 10
-          docker buildx rm ${{ steps.builder.outputs.name }}
   dind:
     name: Build dind image
     runs-on: ubuntu-latest
@@ -250,16 +165,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: setup kubectl
-        uses: azure/setup-kubectl@v3
-      - name: Get EKS credentials
-        run: aws eks update-kubeconfig --name pluraldev
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -272,34 +177,10 @@ jobs:
             type=sha
             type=ref,event=pr
             type=ref,event=branch
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        id: builder
         uses: docker/setup-buildx-action@v3
-        with:
-          cleanup: true
-          driver: kubernetes
-          platforms: linux/amd64
-          driver-opts: |
-            namespace=buildx
-            requests.cpu=1.5
-            requests.memory=3.5Gi
-            "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
-            "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
-      - name: Append ARM buildx builder from AWS
-        run: |
-          docker buildx create \
-            --append \
-            --bootstrap \
-            --name ${{ steps.builder.outputs.name }} \
-            --driver=kubernetes \
-            --platform linux/arm64 \
-            --node=${{ steps.builder.outputs.name }}-arm64 \
-            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-            --driver-opt namespace=buildx \
-            --driver-opt requests.cpu=1.5 \
-            --driver-opt requests.memory=3.5Gi \
-            '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
-            '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -339,19 +220,6 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        if: always()
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: Manually cleanup buildx
-        if: always()
-        run: |
-          docker buildx stop ${{ steps.builder.outputs.name }}
-          sleep 10
-          docker buildx rm ${{ steps.builder.outputs.name }}
   trivy-scan:
     name: Trivy fs scan
     runs-on: ubuntu-latest
