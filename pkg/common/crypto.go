@@ -19,8 +19,6 @@ const Gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-c
 /**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
 /**/helm/**/README.md* filter=plural-crypt diff=plural-crypt
 /**/helm/**/default-values.yaml* filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf filter=plural-crypt diff=plural-crypt
-/**/terraform/**/main.tf* filter=plural-crypt diff=plural-crypt
 /**/manifest.yaml filter=plural-crypt diff=plural-crypt
 /**/output.yaml filter=plural-crypt diff=plural-crypt
 /diffs/**/* filter=plural-crypt diff=plural-crypt
@@ -60,12 +58,16 @@ func CryptoInit(c *cli.Context) error {
 		}
 	}
 
-	if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
-		return err
+	if !utils.Exists(GitAttributesFile) {
+		if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
+			return err
+		}
 	}
 
-	if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
-		return err
+	if !utils.Exists(GitIgnoreFile) {
+		if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
+			return err
+		}
 	}
 
 	_, err := crypto.Build()
