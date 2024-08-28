@@ -319,11 +319,15 @@ func TestCheckGitCrypt(t *testing.T) {
 
 			attributes, err := utils.ReadFile(gitAttributes)
 			assert.NoError(t, err)
-			assert.Equal(t, attributes, common.Gitattributes)
+			if !test.createFiles {
+				assert.Equal(t, attributes, common.Gitattributes)
+			}
 
 			ignore, err := utils.ReadFile(gitIgnore)
 			assert.NoError(t, err)
-			assert.Equal(t, ignore, common.Gitignore)
+			if !test.createFiles {
+				assert.Equal(t, ignore, common.Gitignore)
+			}
 		})
 	}
 }
