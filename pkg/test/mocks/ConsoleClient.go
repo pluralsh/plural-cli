@@ -161,6 +161,36 @@ func (_m *ConsoleClient) CreateNotificationSinks(attr client.NotificationSinkAtt
 	return r0, r1
 }
 
+// CreatePipelineContext provides a mock function with given fields: id, attrs
+func (_m *ConsoleClient) CreatePipelineContext(id string, attrs client.PipelineContextAttributes) (*client.PipelineContextFragment, error) {
+	ret := _m.Called(id, attrs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreatePipelineContext")
+	}
+
+	var r0 *client.PipelineContextFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, client.PipelineContextAttributes) (*client.PipelineContextFragment, error)); ok {
+		return rf(id, attrs)
+	}
+	if rf, ok := ret.Get(0).(func(string, client.PipelineContextAttributes) *client.PipelineContextFragment); ok {
+		r0 = rf(id, attrs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.PipelineContextFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, client.PipelineContextAttributes) error); ok {
+		r1 = rf(id, attrs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateProvider provides a mock function with given fields: attr
 func (_m *ConsoleClient) CreateProvider(attr client.ClusterProviderAttributes) (*client.CreateClusterProvider, error) {
 	ret := _m.Called(attr)
@@ -506,6 +536,36 @@ func (_m *ConsoleClient) GetGlobalSettings() (*client.DeploymentSettingsFragment
 
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPipelineContext provides a mock function with given fields: id
+func (_m *ConsoleClient) GetPipelineContext(id string) (*client.PipelineContextFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPipelineContext")
+	}
+
+	var r0 *client.PipelineContextFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.PipelineContextFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.PipelineContextFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.PipelineContextFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}
