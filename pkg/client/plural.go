@@ -126,7 +126,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return nil
 	}
 
-	prov, err := common.RunPreflights()
+	prov, err := common.RunPreflights(c)
 	if err != nil && !c.Bool("ignore-preflights") {
 		return err
 	}

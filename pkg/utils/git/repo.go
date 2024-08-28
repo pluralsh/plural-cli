@@ -39,6 +39,11 @@ func BranchedSubmodule(url, branch string) error {
 	return err
 }
 
+func PathClone(url, branch, path string) error {
+	_, err := GitRaw("clone", url, "-b", branch, path)
+	return err
+}
+
 func Rm(path string) error {
 	_, err := GitRaw("rm", path)
 	return err

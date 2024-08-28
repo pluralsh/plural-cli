@@ -99,6 +99,8 @@ type Client interface {
 	DeleteTrust(id string) error
 	OidcToken(provider gqlclient.ExternalOidcProvider, token, email string) (string, error)
 	MarkSynced(repo string) error
+	GetConsoleInstances() ([]*gqlclient.ConsoleInstanceFragment, error)
+	UpdateConsoleInstance(id string, attrs gqlclient.ConsoleInstanceUpdateAttributes) error
 }
 
 type client struct {

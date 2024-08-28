@@ -101,8 +101,19 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 		return err
 	}
 	var branch, context *string
+	var prID string
+	id, name := common.GetIdAndName(c.Args().Get(0))
+	if id != nil {
+		prID = *id
+	}
+	if name != nil {
+		pr, err := p.ConsoleClient.GetPrAutomationByName(*name)
+		if err != nil {
+			return err
+		}
+		prID = pr.ID
+	}
 
-	id := c.Args().Get(0)
 	if c := c.String("context"); c != "" {
 		if c == "-" {
 			bytes, err := io.ReadAll(os.Stdin)
@@ -117,7 +128,7 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 		branch = &b
 	}
 
-	pr, err := p.ConsoleClient.CreatePullRequest(id, branch, context)
+	pr, err := p.ConsoleClient.CreatePullRequest(prID, branch, context)
 	if err != nil {
 		return err
 	}

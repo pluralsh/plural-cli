@@ -124,15 +124,17 @@ func Read(path string) (man *Manifest, err error) {
 	return
 }
 
-func (pMan *ProjectManifest) Configure() Writer {
+func (pMan *ProjectManifest) Configure(cloud bool) Writer {
 	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
 
 	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
 	pMan.BucketPrefix = res
 	pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
 
-	if err := pMan.ConfigureNetwork(); err != nil {
-		return nil
+	if !cloud {
+		if err := pMan.ConfigureNetwork(); err != nil {
+			return nil
+		}
 	}
 
 	if exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI) {
@@ -148,11 +150,8 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 	}
 
 	utils.Highlight("\nOk, let's get your network configuration set up now...\n")
-	pluralDns := utils.Confirm("Do you want to use plural's dns provider?")
-	modifier := " (eg something.mydomain.com)"
-	if pluralDns {
-		modifier = ", must be a subdomain under onplural.sh"
-	}
+
+	modifier := ", must be a subdomain under onplural.sh"
 
 	subdomain := ""
 	input := &survey.Input{Message: fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier)}
@@ -162,15 +161,13 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 			return err
 		}
 
-		if pluralDns && !strings.HasSuffix(res, pluralDomain) {
+		if !strings.HasSuffix(res, pluralDomain) {
 			return fmt.Errorf("Not an onplural.sh domain")
 		}
 
-		if pluralDns {
-			client := api.NewClient()
-			if err := client.CreateDomain(res); err != nil {
-				return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
-			}
+		client := api.NewClient()
+		if err := client.CreateDomain(res); err != nil {
+			return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
 		}
 
 		return nil
@@ -178,7 +175,7 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 		return err
 	}
 
-	pMan.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: pluralDns}
+	pMan.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: true}
 
 	return nil
 }

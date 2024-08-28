@@ -123,7 +123,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	provider.writer = projectManifest.Configure()
+	provider.writer = projectManifest.Configure(cloudFlag)
 	provider.bucket = projectManifest.Bucket
 	return
 }
