@@ -29,7 +29,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "more-up-improvements", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "resources-refactor", dir); err != nil {
 		return
 	}
 
@@ -69,8 +69,9 @@ func (ctx *Context) Generate() (dir string, err error) {
 	copies := []templatePair{
 		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
 		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
-		{from: ctx.path("setup"), to: "setup"},
+		{from: ctx.path("setup"), to: "bootstrap"},
 		{from: ctx.path("templates"), to: "templates"},
+		{from: ctx.path("resources"), to: "resources"},
 	}
 
 	for _, copy := range copies {
@@ -84,7 +85,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 	}
 
 	if ctx.Cloud {
-		toRemove := []string{"setup/console.yaml", "setup/flux.yaml"}
+		toRemove := []string{"bootstrap/console.yaml", "bootstrap/flux.yaml"}
 		for _, f := range toRemove {
 			os.Remove(f)
 		}
@@ -92,11 +93,32 @@ func (ctx *Context) Generate() (dir string, err error) {
 
 	ctx.changeDelims()
 	overwrites := []templatePair{
-		{from: "setup/setup.yaml", to: "setup/setup.yaml"},
-		{from: "setup/pr-automation/cluster-creator.yaml", to: "setup/pr-automation/cluster-creator.yaml"},
+		{from: "bootstrap/setup.yaml", to: "bootstrap/setup.yaml"},
+		{from: "bootstrap/pr-automation", to: "bootstrap/pr-automation"},
 	}
 
 	for _, tpl := range overwrites {
+		if utils.IsDir(tpl.from) {
+			files, err := utils.ListDirectory(tpl.from)
+			if err != nil {
+				return dir, err
+			}
+
+			for _, file := range files {
+				destFile, err := filepath.Rel(tpl.from, file)
+				if err != nil {
+					return dir, err
+				}
+
+				destFile = filepath.Join(string(tpl.to), destFile)
+				if err = ctx.templateFrom(file, destFile); err != nil {
+					return dir, err
+				}
+			}
+
+			continue
+		}
+
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			return
 		}
