@@ -182,7 +182,6 @@ func (s *Scaffold) buildChartValues(w *wkspace.Workspace) error {
 		"Config":        conf,
 		"Provider":      w.Provider.Name(),
 		"Context":       w.Provider.Context(),
-		"ClusterAPI":    proj.ClusterAPI,
 		"Network":       proj.Network,
 		"Applications":  apps,
 	}

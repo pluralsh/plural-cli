@@ -77,23 +77,6 @@ func (p *Plural) Deploy(c *cli.Context) error {
 			continue
 		}
 
-		// if repo == Bootstrap && project.ClusterAPI {
-		//	ready, err := bootstrap.CheckClusterReadiness(project.Cluster, Bootstrap)
-		//
-		//	// Stop if cluster exists, but it is not ready yet.
-		//	if err != nil && err.Error() == bootstrap.ClusterNotReadyError {
-		//		return err
-		//	}
-		//
-		//	// If cluster does not exist bootstrap needs to be done first.
-		//	if !ready {
-		//		err := bootstrap.BootstrapCluster(plural.RunPlural)
-		//		if err != nil {
-		//			return err
-		//		}
-		//	}
-		//}
-
 		execution, err := executor.GetExecution(pathing.SanitizeFilepath(filepath.Join(repoRoot, repo)), "deploy")
 		if err != nil {
 			return err

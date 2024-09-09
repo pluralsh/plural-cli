@@ -4,7 +4,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/ai"
 	"github.com/pluralsh/plural-cli/cmd/command/api"
 	"github.com/pluralsh/plural-cli/cmd/command/auth"
-	"github.com/pluralsh/plural-cli/cmd/command/bootstrap"
 	"github.com/pluralsh/plural-cli/cmd/command/bounce"
 	"github.com/pluralsh/plural-cli/cmd/command/buildcmd"
 	"github.com/pluralsh/plural-cli/cmd/command/bundle"
@@ -226,7 +225,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		api.Command(plural.Plural),
 		auth.Command(plural.Plural),
 		ai.Command(plural.Plural),
-		bootstrap.Command(plural.Plural),
 		bounce.Command(plural.Plural),
 		bundle.Command(plural.Plural),
 		buildcmd.Command(plural.Plural),
