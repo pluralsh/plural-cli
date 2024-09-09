@@ -59,11 +59,6 @@ func (p *Plural) destroy(c *cli.Context) error {
 	force := c.Bool("force")
 	all := c.Bool("all")
 
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
 	infix := "this workspace"
 	if repoName != "" {
 		infix = repoName
@@ -87,7 +82,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			return fmt.Errorf("No installation for app %s to destroy, if the app is still in your repo, you can always run cd %s/terraform && terraform destroy", repoName, repoName)
 		}
 
-		return p.doDestroy(repoRoot, installation, delete, project.ClusterAPI)
+		return p.doDestroy(repoRoot, installation, delete)
 	}
 
 	installations, err := client.GetSortedInstallations(p.Plural, repoName)
@@ -107,7 +102,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 			continue
 		}
 
-		if err := p.doDestroy(repoRoot, installation, delete, project.ClusterAPI); err != nil {
+		if err := p.doDestroy(repoRoot, installation, delete); err != nil {
 			return err
 		}
 	}
@@ -139,7 +134,7 @@ func (p *Plural) destroy(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete, clusterAPI bool) error {
+func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, delete bool) error {
 	p.Plural.InitPluralClient()
 	if err := os.Chdir(repoRoot); err != nil {
 		return err
@@ -154,18 +149,6 @@ func (p *Plural) doDestroy(repoRoot string, installation *api.Installation, dele
 	if err != nil {
 		return err
 	}
-
-	// TODO fix for clusterAPI
-	// if repo == Bootstrap && clusterAPI {
-	//	if err = bootstrap.DestroyCluster(workspace.Destroy, plural.RunPlural); err != nil {
-	//		return err
-	//	}
-	//
-	// } else {
-	//	if err := workspace.Destroy(); err != nil {
-	//		return err
-	//	}
-	// }
 
 	if err := workspace.Destroy(); err != nil {
 		return err
