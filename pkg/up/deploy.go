@@ -1,11 +1,17 @@
 package up
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
+	"github.com/samber/lo"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
@@ -84,10 +90,40 @@ func (ctx *Context) Deploy(commit func() error) error {
 }
 
 func (ctx *Context) Destroy() error {
+	if err := ctx.DestroyNamespace("plural-runtime"); err != nil {
+		return err
+	}
 	return runAll([]terraformCmd{
 		{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 		{dir: "./terraform/mgmt", cmd: "destroy", args: []string{"-auto-approve"}, retries: 2},
 	})
+}
+
+func (ctx *Context) DestroyNamespace(name string) error {
+	utils.Highlight("\nCleaning up namespace %s...\n", name)
+	// ensure current kubeconfig is correct before destroying stuff
+	if err := ctx.Provider.KubeConfig(); err != nil {
+		return err
+	}
+	kube, err := kubernetes.Kubernetes()
+	if err != nil {
+		utils.Error("Could not set up k8s client due to %s\n", err)
+		return err
+	}
+	c := context.Background()
+	namespace, err := kube.GetClient().CoreV1().Namespaces().Get(c, name, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	if namespace != nil {
+		return kube.GetClient().CoreV1().Namespaces().Delete(c, name, metav1.DeleteOptions{
+			GracePeriodSeconds: lo.ToPtr(int64(0)),
+		})
+	}
+
+	return nil
+
 }
 
 func runAll(cmds []terraformCmd) error {
