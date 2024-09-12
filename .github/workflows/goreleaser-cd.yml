@@ -142,16 +142,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
-      - name: Get EKS credentials
-        run: aws eks update-kubeconfig --name pluraldev
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -159,53 +151,15 @@ jobs:
           # list of Docker images to use as base name for tags
           images: |
             ghcr.io/pluralsh/${{ matrix.image }}
-            gcr.io/pluralsh/${{ matrix.image }}
           # generate Docker tags based on the following events/attributes
           tags: |
             type=semver,pattern={{version}}
-      - name: Set up Docker Buildx
-        id: builder
-        uses: docker/setup-buildx-action@v3
-        with:
-          cleanup: true
-          driver: kubernetes
-          platforms: linux/amd64
-          driver-opts: |
-            namespace=buildx
-            requests.cpu=1.5
-            requests.memory=3.5Gi
-            "nodeselector=plural.sh/scalingGroup=buildx-spot-x86"
-            "tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"
-      - name: Append ARM buildx builder from AWS
-        run: |
-          docker buildx create \
-            --append \
-            --bootstrap \
-            --name ${{ steps.builder.outputs.name }} \
-            --driver=kubernetes \
-            --platform linux/arm64 \
-            --node=${{ steps.builder.outputs.name }}-arm64 \
-            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-            --driver-opt namespace=buildx \
-            --driver-opt requests.cpu=1.5 \
-            --driver-opt requests.memory=3.5Gi \
-            '--driver-opt="nodeselector=plural.sh/scalingGroup=buildx-spot-arm64"' \
-            '--driver-opt="tolerations=key=plural.sh/capacityType,value=SPOT,effect=NoSchedule;key=plural.sh/reserved,value=BUILDX,effect=NoSchedule"'
-      - uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: 'projects/${{ secrets.GOOGLE_PROJECT_ID }}/locations/global/workloadIdentityPools/github/providers/github'
-          service_account: 'terraform@pluralsh.iam.gserviceaccount.com'
-          token_format: 'access_token'
-          create_credentials_file: true
-      - uses: google-github-actions/setup-gcloud@v1.0.1
-      - name: Login to gcr
-        run: gcloud auth configure-docker -q
-      - name: Login to plural registry
-        uses: docker/login-action@v2
-        with:
-          registry: dkr.plural.sh
-          username: mjg@plural.sh
-          password: ${{ secrets.PLURAL_ACCESS_TOKEN }}
+      # - name: Login to plural registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: dkr.plural.sh
+      #     username: mjg@plural.sh
+      #     password: ${{ secrets.PLURAL_ACCESS_TOKEN }}
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -243,52 +197,39 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: 'trivy-results.sarif'
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        if: always()
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::312272277431:role/github-actions/buildx-deployments
-          role-session-name: PluralCLI
-      - name: Manually cleanup buildx
-        if: always()
-        run: |
-          docker buildx stop ${{ steps.builder.outputs.name }}
-          sleep 10
-          docker buildx rm ${{ steps.builder.outputs.name }}
-  packer:
-    name: Build EKS AMI
-    runs-on: ubuntu-latest
-    needs: release
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::654897662046:role/github-actions/plural-cli-amis-packer
-          role-session-name: CLIAmisPacker
-      - name: Setup `packer`
-        uses: hashicorp/setup-packer@main
-        id: setup
-        with:
-          version: 1.9.2
-      - name: Run `packer init`
-        id: init
-        run: "packer init ./packer/"
-      - name: Run `packer validate`
-        id: validate
-        env:
-          PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
-        run: "packer validate ./packer/"
-      - name: Run `packer build`
-        id: build
-        # always is used here to ensure the builds can't get cancelled and leave dangling resources
-        if: always()
-        env:
-          PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
-        run: "packer build ./packer/"
+  # packer:
+  #   name: Build EKS AMI
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   permissions:
+  #     contents: 'read'
+  #     id-token: 'write'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-region: us-east-2
+  #         role-to-assume: arn:aws:iam::654897662046:role/github-actions/plural-cli-amis-packer
+  #         role-session-name: CLIAmisPacker
+  #     - name: Setup `packer`
+  #       uses: hashicorp/setup-packer@main
+  #       id: setup
+  #       with:
+  #         version: 1.9.2
+  #     - name: Run `packer init`
+  #       id: init
+  #       run: "packer init ./packer/"
+  #     - name: Run `packer validate`
+  #       id: validate
+  #       env:
+  #         PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
+  #       run: "packer validate ./packer/"
+  #     - name: Run `packer build`
+  #       id: build
+  #       # always is used here to ensure the builds can't get cancelled and leave dangling resources
+  #       if: always()
+  #       env:
+  #         PKR_VAR_k8s_cli_version: ${{ github.ref_name}}
+  #       run: "packer build ./packer/"
