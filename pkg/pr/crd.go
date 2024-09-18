@@ -114,6 +114,7 @@ func configuration(pr *v1alpha1.PrAutomation) (error, map[string]interface{}) {
 		}
 		return ci
 	})
+	utils.Highlight("Lets' fill out the configuration for this PR automation:\n")
 	for _, item := range items {
 		if err := bundle.Configure(ctx, item, &manifest.Context{}, ""); err != nil {
 			return err, ctx
