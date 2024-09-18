@@ -80,11 +80,36 @@ func (p *Plural) prCommands() []cli.Command {
 				cli.StringFlag{Name: "branch", Usage: "branch name"},
 			},
 		},
+		{
+			Name:   "test",
+			Action: common.LatestVersion(handleTestPrAutomation),
+			Usage:  "create PR automation",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:     "file",
+					Usage:    "the file the PR automation was placed in",
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
 func handlePrTemplate(c *cli.Context) error {
 	template, err := pr.Build(c.String("file"))
+	if err != nil {
+		return err
+	}
+
+	if template.Spec.Creates != nil {
+		template.Spec.Creates.ExternalDir = c.String("templates")
+	}
+
+	return pr.Apply(template)
+}
+
+func handleTestPrAutomation(c *cli.Context) error {
+	template, err := pr.BuildCRD(c.String("file"))
 	if err != nil {
 		return err
 	}
