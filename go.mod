@@ -73,7 +73,6 @@ require (
 	k8s.io/client-go v0.30.1
 	layeh.com/gopher-luar v1.0.10
 	sigs.k8s.io/application v0.8.3
-	sigs.k8s.io/controller-runtime v0.18.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -189,6 +188,7 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
+	sigs.k8s.io/controller-runtime v0.18.2 // indirect
 )
 
 require (
