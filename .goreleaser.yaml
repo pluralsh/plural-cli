@@ -5,6 +5,8 @@
 partial:
   by: goos
 
+version: 2
+
 before:
   hooks:
     - go mod tidy
@@ -35,12 +37,12 @@ builds:
     overrides:
       - goos: linux
         goarch: arm64
-        tags: [ linux ]
+        tags: [linux]
         env:
           - CGO_ENABLED=0
       - goos: windows
         goarch: arm64
-        tags: [ windows ]
+        tags: [windows]
         env:
           - CGO_ENABLED=0
   # Build CLI binary without embedded UI for linux.
@@ -62,7 +64,7 @@ builds:
 
 archives:
   - id: plural-cli
-    builds: [ plural-cli ]
+    builds: [plural-cli]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
@@ -79,7 +81,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   use: github-native
@@ -87,6 +89,18 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    artifacts: checksum
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
 
 release:
   name_template: "{{.ProjectName}}-v{{.Version}}"
@@ -106,7 +120,7 @@ git:
 
 brews:
   - name: plural
-    ids: [ plural-cli ]
+    ids: [plural-cli]
     repository:
       owner: pluralsh
       name: homebrew-plural
@@ -140,7 +154,7 @@ brews:
 
     # Folder inside the repository to put the formula.
     # Default is the root folder.
-    folder: Formula
+    directory: Formula
 
     # Your app's homepage.
     # Default is empty.
