@@ -83,12 +83,17 @@ func (p *Plural) prCommands() []cli.Command {
 		{
 			Name:   "test",
 			Action: common.LatestVersion(handleTestPrAutomation),
-			Usage:  "create PR automation",
+			Usage:  "tests a PR automation CRD locally",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:     "file",
 					Usage:    "the file the PR automation was placed in",
 					Required: true,
+				},
+				cli.StringFlag{
+					Name:     "context",
+					Usage:    "a yaml file containing the context for the PRA, will read from stdin if not present",
+					Required: false,
 				},
 			},
 		},
@@ -109,7 +114,7 @@ func handlePrTemplate(c *cli.Context) error {
 }
 
 func handleTestPrAutomation(c *cli.Context) error {
-	template, err := pr.BuildCRD(c.String("file"))
+	template, err := pr.BuildCRD(c.String("file"), c.String("context"))
 	if err != nil {
 		return err
 	}

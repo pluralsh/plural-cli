@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func BuildCRD(path string) (*PrTemplate, error) {
+func BuildCRD(path, contextFile string) (*PrTemplate, error) {
 	var prAutomationOk bool
 	pr := &v1alpha1.PrAutomation{}
 	data, err := os.ReadFile(path)
@@ -49,7 +49,7 @@ func BuildCRD(path string) (*PrTemplate, error) {
 		Spec:       PrTemplateSpec{},
 	}
 
-	err, ctx := configuration(pr)
+	ctx, err := configuration(pr, contextFile)
 	if err != nil {
 		return nil, err
 	}
@@ -62,17 +62,22 @@ func BuildCRD(path string) (*PrTemplate, error) {
 	return prTemplate, nil
 }
 
-func configuration(pr *v1alpha1.PrAutomation) (error, map[string]interface{}) {
+func configuration(pr *v1alpha1.PrAutomation, contextFile string) (map[string]interface{}, error) {
 	ctx := map[string]interface{}{}
 	if len(pr.Spec.Configuration) == 0 {
-		return nil, ctx
+		return ctx, nil
+	}
+
+	if contextFile != "" {
+		err := utils.YamlFile(contextFile, &ctx)
+		return ctx, err
 	}
 
 	path := manifest.ProjectManifestPath()
 	man := manifest.ProjectManifest{}
 	if !utils.Exists(path) {
 		if err := man.Write(path); err != nil {
-			return fmt.Errorf("error writing manifest: %w", err), ctx
+			return ctx, fmt.Errorf("error writing manifest: %w", err)
 		}
 		defer os.Remove(path)
 	}
@@ -117,10 +122,10 @@ func configuration(pr *v1alpha1.PrAutomation) (error, map[string]interface{}) {
 	utils.Highlight("Lets' fill out the configuration for this PR automation:\n")
 	for _, item := range items {
 		if err := bundle.Configure(ctx, item, &manifest.Context{}, ""); err != nil {
-			return err, ctx
+			return ctx, err
 		}
 	}
-	return nil, ctx
+	return ctx, nil
 }
 
 func deletes(pr *v1alpha1.PrAutomation) *DeleteSpec {
