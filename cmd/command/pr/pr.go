@@ -97,6 +97,18 @@ func (p *Plural) prCommands() []cli.Command {
 				},
 			},
 		},
+		{
+			Name:   "contracts",
+			Action: handlePrContracts,
+			Usage:  "Runs a set of contract tests for your pr automations",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:     "file",
+					Usage:    "the contract file to run",
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
@@ -124,6 +136,42 @@ func handleTestPrAutomation(c *cli.Context) error {
 	}
 
 	return pr.Apply(template)
+}
+
+func handlePrContracts(c *cli.Context) error {
+	contracts, err := pr.BuildContracts(c.String("file"))
+	if err != nil {
+		return err
+	}
+
+	if contracts.Spec.Templates != nil {
+		tplCopy := contracts.Spec.Templates
+		if err := utils.CopyFile(tplCopy.From, tplCopy.To); err != nil {
+			return err
+		}
+	}
+
+	if contracts.Spec.Workdir != "" {
+		if err := os.Chdir(contracts.Spec.Workdir); err != nil {
+			return err
+		}
+	}
+
+	for _, contract := range contracts.Spec.Automations {
+		template, err := pr.BuildCRD(contract.File, contract.Context)
+		if err != nil {
+			return err
+		}
+		if contract.ExternalDir != "" {
+			template.Spec.Creates.ExternalDir = contract.ExternalDir
+		}
+
+		if err := pr.Apply(template); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
