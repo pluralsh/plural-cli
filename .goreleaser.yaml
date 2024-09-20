@@ -92,12 +92,11 @@ changelog:
 
 signs:
   - cmd: cosign
-    signature: "${artifact}.sig"
-    certificate: "${artifact}.pem"
     artifacts: checksum
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
     args:
       - sign-blob
-      - "--output-certificate=${certificate}"
+      - "--key=env://COSIGN_PRIVATE_KEY"
       - "--output-signature=${signature}"
       - "${artifact}"
       - "--yes"

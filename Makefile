@@ -195,6 +195,7 @@ OIDC_ISSUER_URL := https://token.actions.githubusercontent.com
 VERIFY_FILE_NAME := checksums.txt
 RELEASE_ARCHIVE_NAME := plural-cli
 VERIFY_TMP_DIR := dist
+PUBLIC_KEY_FILE := cosign.pub
 
 .PHONY: verify
 verify: ## verifies provided tagged release with cosign
@@ -202,11 +203,8 @@ verify: ## verifies provided tagged release with cosign
 	echo "Downloading ${VERIFY_FILE_NAME} for tag v$${tag}..." ;\
 	wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/checksums.txt" >/dev/null 2>&1 ;\
 	echo "Verifying signature..." ;\
-	COSIGN_EXPERIMENTAL=1 cosign verify-blob \
-      --certificate-oidc-issuer "${OIDC_ISSUER_URL}" \
-      --certificate-github-workflow-name "CD / CLI" \
-      --certificate-github-workflow-ref "refs/tags/v$${tag}" \
-      --certificate "${REPO_URL}/v$${tag}/${VERIFY_FILE_NAME}.pem" \
+	cosign verify-blob \
+	  --key "${PUBLIC_KEY_FILE}" \
       --signature "${REPO_URL}/v$${tag}/${VERIFY_FILE_NAME}.sig" \
       "./${VERIFY_TMP_DIR}/${VERIFY_FILE_NAME}" ;\
     echo "Verifying archives..." ;\
