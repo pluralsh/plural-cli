@@ -79,6 +79,10 @@ release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/pluralctl
 
+.PHONY: goreleaser
+goreleaser:
+	goreleaser release --clean --prepare --single-target --snapshot --verbose
+
 .PHONY: setup
 setup: ## sets up your local env (for mac only)
 	brew install golangci-lint
@@ -140,20 +144,20 @@ bake-ami:
 	@echo "baked ami for all regions"
 
 .PHONY: up
-up: # spin up local server
+up: ## spin up local server
 	docker-compose up
 
 .PHONY: pull
-pull: # pulls new server image
+pull: ## pulls new server image
 	docker-compose pull
 
 .PHONY: serve
-serve: build-cloud # build cloud version of plural-cli and start plural serve in docker
+serve: build-cloud ## build cloud version of plural-cli and start plural serve in docker
 	docker kill plural-cli || true
 	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
 
 .PHONY: release-vsn
-release-vsn: # tags and pushes a new release
+release-vsn: ## tags and pushes a new release
 	@read -p "Version: " tag; \
 	git checkout main; \
 	git pull --rebase; \
@@ -169,11 +173,11 @@ test: setup-tests
 	gotestsum --format testname -- -v -race ./pkg/... ./cmd/command/...
 
 .PHONY: format
-format: # formats all go code to prep for linting
+format: ## formats all go code to prep for linting
 	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run --fix
 
 .PHONY: genmock
-genmock: # generates mocks before running tests
+genmock: ## generates mocks before running tests
 	hack/gen-client-mocks.sh
 
 .PHONY: lint
@@ -185,3 +189,29 @@ delete-tag:
 	@read -p "Version: " tag; \
 	git tag -d $$tag; \
 	git push origin :$$tag
+
+REPO_URL := https://github.com/pluralsh/plural-cli/releases/download
+OIDC_ISSUER_URL := https://token.actions.githubusercontent.com
+VERIFY_FILE_NAME := checksums.txt
+RELEASE_ARCHIVE_NAME := plural-cli
+VERIFY_TMP_DIR := dist
+PUBLIC_KEY_FILE := cosign.pub
+
+.PHONY: verify
+verify: ## verifies provided tagged release with cosign
+	@read -p "Enter version to verify: " tag ;\
+	echo "Downloading ${VERIFY_FILE_NAME} for tag v$${tag}..." ;\
+	wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/checksums.txt" >/dev/null 2>&1 ;\
+	echo "Verifying signature..." ;\
+	cosign verify-blob \
+	  --key "${PUBLIC_KEY_FILE}" \
+      --signature "${REPO_URL}/v$${tag}/${VERIFY_FILE_NAME}.sig" \
+      "./${VERIFY_TMP_DIR}/${VERIFY_FILE_NAME}" ;\
+    echo "Verifying archives..." ;\
+    wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Darwin_amd64.tar.gz" >/dev/null 2>&1 ;\
+    wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Darwin_arm64.tar.gz" >/dev/null 2>&1 ;\
+    wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Linux_amd64.tar.gz" >/dev/null 2>&1 ;\
+    wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Linux_arm64.tar.gz" >/dev/null 2>&1 ;\
+    wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Windows_amd64.tar.gz" >/dev/null 2>&1 ;\
+    (cd ${VERIFY_TMP_DIR} && exec sha256sum --ignore-missing -c checksums.txt) ;\
+    rm -r "${VERIFY_TMP_DIR}"

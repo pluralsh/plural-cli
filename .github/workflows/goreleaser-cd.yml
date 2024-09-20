@@ -55,7 +55,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
-          version: "~> v1"
+          version: '~> v2'
           args: release --clean --split --timeout 90m
         env:
           CGO_LDFLAGS: "${{ matrix.goos == 'darwin' && '-framework UniformTypeIdentifiers' || '' }}"
@@ -73,6 +73,9 @@ jobs:
     needs: prepare
     env:
       DOCKER_CLI_EXPERIMENTAL: "enabled"
+    permissions:
+      contents: write # needed to write releases
+      id-token: write # needed for keyless signing
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -106,16 +109,20 @@ jobs:
         uses: WyriHaximus/github-action-get-previous-tag@v1
         env:
           INPUT_PREFIX: v
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.6.0
       - name: GoReleaser (Release)
         uses: goreleaser/goreleaser-action@v6
         if: steps.cache.outputs.cache-hit != 'true' # do not run if cache hit
         with:
           distribution: goreleaser-pro
-          version: "~> v1"
+          version: '~> v2'
           args: continue --merge --timeout 90m
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
