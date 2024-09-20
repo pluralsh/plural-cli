@@ -52,6 +52,31 @@ type RegexReplacement struct {
 	Templated   bool   `json:"templated"`
 }
 
+type PrContracts struct {
+	ApiVersion string                 `json:"apiVersion"`
+	Kind       string                 `json:"kind"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	Context    map[string]interface{} `json:"context"`
+	Spec       PrContractsSpec        `json:"spec"`
+}
+
+type PrContractsSpec struct {
+	Templates   *TemplateCopy        `json:"templates"`
+	Workdir     string               `json:"workdir,omitempty"`
+	Automations []AutomationContract `json:"automations"`
+}
+
+type TemplateCopy struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+type AutomationContract struct {
+	File        string `json:"file"`
+	ExternalDir string `json:"externalDir,omitempty"`
+	Context     string `json:"context"`
+}
+
 func Build(path string) (*PrTemplate, error) {
 	pr := &PrTemplate{}
 	data, err := os.ReadFile(path)
@@ -64,4 +89,18 @@ func Build(path string) (*PrTemplate, error) {
 	}
 
 	return pr, nil
+}
+
+func BuildContracts(path string) (*PrContracts, error) {
+	pr := &PrContracts{}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return pr, err
+	}
+
+	if err := yaml.Unmarshal(data, pr); err != nil {
+		return pr, err
+	}
+
+	return pr, err
 }
