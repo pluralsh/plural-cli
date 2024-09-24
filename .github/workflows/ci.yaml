@@ -295,7 +295,7 @@ jobs:
         shell: bash
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Setup Cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.6
         with:
           path: dist/${{ matrix.goos }}
           key: ${{ matrix.goos }}-${{ env.sha_short }}

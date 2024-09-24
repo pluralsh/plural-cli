@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 16.18.1
       - name: Setup Cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.6
         with:
           path: dist/${{ matrix.goos }}
           key: ${{ matrix.goos }}-${{ github.ref_name }}
@@ -89,17 +89,17 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Restore Linux Cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.6
         with:
           path: dist/linux
           key: linux-${{ github.ref_name }}
       - name: Restore Darwin Cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.6
         with:
           path: dist/darwin
           key: darwin-${{ github.ref_name }}
       - name: Restore Windows Cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.6
         with:
           path: dist/windows
           key: windows-${{ github.ref_name }}
