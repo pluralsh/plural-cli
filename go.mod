@@ -46,7 +46,7 @@ require (
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pluralsh/console/go/client v1.17.1-0.20240918005717-8285a4b181b1
 	github.com/pluralsh/console/go/controller v0.0.0-20240918005717-8285a4b181b1
 	github.com/pluralsh/gqlclient v1.12.2
@@ -73,6 +73,7 @@ require (
 	k8s.io/client-go v0.30.1
 	layeh.com/gopher-luar v1.0.10
 	sigs.k8s.io/application v0.8.3
+	sigs.k8s.io/controller-runtime v0.18.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -188,7 +189,6 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
-	sigs.k8s.io/controller-runtime v0.18.2 // indirect
 )
 
 require (
