@@ -25,7 +25,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
-const ApplicationName = "pluralctl"
+const ApplicationName = "plrlctl"
 
 type Plural struct {
 	client.Plural

@@ -29,7 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     -X "github.com/pluralsh/plural-cli/pkg/common.Version=${APP_VSN}" \
     -X "github.com/pluralsh/plural-cli/pkg/common.Commit=${APP_COMMIT}" \
     -X "github.com/pluralsh/plural-cli/pkg/common.Date=${APP_DATE}"' \
-    -o plural ./cmd/plural
+    -o plrlctl ./cmd/plrlctl
 
 FROM golang:1.22-alpine3.19 AS final
 
@@ -41,7 +41,7 @@ RUN apk update && apk add --no-cache git build-base
 COPY --from=user /etc/passwd /etc/passwd
 USER nonroot
 
-COPY --chown=nonroot --from=builder /workspace/plural /go/bin/
-RUN chmod a+x /go/bin/plural
+COPY --chown=nonroot --from=builder /workspace/plrlctl /go/bin/
+RUN chmod a+x /go/bin/plrlctl
 
-ENTRYPOINT ["/go/bin/plural"]
+ENTRYPOINT ["/go/bin/plrlctl"]

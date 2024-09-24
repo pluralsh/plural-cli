@@ -6,6 +6,7 @@ include $(ROOT_DIRECTORY)/hack/include/build.mk
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
+APP_CTL_NAME ?= plrlctl
 APP_VSN ?= $(shell git describe --tags --always --dirty)
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
@@ -16,9 +17,9 @@ GOLANG_CROSS_VERSION  ?= v1.22.0
 PACKAGE ?= github.com/pluralsh/plural
 BASE_LDFLAGS ?= -s -w
 LDFLAGS ?= $(BASE_LDFLAGS) $\
-	-X "$(PACKAGE)/cmd/plural.Version=$(APP_VSN)" $\
-	-X "$(PACKAGE)/cmd/plural.Commit=$(BUILD)" $\
-	-X "$(PACKAGE)/cmd/plural.Date=$(APP_DATE)" $\
+	-X "$(PACKAGE)/pkg/common.Version=$(APP_VSN)" $\
+	-X "$(PACKAGE)/pkg/common.Commit=$(BUILD)" $\
+	-X "$(PACKAGE)/pkg/common.Date=$(APP_DATE)" $\
 	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
 	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
 WAILS_TAGS ?= desktop,production,ui,debug
@@ -26,7 +27,7 @@ WAILS_BINDINGS_TAGS ?= bindings,generate
 WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
-OUTCTLFILE ?= pluralctl.o
+OUTCTLFILE ?= plrlctl.o
 GOBIN ?= go env GOBIN
 
 # Targets to run before other targets
@@ -41,7 +42,7 @@ git-push:
 .PHONY: install
 install:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
-	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/pluralctl ./cmd/pluralctl
+	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plrlctl ./cmd/plrlctl
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
@@ -49,7 +50,7 @@ build-cli: ## Build a CLI binary for the host architecture without embedded UI
 
 .PHONY: build-ctl
 build-ctl: ## Build a CLI binary for the fleet management
-	go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plural
+	go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plrlctl
 
 .PHONY: build-cli-ui
 build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
@@ -77,7 +78,7 @@ generate-bindings: build-web ## Generate backend bindings for the embedded UI
 .PHONY: release
 release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/pluralctl
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plrlctl
 
 .PHONY: goreleaser
 goreleaser:
@@ -101,6 +102,17 @@ build: ## Build the Docker image
 		-t $(APP_NAME):latest \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
+
+.PHONY: build-ctl
+build-ctl: ## Build the plrctl Docker image
+	docker build --build-arg APP_NAME=$(APP_CTL_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
+		-t $(APP_CTL_NAME):$(APP_VSN) \
+		-t $(APP_CTL_NAME):latest \
+		-t gcr.io/$(GCP_PROJECT)/$(APP_CTL_NAME):$(APP_VSN) \
+		-t $(DKR_HOST)/plural/$(APP_CTL_NAME):$(APP_VSN) -f dockerfiles/plrlctl/Dockerfile  .
 
 .PHONY: build-cloud
 build-cloud: ## build the cloud docker image
