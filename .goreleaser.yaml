@@ -32,7 +32,6 @@ builds:
       - -X "github.com/pluralsh/plural-cli/pkg/common.Commit={{.Commit}}"
       - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-      - -X "github.com/pluralsh/plural-cli/pkg/scm.BitbucketClientSecret={{.Env.BITBUCKET_CLIENT_SECRET}}"
     binary: plural
     # Do not embed UI into linux/arm64 and windows/arm64 binaries
     overrides:
@@ -66,7 +65,6 @@ builds:
       - -X "github.com/pluralsh/plural-cli/pkg/common.Commit={{.Commit}}"
       - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-      - -X "github.com/pluralsh/plural-cli/pkg/scm.BitbucketClientSecret={{.Env.BITBUCKET_CLIENT_SECRET}}"
     binary: plural
     # Do not embed UI into linux/arm64 and windows/arm64 binaries
     overrides:
