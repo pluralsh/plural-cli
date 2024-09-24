@@ -26,7 +26,7 @@ WAILS_BINDINGS_TAGS ?= bindings,generate
 WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
 TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
-OUTCTLFILE ?= pluralctl.o
+OUTCTLFILE ?= plrlctl.o
 GOBIN ?= go env GOBIN
 
 # Targets to run before other targets
@@ -41,11 +41,11 @@ git-push:
 .PHONY: install
 install:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
-	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/pluralctl ./cmd/pluralctl
+	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plrlctl ./cmd/plrlctl
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
-	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
+	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plrlctl
 
 .PHONY: build-ctl
 build-ctl: ## Build a CLI binary for the fleet management
@@ -77,7 +77,7 @@ generate-bindings: build-web ## Generate backend bindings for the embedded UI
 .PHONY: release
 release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/pluralctl
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plrlctl
 
 .PHONY: goreleaser
 goreleaser:
