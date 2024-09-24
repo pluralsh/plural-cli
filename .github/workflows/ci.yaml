@@ -44,7 +44,7 @@ jobs:
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -123,7 +123,7 @@ jobs:
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./dockerfiles/Dockerfile.cloud
@@ -190,7 +190,7 @@ jobs:
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@v4
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./dockerfiles/Dockerfile.dind
