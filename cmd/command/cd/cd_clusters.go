@@ -113,7 +113,8 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 			},
-			Usage: "reinstalls the deployment operator into a cluster",
+			Usage:     "reinstalls the deployment operator into a cluster",
+			ArgsUsage: "@{cluster-handle}",
 		},
 	}
 }
@@ -396,7 +397,16 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 		return err
 	}
 
-	id, name := common.GetIdAndName(c.Args().Get(0))
+	handle := c.Args().Get(0)
+	var err error
+	if handle == "" {
+		handle, err = utils.ReadLine("Enter the handle for the cluster you want to reinstall the agent in")
+		if err != nil {
+			return err
+		}
+	}
+
+	id, name := common.GetIdAndName(handle)
 	return p.ReinstallOperator(c, id, name)
 }
 
