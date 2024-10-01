@@ -21,8 +21,8 @@ func Command(clients client.Plural) cli.Command {
 	return cli.Command{
 		Name:      "info",
 		Usage:     "Get information for your installation of APP",
-		ArgsUsage: "APP",
-		Action:    common.LatestVersion(common.Owned(common.Rooted(p.info))),
+		ArgsUsage: "{app}",
+		Action:    common.LatestVersion(common.RequireArgs(common.Owned(common.Rooted(p.info)), []string{"{app}"})),
 	}
 }
 func (p *Plural) info(c *cli.Context) error {

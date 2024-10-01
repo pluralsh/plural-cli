@@ -25,8 +25,8 @@ func outputCommands() []cli.Command {
 		{
 			Name:      "terraform",
 			Usage:     "generates terraform output",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(handleTerraformOutput),
+			ArgsUsage: "{repo}",
+			Action:    common.LatestVersion(common.RequireArgs(handleTerraformOutput, []string{"{repo}"})),
 		},
 	}
 }
