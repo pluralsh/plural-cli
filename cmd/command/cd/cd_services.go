@@ -28,13 +28,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
-			ArgsUsage: "{cluster-id}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"{cluster-id}"})),
+			ArgsUsage: "{cluster}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"{cluster}"})),
 			Usage:     "list cluster services",
 		},
 		{
 			Name:      "create",
-			ArgsUsage: "{cluster-id}",
+			ArgsUsage: "{cluster}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "service name", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "service namespace. If not specified the 'default' will be used"},
@@ -50,7 +50,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				},
 				cli.StringFlag{Name: "config-file", Usage: "path for configuration file"},
 			},
-			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"{cluster-id}"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"{cluster}"})),
 			Usage:  "create cluster service",
 		},
 		{
