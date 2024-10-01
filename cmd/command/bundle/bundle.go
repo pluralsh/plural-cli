@@ -33,13 +33,13 @@ func (p *Plural) bundleCommands() []cli.Command {
 		{
 			Name:      "list",
 			Usage:     "lists bundles for a repository",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.Rooted(common.RequireArgs(p.bundleList, []string{"repo"}))),
+			ArgsUsage: "{repository}",
+			Action:    common.LatestVersion(common.Rooted(common.RequireArgs(p.bundleList, []string{"{repository}"}))),
 		},
 		{
 			Name:      "install",
 			Usage:     "installs a bundle and writes the configuration to this installation's context",
-			ArgsUsage: "REPO NAME",
+			ArgsUsage: "{repository} {bundle}",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "refresh",
