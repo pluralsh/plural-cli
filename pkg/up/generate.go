@@ -130,7 +130,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 func (ctx *Context) afterSetup() error {
 	prov := ctx.Provider.Name()
 	overwrites := []templatePair{
-		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "setup/stacks/serviceaccount.yaml"},
+		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "bootstrap/stacks/serviceaccount.yaml"},
 	}
 
 	ctx.Delims = nil
