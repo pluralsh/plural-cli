@@ -15,10 +15,9 @@ func Command(clients client.Plural) cli.Command {
 		Plural: clients,
 	}
 	return cli.Command{
-		Name:      "deploy",
-		Aliases:   []string{"d"},
-		Usage:     "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
-		ArgsUsage: "Workspace",
+		Name:    "deploy",
+		Aliases: []string{"d"},
+		Usage:   "Deploys the current workspace. This command will first sniff out git diffs in workspaces, topsort them, then apply all changes.",
 		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "silence",
