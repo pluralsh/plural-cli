@@ -24,14 +24,13 @@ func configCommands() []cli.Command {
 		{
 			Name:      "amend",
 			Usage:     "modify config",
-			ArgsUsage: "[key] [value]",
+			ArgsUsage: "{key} {value}",
 			Action:    common.LatestVersion(handleAmend),
 		},
 		{
-			Name:      "read",
-			Usage:     "dumps config",
-			ArgsUsage: "",
-			Action:    common.LatestVersion(handleRead),
+			Name:   "read",
+			Usage:  "dumps config",
+			Action: common.LatestVersion(handleRead),
 		},
 		{
 			Name:   "import",
