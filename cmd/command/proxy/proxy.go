@@ -29,14 +29,14 @@ func (p *Plural) proxyCommands() []cli.Command {
 		{
 			Name:      "list",
 			Usage:     "lists proxy plugins for a repo",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyList, []string{"REPO"}))),
+			ArgsUsage: "{repo}",
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyList, []string{"{repo}"}))),
 		},
 		{
 			Name:      "connect",
 			Usage:     "connects to a named proxy for a repo",
-			ArgsUsage: "REPO NAME",
-			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyConnect, []string{"REPO", "NAME"}))),
+			ArgsUsage: "{repo} {name}",
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleProxyConnect, []string{"{repo}", "{name}"}))),
 		},
 	}
 }
