@@ -23,14 +23,14 @@ func (p *Plural) cdCredentialsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "create",
-			ArgsUsage: "PROVIDER_NAME",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateProviderCredentials, []string{"PROVIDER_NAME"})),
+			ArgsUsage: "{provider-name}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateProviderCredentials, []string{"{provider-name}"})),
 			Usage:     "create provider credentials",
 		},
 		{
 			Name:      "delete",
-			ArgsUsage: "ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteProviderCredentials, []string{"ID"})),
+			ArgsUsage: "{id}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteProviderCredentials, []string{"{id}"})),
 			Usage:     "delete provider credentials",
 		},
 	}

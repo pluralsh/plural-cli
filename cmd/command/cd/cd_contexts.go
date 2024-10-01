@@ -24,18 +24,18 @@ func (p *Plural) cdServiceContextCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "upsert",
-			ArgsUsage: "NAME",
+			ArgsUsage: "{name}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "config-file", Usage: "path for json configuration file with the context blob", Required: true},
 				cli.StringFlag{Name: "name", Usage: "context name", Required: true},
 			},
-			Action: common.LatestVersion(common.RequireArgs(p.handleUpsertServiceContext, []string{"NAME"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleUpsertServiceContext, []string{"{name}"})),
 			Usage:  "upsert service context",
 		},
 		{
 			Name:      "get",
-			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleGetServiceContext, []string{"NAME"})),
+			ArgsUsage: "{name}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleGetServiceContext, []string{"name"})),
 			Usage:     "get service context",
 		},
 	}

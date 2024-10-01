@@ -40,8 +40,8 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 		},
 		{
 			Name:      "update",
-			ArgsUsage: "REPO_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCDRepository, []string{"REPO_ID"})),
+			ArgsUsage: "{repository-id}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCDRepository, []string{"{repository-id}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "git repo url", Required: true},
 				cli.StringFlag{Name: "private-key", Usage: "git repo private key"},

@@ -117,9 +117,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Name:      "eject",
 			Action:    p.handleEject,
 			Usage:     "ejects cluster scaffolds",
-			ArgsUsage: "<cluster-id>",
-			// TODO: enable once logic is finished
-			Hidden: true,
+			ArgsUsage: "{cluster-id}",
+			Hidden:    true, // TODO: enable once logic is finished
 		},
 	}
 }
