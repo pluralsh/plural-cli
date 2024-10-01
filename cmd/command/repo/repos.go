@@ -51,20 +51,20 @@ func (p *Plural) reposCommands() []cli.Command {
 		{
 			Name:      "unlock",
 			Usage:     "unlocks installations in a repo that have breaking changes",
-			ArgsUsage: "APP",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUnlockRepo, []string{"APP"})),
+			ArgsUsage: "{app}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUnlockRepo, []string{"{app}"})),
 		},
 		{
 			Name:      "release",
 			Usage:     "tags the installations in the current cluster with the given release channels",
-			ArgsUsage: "APP",
+			ArgsUsage: "{app}",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
 					Name:  "tag",
 					Usage: "tag name for a given release channel, eg stable, warm, dev, prod",
 				},
 			},
-			Action: common.LatestVersion(common.RequireArgs(p.handleRelease, []string{"APP"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleRelease, []string{"{app}"})),
 		},
 		{
 			Name:  "reinstall",
@@ -90,13 +90,12 @@ func (p *Plural) reposCommands() []cli.Command {
 		{
 			Name:      "uninstall",
 			Usage:     "uninstall an app from the plural api",
-			ArgsUsage: "APP",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUninstall, []string{"APP"})),
+			ArgsUsage: "{app}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUninstall, []string{"{app}"})),
 		},
 		{
-			Name:      "list",
-			Usage:     "list available repositories to install",
-			ArgsUsage: "",
+			Name:  "list",
+			Usage: "list available repositories to install",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "query",

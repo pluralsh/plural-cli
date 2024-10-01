@@ -106,9 +106,9 @@ func (p *Plural) vpnCreateCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "client",
-			ArgsUsage: "NAME",
+			ArgsUsage: "{name}",
 			Usage:     "create a new vpn client for a server",
-			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerCreate))), []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerCreate))), []string{"{name}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
@@ -123,9 +123,9 @@ func (p *Plural) vpnDeleteCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "client",
-			ArgsUsage: "NAME",
+			ArgsUsage: "{name}",
 			Usage:     "delete a vpn client for a server",
-			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerDelete))), []string{"NAME"})),
+			Action:    common.LatestVersion(common.RequireArgs(common.Highlighted(p.vpnInstalled(common.InitKubeconfig(p.handleWireguardPeerDelete))), []string{"{name}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "server",
