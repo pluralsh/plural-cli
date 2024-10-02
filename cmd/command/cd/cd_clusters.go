@@ -45,16 +45,16 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:      "describe",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeCluster, []string{"{cluster}"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeCluster, []string{"@{cluster-handle}"})),
 			Usage:     "describe cluster",
-			ArgsUsage: "{cluster}",
+			ArgsUsage: "@{cluster-handle}",
 			Flags:     []cli.Flag{cli.StringFlag{Name: "o", Usage: "output format"}},
 		},
 		{
 			Name:      "update",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCluster, []string{"{cluster}"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateCluster, []string{"@{cluster-handle}"})),
 			Usage:     "update cluster",
-			ArgsUsage: "{cluster}",
+			ArgsUsage: "@{cluster-handle}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "handle", Usage: "unique human readable name used to identify this cluster"},
 				cli.StringFlag{Name: "kubeconf-path", Usage: "path to kubeconfig"},
@@ -63,9 +63,9 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		},
 		{
 			Name:      "delete",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteCluster, []string{"{cluster}"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteCluster, []string{"@{cluster-handle}"})),
 			Usage:     "deregisters a cluster in plural cd, and drains all services (unless --soft is specified)",
-			ArgsUsage: "{cluster}",
+			ArgsUsage: "@{cluster-handle}",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "soft",
@@ -76,9 +76,9 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		{
 			Name:      "get-credentials",
 			Aliases:   []string{"kubeconfig"},
-			Action:    common.LatestVersion(common.RequireArgs(p.handleGetClusterCredentials, []string{"{cluster}"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleGetClusterCredentials, []string{"@{cluster-handle}"})),
 			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
-			ArgsUsage: "{cluster}",
+			ArgsUsage: "@{cluster-handle}",
 		},
 		{
 			Name:      "create",

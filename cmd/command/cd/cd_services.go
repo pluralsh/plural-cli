@@ -28,13 +28,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
-			ArgsUsage: "{cluster}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"{cluster}"})),
+			ArgsUsage: "@{cluster-handle}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"@{cluster-handle}"})),
 			Usage:     "list cluster services",
 		},
 		{
 			Name:      "create",
-			ArgsUsage: "{cluster}",
+			ArgsUsage: "@{cluster-handle}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "service name", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "service namespace. If not specified the 'default' will be used"},
@@ -50,7 +50,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				},
 				cli.StringFlag{Name: "config-file", Usage: "path for configuration file"},
 			},
-			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"{cluster}"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"@{cluster-handle}"})),
 			Usage:  "create cluster service",
 		},
 		{
@@ -77,8 +77,8 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "clone",
-			ArgsUsage: "{cluster} {service}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCloneClusterService, []string{"{cluster}", "{service}"})),
+			ArgsUsage: "@{cluster-handle} {service}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCloneClusterService, []string{"@{cluster-handle}", "{service}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "the name for the cloned service", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "the namespace for this cloned service", Required: true},
