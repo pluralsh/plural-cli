@@ -77,8 +77,9 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "clone",
-			ArgsUsage: "@{cluster-handle} {service}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCloneClusterService, []string{"@{cluster-handle}", "{service}"})),
+			ArgsUsage: "@{cluster-handle} @{cluster-handle}/{serviceName}",
+			Action: common.LatestVersion(common.RequireArgs(p.handleCloneClusterService,
+				[]string{"@{cluster-handle}", "@{cluster-handle}/{serviceName}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "the name for the cloned service", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "the namespace for this cloned service", Required: true},
@@ -538,7 +539,7 @@ func getServiceIdClusterNameServiceName(input string) (serviceId, clusterName, s
 		i := strings.Trim(input, "@")
 		split := strings.Split(i, "/")
 		if len(split) != 2 {
-			err = fmt.Errorf("expected format @clusterName/serviceName")
+			err = fmt.Errorf("expected format @{cluster-handle}/{serviceName}")
 			return
 		}
 		clusterName = &split[0]
