@@ -92,8 +92,8 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "describe",
-			ArgsUsage: "{service-id}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeClusterService, []string{"{service-id}"})),
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Flags:     []cli.Flag{cli.StringFlag{Name: "o", Usage: "output format"}},
 			Usage:     "describe cluster service",
 		},
@@ -117,14 +117,14 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "delete",
-			ArgsUsage: "{service-id}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteClusterService, []string{"{service-id}"})),
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "delete cluster service",
 		},
 		{
 			Name:      "kick",
-			ArgsUsage: "{service-id}",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"{service-id}"})),
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "force sync cluster service",
 		},
 	}
