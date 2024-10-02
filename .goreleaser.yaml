@@ -100,16 +100,16 @@ archives:
     builds: [plural-cli]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
-      {{- title .Os }}_
+      {{- title .Os -}}_
       {{- if eq .Arch "386" -}}i386
       {{- else -}}{{ .Arch }}{{- end -}}
   - id: plrlctl
     builds: [plrlctl]
     name_template: >-
       {{ .ProjectName }}ctl_{{ .Version }}_
-      {{- title .Os }}_
+      {{- title .Os -}}_
       {{- if eq .Arch "386" -}}i386
-      {{- else -}}{{ .Arch }}{{- end -}}      
+      {{- else -}}{{ .Arch }}{{- end -}}
 
 checksum:
   name_template: 'checksums.txt'
