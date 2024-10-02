@@ -29,14 +29,14 @@ func (p *Plural) logsCommands() []cli.Command {
 		{
 			Name:      "list",
 			Usage:     "lists log tails for a repo",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleLogsList, []string{"REPO"}))),
+			ArgsUsage: "{repo}",
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleLogsList, []string{"{repo}"}))),
 		},
 		{
 			Name:      "tail",
 			Usage:     "execs the specific logtail",
-			ArgsUsage: "REPO NAME",
-			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleLogTail, []string{"REPO", "NAME"}))),
+			ArgsUsage: "{repo} {name}",
+			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(p.handleLogTail, []string{"{repo}", "{name}"}))),
 		},
 	}
 }

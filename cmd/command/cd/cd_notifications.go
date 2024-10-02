@@ -34,8 +34,8 @@ func (p *Plural) cdNotificationSinkCommands() []cli.Command {
 		},
 		{
 			Name:      "upsert",
-			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateNotificationSinks, []string{"NAME"})),
+			ArgsUsage: "{name}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreateNotificationSinks, []string{"{name}"})),
 			Usage:     "upsert notification sink",
 		},
 	}

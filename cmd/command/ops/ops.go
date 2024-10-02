@@ -31,8 +31,8 @@ func (p *Plural) opsCommands() []cli.Command {
 		{
 			Name:      "terminate",
 			Usage:     "terminates a worker node in your cluster",
-			ArgsUsage: "NAME",
-			Action:    common.LatestVersion(common.InitKubeconfig(p.handleTerminateNode)),
+			ArgsUsage: "{name}",
+			Action:    common.LatestVersion(common.RequireArgs(common.InitKubeconfig(p.handleTerminateNode), []string{"{name}"})),
 		},
 		{
 			Name:   "cluster",

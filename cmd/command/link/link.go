@@ -12,7 +12,7 @@ func Commands() []cli.Command {
 		{
 			Name:      "link",
 			Usage:     "links a local package into an installation repo",
-			ArgsUsage: "TOOL REPO",
+			ArgsUsage: "{tool} {repo}",
 			Action:    handleLink,
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -28,7 +28,7 @@ func Commands() []cli.Command {
 		{
 			Name:      "unlink",
 			Usage:     "unlinks a linked package",
-			ArgsUsage: "REPO TOOL NAME",
+			ArgsUsage: "{repo} {tool} {name}",
 			Action:    handleUnlink,
 		},
 	}

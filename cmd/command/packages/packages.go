@@ -37,24 +37,24 @@ func (p *Plural) packagesCommands() []cli.Command {
 		{
 			Name:      "install",
 			Usage:     "installs a package at a specific version",
-			ArgsUsage: "helm|terraform REPO NAME VSN",
-			Action:    common.Affirmed(common.RequireArgs(p.installPackage, []string{"TYPE", "REPO", "NAME", "VERSION"}), "Are you sure you want to install this package?", "PLURAL_PACKAGES_INSTALL"),
+			ArgsUsage: "{helm|terraform} {repo} {name} {version}",
+			Action:    common.Affirmed(common.RequireArgs(p.installPackage, []string{"{type}", "{repo}", "{name}", "{version}"}), "Are you sure you want to install this package?", "PLURAL_PACKAGES_INSTALL"),
 		},
 		{
 			Name:      "uninstall",
 			Usage:     "uninstall a helm or terraform package",
-			ArgsUsage: "helm|terraform REPO NAME",
-			Action:    common.LatestVersion(common.Affirmed(common.RequireArgs(common.Rooted(p.uninstallPackage), []string{"TYPE", "REPO", "NAME"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
+			ArgsUsage: "{helm|terraform} {repo} {name}",
+			Action:    common.LatestVersion(common.Affirmed(common.RequireArgs(common.Rooted(p.uninstallPackage), []string{"{type}", "{repo}", "{name}"}), "Are you sure you want to uninstall this package?", "PLURAL_PACKAGES_UNINSTALL")),
 		},
 		{
 			Name:      "list",
 			Usage:     "lists the packages installed for a given repo",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.RequireArgs(common.Rooted(p.listPackages), []string{"REPO"})),
+			ArgsUsage: "{repo}",
+			Action:    common.LatestVersion(common.RequireArgs(common.Rooted(p.listPackages), []string{"{repo}"})),
 		},
 		{
 			Name:        "show",
-			Usage:       "Shows version information for packages within a plural repo",
+			Usage:       "shows version information for packages within a plural repo",
 			Subcommands: p.showCommands(),
 		},
 	}
@@ -65,14 +65,14 @@ func (p *Plural) showCommands() []cli.Command {
 		{
 			Name:      "helm",
 			Usage:     "list versions for a helm chart",
-			ArgsUsage: "REPO NAME",
-			Action:    common.RequireArgs(p.showHelm, []string{"REPO", "NAME"}),
+			ArgsUsage: "{repo} {name}",
+			Action:    common.RequireArgs(p.showHelm, []string{"{repo}", "{name}"}),
 		},
 		{
 			Name:      "terraform",
 			Usage:     "list versions for a terraform module",
-			ArgsUsage: "REPO NAME",
-			Action:    common.RequireArgs(p.showTerraform, []string{"REPO", "NAME"}),
+			ArgsUsage: "{repo} {name}",
+			Action:    common.RequireArgs(p.showTerraform, []string{"{repo}", "{name}"}),
 		},
 	}
 }

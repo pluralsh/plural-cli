@@ -19,8 +19,8 @@ func (p *Plural) cdSettingsCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "agents",
-			ArgsUsage: "FILENAME",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateAgents, []string{"FILENAME"})),
+			ArgsUsage: "{file-path}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateAgents, []string{"{file-path}"})),
 			Usage:     "update agents settings",
 		},
 	}

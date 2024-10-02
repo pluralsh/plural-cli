@@ -9,7 +9,7 @@ func Command() cli.Command {
 	return cli.Command{
 		Name:      "clone",
 		Usage:     "clones and decrypts a plural repo",
-		ArgsUsage: "URL",
-		Action:    common.HandleClone,
+		ArgsUsage: "{url}",
+		Action:    common.RequireArgs(common.HandleClone, []string{"{url}"}),
 	}
 }

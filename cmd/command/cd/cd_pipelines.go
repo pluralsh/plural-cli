@@ -36,9 +36,9 @@ func (p *Plural) pipelineCommands() []cli.Command {
 		},
 		{
 			Name:      "context",
-			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"PIPELINE_ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handlePipelineContext, []string{"{pipeline-id}"})),
 			Usage:     "set pipeline context",
-			ArgsUsage: "PIPELINE_ID",
+			ArgsUsage: "{pipeline-id}",
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
 					Name:     "set",

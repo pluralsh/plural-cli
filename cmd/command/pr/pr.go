@@ -72,9 +72,9 @@ func (p *Plural) prCommands() []cli.Command {
 		},
 		{
 			Name:      "create",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCreatePrAutomation, []string{"ID"})),
+			Action:    common.LatestVersion(common.RequireArgs(p.handleCreatePrAutomation, []string{"{id}"})),
 			Usage:     "create PR automation",
-			ArgsUsage: "ID",
+			ArgsUsage: "{id}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "context", Usage: "JSON blob string"},
 				cli.StringFlag{Name: "branch", Usage: "branch name"},

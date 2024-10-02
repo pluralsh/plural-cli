@@ -52,9 +52,10 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Action: handleEncrypt,
 		},
 		{
-			Name:   "decrypt",
-			Usage:  "decrypts stdin and writes to stdout",
-			Action: handleDecrypt,
+			Name:      "decrypt",
+			Usage:     "decrypts stdin and writes to stdout",
+			ArgsUsage: "{file-path}",
+			Action:    handleDecrypt,
 		},
 		{
 			Name:   "init",
@@ -77,9 +78,10 @@ func (p *Plural) cryptoCommands() []cli.Command {
 			Action: common.InitKubeconfig(p.handleRecover),
 		},
 		{
-			Name:   "random",
-			Usage:  "generates a random string",
-			Action: randString,
+			Name:      "random",
+			Usage:     "generates a random string",
+			ArgsUsage: "{length}",
+			Action:    randString,
 			Flags: []cli.Flag{
 				cli.IntFlag{
 					Name:  "len",
@@ -151,8 +153,8 @@ func (p *Plural) backupCommands() []cli.Command {
 		{
 			Name:      "restore",
 			Usage:     "restores a key backup as your current encryption key",
-			ArgsUsage: "NAME",
-			Action:    common.RequireArgs(p.restoreBackup, []string{"NAME"}),
+			ArgsUsage: "{name}",
+			Action:    common.RequireArgs(p.restoreBackup, []string{"{name}"}),
 		},
 	}
 }

@@ -27,8 +27,8 @@ func Command(clients client.Plural) cli.Command {
 		Name:      "bounce",
 		Aliases:   []string{"b"},
 		Usage:     "redeploys the charts in a workspace",
-		ArgsUsage: "APP",
-		Action:    common.LatestVersion(common.InitKubeconfig(common.Owned(p.bounce))),
+		ArgsUsage: "{app}",
+		Action:    common.LatestVersion(common.RequireArgs(common.InitKubeconfig(common.Owned(p.bounce)), []string{"{app}"})),
 	}
 }
 

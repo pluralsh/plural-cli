@@ -22,14 +22,14 @@ func Command(clients client.Plural) cli.Command {
 	return cli.Command{
 		Name:      "upgrade",
 		Usage:     "creates an upgrade in the upgrade queue QUEUE for application REPO",
-		ArgsUsage: "QUEUE REPO",
+		ArgsUsage: "{queue} {repo}",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "f",
 				Usage: "file containing upgrade contents, use - for stdin",
 			},
 		},
-		Action: common.LatestVersion(common.RequireArgs(p.handleUpgrade, []string{"QUEUE", "REPO"})),
+		Action: common.LatestVersion(common.RequireArgs(p.handleUpgrade, []string{"{queue}", "{repo}"})),
 	}
 }
 

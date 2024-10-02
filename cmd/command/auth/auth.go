@@ -6,6 +6,7 @@ import (
 
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -30,7 +31,7 @@ func (p *Plural) authCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "oidc",
-			ArgsUsage: "PROVIDER",
+			ArgsUsage: "{provider}",
 			Usage:     "logs in using an exchange from a given oidc id token",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -42,7 +43,7 @@ func (p *Plural) authCommands() []cli.Command {
 					Usage: "the plural email you want to log in as",
 				},
 			},
-			Action: p.handleOidcToken,
+			Action: common.RequireArgs(p.handleOidcToken, []string{"{provider}"}),
 		},
 		{
 			Name:        "trust",
@@ -75,9 +76,9 @@ func (p *Plural) trustCommands() []cli.Command {
 		},
 		{
 			Name:      "delete",
-			ArgsUsage: "ID",
+			ArgsUsage: "{id}",
 			Usage:     "deletes an existing oidc trust relationship by id",
-			Action:    p.handleDeleteTrust,
+			Action:    common.RequireArgs(p.handleDeleteTrust, []string{"{id}"}),
 		},
 	}
 }

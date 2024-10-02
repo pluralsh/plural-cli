@@ -34,14 +34,14 @@ func (p *Plural) stackCommands() []cli.Command {
 		{
 			Name:      "install",
 			Usage:     "installs a plural stack for your current provider",
-			ArgsUsage: "NAME",
+			ArgsUsage: "{stack-name}",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "refresh",
 					Usage: "re-enter the configuration for all bundles",
 				},
 			},
-			Action: common.Tracked(common.LatestVersion(common.Rooted(common.RequireArgs(p.stackInstall, []string{"stack-name"}))), "stack.install"),
+			Action: common.Tracked(common.LatestVersion(common.Rooted(common.RequireArgs(p.stackInstall, []string{"{stack-name}"}))), "stack.install"),
 		},
 		{
 			Name:  "list",

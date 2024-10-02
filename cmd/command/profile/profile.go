@@ -23,20 +23,19 @@ func profileCommands() []cli.Command {
 		{
 			Name:      "use",
 			Usage:     "moves the config in PROFILE to the current config",
-			ArgsUsage: "PROFILE",
-			Action:    common.LatestVersion(handleUseProfile),
+			ArgsUsage: "{profile}",
+			Action:    common.LatestVersion(common.RequireArgs(handleUseProfile, []string{"{profile}"})),
 		},
 		{
 			Name:      "save",
 			Usage:     "saves the current config as PROFILE",
-			ArgsUsage: "PROFILE",
-			Action:    common.LatestVersion(handleSaveProfile),
+			ArgsUsage: "{profile}",
+			Action:    common.LatestVersion(common.RequireArgs(handleSaveProfile, []string{"{profile}"})),
 		},
 		{
-			Name:      "show",
-			Usage:     "displays the configuration for the current profile",
-			ArgsUsage: "PROFILE",
-			Action:    common.LatestVersion(handleRead),
+			Name:   "show",
+			Usage:  "displays the configuration for the current profile",
+			Action: common.LatestVersion(handleRead),
 		},
 		{
 			Name:      "list",

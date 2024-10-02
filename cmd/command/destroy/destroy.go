@@ -26,7 +26,7 @@ func Command(clients client.Plural) cli.Command {
 		Name:      "destroy",
 		Aliases:   []string{"d"},
 		Usage:     "iterates through all installations in reverse topological order, deleting helm installations and terraform",
-		ArgsUsage: "APP",
+		ArgsUsage: "{app}",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "from",

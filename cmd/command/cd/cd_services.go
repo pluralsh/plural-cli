@@ -28,13 +28,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:      "list",
-			ArgsUsage: "CLUSTER_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"CLUSTER_ID"})),
+			ArgsUsage: "@{cluster-handle}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleListClusterServices, []string{"@{cluster-handle}"})),
 			Usage:     "list cluster services",
 		},
 		{
 			Name:      "create",
-			ArgsUsage: "CLUSTER_ID",
+			ArgsUsage: "@{cluster-handle}",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "service name", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "service namespace. If not specified the 'default' will be used"},
@@ -50,13 +50,13 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				},
 				cli.StringFlag{Name: "config-file", Usage: "path for configuration file"},
 			},
-			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"CLUSTER_ID"})),
+			Action: common.LatestVersion(common.RequireArgs(p.handleCreateClusterService, []string{"@{cluster-handle}"})),
 			Usage:  "create cluster service",
 		},
 		{
 			Name:      "update",
-			ArgsUsage: "SERVICE_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateClusterService, []string{"SERVICE_ID"})),
+			ArgsUsage: "{service-id}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleUpdateClusterService, []string{"{service-id}"})),
 			Usage:     "update cluster service",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "version", Usage: "service version"},
@@ -77,8 +77,9 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "clone",
-			ArgsUsage: "CLUSTER SERVICE",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleCloneClusterService, []string{"CLUSTER", "SERVICE"})),
+			ArgsUsage: "@{cluster-handle} @{cluster-handle}/{serviceName}",
+			Action: common.LatestVersion(common.RequireArgs(p.handleCloneClusterService,
+				[]string{"@{cluster-handle}", "@{cluster-handle}/{serviceName}"})),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "the name for the cloned service", Required: true},
 				cli.StringFlag{Name: "namespace", Usage: "the namespace for this cloned service", Required: true},
@@ -91,12 +92,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "describe",
-			ArgsUsage: "SERVICE_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeClusterService, []string{"SERVICE_ID"})),
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "o", Usage: "output format"},
-			},
-			Usage: "describe cluster service",
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDescribeClusterService, []string{"@{cluster-handle}/{serviceName}"})),
+			Flags:     []cli.Flag{cli.StringFlag{Name: "o", Usage: "output format"}},
+			Usage:     "describe cluster service",
 		},
 		{
 			Name:   "template",
@@ -118,14 +117,14 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 		},
 		{
 			Name:      "delete",
-			ArgsUsage: "SERVICE_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteClusterService, []string{"SERVICE_ID"})),
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleDeleteClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "delete cluster service",
 		},
 		{
 			Name:      "kick",
-			ArgsUsage: "SERVICE_ID",
-			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"SERVICE_ID"})),
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "force sync cluster service",
 		},
 	}
@@ -540,7 +539,7 @@ func getServiceIdClusterNameServiceName(input string) (serviceId, clusterName, s
 		i := strings.Trim(input, "@")
 		split := strings.Split(i, "/")
 		if len(split) != 2 {
-			err = fmt.Errorf("expected format @clusterName/serviceName")
+			err = fmt.Errorf("expected format @{cluster-handle}/{serviceName}")
 			return
 		}
 		clusterName = &split[0]

@@ -115,11 +115,10 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 		},
 		{
 			Name:      "eject",
-			Action:    p.handleEject,
+			Action:    common.RequireArgs(p.handleEject, []string{"{cluster-id}"}),
 			Usage:     "ejects cluster scaffolds",
-			ArgsUsage: "<cluster-id>",
-			// TODO: enable once logic is finished
-			Hidden: true,
+			ArgsUsage: "{cluster-id}",
+			Hidden:    true, // TODO: enable once logic is finished
 		},
 	}
 }
@@ -287,10 +286,6 @@ func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 }
 
 func (p *Plural) handleEject(c *cli.Context) (err error) {
-	if !c.Args().Present() {
-		return fmt.Errorf("clusterid cannot be empty")
-	}
-
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
