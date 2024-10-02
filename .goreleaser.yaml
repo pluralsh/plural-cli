@@ -106,7 +106,7 @@ archives:
   - id: plrlctl
     builds: [plrlctl]
     name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_
+      {{ .ProjectName }}ctl_{{ .Version }}_
       {{- title .Os }}_
       {{- if eq .Arch "386" -}}i386
       {{- else -}}{{ .Arch }}{{- end -}}      
