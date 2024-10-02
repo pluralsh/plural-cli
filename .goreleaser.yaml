@@ -33,18 +33,6 @@ builds:
       - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     binary: plural
-    # Do not embed UI into linux/arm64 and windows/arm64 binaries
-    overrides:
-      - goos: linux
-        goarch: arm64
-        tags: [linux]
-        env:
-          - CGO_ENABLED=0
-      - goos: windows
-        goarch: arm64
-        tags: [windows]
-        env:
-          - CGO_ENABLED=0
   - id: plrlctl
     main: ./cmd/plrlctl
     targets:
@@ -65,35 +53,7 @@ builds:
       - -X "github.com/pluralsh/plural-cli/pkg/common.Commit={{.Commit}}"
       - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-    binary: plural
-    # Do not embed UI into linux/arm64 and windows/arm64 binaries
-    overrides:
-      - goos: linux
-        goarch: arm64
-        tags: [linux]
-        env:
-          - CGO_ENABLED=0
-      - goos: windows
-        goarch: arm64
-        tags: [windows]
-        env:
-          - CGO_ENABLED=0
-  # Build CLI binary without embedded UI for linux.
-#  - id: plural-cli-console
-#    targets:
-#      - linux_amd64
-#      - linux_arm64
-#    ldflags:
-#      - -s
-#      - -w
-#      - -X "github.com/pluralsh/plural-cli/cmd/plural.Version={{.Version}}"
-#      - -X "github.com/pluralsh/plural-cli/cmd/plural.Commit={{.Commit}}"
-#      - -X "github.com/pluralsh/plural-cli/cmd/plural.Date={{.Date}}"
-#      - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-#    tags: [ linux ]
-#    env:
-#      - CGO_ENABLED=0
-#    binary: plural
+    binary: pluralctl
 
 archives:
   - id: plural-cli
