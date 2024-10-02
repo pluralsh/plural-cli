@@ -39,9 +39,9 @@ func TestListArtifacts(t *testing.T) {
 `,
 		},
 		{
-			name:          `test "api list artifacts" without REPO_ID parameter`,
+			name:          `test "api list artifacts" without {repository-id} parameter`,
 			args:          []string{plural.ApplicationName, "api", "list", "artifacts"},
-			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			expectedError: "Not enough arguments provided: needs {repository-id}. Try running --help to see usage.",
 			artifacts:     []api.Artifact{},
 		},
 	}
@@ -154,10 +154,10 @@ func TestGetCharts(t *testing.T) {
 `,
 		},
 		{
-			name:          `test "api list charts" without REPO_ID parameter`,
+			name:          `test "api list charts" without {repository-id} parameter`,
 			args:          []string{plural.ApplicationName, "api", "list", "charts"},
 			charts:        []*api.Chart{},
-			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			expectedError: "Not enough arguments provided: needs {repository-id}. Try running --help to see usage.",
 		},
 	}
 	for _, test := range tests {
@@ -214,10 +214,10 @@ func TestGetTerraform(t *testing.T) {
 `,
 		},
 		{
-			name:          `test "api list terraform" without REPO_ID parameter`,
+			name:          `test "api list terraform" without {repository-id} parameter`,
 			args:          []string{plural.ApplicationName, "api", "list", "terraform"},
 			terraform:     []*api.Terraform{},
-			expectedError: "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			expectedError: "Not enough arguments provided: needs {repository-id}. Try running --help to see usage.",
 		},
 	}
 	for _, test := range tests {
@@ -273,10 +273,10 @@ func TestGetVersons(t *testing.T) {
 `,
 		},
 		{
-			name:          `test "api list versions" without CHART_ID parameter`,
+			name:          `test "api list versions" without {chart-id} parameter`,
 			args:          []string{plural.ApplicationName, "api", "list", "versions"},
 			versions:      []*api.Version{},
-			expectedError: "Not enough arguments provided: needs CHART_ID. Try running --help to see usage.",
+			expectedError: "Not enough arguments provided: needs {chart-id}. Try running --help to see usage.",
 		},
 	}
 	for _, test := range tests {
@@ -343,10 +343,10 @@ func TestGetChartInstallations(t *testing.T) {
 `,
 		},
 		{
-			name:               `test "api list chartinstallations" without REPO_ID parameter`,
+			name:               `test "api list chartinstallations" without {repository-id} parameter`,
 			args:               []string{plural.ApplicationName, "api", "list", "chartinstallations"},
 			chartInstallations: []*api.ChartInstallation{},
-			expectedError:      "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			expectedError:      "Not enough arguments provided: needs {repository-id}. Try running --help to see usage.",
 		},
 	}
 	for _, test := range tests {
@@ -407,10 +407,10 @@ func TestGetTerraformInstallations(t *testing.T) {
 `,
 		},
 		{
-			name:                   `test "api list terraforminstallations" without REPO_ID parameter`,
+			name:                   `test "api list terraforminstallations" without {repository-id} parameter`,
 			args:                   []string{plural.ApplicationName, "api", "list", "terraforminstallations"},
 			terraformInstallations: []*api.TerraformInstallation{},
-			expectedError:          "Not enough arguments provided: needs REPO_ID. Try running --help to see usage.",
+			expectedError:          "Not enough arguments provided: needs {repository-id}. Try running --help to see usage.",
 		},
 	}
 	for _, test := range tests {

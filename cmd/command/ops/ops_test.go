@@ -83,7 +83,7 @@ func TestTerminate(t *testing.T) {
 	}{
 		{
 			name: `test "ops terminate"`,
-			args: []string{plural.ApplicationName, "ops", "terminate"},
+			args: []string{plural.ApplicationName, "ops", "terminate", "cluster-1"},
 			node: &v1.Node{
 
 				ObjectMeta: metav1.ObjectMeta{Name: "cluster-1"},

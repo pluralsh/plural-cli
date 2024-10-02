@@ -23,7 +23,7 @@ func TestLogsList(t *testing.T) {
 		{
 			name:          `test "logs list" without repo name`,
 			args:          []string{plural.ApplicationName, "logs", "list"},
-			expectedError: "Not enough arguments provided: needs REPO. Try running --help to see usage.",
+			expectedError: "Not enough arguments provided: needs {repo}. Try running --help to see usage.",
 		},
 		{
 			name: `test "logs list" with repo name`,

@@ -52,7 +52,7 @@ func (p *Plural) apiCommands() []cli.Command {
 					Name:      "versions",
 					Usage:     "lists versions of a chart",
 					ArgsUsage: "{chart-id}",
-					Action:    common.LatestVersion(common.RequireArgs(p.handleVersions, []string{"{repository-id}"})),
+					Action:    common.LatestVersion(common.RequireArgs(p.handleVersions, []string{"{chart-id}"})),
 				},
 				{
 					Name:      "chartinstallations",
