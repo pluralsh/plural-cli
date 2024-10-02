@@ -101,15 +101,15 @@ archives:
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
-      {{- if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
+      {{- if eq .Arch "386" -}}i386
+      {{- else -}}{{ .Arch }}{{- end -}}
   - id: plrlctl
     builds: [plrlctl]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- title .Os }}_
-      {{- if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}      
+      {{- if eq .Arch "386" -}}i386
+      {{- else -}}{{ .Arch }}{{- end -}}      
 
 checksum:
   name_template: 'checksums.txt'
