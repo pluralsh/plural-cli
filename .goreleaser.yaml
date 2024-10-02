@@ -58,10 +58,10 @@ builds:
 archives:
   - id: plural-cli
     builds: [plural-cli]
-    name_template: "{{ .Binary }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}"
+    name_template: '{{ .Binary }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}'
   - id: plrlctl
     builds: [plrlctl]
-    name_template: "{{ .Binary }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}"
+    name_template: '{{ .Binary }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}'
 
 checksum:
   name_template: 'checksums.txt'
