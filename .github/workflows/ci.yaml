@@ -282,7 +282,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: '~> v2'
-          args: release --clean --prepare --snapshot --timeout 90m
+          args: build --clean --snapshot --timeout 90m
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
