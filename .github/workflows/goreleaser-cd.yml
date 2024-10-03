@@ -5,72 +5,9 @@ on:
       - 'v*.*.*'
 
 jobs:
-  # Build binaries with GoReleaser
-  prepare:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        include:
-          - os: ubuntu-latest
-            goos: linux
-          - os: macos-latest
-            goos: darwin
-          - os: windows-latest
-            goos: windows
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup Go
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version-file: go.mod
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.18.1
-      - name: Setup Cache
-        uses: actions/cache@v3.2.3
-        with:
-          path: dist/${{ matrix.goos }}
-          key: ${{ matrix.goos }}-${{ github.ref_name }}
-          enableCrossOsArchive: true
-      - name: Install Dependencies
-        if: matrix.goos == 'linux'
-        shell: bash
-        run: |
-          sudo apt update
-          sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev
-      - name: Build web
-        shell: bash
-        run: make build-web
-      - name: Get Previous Tag
-        id: prev
-        uses: WyriHaximus/github-action-get-previous-tag@v1
-        env:
-          INPUT_PREFIX: v
-      - name: GoReleaser (Build)
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser-pro
-          version: '~> v2'
-          args: release --clean --split --timeout 90m
-        env:
-          CGO_LDFLAGS: "${{ matrix.goos == 'darwin' && '-framework UniformTypeIdentifiers' || '' }}"
-          GOOS: ${{ matrix.GOOS }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
-          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
-          GORELEASER_PREVIOUS_TAG: ${{ steps.release.outputs.prev }}
-
   # Release binaries with GoReleaser
   release:
     runs-on: ubuntu-latest
-    needs: prepare
     env:
       DOCKER_CLI_EXPERIMENTAL: "enabled"
     permissions:
@@ -84,26 +21,6 @@ jobs:
       - uses: actions/setup-go@v4.1.0
         with:
           go-version-file: go.mod
-      - name: Copy Cache From Previous Job
-        shell: bash
-        run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - name: Restore Linux Cache
-        uses: actions/cache@v3.2.3
-        with:
-          path: dist/linux
-          key: linux-${{ github.ref_name }}
-      - name: Restore Darwin Cache
-        uses: actions/cache@v3.2.3
-        with:
-          path: dist/darwin
-          key: darwin-${{ github.ref_name }}
-      - name: Restore Windows Cache
-        uses: actions/cache@v3.2.3
-        with:
-          path: dist/windows
-          key: windows-${{ github.ref_name }}
-          enableCrossOsArchive: true
       - name: Get Previous Tag
         id: prev
         uses: WyriHaximus/github-action-get-previous-tag@v1
@@ -113,11 +30,10 @@ jobs:
         uses: sigstore/cosign-installer@v3.6.0
       - name: GoReleaser (Release)
         uses: goreleaser/goreleaser-action@v6
-        if: steps.cache.outputs.cache-hit != 'true' # do not run if cache hit
         with:
           distribution: goreleaser-pro
           version: '~> v2'
-          args: continue --merge --timeout 90m
+          args: release --clean --timeout 90m
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
