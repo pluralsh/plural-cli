@@ -29,7 +29,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "resources-refactor", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
 		return
 	}
 
