@@ -1,10 +1,6 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 
-# Requires a GoReleaser Pro to run
-partial:
-  by: goos
-
 version: 2
 
 before:
@@ -18,9 +14,7 @@ builds:
       - linux_amd64
       - linux_arm64
       - windows_amd64
-      # TODO: Re-enable once fixed
-      # Ref: https://github.com/golang/go/issues/51019
-      # - windows_arm64
+      - windows_arm64
       - darwin_amd64
       - darwin_arm64
     env:
@@ -39,9 +33,7 @@ builds:
       - linux_amd64
       - linux_arm64
       - windows_amd64
-      # TODO: Re-enable once fixed
-      # Ref: https://github.com/golang/go/issues/51019
-      # - windows_arm64
+      - windows_arm64
       - darwin_amd64
       - darwin_arm64
     env:

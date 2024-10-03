@@ -82,7 +82,7 @@ release:
 
 .PHONY: goreleaser
 goreleaser:
-	goreleaser release --clean --prepare --single-target --snapshot --verbose
+	goreleaser release --clean --prepare --snapshot
 
 .PHONY: setup
 setup: ## sets up your local env (for mac only)
