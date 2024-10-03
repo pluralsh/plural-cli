@@ -165,7 +165,7 @@ brews:
     ids: [plrlctl]
     repository:
       owner: pluralsh
-      name: homebrew-plrlctl
+      name: homebrew-plural
 
       # Optionally a branch can be provided.
       # Defaults to the default repository branch.
