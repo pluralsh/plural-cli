@@ -146,7 +146,7 @@ func handlePrContracts(c *cli.Context) error {
 
 	if contracts.Spec.Templates != nil {
 		tplCopy := contracts.Spec.Templates
-		if err := utils.CopyFile(tplCopy.From, tplCopy.To); err != nil {
+		if err := utils.CopyDir(tplCopy.From, tplCopy.To); err != nil {
 			return err
 		}
 	}
