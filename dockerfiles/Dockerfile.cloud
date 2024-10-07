@@ -31,13 +31,13 @@ FROM alpine:3.17.2 as tools
 ARG TARGETARCH
 
 # renovate: datasource=github-releases depName=helm/helm
-ENV HELM_VERSION=v3.10.3
+ENV HELM_VERSION=v3.15.1
 
 # renovate: datasource=github-releases depName=hashicorp/terraform
-ENV TERRAFORM_VERSION=v1.2.9
+ENV TERRAFORM_VERSION=v1.9.7
 
 # renovate: datasource=github-tags depName=kubernetes/kubernetes
-ENV KUBECTL_VERSION=v1.25.5
+ENV KUBECTL_VERSION=v1.30.0
 
 RUN apk add --update --no-cache curl ca-certificates unzip wget openssl build-base && \
     curl -L https://get.helm.sh/helm-${HELM_VERSION}-linux-${TARGETARCH}.tar.gz | tar xvz && \
