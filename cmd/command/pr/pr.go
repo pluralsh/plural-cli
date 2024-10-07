@@ -1,6 +1,7 @@
 package pr
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/pr"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 )
@@ -107,6 +109,10 @@ func (p *Plural) prCommands() []cli.Command {
 					Usage:    "the contract file to run",
 					Required: true,
 				},
+				cli.BoolFlag{
+					Name:  "validate",
+					Usage: "check if there are any local git changes and fail if so",
+				},
 			},
 		},
 	}
@@ -168,6 +174,22 @@ func handlePrContracts(c *cli.Context) error {
 
 		if err := pr.Apply(template); err != nil {
 			return err
+		}
+	}
+
+	if c.Bool("validate") {
+		changes, err := git.Modified()
+		if err != nil {
+			return err
+		}
+
+		if len(changes) > 0 {
+			utils.Highlight("Contracts failed due to local git changes, displaying below ===>\n\n")
+			if err := git.PrintDiff(); err != nil {
+				return err
+			}
+			fmt.Println("")
+			return fmt.Errorf("contract validation failed")
 		}
 	}
 

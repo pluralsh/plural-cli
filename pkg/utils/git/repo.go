@@ -2,6 +2,8 @@ package git
 
 import (
 	"bufio"
+	"os"
+	"os/exec"
 	"strings"
 
 	gogit "github.com/go-git/go-git/v5"
@@ -18,6 +20,13 @@ func Repo() (*gogit.Repository, error) {
 	}
 
 	return gogit.PlainOpen(root)
+}
+
+func PrintDiff() error {
+	cmd := exec.Command("git", "--no-pager", "diff")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func CurrentBranch() (string, error) {
