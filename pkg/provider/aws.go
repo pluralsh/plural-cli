@@ -109,7 +109,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider.project = account
 	provider.storageClient = client
 
-	azones, err := getAvailabilityZones(ctx, provider.Region())
+	azones, err := getAvailabilityZones(ctx, provider.Region(), cloudFlag)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	provider.writer = projectManifest.Configure(cloudFlag)
+	provider.writer = projectManifest.Configure(cloudFlag, provider.Cluster())
 	provider.bucket = projectManifest.Bucket
 	return
 }
@@ -159,17 +159,20 @@ func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
 }
 
 // TODO: during Plural init we should ask the user to choose which AZs they want to use (first 3, random, manual, look at how CAPA does that). There should be a minimum limit of 3.
-func getAvailabilityZones(ctx context.Context, region string) ([]string, error) {
+func getAvailabilityZones(ctx context.Context, region string, cloudFlag bool) ([]string, error) {
 	first3 := "first three"
 	random := "random"
 	manual := "manual"
-	choice := ""
-	prompt := &survey.Select{
-		Message: "Which availability zones you would like to use:",
-		Options: []string{first3, random, manual},
-	}
-	if err := survey.AskOne(prompt, &choice); err != nil {
-		return nil, err
+	choice := first3
+	if !cloudFlag {
+		choice = ""
+		prompt := &survey.Select{
+			Message: "Which availability zones you would like to use:",
+			Options: []string{first3, random, manual},
+		}
+		if err := survey.AskOne(prompt, &choice); err != nil {
+			return nil, err
+		}
 	}
 
 	switch choice {

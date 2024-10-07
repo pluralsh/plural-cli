@@ -118,19 +118,12 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 }
 
 func (p *Plural) handleListClusters(_ *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-
-	clusters, err := p.ConsoleClient.ListClusters()
+	clusters, err := p.ListClusters()
 	if err != nil {
 		return err
 	}
-	if clusters == nil {
-		return fmt.Errorf("returned objects list [ListClusters] is nil")
-	}
 	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
-	return utils.PrintTable(clusters.Clusters.Edges, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
+	return utils.PrintTable(clusters, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
 		provider := ""
 		if cl.Node.Provider != nil {
 			provider = cl.Node.Provider.Name
@@ -145,6 +138,20 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 		}
 		return []string{cl.Node.ID, cl.Node.Name, handle, version, provider}, nil
 	})
+}
+
+func (p *Plural) ListClusters() ([]*gqlclient.ClusterEdgeFragment, error) {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return nil, err
+	}
+	clusters, err := p.ConsoleClient.ListClusters()
+	if err != nil {
+		return nil, err
+	}
+	if clusters == nil {
+		return nil, fmt.Errorf("returned objects list [ListClusters] is nil")
+	}
+	return clusters.Clusters.Edges, nil
 }
 
 func (p *Plural) GetClusterId(handle string) (string, string, error) {
