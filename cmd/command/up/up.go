@@ -122,7 +122,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 
 func getCluster(cd *cd.Plural) (id string, name string, err error) {
 	if cd == nil {
-		return "", "", fmt.Errorf("please provide a plural client")
+		return "", "", fmt.Errorf("your CLI is not logged into Plural, try running `plural login` to generate local credentials")
 	}
 	clusters, err := cd.ListClusters()
 	if err != nil {
