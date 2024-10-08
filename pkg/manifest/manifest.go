@@ -118,14 +118,16 @@ func Read(path string) (man *Manifest, err error) {
 	return
 }
 
-func (pMan *ProjectManifest) Configure(cloud bool) Writer {
+func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {
 	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
 
-	res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
-	pMan.BucketPrefix = res
-	pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
+	pMan.BucketPrefix = cluster
+	pMan.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
 
 	if !cloud {
+		res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
+		pMan.BucketPrefix = res
+		pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
 		if err := pMan.ConfigureNetwork(); err != nil {
 			return nil
 		}

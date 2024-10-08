@@ -62,7 +62,7 @@ func mkKind(conf config.Config) (provider *KINDProvider, err error) {
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
-	provider.writer = projectManifest.Configure(cloudFlag)
+	provider.writer = projectManifest.Configure(cloudFlag, provider.Cluster())
 	provider.bucket = projectManifest.Bucket
 	return
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -81,11 +82,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	if c.Bool("cloud") {
-		id, name, err := cd.GetClusterId("mgmt")
+		id, name, err := getCluster(cd)
 		if err != nil {
 			return err
 		}
-
 		ctx.ImportCluster = lo.ToPtr(id)
 		ctx.CloudCluster = name
 	}
@@ -118,4 +118,32 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	utils.Success("Finished setting up your management cluster!\n")
 	utils.Highlight("Feel free to use terraform as you normally would, and leverage the gitops setup we've generated in the apps/ subfolder\n")
 	return nil
+}
+
+func getCluster(cd *cd.Plural) (id string, name string, err error) {
+	if cd == nil {
+		return "", "", fmt.Errorf("your CLI is not logged into Plural, try running `plural login` to generate local credentials")
+	}
+	clusters, err := cd.ListClusters()
+	if err != nil {
+		return "", "", err
+	}
+
+	clusterNames := []string{}
+	clusterMap := map[string]string{}
+
+	for _, cluster := range clusters {
+		clusterNames = append(clusterNames, cluster.Node.Name)
+		clusterMap[cluster.Node.Name] = cluster.Node.ID
+	}
+
+	prompt := &survey.Select{
+		Message: "Select one of the following clusters:",
+		Options: clusterNames,
+	}
+	if err = survey.AskOne(prompt, &name, survey.WithValidator(survey.Required)); err != nil {
+		return
+	}
+	id = clusterMap[name]
+	return
 }
