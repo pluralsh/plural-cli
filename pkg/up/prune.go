@@ -38,7 +38,6 @@ func (ctx *Context) Prune() error {
 	}
 
 	_ = os.RemoveAll("./terraform/apps")
-	ctx.Cleanup()
 
 	return git.Sync(repoRoot, "Post-setup resource cleanup", true)
 }

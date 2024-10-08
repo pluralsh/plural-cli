@@ -17,11 +17,6 @@ type templatePair struct {
 	cloudless bool
 }
 
-func (ctx *Context) Cleanup() {
-	_ = git.RemoveSubmodule("bootstrap")
-	_ = os.RemoveAll("./bootstrap")
-}
-
 func (ctx *Context) Generate() (dir string, err error) {
 	dir, err = os.MkdirTemp("", "sampledir")
 	ctx.dir = dir
