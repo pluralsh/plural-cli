@@ -174,7 +174,7 @@ func getCluster(cd *cd.Plural) (id string, err error) {
 	}
 
 	for _, cluster := range clusters {
-		if *cluster.Node.Handle == "mgmt" {
+		if lo.FromPtr(cluster.Node.Handle) == "mgmt" {
 			return cluster.Node.ID, nil
 		}
 	}
