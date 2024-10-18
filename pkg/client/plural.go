@@ -111,6 +111,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	if err := common.HandleLogin(c); err != nil {
 		return err
 	}
+
 	p.InitPluralClient()
 
 	me, err := p.Me()

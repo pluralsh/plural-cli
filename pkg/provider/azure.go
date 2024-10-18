@@ -116,29 +116,6 @@ var (
 	}
 )
 
-var azureSurvey = []*survey.Question{
-	{
-		Name:     "cluster",
-		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: validCluster,
-	},
-	{
-		Name:     "storage",
-		Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
-		Validate: utils.ValidateStorageAccountName,
-	},
-	{
-		Name:     "region",
-		Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: azureRegions},
-		Validate: survey.Required,
-	},
-	{
-		Name:     "resource",
-		Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
-		Validate: utils.ValidateResourceGroupName,
-	},
-}
-
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	var resp struct {
 		Cluster  string
@@ -146,6 +123,29 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		Region   string
 		Resource string
 	}
+	var azureSurvey = []*survey.Question{
+		{
+			Name:     "cluster",
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster:", Default: clusterFlag},
+			Validate: validCluster,
+		},
+		{
+			Name:     "storage",
+			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
+			Validate: utils.ValidateStorageAccountName,
+		},
+		{
+			Name:     "region",
+			Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: azureRegions},
+			Validate: survey.Required,
+		},
+		{
+			Name:     "resource",
+			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
+			Validate: utils.ValidateResourceGroupName,
+		},
+	}
+
 	err = survey.Ask(azureSurvey, &resp)
 	if err != nil {
 		return

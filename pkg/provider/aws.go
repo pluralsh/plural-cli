@@ -67,21 +67,21 @@ var (
 	}
 )
 
-var awsSurvey = []*survey.Question{
-	{
-		Name:     "cluster",
-		Prompt:   &survey.Input{Message: "Enter the name of your cluster:"},
-		Validate: validCluster,
-	},
-	{
-		Name:     "region",
-		Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east-2", Options: awsRegions},
-		Validate: survey.Required,
-	},
-}
-
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	provider = &AWSProvider{}
+	var awsSurvey = []*survey.Question{
+		{
+			Name:     "cluster",
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster:", Default: clusterFlag},
+			Validate: validCluster,
+		},
+		{
+			Name:     "region",
+			Prompt:   &survey.Select{Message: "What region will you deploy to?", Default: "us-east-2", Options: awsRegions},
+			Validate: survey.Required,
+		},
+	}
+
 	if err = survey.Ask(awsSurvey, provider); err != nil {
 		return
 	}

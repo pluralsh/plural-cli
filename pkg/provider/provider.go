@@ -17,6 +17,7 @@ import (
 )
 
 var cloudFlag bool
+var clusterFlag string
 
 type Provider interface {
 	Name() string
@@ -104,6 +105,10 @@ func GetProvider() (Provider, error) {
 
 func SetCloudFlag(cloud bool) {
 	cloudFlag = cloud
+}
+
+func SetClusterFlag(cluster string) {
+	clusterFlag = cluster
 }
 
 func FromManifest(man *manifest.ProjectManifest) (Provider, error) {

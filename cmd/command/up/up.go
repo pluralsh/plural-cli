@@ -6,8 +6,10 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
+	cdpkg "github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -54,14 +56,24 @@ func Command(clients client.Plural) cli.Command {
 
 func (p *Plural) handleUp(c *cli.Context) error {
 	// provider.IgnoreProviders([]string{"GENERIC", "KIND"})
-	if err := p.HandleInit(c); err != nil {
+	if err := common.HandleLogin(c); err != nil {
 		return err
 	}
 	p.InitPluralClient()
 
-	cd := &cd.Plural{Plural: p.Plural}
+	cd := &cdpkg.Plural{Plural: p.Plural}
+
+	var name, url string
+	var err error
 
 	if c.Bool("cloud") {
+		name, url, err = p.choseCluster()
+		if err != nil {
+			return err
+		}
+
+		cdpkg.SetConsoleURL(url)
+		provider.SetClusterFlag(name)
 		if err := cd.HandleCdLogin(c); err != nil {
 			return err
 		}
@@ -69,6 +81,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		if err := p.backfillEncryption(); err != nil {
 			return err
 		}
+	}
+
+	if err := p.HandleInit(c); err != nil {
+		return err
 	}
 
 	repoRoot, err := git.Root()
@@ -82,10 +98,11 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	if c.Bool("cloud") {
-		id, name, err := getCluster(cd)
+		id, err := getCluster(cd)
 		if err != nil {
 			return err
 		}
+
 		ctx.ImportCluster = lo.ToPtr(id)
 		ctx.CloudCluster = name
 	}
@@ -120,21 +137,18 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	return nil
 }
 
-func getCluster(cd *cd.Plural) (id string, name string, err error) {
-	if cd == nil {
-		return "", "", fmt.Errorf("your CLI is not logged into Plural, try running `plural login` to generate local credentials")
-	}
-	clusters, err := cd.ListClusters()
+func (p *Plural) choseCluster() (name, url string, err error) {
+	instances, err := p.GetConsoleInstances()
 	if err != nil {
-		return "", "", err
+		return
 	}
 
 	clusterNames := []string{}
 	clusterMap := map[string]string{}
 
-	for _, cluster := range clusters {
-		clusterNames = append(clusterNames, cluster.Node.Name)
-		clusterMap[cluster.Node.Name] = cluster.Node.ID
+	for _, cluster := range instances {
+		clusterNames = append(clusterNames, cluster.Name)
+		clusterMap[cluster.Name] = cluster.URL
 	}
 
 	prompt := &survey.Select{
@@ -144,6 +158,27 @@ func getCluster(cd *cd.Plural) (id string, name string, err error) {
 	if err = survey.AskOne(prompt, &name, survey.WithValidator(survey.Required)); err != nil {
 		return
 	}
-	id = clusterMap[name]
+	url = clusterMap[name]
+	return
+}
+
+func getCluster(cd *cd.Plural) (id string, err error) {
+	if cd == nil {
+		err = fmt.Errorf("your CLI is not logged into Plural, try running `plural login` to generate local credentials")
+		return
+	}
+
+	clusters, err := cd.ListClusters()
+	if err != nil {
+		return
+	}
+
+	for _, cluster := range clusters {
+		if *cluster.Node.Handle == "mgmt" {
+			return cluster.Node.ID, nil
+		}
+	}
+
+	err = fmt.Errorf("could not find the management cluster in your Plural cloud instance, contact support for assistance")
 	return
 }

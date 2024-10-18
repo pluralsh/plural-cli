@@ -31,6 +31,10 @@ type Plural struct {
 	HelmConfiguration *action.Configuration
 }
 
+func SetConsoleURL(url string) {
+	consoleURL = url
+}
+
 func Command(clients client.Plural, helmConfiguration *action.Configuration) cli.Command {
 	return cli.Command{
 		Name:        "deployments",
@@ -234,7 +238,10 @@ func (p *Plural) HandleCdLogin(c *cli.Context) (err error) {
 		}
 	}
 
-	url := c.String("url")
+	url := consoleURL
+	if url == "" {
+		url = c.String("url")
+	}
 	if url == "" {
 		url, err = utils.ReadLine("Enter the url of your console: ")
 		if err != nil {

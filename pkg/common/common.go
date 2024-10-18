@@ -23,6 +23,10 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
+var (
+	loggedIn = false
+)
+
 func AppReadme(name string, dryRun bool) error {
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -74,6 +78,13 @@ func DoBuild(client api.Client, installation *api.Installation, force bool) erro
 }
 
 func HandleLogin(c *cli.Context) error {
+	if loggedIn {
+		return nil
+	}
+	defer func() {
+		loggedIn = true
+	}()
+
 	conf := &config.Config{}
 	conf.Token = ""
 	conf.Endpoint = c.String("endpoint")
