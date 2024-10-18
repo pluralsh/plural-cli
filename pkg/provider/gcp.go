@@ -90,7 +90,7 @@ func getGCPSurvey() []*survey.Question {
 	return []*survey.Question{
 		{
 			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster", Default: clusterFlag},
 			Validate: validCluster,
 		},
 		{

@@ -47,7 +47,7 @@ func getLinodeSurvey() (surveys []*survey.Question, err error) {
 	surveys = []*survey.Question{
 		{
 			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster"},
+			Prompt:   &survey.Input{Message: "Enter the name of your cluster", Default: clusterFlag},
 			Validate: validCluster,
 		},
 		{
