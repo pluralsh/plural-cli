@@ -20,3 +20,7 @@ func Modified() ([]string, error) {
 
 	return result, nil
 }
+
+func Status() (string, error) {
+	return GitRaw("status", "--porcelain")
+}

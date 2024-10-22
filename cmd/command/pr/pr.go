@@ -184,7 +184,13 @@ func handlePrContracts(c *cli.Context) error {
 		}
 
 		if len(changes) > 0 {
-			utils.Highlight("Contracts failed due to local git changes, displaying below ===>\n\n")
+			utils.Highlight("Contracts failed due to local git changes, all changed files ===>\n\n")
+			status, err := git.Status()
+			if err != nil {
+				return err
+			}
+			fmt.Println(status)
+			utils.Highlight("Git diff output===>\n")
 			if err := git.PrintDiff(); err != nil {
 				return err
 			}
