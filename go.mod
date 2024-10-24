@@ -46,7 +46,7 @@ require (
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pluralsh/console/go/client v1.17.1-0.20240918005717-8285a4b181b1
 	github.com/pluralsh/console/go/controller v0.0.0-20240918005717-8285a4b181b1
 	github.com/pluralsh/gqlclient v1.12.2
