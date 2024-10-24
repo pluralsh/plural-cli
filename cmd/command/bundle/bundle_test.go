@@ -4,21 +4,21 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pluralsh/plural-cli/pkg/manifest"
+
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/pluralsh/plural-cli/cmd/command/plural"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"gopkg.in/yaml.v2"
 )
 
 func TestBundleList(t *testing.T) {
-	t.Skip("Skipping until fixed...")
-
 	tests := []struct {
 		name             string
 		args             []string
@@ -58,6 +58,17 @@ func TestBundleList(t *testing.T) {
 			err = os.Chdir(dir)
 			assert.NoError(t, err)
 			_, err = git.Init()
+			assert.NoError(t, err)
+
+			data, err := yaml.Marshal(manifest.ProjectManifest{
+				Cluster:  "test",
+				Bucket:   "test",
+				Project:  "test",
+				Provider: "test",
+				Region:   "test",
+			})
+			assert.NoError(t, err)
+			err = os.WriteFile("workspace.yaml", data, os.FileMode(0755))
 			assert.NoError(t, err)
 
 			client := mocks.NewClient(t)
