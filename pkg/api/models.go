@@ -251,6 +251,7 @@ type ConfigurationItem struct {
 	Optional      bool
 	Condition     *Condition
 	Validation    *Validation
+	Values        []string
 }
 
 type Artifact struct {

@@ -9,4 +9,5 @@ const (
 	File     = "FILE"
 	Function = "FUNCTION"
 	Password = "PASSWORD"
+	Enum     = "ENUM"
 )

@@ -27,6 +27,20 @@ func TestConfigureEnvVariables(t *testing.T) {
 		envVars       map[string]string
 	}{
 		{
+			name: "test enum item",
+			item: &api.ConfigurationItem{
+				Name:    "test_item",
+				Default: "",
+				Type:    bundle.Enum,
+				Values:  []string{"a", "b", "c"},
+			},
+			context:       &manifest.Context{},
+			ctx:           map[string]interface{}{},
+			repo:          "test",
+			envVars:       map[string]string{"PLURAL_TEST_TEST_ITEM": "a"},
+			expectedValue: "a",
+		},
+		{
 			name: "test integer item",
 			item: &api.ConfigurationItem{
 				Name:    "test_item",

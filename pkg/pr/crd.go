@@ -117,6 +117,11 @@ func configuration(pr *v1alpha1.PrAutomation, contextFile string) (map[string]in
 			}
 			ci.Validation = validation
 		}
+		if len(t.Values) > 0 {
+			ci.Values = algorithms.Map(t.Values, func(t *string) string {
+				return *t
+			})
+		}
 		return ci
 	})
 	utils.Highlight("Lets' fill out the configuration for this PR automation:\n")
