@@ -199,6 +199,23 @@ func Configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 			return err
 		}
 		ctx[item.Name] = contents
+
+	case Enum:
+		var res string
+		if len(item.Values) == 0 {
+			return fmt.Errorf("no values defined for %s", item.Name)
+		}
+		if value := getEnvVar(repo, item.Name); value != "" {
+			res = value
+		} else {
+			prompt, opts := enumSurvey(def, item)
+			err = survey.AskOne(prompt, &res, opts...)
+			if err != nil {
+				return err
+			}
+		}
+
+		ctx[item.Name] = res
 	}
 
 	return

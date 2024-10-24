@@ -14,6 +14,8 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
+const enterTheValue = "Enter the value"
+
 func stringValidator(item *api.ConfigurationItem) survey.AskOpt {
 	return survey.WithValidator(func(val interface{}) error {
 		res, _ := val.(string)
@@ -33,7 +35,7 @@ func stringSurvey(def string, item *api.ConfigurationItem) (survey.Prompt, []sur
 	}
 
 	return &survey.Input{
-		Message: "Enter the value",
+		Message: enterTheValue,
 		Default: def,
 	}, opts
 }
@@ -45,7 +47,7 @@ func passwordSurvey(item *api.ConfigurationItem) (survey.Prompt, []survey.AskOpt
 		opts = append(opts, survey.WithValidator(survey.Required))
 	}
 
-	return &survey.Password{Message: "Enter the value"}, opts
+	return &survey.Password{Message: enterTheValue}, opts
 }
 
 func boolSurvey() (survey.Prompt, []survey.AskOpt) {
@@ -54,7 +56,7 @@ func boolSurvey() (survey.Prompt, []survey.AskOpt) {
 
 func intSurvey(def string) (survey.Prompt, []survey.AskOpt) {
 	return &survey.Input{
-		Message: "Enter the value",
+		Message: enterTheValue,
 		Default: def,
 	}, []survey.AskOpt{survey.WithValidator(survey.Required)}
 }
@@ -104,6 +106,19 @@ func fileSurvey(def string, item *api.ConfigurationItem) (prompt survey.Prompt, 
 			files, _ := filepath.Glob(CleanPath(path) + "*")
 			return files
 		},
+	}
+	return
+}
+
+func enumSurvey(def string, item *api.ConfigurationItem) (input survey.Prompt, opts []survey.AskOpt) {
+	opts = []survey.AskOpt{survey.WithValidator(survey.Required)}
+	if def == "" && len(item.Values) > 0 {
+		def = item.Values[0]
+	}
+	input = &survey.Select{
+		Message: enterTheValue,
+		Default: def,
+		Options: item.Values,
 	}
 	return
 }
