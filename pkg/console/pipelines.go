@@ -44,7 +44,7 @@ type Gate struct {
 	Cluster string `json:"cluster"`
 }
 
-func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragment, error) {
+func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttributes) (*gqlclient.PipelineFragmentMinimal, error) {
 	result, err := c.client.SavePipeline(c.ctx, name, attrs)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "SavePipeline")
