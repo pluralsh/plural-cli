@@ -56,7 +56,7 @@ func readFiles(paths []string) (map[string]string, error) {
 // Notes:
 //   - YAML encoder adds a new line at the end!
 //   - YAML encoder can reorder fields compared to the overlay YAML.
-//	   Output YAML field order is stable though.
+//     Output YAML field order is stable though.
 const (
 	baseYAMLIn = `include:
   - directory: foo/foo1
