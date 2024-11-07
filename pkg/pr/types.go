@@ -2,7 +2,9 @@ package pr
 
 import (
 	"os"
+	"strings"
 
+	console "github.com/pluralsh/console/go/client"
 	"sigs.k8s.io/yaml"
 )
 
@@ -27,6 +29,37 @@ type UpdateSpec struct {
 	Yq                string             `json:"yq"`
 	MatchStrategy     string             `json:"match_strategy"`
 	RegexReplacements []RegexReplacement `json:"regex_replacements"`
+	YamlOverlays      []YamlOverlay      `json:"yaml_overlays"`
+}
+
+type ListMerge string
+
+func toListMerge(listMerge *console.ListMerge) ListMerge {
+	// default to overwrite
+	if listMerge == nil {
+		return ListMergeOverwrite
+	}
+
+	switch strings.ToUpper(string(*listMerge)) {
+	case string(console.ListMergeOverwrite):
+		return ListMergeOverwrite
+	case string(console.ListMergeAppend):
+		return ListMergeAppend
+	}
+
+	return ListMergeOverwrite
+}
+
+const (
+	ListMergeAppend    = "APPEND"
+	ListMergeOverwrite = "OVERWRITE"
+)
+
+type YamlOverlay struct {
+	File      string    `json:"file"`
+	Yaml      string    `json:"yaml"`
+	ListMerge ListMerge `json:"list_merge"`
+	Templated bool      `json:"templated"`
 }
 
 type CreateSpec struct {
