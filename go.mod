@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/resourcemanager v1.9.4
 	cloud.google.com/go/serviceusage v1.6.0
 	cloud.google.com/go/storage v1.35.1
+	dario.cat/mergo v1.0.1
 	filippo.io/age v1.1.1
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1
@@ -40,6 +41,7 @@ require (
 	github.com/ktrysmt/go-bitbucket v0.9.55
 	github.com/likexian/doh v0.7.1
 	github.com/linode/linodego v1.26.0
+	github.com/lithammer/dedent v1.1.0
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -47,8 +49,8 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pluralsh/console/go/client v1.22.3
-	github.com/pluralsh/console/go/controller v0.0.0-20240918005717-8285a4b181b1
+	github.com/pluralsh/console/go/client v1.23.0
+	github.com/pluralsh/console/go/controller v0.0.0-20241106170618-0c255ee72c4c
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.1.10
@@ -81,7 +83,6 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/longrunning v0.5.4 // indirect
-	dario.cat/mergo v1.0.0 // indirect
 	github.com/99designs/gqlgen v0.17.49 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect

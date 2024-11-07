@@ -1,11 +1,14 @@
 package pr
 
 import (
+	"bytes"
 	"io/fs"
 	"path/filepath"
 	"regexp"
 
+	"dario.cat/mergo"
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
@@ -14,6 +17,10 @@ func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
 	}
 
 	if err := processRegexReplacements(updates.RegexReplacements, ctx); err != nil {
+		return err
+	}
+
+	if err := processYamlOverlays(updates.YamlOverlays, ctx); err != nil {
 		return err
 	}
 
@@ -82,6 +89,70 @@ func processRegexReplacements(replacements []RegexReplacement, ctx map[string]in
 	}
 
 	return nil
+}
+
+func processYamlOverlays(overlays []YamlOverlay, ctx map[string]interface{}) error {
+	if len(overlays) == 0 {
+		return nil
+	}
+
+	for _, overlay := range overlays {
+		var err error
+		var overlayYaml = []byte(overlay.Yaml)
+
+		if overlay.Templated {
+			overlayYaml, err = templateReplacement([]byte(overlay.Yaml), ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		mergeFunc := func(data []byte) ([]byte, error) {
+			return mergeYaml(data, overlayYaml, overlay.ListMerge)
+		}
+
+		if err = replaceInPlace(overlay.File, mergeFunc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func mergeYaml(base, overlay []byte, merge ListMerge) ([]byte, error) {
+	baseMap := make(map[string]interface{})
+	overlayMap := make(map[string]interface{})
+
+	if err := yaml.Unmarshal(base, &baseMap); err != nil {
+		return nil, err
+	}
+
+	if err := yaml.Unmarshal(overlay, &overlayMap); err != nil {
+		return nil, err
+	}
+
+	options := []func(*mergo.Config){mergo.WithOverride, mergo.WithSliceDeepCopy}
+	if merge == ListMergeAppend {
+		options = append(options, mergo.WithAppendSlice)
+	}
+
+	if err := mergo.Merge(
+		&baseMap,
+		overlayMap,
+		options...,
+	); err != nil {
+		return nil, err
+	}
+
+	var b bytes.Buffer
+	encoder := yaml.NewEncoder(&b)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(baseMap); err != nil {
+		return nil, err
+	}
+
+	defer encoder.Close()
+	return b.Bytes(), nil
 }
 
 func updateFile(path string, updates *UpdateSpec, replacement []byte) error {

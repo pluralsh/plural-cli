@@ -5,11 +5,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/samber/lo"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/pluralsh/console/go/controller/api/v1alpha1"
 	"github.com/pluralsh/polly/algorithms"
@@ -152,6 +154,7 @@ func updates(pr *v1alpha1.PrAutomation) *UpdateSpec {
 		Regexes:           make([]string, 0),
 		Files:             make([]string, 0),
 		RegexReplacements: make([]RegexReplacement, 0),
+		YamlOverlays:      make([]YamlOverlay, 0),
 	}
 	if u.ReplaceTemplate != nil {
 		prUpdates.ReplaceTemplate = *u.ReplaceTemplate
@@ -175,16 +178,22 @@ func updates(pr *v1alpha1.PrAutomation) *UpdateSpec {
 	}
 	if len(u.RegexReplacements) > 0 {
 		prUpdates.RegexReplacements = algorithms.Map(u.RegexReplacements, func(t v1alpha1.RegexReplacement) RegexReplacement {
-			r := RegexReplacement{
+			return RegexReplacement{
 				Regex:       t.Regex,
 				Replacement: t.Replacement,
 				File:        t.File,
-				Templated:   false,
+				Templated:   lo.FromPtr(t.Templated),
 			}
-			if t.Templated != nil {
-				r.Templated = *t.Templated
+		})
+	}
+	if len(u.YamlOverlays) > 0 {
+		prUpdates.YamlOverlays = algorithms.Map(u.YamlOverlays, func(y v1alpha1.YamlOverlay) YamlOverlay {
+			return YamlOverlay{
+				File:      y.File,
+				Yaml:      y.Yaml,
+				Templated: lo.FromPtr(y.Templated),
+				ListMerge: toListMerge(y.ListMerge),
 			}
-			return r
 		})
 	}
 	return prUpdates
