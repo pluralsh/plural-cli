@@ -31,3 +31,5 @@ jobs:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+      - name: Print Plural CLI version
+        run: plural version
