@@ -41,8 +41,14 @@ git-push:
 	git push
 
 .PHONY: install
-install:
+install: install-cli install-ctl
+
+.PHONY: install-cli
+install-cli:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
+
+.PHONY: install-ctl
+install-ctl:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plrlctl ./cmd/plrlctl
 
 .PHONY: build-cli

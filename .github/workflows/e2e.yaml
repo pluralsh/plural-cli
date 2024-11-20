@@ -27,6 +27,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
       - name: Setup Plural CLI
-        run: go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
+        run: make install-cli
       - name: Print Plural CLI version
         run: plural version
