@@ -33,5 +33,8 @@ jobs:
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
       - name: Add Plural CLI to PATH
         run: echo "$HOME/dist/linux_amd64_v1/plural-cli_linux_amd64_v1" >> "$GITHUB_PATH"
+      - run: echo $GITHUB_PATH
+      - run: ls $HOME
+      - run: ls $HOME/dist
       - name: Print Plural CLI version
         run: plural version
