@@ -110,8 +110,8 @@ build: ## Build the Docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
-.PHONY: build-ctl
-build-ctl: ## Build the plrctl Docker image
+.PHONY: build-ctl-image
+build-ctl-image: ## Build the plrctl Docker image
 	docker build --build-arg APP_NAME=$(APP_CTL_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -121,8 +121,8 @@ build-ctl: ## Build the plrctl Docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_CTL_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_CTL_NAME):$(APP_VSN) -f dockerfiles/plrlctl/Dockerfile  .
 
-.PHONY: build-cloud
-build-cloud: ## build the cloud docker image
+.PHONY: build-cloud-image
+build-cloud-image: ## build the cloud docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -132,8 +132,8 @@ build-cloud: ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
-.PHONY: build-dind
-build-dind: ## build the dind docker image
+.PHONY: build-dind-image
+build-dind-image: ## build the dind docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -171,7 +171,7 @@ pull: ## pulls new server image
 	docker-compose pull
 
 .PHONY: serve
-serve: build-cloud ## build cloud version of plural-cli and start plural serve in docker
+serve: build-cloud-image ## build cloud version of plural-cli and start plural serve in docker
 	docker kill plural-cli || true
 	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
 
