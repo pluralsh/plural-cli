@@ -31,5 +31,7 @@ jobs:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+      - name: Add Plural CLI to PATH
+        run: echo "$HOME/dist/linux_amd64_v1/plural-cli_linux_amd64_v1/plural" >> "$GITHUB_PATH"
       - name: Print Plural CLI version
         run: plural version
