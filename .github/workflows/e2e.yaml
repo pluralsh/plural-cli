@@ -22,6 +22,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
       - name: Build Plural CLI
+        id: goreleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
@@ -33,8 +34,6 @@ jobs:
           GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
       - name: Add Plural CLI to PATH
         run: echo "$HOME/dist/linux_amd64_v1/plural-cli_linux_amd64_v1" >> "$GITHUB_PATH"
-      - run: echo $GITHUB_PATH
-      - run: ls $HOME
-      - run: ls $HOME/dist
+      - run: echo ${{steps.goreleaser.outputs.artifacts}}
       - name: Print Plural CLI version
         run: plural version
