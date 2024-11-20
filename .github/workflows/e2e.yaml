@@ -1,0 +1,33 @@
+name: E2E
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    name: Test `plural up`
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Build Plural CLI
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser-pro
+          version: '~> v2'
+          args: build --clean --snapshot --single-target --id plural-cli
+        env:
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
