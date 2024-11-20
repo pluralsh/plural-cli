@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - main
+env:
+  GOPATH: /home/runner/go/
+  GOBIN: /home/runner/go/bin
 jobs:
   build:
     name: Test `plural up`
@@ -19,21 +22,11 @@ jobs:
         uses: actions/setup-go@v4.1.0
         with:
           go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-      - name: Build Plural CLI
-        id: goreleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser-pro
-          version: '~> v2'
-          args: build --clean --snapshot --single-target --id plural-cli
-        env:
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
-      - name: Add Plural CLI to PATH
-        run: echo "$HOME/dist/linux_amd64_v1/plural-cli_linux_amd64_v1" >> "$GITHUB_PATH"
-      - run: echo ${{steps.goreleaser.outputs.artifacts}}
+      - name: Setup Plural CLI
+        run: go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
       - name: Print Plural CLI version
         run: plural version
