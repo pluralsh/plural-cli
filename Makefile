@@ -10,6 +10,7 @@ APP_CTL_NAME ?= plrlctl
 APP_VSN ?= $(shell git describe --tags --always --dirty)
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
+TIMESTAMP ?= $(shell date +%s)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= arm64
@@ -183,6 +184,22 @@ setup-tests:
 .PHONY: test
 test: setup-tests
 	gotestsum --format testname -- -v -race ./pkg/... ./cmd/command/...
+
+.PHONY: e2e
+e2e: --ensure-venom
+	@VENOM_VAR_branch=e2e-gcp-${TIMESTAMP} \
+	VENOM_VAR_directory=../../testout/gcp \
+	VENOM_VAR_email=test-cli-e2e-gcp@srv.plural.sh \
+	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
+	VENOM_VAR_privateKeyPath=${PLRL_CLI_E2E_GCP_PRIVATE_KEY_PATH} \
+	VENOM_VAR_username=test-cli-e2e-gcp \
+	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
+	VENOM_VAR_pluralHome=${HOME}/.plural \
+	VENOM_VAR_gitRepoPrivateKey=${PLRL_CLI_E2E_GCP_PRIVATE_KEY} \
+	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
+ 		venom run --output-dir testout --stop-on-failure test/plural -vv ;\
+ 		# rm -rf testout
+
 
 .PHONY: format
 format: ## formats all go code to prep for linting

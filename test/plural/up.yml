@@ -1,0 +1,50 @@
+name: Plural up
+description: TODO
+
+vars:
+  branch: ''
+  directory: ''
+  email: ''
+  gitRepo: ''
+  privateKeyPath: ''
+  username: ''
+  token: ''
+  pluralHome: ''
+  gitRepoPrivateKey: ''
+
+testcases:
+  - name: Setup Git
+    steps:
+      - type: git-setup
+        branch: {{ .branch }}
+        directory: {{ .directory }}
+        email: {{ .email }}
+        gitRepo: {{ .gitRepo }}
+        privateKeyPath: {{ .privateKeyPath }}
+        username: {{ .username }}
+  - name: Setup workspace file
+    steps:
+      - type: workspace-setup
+        name: {{ .username }}
+        directory: {{ .directory }}
+        provider: 'gcp'
+        region: 'us-central1'
+        email: {{ .email }}
+  - name: Setup context file
+    steps:
+      - type: context-setup
+        directory: {{ .directory }}
+        gitRepo: {{ .gitRepo }}
+        gitRepoPrivateKey: {{ .gitRepoPrivateKey }}
+  - name: Plural login
+    steps:
+      - type: plural-login
+        email: {{ .email }}
+        name: {{ .username }}
+        pluralHome: {{ .pluralHome }}
+        token: {{ .token }}
+  - name: Plural up
+    steps:
+      - script: |
+          cd {{ .directory }} ;\
+          plural up

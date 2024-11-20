@@ -1,0 +1,20 @@
+executor: plural-login
+input:
+  email: ''
+  name: ''
+  pluralHome: ''
+  token: ''
+steps:
+  - script: |
+      cat << EOF > {{ .input.pluralHome }}/config.yml
+      apiVersion: platform.plural.sh/v1alpha1
+      kind: Config
+      metadata:
+        name: {{ .input.name }}
+      spec:
+        email: {{ .input.email }}
+        token: {{ .input.token }}
+        namespacePrefix: ""
+        endpoint: ""
+        lockProfile: ""
+        reportErrors: true

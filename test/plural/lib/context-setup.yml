@@ -1,0 +1,19 @@
+executor: context-setup
+input:
+  directory: ''
+  gitRepo: ''
+  gitRepoPrivateKey: ''
+steps:
+  - script: |
+      cat << EOF > {{ .input.directory }}/context.yaml
+      apiVersion: plural.sh/v1alpha1
+      kind: Context
+      spec:
+        bundles: []
+        buckets: []
+        domains: []
+        configuration:
+          console:
+            repo_url: {{ .input.gitRepo }}
+            private_key: {{ .input.gitRepoPrivateKey | b64dec }}
+

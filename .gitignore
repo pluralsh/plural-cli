@@ -9,6 +9,7 @@ workspace.yaml
 # Build files and binaries
 dist/
 build/
+testout/
 *.exe
 *.exe~
 *.dll
