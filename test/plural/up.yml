@@ -11,6 +11,7 @@ vars:
   token: ''
   pluralHome: ''
   gitRepoPrivateKey: ''
+  project: ''
 
 testcases:
   - name: Setup Git
@@ -30,6 +31,7 @@ testcases:
         provider: 'gcp'
         region: 'us-central1'
         email: {{ .email }}
+        project: {{ .project }}
   - name: Setup context file
     steps:
       - type: context-setup

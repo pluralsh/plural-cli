@@ -5,6 +5,7 @@ input:
   provider: ''
   region: ''
   email: ''
+  project: ''
 steps:
   - script: |
       cat << EOF > {{ .input.directory }}/workspace.yaml
@@ -15,7 +16,7 @@ steps:
       spec:
         cluster: {{ .input.name }}
         bucket: {{ .input.name }}-tf-state
-        project: ""
+        project: {{ .input.project }}
         provider: {{ .input.provider }}
         region: {{ .input.region }}
         owner:
