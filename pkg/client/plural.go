@@ -121,6 +121,10 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		if err := proj.Flush(); err != nil {
 			return err
 		}
+		if err := common.CryptoInit(c); err != nil {
+			return err
+		}
+		_ = wkspace.DownloadReadme()
 		return nil
 	}
 
