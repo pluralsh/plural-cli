@@ -24,7 +24,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "template-branch", dir); err != nil {
 		return
 	}
 
@@ -88,8 +88,8 @@ func (ctx *Context) Generate() (dir string, err error) {
 
 	ctx.changeDelims()
 	overwrites := []templatePair{
-		{from: "bootstrap/setup.yaml", to: "bootstrap/setup.yaml"},
-		{from: "bootstrap/pr-automation", to: "bootstrap/pr-automation"},
+		{from: "resources", to: "resources"},
+		{from: "bootstrap", to: "bootstrap"},
 	}
 
 	for _, tpl := range overwrites {
