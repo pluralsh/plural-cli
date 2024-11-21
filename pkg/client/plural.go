@@ -117,7 +117,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		proj.Context["branch"] = branch
+		proj.Context["Branch"] = branch
 		if err := proj.Flush(); err != nil {
 			return err
 		}
