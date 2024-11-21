@@ -10,8 +10,8 @@ env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
 jobs:
-  build:
-    name: Test `plural up`
+  plural-up-gcp:
+    name: Test `plural up` / GCP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,9 +24,55 @@ jobs:
           go-version-file: go.mod
       - name: Add GOBIN to PATH
         run: echo $GOBIN >> $GITHUB_PATH
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
       - name: Setup Plural CLI
         run: make install-cli
       - name: Print Plural CLI version
         run: plural version
+      - name: Print Terraform version
+        run: terraform --version
+      - name: Print Google Cloud CLI version
+        run: gcloud --version
+  plural-up-aws:
+    name: Test `plural up` / AWS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Plural CLI
+        run: make install-cli
+      - name: Print Plural CLI version
+        run: plural version
+      - name: Print Terraform version
+        run: terraform --version
+      - name: Print AWS CLI version
+        run: aws --version
+  plural-up-azure:
+    name: Test `plural up` / Azure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Plural CLI
+        run: make install-cli
+      - name: Print Plural CLI version
+        run: plural version
+      - name: Print Terraform version
+        run: terraform --version
+      - name: Print Azure CLI version
+        run: az --version
