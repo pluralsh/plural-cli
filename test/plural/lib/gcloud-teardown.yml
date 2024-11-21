@@ -1,0 +1,11 @@
+executor: gcloud-teardown
+input:
+  email: ''
+  saKeyFile: ''
+  project: ''
+
+steps:
+  - script: |
+      gcloud auth activate-service-account {{ .input.email }} --key-file={{ .input.saKeyFile }} ;\
+      gcloud -q projects delete {{ .input.project }}
+      
