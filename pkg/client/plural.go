@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"os"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -112,6 +113,14 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 			}
 		}
 		utils.Highlight("Domain OK \n")
+		branch, err := git.CurrentBranch()
+		if err != nil {
+			return err
+		}
+		proj.Context["branch"] = branch
+		if err := proj.Flush(); err != nil {
+			return err
+		}
 		return nil
 	}
 
