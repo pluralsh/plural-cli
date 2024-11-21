@@ -1,0 +1,6 @@
+executor: git-teardown
+input:
+  branch: ''
+steps:
+  - script: |
+      git push -d origin {{ .input.branch }}
