@@ -97,9 +97,21 @@ func (p *Plural) AssumeServiceAccount(conf config.Config, man *manifest.ProjectM
 func (p *Plural) HandleInit(c *cli.Context) error {
 	gitCreated := false
 	repo := ""
+	p.InitPluralClient()
 
 	if utils.Exists("./workspace.yaml") {
-		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized...\n")
+		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
+		utils.Highlight("Checking domain...\n")
+		proj, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+		if proj.Network.PluralDns {
+			if err := p.Client.CreateDomain(proj.Network.Subdomain); err != nil {
+				return err
+			}
+		}
+		utils.Highlight("Domain OK \n")
 		return nil
 	}
 
@@ -111,8 +123,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	if err := common.HandleLogin(c); err != nil {
 		return err
 	}
-
-	p.InitPluralClient()
 
 	me, err := p.Me()
 	if err != nil {
