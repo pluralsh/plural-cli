@@ -81,6 +81,13 @@ testcases:
           cd {{ .directory }} ;\
           plural up
 
+  - name: Azure Teardown
+    skip:
+      - {{ .provider }} NotEqual azure
+    steps:
+      - type: azure-teardown
+        resourceGroup: {{ .project }}
+
 #  - name: Google Cloud Teardown
 #    steps:
 #      - type: gcloud-teardown
