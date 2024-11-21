@@ -94,9 +94,21 @@ testcases:
           cd {{ .directory }} ;\
           plural up
 
-#  - name: Google Cloud Teardown
+  - name: Azure teardown
+    skip:
+      - {{ .provider }} NotEqual azure
+    steps:
+      - type: azure-teardown
+        resourceGroup: {{ .project }}
+
+#  - name: Google Cloud teardown
 #    steps:
 #      - type: gcloud-teardown
 #        email: {{ .gcpEmail }}
 #        saKeyFile: {{ .gcpSAKeyFile }}
 #        project: {{ .project }}
+
+  - name: Git teardown
+    steps:
+        - type: git-teardown
+          branch: {{ .branch }}
