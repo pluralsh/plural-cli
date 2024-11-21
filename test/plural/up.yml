@@ -16,6 +16,11 @@ vars:
   provider: ''
   region: ''
 
+  # Azure variables
+  azureSubscriptionId: ''
+  azureTenantId: ''
+  azureStorageAccount: ''
+
   # GCP variables
   gcpEmail: ''
   gcpSAKeyFile: ''
@@ -42,6 +47,9 @@ testcases:
         region: {{ .region }}
         email: {{ .email }}
         project: {{ .project }}
+        azureSubscriptionId: {{ .azureSubscriptionId }}
+        azureTenantId: {{ .azureTenantId }}
+        azureStorageAccount: {{ .azureStorageAccount }}
 
   - name: Setup context file
     steps:

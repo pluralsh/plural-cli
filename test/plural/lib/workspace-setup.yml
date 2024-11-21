@@ -6,6 +6,11 @@ input:
   region: ''
   email: ''
   project: ''
+
+  # Azure variables
+  azureSubscriptionId: ''
+  azureTenantId: ''
+  azureStorageAccount: ''
 steps:
   - script: |
       cat << EOF > {{ .input.directory }}/workspace.yaml
@@ -24,5 +29,9 @@ steps:
         network:
           subdomain: {{ .input.name }}.onplural.sh
           pluraldns: true
+        availabilityzones: []
         bucketPrefix: {{ .input.name }}
-        context: {}
+        context:
+          StorageAccount: {{ .input.azureStorageAccount }}
+          SubscriptionId: {{ .input.azureSubscriptionId }}
+          TenantId: {{ .input.azureTenantId }}
