@@ -1,0 +1,76 @@
+executor: check-required
+input:
+  branch: ''
+  directory: ''
+  email: ''
+  gitRepo: ''
+  privateKeyPath: ''
+  username: ''
+  token: ''
+  pluralHome: ''
+  gitRepoPrivateKey: ''
+  project: ''
+  provider: ''
+  region: ''
+
+steps:
+  - name: Branch
+    script: echo {{ .input.branch }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Directory
+    script: echo {{ .input.directory }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Email
+    script: echo {{ .input.email }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Git Repo
+    script: echo {{ .input.gitRepo }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Private Key Path
+    script: echo {{ .input.privateKeyPath }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Username
+    script: echo {{ .input.username }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Token
+    script: echo {{ .input.token }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Plural Home
+    script: echo {{ .input.pluralHome }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Git Repo Private Key
+    script: echo {{ .input.gitRepoPrivateKey }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Project
+    script: echo {{ .input.project }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Provider
+    script: echo {{ .input.provider }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+
+  - name: Region
+    script: echo {{ .input.region }}
+    assertions:
+      - result.systemout ShouldNotBeBlank
+

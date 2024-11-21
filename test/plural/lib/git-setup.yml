@@ -13,6 +13,6 @@ steps:
       git config --local user.email {{ .input.email }} ;\
       git config --local user.name {{ .input.username }} ;\
       git checkout -b {{ .input.branch }} ;\
-      git push -u origin {{ .input.branch }}
+      GIT_SSH_COMMAND='ssh -i {{ .input.privateKeyPath }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin {{ .input.branch }}
     info:
       - 'Git Repository: {{ .input.gitRepo }}'

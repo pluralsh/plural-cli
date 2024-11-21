@@ -2,14 +2,16 @@ package client
 
 import (
 	"fmt"
-	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"os"
+
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+
+	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
-	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"

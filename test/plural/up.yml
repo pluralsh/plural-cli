@@ -27,7 +27,20 @@ vars:
   gcpOrgID: ''
   gcpBillingID: ''
 
+secrets:
+  - gitRepoPrivateKey
+  - gcpSAKeyFile
+  - gcpOrgID
+  - gcpBillingID
+  - azureSubscriptionId
+  - azureTenantId
+  - azureStorageAccount
+
 testcases:
+  - name: Check required arguments
+    steps:
+      - type: check-required
+
   - name: Setup Git
     steps:
       - type: git-setup

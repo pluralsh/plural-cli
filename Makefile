@@ -197,12 +197,12 @@ e2e: --ensure-venom
 	VENOM_VAR_directory=../../testout/gcp \
 	VENOM_VAR_email=test-cli-e2e-gcp@srv.plural.sh \
 	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
-	VENOM_VAR_privateKeyPath=${PLRL_CLI_E2E_GCP_PRIVATE_KEY_PATH} \
+	VENOM_VAR_privateKeyPath=${PLRL_CLI_E2E_PRIVATE_KEY_PATH} \
 	VENOM_VAR_username=test-cli-e2e-gcp \
 	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
 	VENOM_VAR_pluralHome=${HOME}/.plural \
-	VENOM_VAR_gitRepoPrivateKey=${PLRL_CLI_E2E_GCP_PRIVATE_KEY} \
-	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_gitRepoPrivateKey=${PLRL_CLI_E2E_PRIVATE_KEY} \
+	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT}-${TIMESTAMP} \
 	VENOM_VAR_provider=gcp \
 	VENOM_VAR_region=us-central1 \
 	VENOM_VAR_gcpSAKeyFile=${PLRL_CLI_E2E_GCLOUD_KEY_FILE} \
@@ -211,7 +211,7 @@ e2e: --ensure-venom
 	VENOM_VAR_gcpBillingID=${PLRL_CLI_E2E_GCLOUD_BILLING_ID} \
 	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
 	PLURAL_UP_AFFIRM_DEPLOY=true \
- 		venom run --output-dir testout --stop-on-failure test/plural -vv ;\
+ 		venom run -v --output-dir testout --stop-on-failure test/plural ;\
  		# rm -rf testout
 
 
