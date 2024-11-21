@@ -30,12 +30,8 @@ jobs:
         run: make install-cli
       - name: Print Plural CLI version
         run: plural version
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          version: ">= 363.0.0"
-      - name: Print Google Cloud SDK info
-        run: gcloud info
+      - name: Print Google Cloud CLI version
+        run: gcloud --version
   plural-up-aws:
     name: Test `plural up` / AWS
     runs-on: ubuntu-latest
@@ -78,7 +74,5 @@ jobs:
         run: make install-cli
       - name: Print Plural CLI version
         run: plural version
-      - name: Set up Azure CLI
-        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Print Azure CLI version
         run: az --version
