@@ -45,13 +45,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Get time
-        id: time
-        run: date +%s >> $GITHUB_OUTPUT
-      - name: Test time step
-        env:
-          TIME: {{ steps.time.outputs.time }}
-        run: echo $TIME
+      - name: Set TIMESTAMP environment variable
+        run: echo "TIMESTAMP=(date +%s)" >> $GITHUB_ENV
+      - name: Test time
+        run: echo TIMESTAMP
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
