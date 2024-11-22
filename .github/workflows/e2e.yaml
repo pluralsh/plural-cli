@@ -9,6 +9,8 @@ on:
 env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
+  PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
+  PLURAL_UP_AFFIRM_DEPLOY: true
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -18,6 +20,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Store test timestamp
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -45,13 +49,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Get time
-        id: time
-        run: date +%s >> $GITHUB_OUTPUT
-      - name: Test time step
-        env:
-          TIME: {{ steps.time.outputs.time }}
-        run: echo $TIME
+      - name: Store test timestamp
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -84,17 +83,15 @@ jobs:
 #          VENOM_VAR_region: eastus
 #          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
 #          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-#          VENOM_VAR_azureStorageAccount: e2e-123 # Use timestamp for uniqueness
-#          VENOM_VAR_project: e2e-123 # Use timestamp for uniqueness
-#          VENOM_VAR_directory: ${{ HOME }}/testout/azure # Check if it works
+#          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
+#          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+#          VENOM_VAR_directory: ${{ env.HOME }}/testout/azure
 #          VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
 #          VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
 #          VENOM_VAR_privateKeyPath: '' # Put data from the secret above in a file and reference it here
-#          VENOM_VAR_branch: e2e-azure-123 # Use timestamp for uniqueness
+#          VENOM_VAR_branch: e2e-azure-${{ env.TIMESTAMP }}
 #          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
 #          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
 #          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
-#          VENOM_VAR_pluralHome: ${{ HOME }}/.plural # Check if it works
-#          PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
-#          PLURAL_UP_AFFIRM_DEPLOY: true
+#          VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
 #        run: venom run -v --output-dir ${HOME}/testout --stop-on-failure test/plural
