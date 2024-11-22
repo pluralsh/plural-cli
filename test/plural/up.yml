@@ -109,7 +109,9 @@ testcases:
     steps:
       - script: |
           cd {{ .directory }} ;\
-          plural up
+          plural up --commit "Plural up e2e cluster"
+        retry: 3
+        delay: 5
 
   - name: Azure teardown
     skip:
