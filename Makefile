@@ -193,7 +193,8 @@ test: setup-tests
 
 .PHONY: e2e
 e2e: --ensure-venom
-	@VENOM_VAR_branch=e2e-${PLRL_CLI_E2E_PROVIDER}-${TIMESTAMP} \
+	@rm -rf testout ;\
+	VENOM_VAR_branch=e2e-${PLRL_CLI_E2E_PROVIDER}-${TIMESTAMP} \
 	VENOM_VAR_directory=../../testout/${PLRL_CLI_E2E_PROVIDER} \
 	VENOM_VAR_email=${PLRL_CLI_E2E_SA_EMAIL} \
 	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
@@ -214,9 +215,7 @@ e2e: --ensure-venom
 	VENOM_VAR_gcpBillingID=${PLRL_CLI_E2E_GCLOUD_BILLING_ID} \
 	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
 	PLURAL_UP_AFFIRM_DEPLOY=true \
- 		venom run -v --output-dir testout --stop-on-failure test/plural ;\
- 		# rm -rf testout
-
+ 		venom run -v --output-dir testout --stop-on-failure test/plural
 
 .PHONY: format
 format: ## formats all go code to prep for linting
