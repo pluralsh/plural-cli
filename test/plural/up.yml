@@ -64,12 +64,6 @@ testcases:
   - name: Setup Git
     steps:
       - type: git-setup
-        branch: {{ .branch }}
-        directory: {{ .directory }}
-        email: {{ .email }}
-        gitRepo: {{ .gitRepo }}
-        privateKeyPath: {{ .privateKeyPath }}
-        username: {{ .username }}
 
   - name: Setup workspace file
     steps:
@@ -126,7 +120,7 @@ testcases:
 
   - name: Google Cloud teardown
     skip:
-      - {{.provider}} NotEqual gcp
+      - {{.provider}} ShouldNotEqual gcp
     steps:
       - type: gcloud-teardown
         email: {{ .gcpEmail }}

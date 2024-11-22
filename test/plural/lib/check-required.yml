@@ -15,62 +15,62 @@ input:
 
 steps:
   - name: Branch
-    script: echo {{ .input.branch }}
+    script: "echo Branch {{ .input.branch }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Branch .+$'
 
   - name: Directory
-    script: echo {{ .input.directory }}
+    script: "echo Directory {{ .input.directory }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Directory .+$'
 
   - name: Email
-    script: echo {{ .input.email }}
+    script: "echo Email {{ .input.email }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Email .+$'
 
   - name: Git Repo
-    script: echo {{ .input.gitRepo }}
+    script: "echo Git Repo {{ .input.gitRepo }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Git Repo .+$'
 
   - name: Private Key Path
-    script: echo {{ .input.privateKeyPath }}
+    script: "echo Private Key Path {{ .input.privateKeyPath }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Private Key Path .+$'
 
   - name: Username
-    script: echo {{ .input.username }}
+    script: "echo Username {{ .input.username }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Username .+$'
 
   - name: Token
-    script: echo {{ .input.token }}
+    script: "echo Token {{ .input.token }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Token .+$'
 
   - name: Plural Home
-    script: echo {{ .input.pluralHome }}
+    script: "echo Plural Home {{ .input.pluralHome }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Plural Home .+$'
 
   - name: Git Repo Private Key
-    script: echo {{ .input.gitRepoPrivateKey }}
+    script: "echo Git Repo Private Key {{ .input.gitRepoPrivateKey }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Git Repo Private Key .+$'
 
   - name: Project
-    script: echo {{ .input.project }}
+    script: "echo Project {{ .input.project }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Project .+$'
 
   - name: Provider
-    script: echo {{ .input.provider }}
+    script: "echo Provider {{ .input.provider }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Provider .+$'
 
   - name: Region
-    script: echo {{ .input.region }}
+    script: "echo Region {{ .input.region }}"
     assertions:
-      - result.systemout ShouldNotBeBlank
+      - result.systemout ShouldMatchRegex '^Region .+$'
 
