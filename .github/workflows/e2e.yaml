@@ -71,3 +71,23 @@ jobs:
           client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#      - name: Run tests
+#        env:
+#          VENOM_VAR_provider: azure
+#          VENOM_VAR_region: eastus
+#          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
+#          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#          VENOM_VAR_azureStorageAccount: e2e-123 # Use timestamp for uniqueness
+#          VENOM_VAR_project: e2e-123 # Use timestamp for uniqueness
+#          VENOM_VAR_directory: ${{ HOME }}/testout/azure # Check if it works
+#          VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
+#          VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
+#          VENOM_VAR_privateKeyPath: '' # Put data from the secret above in a file and reference it here
+#          VENOM_VAR_branch: e2e-azure-123 # Use timestamp for uniqueness
+#          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
+#          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
+#          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
+#          VENOM_VAR_pluralHome: ${{ HOME }}/.plural # Check if it works
+#          PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
+#          PLURAL_UP_AFFIRM_DEPLOY: true
+#        run: venom run -v --output-dir ${HOME}/testout --stop-on-failure test/plural
