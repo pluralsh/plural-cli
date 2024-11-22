@@ -11,7 +11,7 @@ env:
   GOBIN: /home/runner/go/bin
 jobs:
   plural-up-gcp:
-    name: Test `plural up` / GCP
+    name: plural up / GCP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,30 +32,8 @@ jobs:
         run: terraform --version
       - name: Print Google Cloud CLI version
         run: gcloud --version
-  plural-up-aws:
-    name: Test `plural up` / AWS
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup Go
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version-file: go.mod
-      - name: Add GOBIN to PATH
-        run: echo $GOBIN >> $GITHUB_PATH
-      - name: Setup Plural CLI
-        run: make install-cli
-      - name: Print Plural CLI version
-        run: plural version
-      - name: Print Terraform version
-        run: terraform --version
-      - name: Print AWS CLI version
-        run: aws --version
   plural-up-azure:
-    name: Test `plural up` / Azure
+    name: plural up / Azure
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -76,3 +54,9 @@ jobs:
         run: terraform --version
       - name: Print Azure CLI version
         run: az --version
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
