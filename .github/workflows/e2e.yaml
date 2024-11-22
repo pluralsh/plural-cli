@@ -25,9 +25,9 @@ jobs:
       - name: Add GOBIN to PATH
         run: echo $GOBIN >> $GITHUB_PATH
       - name: Setup Plural CLI
-        run: make install-cli
-      - name: Print Plural CLI version
-        run: plural version
+        run: |
+          make install-cli
+          plural version
       - name: Print Terraform version
         run: terraform --version
       - name: Print Google Cloud CLI version
@@ -52,9 +52,9 @@ jobs:
           chmod +x /usr/local/bin/venom
           venom version
       - name: Setup Plural CLI
-        run: make install-cli
-      - name: Print Plural CLI version
-        run: plural version
+        run: |
+          make install-cli
+          plural version
       - name: Print Terraform version
         run: terraform --version
       - name: Print Azure CLI version
