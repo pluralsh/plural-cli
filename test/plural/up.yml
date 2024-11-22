@@ -15,6 +15,7 @@ vars:
   project: ''
   provider: ''
   region: ''
+  pluralKey: ''
 
   # Azure variables
   azureSubscriptionId: ''
@@ -28,6 +29,8 @@ vars:
   gcpBillingID: ''
 
 secrets:
+  - pluralKey
+  - token
   - gitRepoPrivateKey
   - gcpSAKeyFile
   - gcpOrgID
@@ -78,15 +81,18 @@ testcases:
         name: {{ .username }}
         pluralHome: {{ .pluralHome }}
         token: {{ .token }}
+        key: {{ .pluralKey }}
 
-#  - name: Google Cloud Setup
-#    steps:
-#      - type: gcloud-setup
-#        email: {{ .gcpEmail }}
-#        saKeyFile: {{ .gcpSAKeyFile }}
-#        orgID: {{ .gcpOrgID }}
-#        billingID: {{ .gcpBillingID }}
-#        project: {{ .project }}
+  - name: Google Cloud Setup
+    skip:
+      - {{.provider}} NotEqual gcp
+    steps:
+      - type: gcloud-setup
+        email: {{ .gcpEmail }}
+        saKeyFile: {{ .gcpSAKeyFile }}
+        orgID: {{ .gcpOrgID }}
+        billingID: {{ .gcpBillingID }}
+        project: {{ .project }}
 
   - name: Plural up
     steps:
@@ -101,12 +107,14 @@ testcases:
       - type: azure-teardown
         resourceGroup: {{ .project }}
 
-#  - name: Google Cloud teardown
-#    steps:
-#      - type: gcloud-teardown
-#        email: {{ .gcpEmail }}
-#        saKeyFile: {{ .gcpSAKeyFile }}
-#        project: {{ .project }}
+  - name: Google Cloud teardown
+    skip:
+      - {{.provider}} NotEqual gcp
+    steps:
+      - type: gcloud-teardown
+        email: {{ .gcpEmail }}
+        saKeyFile: {{ .gcpSAKeyFile }}
+        project: {{ .project }}
 
   - name: Git teardown
     steps:

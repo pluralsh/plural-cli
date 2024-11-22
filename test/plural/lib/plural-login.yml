@@ -4,8 +4,10 @@ input:
   name: ''
   pluralHome: ''
   token: ''
+  key: ''
 steps:
-  - script: |
+  - name: Setup config.yml
+    script: |
       cat << EOF > {{ .input.pluralHome }}/config.yml
       apiVersion: platform.plural.sh/v1alpha1
       kind: Config
@@ -18,3 +20,7 @@ steps:
         endpoint: ""
         lockProfile: ""
         reportErrors: true
+  - name: Setup key
+    script: |
+      cat << EOF > {{ .input.pluralHome }}/key
+      {{ .key }}

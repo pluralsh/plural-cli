@@ -203,6 +203,7 @@ e2e: --ensure-venom
 	VENOM_VAR_username=${PLRL_CLI_E2E_SA_USERNAME} \
 	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
 	VENOM_VAR_pluralHome=${HOME}/.plural \
+	VENOM_VAR_pluralKey=${PLRL_CLI_E2E_PLURAL_KEY} \
 	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT} \
 	VENOM_VAR_provider=${PLRL_CLI_E2E_PROVIDER} \
 	VENOM_VAR_region=${PLRL_CLI_E2E_REGION} \
@@ -215,7 +216,7 @@ e2e: --ensure-venom
 	VENOM_VAR_gcpBillingID=${PLRL_CLI_E2E_GCLOUD_BILLING_ID} \
 	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
 	PLURAL_UP_AFFIRM_DEPLOY=true \
- 		venom run -v --output-dir testout --stop-on-failure test/plural
+ 		venom run -v --html-report --format=json --output-dir testout --stop-on-failure test/plural
 
 .PHONY: format
 format: ## formats all go code to prep for linting
