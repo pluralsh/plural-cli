@@ -204,7 +204,7 @@ e2e: --ensure-venom
 	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
 	VENOM_VAR_pluralHome=${HOME}/.plural \
 	VENOM_VAR_pluralKey=${PLRL_CLI_E2E_PLURAL_KEY} \
-	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT}-${TIMESTAMP} \
 	VENOM_VAR_provider=${PLRL_CLI_E2E_PROVIDER} \
 	VENOM_VAR_region=${PLRL_CLI_E2E_REGION} \
 	VENOM_VAR_azureSubscriptionId=${PLRL_CLI_E2E_AZURE_SUBSCRIPTION_ID} \
