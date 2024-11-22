@@ -49,8 +49,8 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Test time
         env:
-          ASD: ${{ TIMESTAMP }}
-        run: echo ASD
+          ASD: ${{ env.TIMESTAMP }}
+        run: echo $ASD
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
