@@ -193,21 +193,21 @@ test: setup-tests
 
 .PHONY: e2e
 e2e: --ensure-venom
-	@VENOM_VAR_branch=e2e-gcp-${TIMESTAMP} \
-	VENOM_VAR_directory=../../testout/gcp \
-	VENOM_VAR_email=test-cli-e2e-gcp@srv.plural.sh \
+	@VENOM_VAR_branch=e2e-${PLRL_CLI_E2E_PROVIDER}-${TIMESTAMP} \
+	VENOM_VAR_directory=../../testout/${PLRL_CLI_E2E_PROVIDER} \
+	VENOM_VAR_email=${PLRL_CLI_E2E_SA_EMAIL} \
 	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
 	VENOM_VAR_gitRepoPrivateKey=${PLRL_CLI_E2E_PRIVATE_KEY} \
 	VENOM_VAR_privateKeyPath=${PLRL_CLI_E2E_PRIVATE_KEY_PATH} \
-	VENOM_VAR_username=test-cli-e2e-gcp \
+	VENOM_VAR_username=${PLRL_CLI_E2E_SA_USERNAME} \
 	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
 	VENOM_VAR_pluralHome=${HOME}/.plural \
-	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT}-${TIMESTAMP} \
-	VENOM_VAR_provider=gcp \
-	VENOM_VAR_region=us-central1 \
+	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_provider=${PLRL_CLI_E2E_PROVIDER} \
+	VENOM_VAR_region=${PLRL_CLI_E2E_REGION} \
 	VENOM_VAR_azureSubscriptionId=${PLRL_CLI_E2E_AZURE_SUBSCRIPTION_ID} \
 	VENOM_VAR_azureTenantId=${PLRL_CLI_E2E_AZURE_TENANT_ID} \
-	VENOM_VAR_azureStorageAccount=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_azureStorageAccount=${TIMESTAMP} \
 	VENOM_VAR_gcpSAKeyFile=${PLRL_CLI_E2E_GCLOUD_KEY_FILE} \
 	VENOM_VAR_gcpEmail=${PLRL_CLI_E2E_GCLOUD_EMAIL} \
 	VENOM_VAR_gcpOrgID=${PLRL_CLI_E2E_GCLOUD_ORG_ID} \
