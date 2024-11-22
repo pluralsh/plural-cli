@@ -120,7 +120,7 @@ testcases:
 
   - name: Google Cloud teardown
     skip:
-      - {{.provider}} ShouldNotEqual gcp
+      - provider ShouldEqual gcp
     steps:
       - type: gcloud-teardown
         email: {{ .gcpEmail }}
