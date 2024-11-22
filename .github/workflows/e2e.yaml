@@ -9,6 +9,8 @@ on:
 env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
+  PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
+  PLURAL_UP_AFFIRM_DEPLOY: true
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -92,6 +94,4 @@ jobs:
 #          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
 #          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
 #          VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
-#          PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
-#          PLURAL_UP_AFFIRM_DEPLOY: true
 #        run: venom run -v --output-dir ${HOME}/testout --stop-on-failure test/plural
