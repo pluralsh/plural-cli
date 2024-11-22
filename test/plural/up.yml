@@ -2,19 +2,32 @@ name: Plural up
 description: TODO
 
 vars:
-  # Core variables
+  ### Core variables
+  # Branch that will be created to run 'plural up'
   branch: ''
+  # Local directory used to set up git repository (clone, checkout)
   directory: ''
+  # Plural user email to run 'plural up' with
   email: ''
+  # Git repository address used to run 'plural up' and store generated files
   gitRepo: ''
+  # SSH key path used to access git repository
   privateKeyPath: ''
+  # Plural user name
   username: ''
+  # Plural user acess token
   token: ''
+  # Local plural home directory used to store plural files
   pluralHome: ''
+  # SSH key used to access git repository
   gitRepoPrivateKey: ''
+  # Provider-specific project name/id
   project: ''
+  # Provider name: gcp, azure, aws
   provider: ''
+  # Provider region used to spin up the cluster
   region: ''
+  # Plural aes key used to encrypt/decrypt git repository files
   pluralKey: ''
 
   # Azure variables
@@ -22,10 +35,14 @@ vars:
   azureTenantId: ''
   azureStorageAccount: ''
 
-  # GCP variables
+  ### GCP variables
+  # Google Service Account email
   gcpEmail: ''
+  # Google Service Account key file
   gcpSAKeyFile: ''
+  # Google organization ID
   gcpOrgID: ''
+  # Google billing account ID
   gcpBillingID: ''
 
 secrets:
