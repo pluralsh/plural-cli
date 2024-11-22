@@ -96,7 +96,7 @@ testcases:
 
   - name: Google Cloud Setup
     skip:
-      - {{ .provider }} ShouldNotEqual gcp
+      - provider ShouldEqual gcp
     steps:
       - type: gcloud-setup
         email: {{ .gcpEmail }}
@@ -113,14 +113,14 @@ testcases:
 
   - name: Azure teardown
     skip:
-      - {{ .provider }} ShouldNotEqual azure
+      - provider ShouldEqual azure
     steps:
       - type: azure-teardown
         resourceGroup: {{ .project }}
 
   - name: Google Cloud teardown
     skip:
-      - {{.provider}} ShouldNotEqual gcp
+      - provider ShouldEqual gcp
     steps:
       - type: gcloud-teardown
         email: {{ .gcpEmail }}
