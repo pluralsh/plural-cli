@@ -80,7 +80,7 @@ jobs:
 #      - name: Run tests
 #        env:
 #          VENOM_VAR_provider: azure
-#          VENOM_VAR_region: eastus
+#          VENOM_VAR_region: polandcentral
 #          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
 #          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
 #          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
