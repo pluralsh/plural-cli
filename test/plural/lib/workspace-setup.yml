@@ -20,7 +20,7 @@ steps:
         name: {{ .input.name }}
       spec:
         cluster: {{ .input.name }}
-        bucket: {{ .input.name }}-tf-state
+        bucket: {{ .input.project }}-tf-state
         project: {{ .input.project }}
         provider: {{ .input.provider }}
         region: {{ .input.region }}
@@ -30,7 +30,7 @@ steps:
           subdomain: {{ .input.name }}.onplural.sh
           pluraldns: true
         availabilityzones: []
-        bucketPrefix: {{ .input.name }}
+        bucketPrefix: {{ .input.project }}
         context:
           StorageAccount: {{ .input.azureStorageAccount }}
           SubscriptionId: {{ .input.azureSubscriptionId }}
