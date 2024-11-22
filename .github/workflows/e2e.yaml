@@ -46,7 +46,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Store test timestamp
-        run: echo "TIMESTAMP=$(date +'%T')" >> $GITHUB_ENV
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Test time
         run: echo TIMESTAMP
       - name: Setup Go
