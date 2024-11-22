@@ -9,6 +9,7 @@ on:
 env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
+  E2E_PRIVATE_KEY_PATH: /home/runner/private.key
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
 jobs:
@@ -22,6 +23,8 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+      - name: Retrieve the test repository private key and decode it to a file
+        run: echo ${{ secrets.E2E_REPO_PRIVATE_KEY }} | base64 --decode > ${{ env.E2E_PRIVATE_KEY_PATH }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -51,6 +54,8 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+      - name: Retrieve the test repository private key and decode it to a file
+        run: echo ${{ secrets.E2E_REPO_PRIVATE_KEY }} | base64 --decode > ${{ env.E2E_PRIVATE_KEY_PATH }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -88,7 +93,7 @@ jobs:
 #          VENOM_VAR_directory: ${{ env.HOME }}/testout/azure
 #          VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
 #          VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
-#          VENOM_VAR_privateKeyPath: '' # Put data from the secret above in a file and reference it here
+#          VENOM_VAR_privateKeyPath: ${{ env.E2E_PRIVATE_KEY_PATH }}
 #          VENOM_VAR_branch: e2e-azure-${{ env.TIMESTAMP }}
 #          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
 #          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
