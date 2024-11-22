@@ -46,6 +46,11 @@ jobs:
           go-version-file: go.mod
       - name: Add GOBIN to PATH
         run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Venom
+        run: |
+          curl https://github.com/ovh/venom/releases/download/v1.1.0/venom.linux-amd64 -L -o /usr/local/bin/venom
+          chmod +x /usr/local/bin/venom
+          venom version
       - name: Setup Plural CLI
         run: make install-cli
       - name: Print Plural CLI version
