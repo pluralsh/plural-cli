@@ -59,7 +59,9 @@ jobs:
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
-        run: (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.E2E_PRIVATE_KEY_PATH }}
+        run: |
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.E2E_PRIVATE_KEY_PATH }}
+          chmod 0600 ${{ env.E2E_PRIVATE_KEY_PATH }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
