@@ -18,7 +18,6 @@ env:
   TESTOUT_PATH: /home/runner/testout
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
-  VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
   VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/private.key
 jobs:
   plural-up-gcp:
