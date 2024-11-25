@@ -103,3 +103,8 @@ jobs:
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
           VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
         run: venom run -v --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ env.E2E_TESTOUT_PATH }}/venom.log
