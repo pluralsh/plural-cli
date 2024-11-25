@@ -28,7 +28,9 @@ jobs:
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
-        run: echo ${{ secrets.E2E_REPO_PRIVATE_KEY }} | base64 --decode > ${{ env.E2E_PRIVATE_KEY_PATH }}
+        run: |
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.E2E_PRIVATE_KEY_PATH }}
+          chmod 0600 ${{ env.E2E_PRIVATE_KEY_PATH }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -37,7 +39,7 @@ jobs:
         run: echo $GOBIN >> $GITHUB_PATH
       - name: Setup Venom
         run: |
-          curl https://github.com/ovh/venom/releases/download/v1.1.0/venom.linux-amd64 -L -o /usr/local/bin/venom
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o /usr/local/bin/venom
           chmod +x /usr/local/bin/venom
           venom version
       - name: Setup Plural CLI
@@ -48,6 +50,16 @@ jobs:
         run: terraform --version
       - name: Print Google Cloud CLI version
         run: gcloud --version
+      - name: Run tests
+        env:
+          VENOM_VAR_provider: gcp
+          # TODO
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ env.E2E_TESTOUT_PATH }}/venom.log
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
@@ -87,13 +99,6 @@ jobs:
           client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-      - run: |
-          git -c core.sshCommand="ssh -i ${{ env.E2E_PRIVATE_KEY_PATH }}" clone git@github.com:pluralsh/plural-cli-e2e.git "${{ env.E2E_TESTOUT_PATH }}/azure" ;\
-          cd ${{ env.E2E_TESTOUT_PATH }}/azure ;\
-          git config --local user.email ${{ secrets.E2E_AZURE_SA_EMAIL }} ;\
-          git config --local user.name ${{ secrets.E2E_AZURE_SA_USERNAME }} ;\
-          git checkout -b e2e-azure-${{ env.TIMESTAMP }} ;\
-          GIT_SSH_COMMAND='ssh -i ${{ env.E2E_PRIVATE_KEY_PATH }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin e2e-azure-${{ env.TIMESTAMP }}
       - name: Run tests
         env:
           VENOM_VAR_provider: azure
@@ -111,7 +116,7 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
           VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
-        run: venom run -vv --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
         uses: actions/upload-artifact@v4
