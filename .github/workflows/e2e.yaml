@@ -12,6 +12,7 @@ permissions:
 env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
+  E2E_TESTOUT_PATH: /home/runner/testout
   E2E_PRIVATE_KEY_PATH: /home/runner/private.key
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
@@ -92,7 +93,7 @@ jobs:
           VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
           VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
           VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_directory: ${{ env.HOME }}/testout/azure
+          VENOM_VAR_directory: ${{ env.E2E_TESTOUT_PATH }}/azure
           VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
           VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
           VENOM_VAR_privateKeyPath: ${{ env.E2E_PRIVATE_KEY_PATH }}
@@ -101,4 +102,4 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
           VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
-        run: venom run -v --output-dir ${{ env.HOME }}/testout --stop-on-failure test/plural
+        run: venom run -v --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
