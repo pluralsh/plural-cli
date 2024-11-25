@@ -4,11 +4,11 @@ input:
   directory: ''
   email: ''
   gitRepo: ''
-  privateKeyPath: ''
+  gitRepoPrivateKeyPath: ''
+  gitRepoPrivateKey: ''
   username: ''
   token: ''
   pluralHome: ''
-  gitRepoPrivateKey: ''
   project: ''
   provider: ''
   region: ''
@@ -35,7 +35,7 @@ steps:
       - result.systemout ShouldMatchRegex '^Git Repo .+$'
 
   - name: Private Key Path
-    script: "echo Private Key Path {{ .input.privateKeyPath }}"
+    script: "echo Private Key Path {{ .input.gitRepoPrivateKeyPath }}"
     assertions:
       - result.systemout ShouldMatchRegex '^Private Key Path .+$'
 

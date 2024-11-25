@@ -12,7 +12,7 @@ vars:
   # Git repository address used to run 'plural up' and store generated files
   gitRepo: ''
   # SSH key path used to access git repository
-  privateKeyPath: ''
+  gitRepoPrivateKeyPath: ''
   # Plural user name
   username: ''
   # Plural user acess token
