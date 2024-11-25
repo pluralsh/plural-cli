@@ -4,15 +4,15 @@ input:
   directory: ''
   email: ''
   gitRepo: ''
-  privateKeyPath: ''
+  gitRepoPrivateKeyPath: ''
   username: ''
 steps:
   - script: |
-      git -c core.sshCommand="ssh -i {{ .input.privateKeyPath }}" clone {{ .input.gitRepo }} "{{ .input.directory }}" ;\
+      git -c core.sshCommand="ssh -i {{ .input.gitRepoPrivateKeyPath }}" clone {{ .input.gitRepo }} "{{ .input.directory }}" ;\
       cd {{ .input.directory }} ;\
       git config --local user.email {{ .input.email }} ;\
       git config --local user.name {{ .input.username }} ;\
       git checkout -b {{ .input.branch }} ;\
-      GIT_SSH_COMMAND='ssh -i {{ .input.privateKeyPath }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin {{ .input.branch }}
+      GIT_SSH_COMMAND='ssh -i {{ .input.gitRepoPrivateKeyPath }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin {{ .input.branch }}
     info:
       - 'Git Repository: {{ .input.gitRepo }}'

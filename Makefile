@@ -199,7 +199,7 @@ e2e: --ensure-venom
 	VENOM_VAR_email=${PLRL_CLI_E2E_SA_EMAIL} \
 	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
 	VENOM_VAR_gitRepoPrivateKey=${PLRL_CLI_E2E_PRIVATE_KEY} \
-	VENOM_VAR_privateKeyPath=${PLRL_CLI_E2E_PRIVATE_KEY_PATH} \
+	VENOM_VAR_gitRepoPrivateKeyPath=${PLRL_CLI_E2E_PRIVATE_KEY_PATH} \
 	VENOM_VAR_username=${PLRL_CLI_E2E_SA_USERNAME} \
 	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
 	VENOM_VAR_pluralHome=${HOME}/.plural \

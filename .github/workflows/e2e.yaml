@@ -13,10 +13,13 @@ permissions:
 env:
   GOPATH: /home/runner/go/
   GOBIN: /home/runner/go/bin
-  E2E_TESTOUT_PATH: /home/runner/testout
-  E2E_PRIVATE_KEY_PATH: /home/runner/private.key
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
+  TESTOUT_PATH: /home/runner/testout
+  VENOM_VAR_directory: /home/runner/testout/azure
+  VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
+  VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
+  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/private.key
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -30,8 +33,8 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.E2E_PRIVATE_KEY_PATH }}
-          chmod 0600 ${{ env.E2E_PRIVATE_KEY_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 0600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -54,13 +57,14 @@ jobs:
       - name: Run tests
         env:
           VENOM_VAR_provider: gcp
-          # TODO
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
+          VENOM_VAR_region: us-central1
+          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.E2E_TESTOUT_PATH }}/venom.log
+          path: ${{ env.TESTOUT_PATH }}/venom.log
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
@@ -73,8 +77,8 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.E2E_PRIVATE_KEY_PATH }}
-          chmod 0600 ${{ env.E2E_PRIVATE_KEY_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 0600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -108,18 +112,14 @@ jobs:
           VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
           VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
           VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_directory: ${{ env.E2E_TESTOUT_PATH }}/azure
-          VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
-          VENOM_VAR_gitRepoPrivateKey: ${{ secrets.E2E_REPO_PRIVATE_KEY }}
-          VENOM_VAR_privateKeyPath: ${{ env.E2E_PRIVATE_KEY_PATH }}
           VENOM_VAR_branch: e2e-azure-${{ env.TIMESTAMP }}
           VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
           VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.E2E_TESTOUT_PATH }} --stop-on-failure test/plural
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.E2E_TESTOUT_PATH }}/venom.log
+          path: ${{ env.TESTOUT_PATH }}/venom.log
