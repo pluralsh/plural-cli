@@ -58,7 +58,16 @@ jobs:
         env:
           VENOM_VAR_provider: gcp
           VENOM_VAR_region: us-central1
+          VENOM_VAR_gcpEmail: ''
+          VENOM_VAR_gcpSAKeyFile: ''
+          VENOM_VAR_gcpOrgID: ''
+          VENOM_VAR_gcpBillingID: ''
           VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-gcp
+          VENOM_VAR_username: ''
+          VENOM_VAR_email: ''
+          VENOM_VAR_token: ''
+          VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
@@ -112,7 +121,7 @@ jobs:
           VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
           VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
           VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_branch: e2e-azure-${{ env.TIMESTAMP }}
+          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
           VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
