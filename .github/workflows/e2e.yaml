@@ -77,8 +77,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gcp.log
-          path: ${{ env.TESTOUT_PATH }}/venom.log
+          name: gcp
+          path: |
+            ${{ env.TESTOUT_PATH }}/venom.log
+            ${{ env.TESTOUT_PATH }}/test_results.html
+          compression-level: 9
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
@@ -139,5 +142,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: azure.log
-          path: ${{ env.TESTOUT_PATH }}/venom.log
+          name: azure
+          path: |
+            ${{ env.TESTOUT_PATH }}/venom.log
+            ${{ env.TESTOUT_PATH }}/test_results.html
+          compression-level: 9
