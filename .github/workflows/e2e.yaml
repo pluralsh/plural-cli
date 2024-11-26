@@ -20,7 +20,7 @@ env:
   VENOM_VAR_pluralHome: /home/runner/.plural
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
-  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/github_actions
+  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/id_rsa
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -77,8 +77,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gcp.log
-          path: ${{ env.TESTOUT_PATH }}/venom.log
+          name: gcp
+          path: |
+            ${{ env.TESTOUT_PATH }}/venom.log
+            ${{ env.TESTOUT_PATH }}/test_results.html
+          compression-level: 9
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
@@ -139,5 +142,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: azure.log
-          path: ${{ env.TESTOUT_PATH }}/venom.log
+          name: azure
+          path: |
+            ${{ env.TESTOUT_PATH }}/venom.log
+            ${{ env.TESTOUT_PATH }}/test_results.html
+          compression-level: 9
