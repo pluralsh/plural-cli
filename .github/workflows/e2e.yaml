@@ -134,11 +134,12 @@ jobs:
         env:
           # Terraform auth.
           # https://registry.terraform.io/providers/hashicorp/azurerm/3.117.0/docs/guides/aks_workload_identity#configuring-with-environment-variables
-          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          # ARM_USE_AKS_WORKLOAD_IDENTITY: true
           ARM_USE_CLI: false
+          ARM_USE_MSI: true
           ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
-          # ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
           # Venom variables.
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
