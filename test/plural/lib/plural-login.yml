@@ -20,7 +20,11 @@ steps:
         endpoint: ""
         lockProfile: ""
         reportErrors: true
+    assertions:
+      - result.code ShouldEqual 0
   - name: Setup key
     script: |
       cat << EOF > {{ .input.pluralHome }}/key
       key: {{ .input.key }}
+    assertions:
+      - result.code ShouldEqual 0

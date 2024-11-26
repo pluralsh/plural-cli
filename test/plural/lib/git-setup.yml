@@ -16,3 +16,5 @@ steps:
       GIT_SSH_COMMAND='ssh -i {{ .input.gitRepoPrivateKeyPath }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin {{ .input.branch }}
     info:
       - 'Git Repository: {{ .input.gitRepo }}'
+    assertions:
+      - result.code ShouldEqual 0
