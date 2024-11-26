@@ -131,7 +131,7 @@ jobs:
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Test Terraform
-        env:
+#        env:
 #          ARM_USE_AKS_WORKLOAD_IDENTITY: true
 #          ARM_USE_CLI: false
 #          # ARM_USE_MSI: true
