@@ -20,7 +20,7 @@ env:
   VENOM_VAR_pluralHome: /home/runner/.plural
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
-  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/github_actions
+  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/id_rsa
 jobs:
   plural-up-gcp:
     name: plural up / GCP
