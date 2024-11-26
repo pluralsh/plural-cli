@@ -38,7 +38,7 @@ jobs:
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval `ssh-agent -s`
+          eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
@@ -98,7 +98,7 @@ jobs:
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval `ssh-agent -s`
+          eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
