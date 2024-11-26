@@ -132,11 +132,11 @@ jobs:
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Test Terraform
         env:
-          ARM_USE_AKS_WORKLOAD_IDENTITY: true
-          ARM_USE_CLI: false
-          # ARM_USE_MSI: true
-          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+#          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+#          ARM_USE_CLI: false
+#          # ARM_USE_MSI: true
+#          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
           # ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
         run: |
           terraform init
