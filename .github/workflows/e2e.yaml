@@ -17,6 +17,7 @@ env:
   PLURAL_UP_AFFIRM_DEPLOY: true
   TESTOUT_PATH: /home/runner/testout
   SSH_PATH: /home/runner/.ssh
+  VENOM_PATH: /usr/local/bin/venom
   VENOM_VAR_pluralHome: /home/runner/.plural
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
@@ -34,11 +35,11 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
-          mkdir -p $SSH_PATH
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> $VENOM_VAR_gitRepoPrivateKeyPath
-          chmod 600 $VENOM_VAR_gitRepoPrivateKeyPath
+          mkdir -p ${{ env.SSH_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval `ssh-agent -s`
-          ssh-add $VENOM_VAR_gitRepoPrivateKeyPath
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -47,13 +48,13 @@ jobs:
         run: echo $GOBIN >> $GITHUB_PATH
       - name: Setup Venom
         run: |
-          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o /usr/local/bin/venom
-          chmod +x /usr/local/bin/venom
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+          chmod +x ${{ env.VENOM_PATH }}
           venom version
       - name: Setup Plural CLI
         run: |
           make install-cli
-          mkdir -p $VENOM_VAR_pluralHome
+          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
           plural version
       - name: Print Terraform version
         run: terraform --version
@@ -73,7 +74,7 @@ jobs:
           VENOM_VAR_email: ''
           VENOM_VAR_token: ''
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Upload test log
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -94,11 +95,11 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
-          mkdir -p $SSH_PATH
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> $VENOM_VAR_gitRepoPrivateKeyPath
-          chmod 600 $VENOM_VAR_gitRepoPrivateKeyPath
+          mkdir -p ${{ env.SSH_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval `ssh-agent -s`
-          ssh-add $VENOM_VAR_gitRepoPrivateKeyPath
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -107,13 +108,13 @@ jobs:
         run: echo $GOBIN >> $GITHUB_PATH
       - name: Setup Venom
         run: |
-          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o /usr/local/bin/venom
-          chmod +x /usr/local/bin/venom
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+          chmod +x ${{ env.VENOM_PATH }}
           venom version
       - name: Setup Plural CLI
         run: |
           make install-cli
-          mkdir -p $VENOM_VAR_pluralHome
+          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
           plural version
       - name: Print Terraform version
         run: terraform --version
@@ -138,7 +139,7 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Upload test log
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
