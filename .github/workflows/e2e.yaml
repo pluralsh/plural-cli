@@ -130,28 +130,40 @@ jobs:
           client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-      - name: Run tests
+      - name: Test Terraform
         env:
-          # Terraform auth.
-          # https://registry.terraform.io/providers/hashicorp/azurerm/3.117.0/docs/guides/aks_workload_identity#configuring-with-environment-variables
-          # ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          ARM_USE_AKS_WORKLOAD_IDENTITY: true
           ARM_USE_CLI: false
-          ARM_USE_MSI: true
+          # ARM_USE_MSI: true
           ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
-          # Venom variables.
-          VENOM_VAR_provider: azure
-          VENOM_VAR_region: polandcentral
-          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
-          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
-          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
-          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
-          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
-          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+          # ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+        run: |
+          terraform init
+          terraform apply --auto-approve
+          terraform destroy --auto-approve
+#      - name: Run tests
+#        env:
+#          # Terraform auth.
+#          # https://registry.terraform.io/providers/hashicorp/azurerm/3.117.0/docs/guides/aks_workload_identity#configuring-with-environment-variables
+#          # ARM_USE_AKS_WORKLOAD_IDENTITY: true
+#          ARM_USE_CLI: false
+#          ARM_USE_MSI: true
+#          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+#          ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+#          # Venom variables.
+#          VENOM_VAR_provider: azure
+#          VENOM_VAR_region: polandcentral
+#          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
+#          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
+#          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+#          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
+#          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
+#          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
+#          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
+#        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
