@@ -17,6 +17,7 @@ env:
   PLURAL_UP_AFFIRM_DEPLOY: true
   TESTOUT_PATH: /home/runner/testout
   SSH_PATH: /home/runner/.ssh
+  VENOM_VAR_pluralHome: /home/runner/.plural
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
   VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/github_actions
@@ -52,6 +53,7 @@ jobs:
       - name: Setup Plural CLI
         run: |
           make install-cli
+          mkdir -p $VENOM_VAR_pluralHome
           plural version
       - name: Print Terraform version
         run: terraform --version
@@ -70,12 +72,12 @@ jobs:
           VENOM_VAR_username: ''
           VENOM_VAR_email: ''
           VENOM_VAR_token: ''
-          VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          name: gcp.log
           path: ${{ env.TESTOUT_PATH }}/venom.log
   plural-up-azure:
     name: plural up / Azure
@@ -108,6 +110,7 @@ jobs:
       - name: Setup Plural CLI
         run: |
           make install-cli
+          mkdir -p $VENOM_VAR_pluralHome
           plural version
       - name: Print Terraform version
         run: terraform --version
@@ -131,10 +134,10 @@ jobs:
           VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
-          VENOM_VAR_pluralHome: ${{ env.HOME }}/.plural
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} --stop-on-failure test/plural
       - name: Upload test log
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          name: azure.log
           path: ${{ env.TESTOUT_PATH }}/venom.log
