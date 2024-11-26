@@ -2,9 +2,10 @@ executor: context-setup
 input:
   directory: ''
   gitRepo: ''
-  gitRepoPrivateKey: ''
+  gitRepoPrivateKeyPath: ''
 steps:
   - script: |
+      PRIVATE_KEY=$(cat {{ .input.gitRepoPrivateKeyPath }} | sed 's/^/        /') ;\
       cat << EOF > {{ .input.directory }}/context.yaml
       apiVersion: plural.sh/v1alpha1
       kind: Context
@@ -15,5 +16,6 @@ steps:
         configuration:
           console:
             repo_url: {{ .input.gitRepo }}
-            private_key: {{ .input.gitRepoPrivateKey | b64dec }}
-
+            private_key: |-
+      $PRIVATE_KEY
+      EOF

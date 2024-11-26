@@ -19,8 +19,6 @@ vars:
   token: ''
   # Local plural home directory used to store plural files
   pluralHome: ''
-  # SSH key used to access git repository
-  gitRepoPrivateKey: ''
   # Provider-specific project name/id
   project: ''
   # Provider name: gcp, azure, aws
@@ -48,7 +46,6 @@ vars:
 secrets:
   - pluralKey
   - token
-  - gitRepoPrivateKey
   - gcpSAKeyFile
   - gcpOrgID
   - gcpBillingID
@@ -81,9 +78,6 @@ testcases:
   - name: Setup context file
     steps:
       - type: context-setup
-        directory: {{ .directory }}
-        gitRepo: {{ .gitRepo }}
-        gitRepoPrivateKey: {{ .gitRepoPrivateKey }}
 
   - name: Plural login
     steps:

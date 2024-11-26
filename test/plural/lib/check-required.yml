@@ -54,11 +54,6 @@ steps:
     assertions:
       - result.systemout ShouldMatchRegex '^Plural Home .+$'
 
-  - name: Git Repo Private Key
-    script: "echo Git Repo Private Key {{ .input.gitRepoPrivateKey }}"
-    assertions:
-      - result.systemout ShouldMatchRegex '^Git Repo Private Key .+$'
-
   - name: Project
     script: "echo Project {{ .input.project }}"
     assertions:
