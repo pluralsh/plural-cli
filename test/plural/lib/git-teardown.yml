@@ -3,4 +3,5 @@ input:
   branch: ''
 steps:
   - script: |
+      cd {{ .input.directory }} ;\
       git push -d origin {{ .input.branch }}
