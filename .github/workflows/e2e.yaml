@@ -34,12 +34,12 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Retrieve the test repository private key and decode it to a file
+      - name: Setup test repository SSH key
         run: |
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval `ssh-agent -s`
+          eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Decode and save Google service account to a file
         run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) >> ${{ env.E2E_GCP_SA_KEY_FILE }}
@@ -65,6 +65,7 @@ jobs:
         run: gcloud --version
       - name: Run tests
         env:
+          # Venom variables.
           VENOM_VAR_provider: gcp
           VENOM_VAR_region: us-central1
           VENOM_VAR_gcpEmail: ${{ secrets.E2E_GCP_EMAIL }}
@@ -96,12 +97,12 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Retrieve the test repository private key and decode it to a file
+      - name: Setup test repository SSH key
         run: |
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval `ssh-agent -s`
+          eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
@@ -131,6 +132,12 @@ jobs:
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Run tests
         env:
+          # Required to make Terraform work.
+          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          ARM_USE_CLI: false
+          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          # Venom variables.
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
           VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
