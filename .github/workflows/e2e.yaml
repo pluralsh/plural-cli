@@ -95,31 +95,31 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Store test timestamp
-        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Setup test repository SSH key
-        run: |
-          mkdir -p ${{ env.SSH_PATH }}
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval "$(ssh-agent -s)"
-          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-      - name: Setup Go
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version-file: go.mod
-      - name: Add GOBIN to PATH
-        run: echo $GOBIN >> $GITHUB_PATH
-      - name: Setup Venom
-        run: |
-          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
-          chmod +x ${{ env.VENOM_PATH }}
-          venom version
-      - name: Setup Plural CLI
-        run: |
-          make install-cli
-          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
-          plural version
+#      - name: Store test timestamp
+#        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+#      - name: Setup test repository SSH key
+#        run: |
+#          mkdir -p ${{ env.SSH_PATH }}
+#          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          eval "$(ssh-agent -s)"
+#          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#      - name: Setup Go
+#        uses: actions/setup-go@v4.1.0
+#        with:
+#          go-version-file: go.mod
+#      - name: Add GOBIN to PATH
+#        run: echo $GOBIN >> $GITHUB_PATH
+#      - name: Setup Venom
+#        run: |
+#          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+#          chmod +x ${{ env.VENOM_PATH }}
+#          venom version
+#      - name: Setup Plural CLI
+#        run: |
+#          make install-cli
+#          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+#          plural version
       - name: Print Terraform version
         run: terraform --version
       - name: Print Azure CLI version
