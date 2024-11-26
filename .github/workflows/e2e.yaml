@@ -62,6 +62,7 @@ jobs:
         run: gcloud --version
       - name: Run tests
         env:
+          # Venom variables.
           VENOM_VAR_provider: gcp
           VENOM_VAR_region: us-central1
           VENOM_VAR_gcpEmail: ''
@@ -128,6 +129,12 @@ jobs:
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Run tests
         env:
+          # Required to make Terraform work.
+          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          ARM_USE_CLI: false
+          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          # Venom variables.
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
           VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
