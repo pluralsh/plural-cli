@@ -23,6 +23,7 @@ resource "random_string" "random" {
   special = false
 }
 
-data "azurerm_resource_group" "group" {
+resource "azurerm_resource_group" "group" {
   name = "test-${random_string.random.result}"
+  location = "polandcentral"
 }
