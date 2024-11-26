@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Retrieve the test repository private key and decode it to a file
+      - name: Setup test repository SSH key
         run: |
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
@@ -93,7 +93,7 @@ jobs:
           fetch-depth: 0
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Retrieve the test repository private key and decode it to a file
+      - name: Setup test repository SSH key
         run: |
           mkdir -p ${{ env.SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
