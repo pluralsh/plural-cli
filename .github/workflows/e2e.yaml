@@ -77,6 +77,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          name: gcp.log
           path: ${{ env.TESTOUT_PATH }}/venom.log
   plural-up-azure:
     name: plural up / Azure
@@ -138,4 +139,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          name: azure.log
           path: ${{ env.TESTOUT_PATH }}/venom.log
