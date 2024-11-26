@@ -127,3 +127,4 @@ testcases:
     steps:
         - type: git-teardown
           branch: {{ .branch }}
+          directory: {{ .directory }}

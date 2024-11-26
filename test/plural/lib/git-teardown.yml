@@ -1,6 +1,7 @@
 executor: git-teardown
 input:
   branch: ''
+  directory: ''
 steps:
   - script: |
       cd {{ .input.directory }} ;\
