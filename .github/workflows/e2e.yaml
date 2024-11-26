@@ -52,6 +52,7 @@ jobs:
       - name: Setup Plural CLI
         run: |
           make install-cli
+          mkdir -p $VENOM_VAR_pluralHome
           plural version
       - name: Print Terraform version
         run: terraform --version
@@ -108,6 +109,7 @@ jobs:
       - name: Setup Plural CLI
         run: |
           make install-cli
+          mkdir -p $VENOM_VAR_pluralHome
           plural version
       - name: Print Terraform version
         run: terraform --version
