@@ -57,10 +57,14 @@ testcases:
   - name: Check required arguments
     steps:
       - type: check-required
+        assertions:
+          - result.code ShouldEqual 0
 
   - name: Setup Git
     steps:
       - type: git-setup
+        assertions:
+          - result.code ShouldEqual 0
 
   - name: Setup workspace file
     steps:
@@ -74,10 +78,15 @@ testcases:
         azureSubscriptionId: {{ .azureSubscriptionId }}
         azureTenantId: {{ .azureTenantId }}
         azureStorageAccount: {{ .azureStorageAccount }}
+        assertions:
+          - result.code ShouldEqual 0
+
 
   - name: Setup context file
     steps:
       - type: context-setup
+        assertions:
+          - result.code ShouldEqual 0
 
   - name: Plural login
     steps:
@@ -87,6 +96,8 @@ testcases:
         pluralHome: {{ .pluralHome }}
         token: {{ .token }}
         key: {{ .pluralKey }}
+        assertions:
+          - result.code ShouldEqual 0
 
   - name: Google Cloud Setup
     skip:
@@ -98,6 +109,8 @@ testcases:
         orgID: {{ .gcpOrgID }}
         billingID: {{ .gcpBillingID }}
         project: {{ .project }}
+        assertions:
+          - result.code ShouldEqual 0
 
   - name: Plural up
     steps:
@@ -113,6 +126,10 @@ testcases:
     steps:
       - type: azure-teardown
         resourceGroup: {{ .project }}
+        retry: 3
+        retry_if:
+          - result.code ShouldNotEqual 0
+        delay: 5
 
   - name: Google Cloud teardown
     skip:
@@ -122,9 +139,17 @@ testcases:
         email: {{ .gcpEmail }}
         saKeyFile: {{ .gcpSAKeyFile }}
         project: {{ .project }}
+        retry: 3
+        retry_if:
+          - result.code ShouldNotEqual 0
+        delay: 5
 
   - name: Git teardown
     steps:
         - type: git-teardown
           branch: {{ .branch }}
           directory: {{ .directory }}
+          retry: 3
+          retry_if:
+            - result.code ShouldNotEqual 0
+          delay: 5
