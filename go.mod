@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.22.5
+go 1.22.9
 
 require (
 	cloud.google.com/go/compute v1.23.3
@@ -10,8 +10,8 @@ require (
 	dario.cat/mergo v1.0.1
 	filippo.io/age v1.1.1
 	github.com/AlecAivazis/survey/v2 v2.3.5
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.7.1
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.3.0
@@ -31,7 +31,7 @@ require (
 	github.com/gofrs/flock v0.8.1
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/hashicorp/go-retryablehttp v0.7.4
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/helm/helm-mapkubeapis v0.4.1
@@ -41,14 +41,13 @@ require (
 	github.com/ktrysmt/go-bitbucket v0.9.55
 	github.com/likexian/doh v0.7.1
 	github.com/linode/linodego v1.26.0
-	github.com/lithammer/dedent v1.1.0
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/norwoodj/helm-docs v1.11.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.29.0
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pluralsh/console/go/client v1.23.0
 	github.com/pluralsh/console/go/controller v0.0.0-20241106170618-0c255ee72c4c
 	github.com/pluralsh/gqlclient v1.12.2
@@ -85,9 +84,9 @@ require (
 	cloud.google.com/go/longrunning v0.5.4 // indirect
 	github.com/99designs/gqlgen v0.17.49 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.8.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v1.1.1 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a // indirect
@@ -134,7 +133,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-resty/resty/v2 v2.9.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
@@ -248,7 +247,7 @@ require (
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.7.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
