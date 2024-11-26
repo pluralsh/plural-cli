@@ -16,9 +16,10 @@ env:
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
   TESTOUT_PATH: /home/runner/testout
+  SSH_PATH: /home/runner/.ssh
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
-  VENOM_VAR_gitRepoPrivateKeyPath: ~/.ssh/id_rsa
+  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/github_actions
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -32,8 +33,10 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
+          mkdir -p ${{ env. SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          chmod 0600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -85,8 +88,10 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Retrieve the test repository private key and decode it to a file
         run: |
+          mkdir -p ${{ env. SSH_PATH }}
           (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          chmod 0600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
