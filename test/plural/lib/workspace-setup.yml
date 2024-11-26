@@ -35,3 +35,5 @@ steps:
           StorageAccount: {{ .input.azureStorageAccount }}
           SubscriptionId: {{ .input.azureSubscriptionId }}
           TenantId: {{ .input.azureTenantId }}
+    assertions:
+      - result.code ShouldEqual 0

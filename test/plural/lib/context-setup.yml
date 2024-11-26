@@ -19,3 +19,5 @@ steps:
             private_key: |-
       $PRIVATE_KEY
       EOF
+    assertions:
+      - result.code ShouldEqual 0

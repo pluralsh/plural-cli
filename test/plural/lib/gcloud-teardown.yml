@@ -8,4 +8,7 @@ steps:
   - script: |
       gcloud auth activate-service-account {{ .input.email }} --key-file={{ .input.saKeyFile }} ;\
       gcloud -q projects delete {{ .input.project }}
-      
+    retry: 3
+    retry_if:
+      - result.code ShouldNotEqual 0
+    delay: 5

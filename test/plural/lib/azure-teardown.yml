@@ -4,3 +4,7 @@ input:
 steps:
   - script: |
       az group delete --name {{ .input.resourceGroup }}      
+    retry: 3
+    retry_if:
+      - result.code ShouldNotEqual 0
+    delay: 5
