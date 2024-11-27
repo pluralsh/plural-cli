@@ -36,8 +36,6 @@ vars:
   ### GCP variables
   # Google Service Account email
   gcpEmail: ''
-  # Google Service Account key file
-  gcpSAKeyFile: ''
   # Google organization ID
   gcpOrgID: ''
   # Google billing account ID
@@ -94,7 +92,6 @@ testcases:
     steps:
       - type: gcloud-setup
         email: {{ .gcpEmail }}
-        saKeyFile: {{ .gcpSAKeyFile }}
         orgID: {{ .gcpOrgID }}
         billingID: {{ .gcpBillingID }}
         project: {{ .project }}
@@ -120,7 +117,6 @@ testcases:
     steps:
       - type: gcloud-teardown
         email: {{ .gcpEmail }}
-        saKeyFile: {{ .gcpSAKeyFile }}
         project: {{ .project }}
 
   - name: Git teardown

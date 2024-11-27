@@ -1,14 +1,12 @@
 executor: gcloud-setup
 input:
   email: ''
-  saKeyFile: ''
   orgID: ''
   project: ''
   billingID: ''
 
 steps:
   - script: |
-      gcloud auth activate-service-account {{ .input.email }} --key-file={{ .input.saKeyFile }} ;\
       gcloud projects describe {{ .input.project }} ;\
       if [ $? -eq 1 ]; then \
         echo "Project does not exist. Creating..." ;\
