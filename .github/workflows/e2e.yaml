@@ -203,6 +203,8 @@ jobs:
             - type: section
               fields:
               - type: mrkdwn
+                text: "*Timestamp*\n`${{ env.TIMESTAMP }}`"
+              - type: mrkdwn
                 text: "*Actor*\n<${{ github.event.actor.url }}|${{ github.event.actor.display_login }}>"
               - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
@@ -226,7 +228,5 @@ jobs:
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "${{ github.workflow }} workflow failed."
             file_uploads:
-              - file: ${{ env.TESTOUT_PATH }}/venom.log
-                filename: venom.log
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
-                filename: rest_results.html
+                filename: test_results.html
