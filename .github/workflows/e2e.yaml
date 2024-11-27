@@ -37,12 +37,16 @@ jobs:
       - name: Setup test repository SSH key
         run: |
           mkdir -p ${{ env.SSH_PATH }}
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) > ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Decode and save Google service account to a file
-        run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) >> ${{ env.E2E_GCP_SA_KEY_FILE }}
+        run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
+      - name: GCloud Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.E2E_GCP_SA_KEY_FILE }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -76,7 +80,7 @@ jobs:
           VENOM_VAR_username: ${{ secrets.E2E_GCP_SA_USERNAME }}
           VENOM_VAR_email: ${{ secrets.E2E_GCP_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_GCP_SA_TOKEN }}
-        run: venom run -v --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Post a slack message on finish
         uses: slackapi/slack-github-action@v2.0.0
         with:
