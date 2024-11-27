@@ -186,7 +186,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: azure
-          path: |
-            ${{ env.TESTOUT_PATH }}/venom.log
-            ${{ env.TESTOUT_PATH }}/test_results.html
+          path: ${{ env.TESTOUT_PATH }}/test_results.html
           compression-level: 9
