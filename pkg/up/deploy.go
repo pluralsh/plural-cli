@@ -154,6 +154,7 @@ func (tf *terraformCmd) outputs() (map[string]Output, error) {
 
 func (tf *terraformCmd) run() (err error) {
 	for tf.retries >= 0 {
+		fmt.Println(tf.dir, tf.cmd, tf.args)
 		args := append([]string{tf.cmd}, tf.args...)
 		cmd := exec.Command("terraform", args...)
 		cmd.Dir = tf.dir
