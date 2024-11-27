@@ -216,8 +216,6 @@ jobs:
                 text: "*Commit*\n<${{ github.event.head_commit.url }}|${{ env.SHORT_SHA }}>"
               - type: mrkdwn
                 text: "*Message*\n${{ github.event.head_commit.message }}"
-              - type: mrkdwn
-                text: "*Failure*\n`${{ failure() }}`"
       - name: Upload artifacts to Slack on failure
         if: failure()
         uses: slackapi/slack-github-action@v2.0.0
