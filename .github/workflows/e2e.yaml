@@ -86,40 +86,42 @@ jobs:
           TF_VAR_network: plural-e2e-network-${{ env.TIMESTAMP }}
           TF_VAR_subnetwork: plural-e2e-subnet-${{ env.TIMESTAMP }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-#      - name: Post a slack message on finish
-#        uses: slackapi/slack-github-action@v2.0.0
-#        with:
-#          webhook-type: incoming-webhook
-#          webhook: ${{ secrets.SLACK_WEBHOOK }}
-#          payload: |
-#            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-#            blocks:
-#            - type: "section"
-#              text:
-#                type: "mrkdwn"
-#                text: "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-#        if: always()
-#      - name: Upload venom logs on failure
-#        uses: slackapi/slack-github-action@v2.0.0
-#        with:
-#          method: files.uploadV2
-#          token: ${{ secrets.SLACK_BOT_TOKEN }}
-#          payload: |
-#            {
-#              "channel_id": "${{ secrets.SLACK_CHANNEL_ID }}" ,
-#              "initial_comment": "Google e2e test has failed. Here are the generated files.",
-#              "file_uploads": [
-#                {
-#                  "file": "${{ env.TESTOUT_PATH }}/venom.log",
-#                  "filename": "venom.log"
-#                },
-#                {
-#                  "file": "${{ env.TESTOUT_PATH }}/test_results.html",
-#                  "filename": "rest_results.html"
-#                }
-#              ]
-#            }
-#        if: failure()
+      - name: Post status on Slack
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            blocks:
+            - type: section
+              text:
+                type: mrkdwn
+                text: "${{ github.workflow }} workflow finished."
+            - type: section
+              fields:
+              - type: mrkdwn
+                text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              - type: mrkdwn
+                text: "*Job*\n`${{ github.job }}`"
+              - type: mrkdwn
+                text: "*Status*\n`${{ job.status }}`"
+              - type: mrkdwn
+                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+      - name: Upload artifacts to Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
+            initial_comment: "${{ github.workflow }} workflow failed."
+            file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
+              - file: ${{ env.TESTOUT_PATH }}/test_results.html
+                filename: rest_results.html
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
