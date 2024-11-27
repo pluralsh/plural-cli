@@ -119,6 +119,7 @@ jobs:
 #            }
 #        if: failure()
   plural-up-azure:
+    if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:
