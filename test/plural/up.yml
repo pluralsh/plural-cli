@@ -39,14 +39,14 @@ vars:
   # Google billing account ID
   gcpBillingID: ''
 
-secrets:
-  - pluralKey
-  - token
-  - gcpOrgID
-  - gcpBillingID
-  - azureSubscriptionId
-  - azureTenantId
-  - azureStorageAccount
+#secrets:
+#  - pluralKey
+#  - token
+#  - gcpOrgID
+#  - gcpBillingID
+#  - azureSubscriptionId
+#  - azureTenantId
+#  - azureStorageAccount
 
 testcases:
   - name: Check required arguments
