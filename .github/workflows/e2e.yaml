@@ -99,7 +99,7 @@ jobs:
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "Google e2e test has failed. Here is the generated log file."
             file: "${{ env.TESTOUT_PATH }}/venom.log"
-            filename: "venom-${{ github.sha }}.log"
+            filename: "venom.log"
         if: failure()
       - name: Upload venom html report on failure
         uses: slackapi/slack-github-action@v2.0.0
@@ -110,7 +110,7 @@ jobs:
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "Google e2e test has failed. Here is the generated html report."
             file: "${{ env.TESTOUT_PATH }}/test_results.html"
-            filename: "venom-${{ github.sha }}.html"
+            filename: "test_results.html"
         if: failure()
   plural-up-azure:
     name: plural up / Azure
