@@ -164,9 +164,10 @@ jobs:
           #          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
         # ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
         run: |
-          terraform init -upgrade
-          terraform apply -auto-approve
-          terraform destroy -auto-approve
+          az-test
+#          terraform init -upgrade
+#          terraform apply -auto-approve
+#          terraform destroy -auto-approve
 #      - name: Run tests
 #        env:
 #          VENOM_VAR_provider: azure
