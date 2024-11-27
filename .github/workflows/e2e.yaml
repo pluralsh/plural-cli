@@ -166,7 +166,6 @@ jobs:
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Run tests
-        if: false # TODO: Remove it.
         env:
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
