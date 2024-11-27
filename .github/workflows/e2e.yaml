@@ -41,12 +41,14 @@ jobs:
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-      - name: Decode and save Google service account to a file
-        run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
+      - name: Decode and save Google service account to a file/env var
+        run: |
+          (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
+          echo "E2E_GCP_SA_KEY_DECODED=$(base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }})" >> $GITHUB_ENV
       - name: GCloud Auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ env.E2E_GCP_SA_KEY_FILE }}
+          credentials_json: ${{ env.E2E_GCP_SA_KEY_DECODED }}
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
