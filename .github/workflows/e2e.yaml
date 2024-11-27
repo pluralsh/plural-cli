@@ -201,7 +201,11 @@ jobs:
             - type: section
               fields:
               - type: mrkdwn
+                text: "*Actor*\n<${{ github.event.actor.url }}|${{ github.event.actor.display_login }}>"
+              - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              - type: mrkdwn
+                text: "*Workflow*\n`${{ github.workflow }}`"
               - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
               - type: mrkdwn
