@@ -6,6 +6,9 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "3.106.1" # 3.40.0 doesn't work
     }
+    azapi = {
+      source = "azure/azapi"
+    }
   }
 }
 
@@ -15,6 +18,9 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+}
+
+provider "azapi" {
 }
 
 resource "random_string" "random" {
