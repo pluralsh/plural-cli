@@ -22,7 +22,7 @@ env:
   VENOM_VAR_directory: /home/runner/testout/azure
   VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
   VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/id_rsa
-  E2E_GCP_SA_KEY_FILE: /home/runner/google_sa.json
+#  E2E_GCP_SA_KEY_FILE: /home/runner/google_sa.json
 jobs:
   plural-up-gcp:
     name: plural up / GCP
@@ -41,14 +41,13 @@ jobs:
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-      - name: Decode and save Google service account to a file/env var
-        run: |
-          (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
-          echo "E2E_GCP_SA_KEY_DECODED=$((base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) | jq -c .)" >> $GITHUB_ENV
+#      - name: Decode and save Google service account to a file/env var
+#        run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
       - name: GCloud Auth
-        uses: google-github-actions/auth@v2
+        uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: ${{ env.E2E_GCP_SA_KEY_DECODED }}
+          project_id: pluralsh
+          workload_identity_provider: "projects/pluralsh/locations/global/workloadIdentityPools/github/providers/github"
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
@@ -74,7 +73,7 @@ jobs:
           VENOM_VAR_provider: gcp
           VENOM_VAR_region: us-central1
           VENOM_VAR_gcpEmail: ${{ secrets.E2E_GCP_EMAIL }}
-          VENOM_VAR_gcpSAKeyFile: ${{ secrets.E2E_GCP_SA_KEY_FILE }}
+          # VENOM_VAR_gcpSAKeyFile: ${{ secrets.E2E_GCP_SA_KEY_FILE }}
           VENOM_VAR_gcpOrgID: ${{ secrets.E2E_GCP_ORG_ID }}
           VENOM_VAR_gcpBillingID: ${{ secrets.E2E_GCP_BILLING_ID }}
           VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
