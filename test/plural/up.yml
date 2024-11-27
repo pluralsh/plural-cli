@@ -34,8 +34,6 @@ vars:
   azureStorageAccount: ''
 
   ### GCP variables
-  # Google Service Account email
-  gcpEmail: ''
   # Google organization ID
   gcpOrgID: ''
   # Google billing account ID
@@ -44,7 +42,6 @@ vars:
 secrets:
   - pluralKey
   - token
-  - gcpSAKeyFile
   - gcpOrgID
   - gcpBillingID
   - azureSubscriptionId
@@ -91,7 +88,6 @@ testcases:
       - provider ShouldEqual gcp
     steps:
       - type: gcloud-setup
-        email: {{ .gcpEmail }}
         orgID: {{ .gcpOrgID }}
         billingID: {{ .gcpBillingID }}
         project: {{ .project }}
@@ -116,7 +112,6 @@ testcases:
       - provider ShouldEqual gcp
     steps:
       - type: gcloud-teardown
-        email: {{ .gcpEmail }}
         project: {{ .project }}
 
   - name: Git teardown
