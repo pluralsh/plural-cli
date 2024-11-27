@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "group" {
 
 module "aks" {
   source = "Azure/aks/azurerm"
-  version = "9.2.0"
+  version = "7.5.0"
 
   kubernetes_version   = "1.22"
   cluster_name         = "marcin"
