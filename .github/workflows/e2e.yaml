@@ -181,10 +181,37 @@ jobs:
           
           # Run tests
           venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Post status on Slack
+        uses: slackapi/slack-github-action@v2.0.0
         with:
-          name: azure
-          path: ${{ env.TESTOUT_PATH }}/test_results.html
-          compression-level: 9
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            text: "*E2E / plural up / Azure*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            blocks:
+            - type: "section"
+              text:
+                type: "mrkdwn"
+                text: "E2E / plural up / Azure: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+        if: always()
+      - name: Upload artifacts to Slack on failure
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel_id": "${{ secrets.SLACK_CHANNEL_ID }}" ,
+              "initial_comment": "`plural up` E2E tests on Azure have failed.",
+              "file_uploads": [
+                {
+                  "file": "${{ env.TESTOUT_PATH }}/venom.log",
+                  "filename": "venom.log"
+                },
+                {
+                  "file": "${{ env.TESTOUT_PATH }}/test_results.html",
+                  "filename": "rest_results.html"
+                }
+              ]
+            }
+        if: failure()
