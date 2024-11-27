@@ -168,6 +168,9 @@ jobs:
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
       - name: Run tests
         env:
+          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          AZURE_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
           VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
@@ -224,5 +227,7 @@ jobs:
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "${{ github.workflow }} workflow failed."
             file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
-                filename: test_results.html
+                filename: rest_results.html
