@@ -75,8 +75,6 @@ jobs:
         run: terraform --version
       - name: Print Google Cloud CLI version
         run: gcloud --version
-      - name: Create Google Project
-        run: gcloud -q projects create plural-e2e-ci-test --name="E2E Debug" --organization=${{ secrets.E2E_GCP_ORG_ID }} --labels=type=e2e
       - name: Run tests
         env:
           VENOM_VAR_provider: gcp
