@@ -46,8 +46,8 @@ jobs:
       - name: GCloud Auth
         uses: 'google-github-actions/auth@v2'
         with:
-          project_id: pluralsh
-          workload_identity_provider: "projects/pluralsh/locations/global/workloadIdentityPools/github/providers/github"
+          project_id: 657418122889
+          workload_identity_provider: "projects/657418122889/locations/global/workloadIdentityPools/github/providers/github"
       - name: Setup Go
         uses: actions/setup-go@v4.1.0
         with:
