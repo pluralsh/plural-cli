@@ -1,7 +1,5 @@
 executor: gcloud-teardown
 input:
-  email: ''
-  saKeyFile: ''
   project: ''
 
 steps:
