@@ -41,7 +41,7 @@
     "@graphql-codegen/typescript-operations": "3.0.2",
     "@graphql-codegen/typescript-react-apollo": "3.3.7",
     "@pluralsh/eslint-config-typescript": "2.5.41",
-    "@types/absinthe__socket": "0.2.3",
+    "@types/absinthe__socket": "0.2.6",
     "@types/absinthe__socket-apollo-link": "0.2.1",
     "@types/phoenix": "1.5.5",
     "@types/react": "18.0.28",
