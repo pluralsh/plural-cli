@@ -95,10 +95,9 @@ jobs:
         with:
           method: files.uploadV2
           token: ${{ secrets.SLACK_BOT_TOKEN }}
-          # ${{ secrets.SLACK_CHANNEL_ID }}
           payload: |
             {
-              "channel": "C082X869RU1" ,
+              "channel_id": "${{ secrets.SLACK_CHANNEL_ID }}" ,
               "initial_comment": "Google e2e test has failed. Here are the generated files.",
               "file_uploads": [
                 {
