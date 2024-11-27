@@ -88,6 +88,7 @@ jobs:
           TF_VAR_subnetwork: plural-e2e-subnet-${{ env.TIMESTAMP }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Post status on Slack
+        id: slack_message
         if: always()
         uses: slackapi/slack-github-action@v2.0.0
         with:
@@ -117,7 +118,7 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
-            initial_comment: "${{ github.workflow }} workflow failed."
+            thread_ts: "${{ steps.slack_message.outputs.ts }}"
             file_uploads:
               - file: ${{ env.TESTOUT_PATH }}/venom.log
                 filename: venom.log
@@ -218,6 +219,7 @@ jobs:
               - type: mrkdwn
                 text: "*Message*\n${{ github.event.head_commit.message }}"
       - name: Upload artifacts to Slack on failure
+        id: slack_message
         if: failure()
         uses: slackapi/slack-github-action@v2.0.0
         with:
@@ -225,7 +227,7 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
-            initial_comment: "${{ github.workflow }} workflow failed."
+            thread_ts: "${{ steps.slack_message.outputs.ts }}"
             file_uploads:
               - file: ${{ env.TESTOUT_PATH }}/venom.log
                 filename: venom.log
