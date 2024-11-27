@@ -179,8 +179,8 @@ jobs:
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
         run: |
           # Create resource group and storage account
-          az group create --name ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }}
-          az storage account create --name ${{ env.VENOM_VAR_azureStorageAccount }} --resource-group ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }} --sku Standard_LRS --kind StorageV2
+          az group create --name ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }} --output none
+          az storage account create --name ${{ env.VENOM_VAR_azureStorageAccount }} --resource-group ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }} --sku Standard_LRS --kind StorageV2 --output none
           
           # Export access key that is required to authenticate to Terraform azurerm backend
           export ARM_ACCESS_KEY=$(az storage account keys list --resource-group ${{ env.VENOM_VAR_project }} --account-name ${{ env.VENOM_VAR_azureStorageAccount }} --query '[0].value' -o tsv)
