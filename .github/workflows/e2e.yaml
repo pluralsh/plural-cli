@@ -94,31 +94,31 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Store test timestamp
-        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Setup test repository SSH key
-        run: |
-          mkdir -p ${{ env.SSH_PATH }}
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval "$(ssh-agent -s)"
-          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-      - name: Setup Go
-        uses: actions/setup-go@v4.1.0
-        with:
-          go-version-file: go.mod
-      - name: Add GOBIN to PATH
-        run: echo $GOBIN >> $GITHUB_PATH
-      - name: Setup Venom
-        run: |
-          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
-          chmod +x ${{ env.VENOM_PATH }}
-          venom version
-      - name: Setup Plural CLI
-        run: |
-          make install-cli
-          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
-          plural version
+#      - name: Store test timestamp
+#        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+#      - name: Setup test repository SSH key
+#        run: |
+#          mkdir -p ${{ env.SSH_PATH }}
+#          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          eval "$(ssh-agent -s)"
+#          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#      - name: Setup Go
+#        uses: actions/setup-go@v4.1.0
+#        with:
+#          go-version-file: go.mod
+#      - name: Add GOBIN to PATH
+#        run: echo $GOBIN >> $GITHUB_PATH
+#      - name: Setup Venom
+#        run: |
+#          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+#          chmod +x ${{ env.VENOM_PATH }}
+#          venom version
+#      - name: Setup Plural CLI
+#        run: |
+#          make install-cli
+#          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+#          plural version
       - name: Print Terraform version
         run: terraform --version
       - name: Print Azure CLI version
@@ -129,25 +129,37 @@ jobs:
           client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-      - name: Run tests
-        env:
-          VENOM_VAR_provider: azure
-          VENOM_VAR_region: polandcentral
-          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
-          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
-          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
-          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
-          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
-          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: azure
-          path: |
-            ${{ env.TESTOUT_PATH }}/venom.log
-            ${{ env.TESTOUT_PATH }}/test_results.html
-          compression-level: 9
+      - name: Test Terraform
+          #        env:
+          #          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          #          ARM_USE_CLI: false
+          #          # ARM_USE_MSI: true
+          #          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          #          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+        # ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+        run: |
+          terraform init -upgrade
+          terraform apply -auto-approve
+          terraform destroy -auto-approve
+#      - name: Run tests
+#        env:
+#          VENOM_VAR_provider: azure
+#          VENOM_VAR_region: polandcentral
+#          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
+#          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+#          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
+#          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+#          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
+#          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
+#          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
+#          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
+#        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+#      - name: Upload artifacts
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: azure
+#          path: |
+#            ${{ env.TESTOUT_PATH }}/venom.log
+#            ${{ env.TESTOUT_PATH }}/test_results.html
+#          compression-level: 9
