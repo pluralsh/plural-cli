@@ -170,7 +170,8 @@ jobs:
           VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
           VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+        run: |
+          ARM_ACCESS_KEY=$(az storage account keys list --resource-group ${{ env.VENOM_VAR_project }} --account-name ${{ env.VENOM_VAR_azureStorageAccount }} --query '[0].value' -o tsv) venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
