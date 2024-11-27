@@ -169,9 +169,9 @@ jobs:
       - name: Run tests
         env:
           ARM_USE_AKS_WORKLOAD_IDENTITY: true
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
           VENOM_VAR_provider: azure
           VENOM_VAR_region: polandcentral
           VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
