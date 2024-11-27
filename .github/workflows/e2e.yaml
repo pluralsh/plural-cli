@@ -223,5 +223,7 @@ jobs:
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "${{ github.workflow }} workflow failed."
             file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
-                filename: test_results.html
+                filename: rest_results.html
