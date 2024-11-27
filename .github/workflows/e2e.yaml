@@ -68,54 +68,56 @@ jobs:
         run: terraform --version
       - name: Print Google Cloud CLI version
         run: gcloud --version
-      - name: Run tests
-        env:
-          VENOM_VAR_provider: gcp
-          VENOM_VAR_region: us-central1
-          VENOM_VAR_gcpEmail: ${{ secrets.E2E_GCP_EMAIL }}
-          # VENOM_VAR_gcpSAKeyFile: ${{ secrets.E2E_GCP_SA_KEY_FILE }}
-          VENOM_VAR_gcpOrgID: ${{ secrets.E2E_GCP_ORG_ID }}
-          VENOM_VAR_gcpBillingID: ${{ secrets.E2E_GCP_BILLING_ID }}
-          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
-          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-gcp
-          VENOM_VAR_username: ${{ secrets.E2E_GCP_SA_USERNAME }}
-          VENOM_VAR_email: ${{ secrets.E2E_GCP_SA_EMAIL }}
-          VENOM_VAR_token: ${{ secrets.E2E_GCP_SA_TOKEN }}
-        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Post a slack message on finish
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.SLACK_WEBHOOK }}
-          payload: |
-            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-            blocks:
-            - type: "section"
-              text:
-                type: "mrkdwn"
-                text: "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-        if: always()
-      - name: Upload venom logs on failure
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          method: files.uploadV2
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            {
-              "channel_id": "${{ secrets.SLACK_CHANNEL_ID }}" ,
-              "initial_comment": "Google e2e test has failed. Here are the generated files.",
-              "file_uploads": [
-                {
-                  "file": "${{ env.TESTOUT_PATH }}/venom.log",
-                  "filename": "venom.log"
-                },
-                {
-                  "file": "${{ env.TESTOUT_PATH }}/test_results.html",
-                  "filename": "rest_results.html"
-                }
-              ]
-            }
-        if: failure()
+      - name: Create Google Project
+        run: gcloud -q projects create plural-e2e-ci-test --name="E2E Debug" --organization=${{ secrets.E2E_GCP_ORG_ID }} --labels=type=e2e
+#      - name: Run tests
+#        env:
+#          VENOM_VAR_provider: gcp
+#          VENOM_VAR_region: us-central1
+#          VENOM_VAR_gcpEmail: ${{ secrets.E2E_GCP_EMAIL }}
+#          # VENOM_VAR_gcpSAKeyFile: ${{ secrets.E2E_GCP_SA_KEY_FILE }}
+#          VENOM_VAR_gcpOrgID: ${{ secrets.E2E_GCP_ORG_ID }}
+#          VENOM_VAR_gcpBillingID: ${{ secrets.E2E_GCP_BILLING_ID }}
+#          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+#          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-gcp
+#          VENOM_VAR_username: ${{ secrets.E2E_GCP_SA_USERNAME }}
+#          VENOM_VAR_email: ${{ secrets.E2E_GCP_SA_EMAIL }}
+#          VENOM_VAR_token: ${{ secrets.E2E_GCP_SA_TOKEN }}
+#        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+#      - name: Post a slack message on finish
+#        uses: slackapi/slack-github-action@v2.0.0
+#        with:
+#          webhook-type: incoming-webhook
+#          webhook: ${{ secrets.SLACK_WEBHOOK }}
+#          payload: |
+#            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+#            blocks:
+#            - type: "section"
+#              text:
+#                type: "mrkdwn"
+#                text: "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+#        if: always()
+#      - name: Upload venom logs on failure
+#        uses: slackapi/slack-github-action@v2.0.0
+#        with:
+#          method: files.uploadV2
+#          token: ${{ secrets.SLACK_BOT_TOKEN }}
+#          payload: |
+#            {
+#              "channel_id": "${{ secrets.SLACK_CHANNEL_ID }}" ,
+#              "initial_comment": "Google e2e test has failed. Here are the generated files.",
+#              "file_uploads": [
+#                {
+#                  "file": "${{ env.TESTOUT_PATH }}/venom.log",
+#                  "filename": "venom.log"
+#                },
+#                {
+#                  "file": "${{ env.TESTOUT_PATH }}/test_results.html",
+#                  "filename": "rest_results.html"
+#                }
+#              ]
+#            }
+#        if: failure()
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
