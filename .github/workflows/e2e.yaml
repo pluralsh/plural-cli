@@ -44,7 +44,7 @@ jobs:
       - name: Decode and save Google service account to a file/env var
         run: |
           (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
-          echo "E2E_GCP_SA_KEY_DECODED=$(base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }})" >> $GITHUB_ENV
+          echo "E2E_GCP_SA_KEY_DECODED=$((base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) | jq -c .)" >> $GITHUB_ENV
       - name: GCloud Auth
         uses: google-github-actions/auth@v2
         with:
