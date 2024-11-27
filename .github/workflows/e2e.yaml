@@ -26,21 +26,24 @@ env:
 jobs:
   plural-up-gcp:
     name: plural up / GCP
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Store test timestamp
-        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-      - name: Setup test repository SSH key
-        run: |
-          mkdir -p ${{ env.SSH_PATH }}
-          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) > ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-          eval "$(ssh-agent -s)"
-          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#      - name: Store test timestamp
+#        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+#      - name: Setup test repository SSH key
+#        run: |
+#          mkdir -p ${{ env.SSH_PATH }}
+#          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) > ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+#          eval "$(ssh-agent -s)"
+#          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
 #      - name: Decode and save Google service account to a file/env var
 #        run: (base64 -d <<< ${{ secrets.E2E_GCP_SA_KEY }}) > ${{ env.E2E_GCP_SA_KEY_FILE }}
       - name: GCloud Auth
@@ -48,26 +51,32 @@ jobs:
         with:
           service_account: ${{ secrets.E2E_GCP_EMAIL }}
           workload_identity_provider: projects/657418122889/locations/global/workloadIdentityPools/github/providers/github
-      - name: Setup Go
-        uses: actions/setup-go@v4.1.0
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          go-version-file: go.mod
-      - name: Add GOBIN to PATH
-        run: echo $GOBIN >> $GITHUB_PATH
-      - name: Setup Venom
-        run: |
-          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
-          chmod +x ${{ env.VENOM_PATH }}
-          venom version
-      - name: Setup Plural CLI
-        run: |
-          make install-cli
-          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
-          plural version
-      - name: Print Terraform version
-        run: terraform --version
-      - name: Print Google Cloud CLI version
-        run: gcloud --version
+          version: '>= 363.0.0'
+      - name: Use gcloud CLI
+        run: gcloud info
+#      - name: Setup Go
+#        uses: actions/setup-go@v4.1.0
+#        with:
+#          go-version-file: go.mod
+#      - name: Add GOBIN to PATH
+#        run: echo $GOBIN >> $GITHUB_PATH
+#      - name: Setup Venom
+#        run: |
+#          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+#          chmod +x ${{ env.VENOM_PATH }}
+#          venom version
+#      - name: Setup Plural CLI
+#        run: |
+#          make install-cli
+#          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+#          plural version
+#      - name: Print Terraform version
+#        run: terraform --version
+#      - name: Print Google Cloud CLI version
+#        run: gcloud --version
       - name: Create Google Project
         run: gcloud -q projects create plural-e2e-ci-test --name="E2E Debug" --organization=${{ secrets.E2E_GCP_ORG_ID }} --labels=type=e2e
 #      - name: Run tests
