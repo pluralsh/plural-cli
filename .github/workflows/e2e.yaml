@@ -203,13 +203,15 @@ jobs:
             - type: section
               fields:
               - type: mrkdwn
+                text: "*Timestamp*\n`${{ env.TIMESTAMP }}`"
+              - type: mrkdwn
+                text: "*Actor*\n<${{ github.event.actor.url }}|${{ github.event.actor.display_login }}>"
+              - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
               - type: mrkdwn
+                text: "*Workflow*\n`${{ github.workflow }}`"
+              - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
-              - type: mrkdwn
-                text: "*Status*\n`${{ github.status }}`"
-              - type: mrkdwn
-                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
               - type: mrkdwn
                 text: "*Commit*\n<${{ github.event.head_commit.url }}|${{ env.SHORT_SHA }}>"
               - type: mrkdwn
@@ -224,7 +226,5 @@ jobs:
             channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
             initial_comment: "${{ github.workflow }} workflow failed."
             file_uploads:
-              - file: ${{ env.TESTOUT_PATH }}/venom.log
-                filename: venom.log
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
-                filename: rest_results.html
+                filename: test_results.html
