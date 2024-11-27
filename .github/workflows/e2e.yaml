@@ -78,15 +78,41 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_GCP_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_GCP_SA_TOKEN }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Post a slack message on finish
+        uses: slackapi/slack-github-action@v2.0.0
         with:
-          name: gcp
-          path: |
-            ${{ env.TESTOUT_PATH }}/venom.log
-            ${{ env.TESTOUT_PATH }}/test_results.html
-          compression-level: 9
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            blocks:
+            - type: "section"
+              text:
+                type: "mrkdwn"
+                text: "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+        if: always()
+      - name: Upload venom log on failure
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            initial_comment: "Google e2e test has failed. Here is the generated log file."
+            file: "${{ env.TESTOUT_PATH }}/venom.log"
+            filename: "venom-${{ github.sha }}.log"
+        if: failure()
+      - name: Upload venom html report on failure
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            initial_comment: "Google e2e test has failed. Here is the generated html report."
+            file: "${{ env.TESTOUT_PATH }}/test_results.html"
+            filename: "venom-${{ github.sha }}.html"
+        if: failure()
   plural-up-azure:
     name: plural up / Azure
     runs-on: ubuntu-latest
