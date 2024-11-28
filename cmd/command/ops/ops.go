@@ -5,6 +5,7 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
@@ -39,7 +40,51 @@ func (p *Plural) opsCommands() []cli.Command {
 			Usage:  "list the nodes in your cluster",
 			Action: common.LatestVersion(common.InitKubeconfig(p.handleListNodes)),
 		},
+		{
+			Name:   "kubeconfig",
+			Usage:  "export kubeconfig",
+			Action: common.LatestVersion(ExportKubeconfig),
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "provider", Usage: "provider name"},
+				cli.StringFlag{Name: "region", Usage: "provider region name"},
+				cli.StringFlag{Name: "cluster", Usage: "provider cluster name"},
+			},
+		},
 	}
+}
+
+func ExportKubeconfig(c *cli.Context) error {
+	_, found := utils.ProjectRoot()
+	if found {
+		prov, err := provider.GetProvider()
+		if err != nil {
+			return err
+		}
+		if err := prov.KubeConfig(); err != nil {
+			return err
+		}
+		utils.LogInfo().Println("init", prov.Name(), "provider")
+	} else {
+		providerName := c.String("provider")
+		region := c.String("region")
+		clusterName := c.String("cluster")
+		if providerName == "" || region == "" || clusterName == "" {
+			return fmt.Errorf("provider, region and cluster name are required")
+		}
+		man := &manifest.ProjectManifest{
+			Cluster:  clusterName,
+			Provider: providerName,
+			Region:   region,
+		}
+		prov, err := provider.FromManifest(man)
+		if err != nil {
+			return err
+		}
+		if err := prov.KubeConfig(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Plural) handleListNodes(c *cli.Context) error {
