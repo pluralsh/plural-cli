@@ -5,8 +5,9 @@ input:
   region: ''
 
 steps:
-  - script: |
-      plural ops kubeconfig --cluster {{ .input.name }} --provider {{ .input.provider }} --region {{ .input.region }}
-      plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode)
+  - script: plural ops kubeconfig --cluster {{ .input.name }} --provider {{ .input.provider }} --region {{ .input.region }}
+    assertions:
+      - result.code ShouldEqual 0
+  - script: plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode)
     assertions:
       - result.code ShouldEqual 0
