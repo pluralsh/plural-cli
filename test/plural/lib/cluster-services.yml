@@ -1,0 +1,9 @@
+executor: cluster-services
+
+steps:
+  - script: plural cd services describe @mgmt/console -o jsonpath='{.status}'
+    assertions:
+      - result.systemout ShouldEqual HEALTHY
+  - script: plural cd services describe @mgmt/deploy-operator -o jsonpath='{.status}'
+    assertions:
+      - result.systemout ShouldEqual HEALTHY

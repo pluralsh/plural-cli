@@ -1,6 +1,7 @@
 package cd
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/util/jsonpath"
 )
 
 func (p *Plural) cdServices() cli.Command {
@@ -471,6 +473,27 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 	} else if output == "yaml" {
 		utils.NewYAMLPrinter(existing).PrettyPrint()
 		return nil
+	} else if strings.HasPrefix(output, "jsonpath=") {
+		after, ok := strings.CutPrefix(output, "jsonpath=")
+		if !ok {
+			return fmt.Errorf("invalid jsonpath format: %s", output)
+		}
+		field, err := utils.RelaxedJSONPathExpression(after)
+		if err != nil {
+			return err
+		}
+		parser := jsonpath.New("parsing").AllowMissingKeys(true)
+		err = parser.Parse(field)
+		if err != nil {
+			return fmt.Errorf("parsing error: %w", err)
+		}
+		buf := new(bytes.Buffer)
+		if err := parser.Execute(buf, existing); err != nil {
+			return err
+		}
+		fmt.Print(buf.String())
+		return nil
+
 	}
 	desc, err := console.DescribeService(existing)
 	if err != nil {

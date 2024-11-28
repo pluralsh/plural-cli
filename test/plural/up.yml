@@ -100,6 +100,14 @@ testcases:
         retry: 3
         delay: 5
 
+  - name: Test cluster
+    steps:
+      - type: cluster-setup
+        provider: {{ .provider }}
+        region: {{ .region }}
+        name: {{ .username }}
+      - type: cluster-services
+
   - name: Azure teardown
     skip:
       - provider ShouldEqual azure
