@@ -73,10 +73,9 @@ jobs:
         run: terraform --version
       - name: Print Google Cloud CLI version
         run: gcloud --version
-      - name: Create kubeconfig
+      - name: Create kube directory
         run: |
           mkdir -p $HOME/.kube
-          touch $HOME/.kube/config
       - name: Run tests
         env:
           VENOM_VAR_provider: gcp
