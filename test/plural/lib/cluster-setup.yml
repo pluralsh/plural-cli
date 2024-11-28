@@ -7,7 +7,7 @@ input:
 steps:
   - script: |
       plural ops kubeconfig --cluster {{ .input.name }} --provider {{ .input.provider }} --region {{ .input.region }}
-      CONSOLE_ACCESS_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode)
+      export CONSOLE_ACCESS_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode)
       plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $CONSOLE_ACCESS_TOKEN
     assertions:
       - result.code ShouldEqual 0
