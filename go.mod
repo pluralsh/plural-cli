@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.22.5
+go 1.22.9
 
 require (
 	cloud.google.com/go/compute v1.23.3
@@ -31,7 +31,7 @@ require (
 	github.com/gofrs/flock v0.8.1
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/hashicorp/go-retryablehttp v0.7.4
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/helm/helm-mapkubeapis v0.4.1
@@ -247,7 +247,7 @@ require (
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.7.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect

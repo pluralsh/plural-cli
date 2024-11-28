@@ -71,10 +71,16 @@ func processRegexReplacements(replacements []RegexReplacement, ctx map[string]in
 		}
 
 		replaceFunc := func(data []byte) ([]byte, error) {
-			r, err := regexp.Compile(replacement.Regex)
+			rx, err := templateReplacement([]byte(replacement.Regex), ctx)
+			if err != nil {
+				rx = []byte(replacement.Regex)
+			}
+
+			r, err := regexp.Compile(string(rx))
 			if err != nil {
 				return data, err
 			}
+
 			return r.ReplaceAll(data, replaceWith), nil
 		}
 
