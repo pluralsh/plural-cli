@@ -11,6 +11,13 @@ input:
   azureSubscriptionId: ''
   azureTenantId: ''
   azureStorageAccount: ''
+
+  # AWS variables
+  awsZoneA: ''
+  awsZoneB: ''
+  awsZoneC: ''
+  projectAWS: ''
+
 steps:
   - script: |
       cat << EOF > {{ .input.directory }}/workspace.yaml
@@ -35,5 +42,32 @@ steps:
           StorageAccount: {{ .input.azureStorageAccount }}
           SubscriptionId: {{ .input.azureSubscriptionId }}
           TenantId: {{ .input.azureTenantId }}
+    assertions:
+      - result.code ShouldEqual 0
+  - skip:
+      - provider ShouldEqual aws
+    script: |
+      cat << EOF > {{ .input.directory }}/workspace.yaml
+      apiVersion: plural.sh/v1alpha1
+      kind: ProjectManifest
+      metadata:
+        name: {{ .input.name }}
+      spec:
+        cluster: {{ .input.name }}
+        bucket: {{ .input.name }}-tf-state
+        project: {{ .input.projectAWS }}
+        provider: {{ .input.provider }}
+        region: {{ .input.region }}
+        owner:
+          email: {{ .input.email }}
+        network:
+          subdomain: {{ .input.name }}.onplural.sh
+          pluraldns: true
+        availabilityzones:
+        - {{ .input.awsZoneA }}
+        - {{ .input.awsZoneB }}
+        - {{ .input.awsZoneC }}
+        bucketPrefix: {{ .input.name }}
+        context: {}
     assertions:
       - result.code ShouldEqual 0

@@ -1,9 +1,12 @@
 executor: cluster-setup
 input:
   name: ''
+  directory: ''
 
 steps:
-  - script: plural ops cluster
+  - script: |
+      cd {{ .input.directory }} ;\
+      plural ops cluster
     assertions:
       - result.code ShouldEqual 0
   - script: |

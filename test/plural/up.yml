@@ -39,6 +39,12 @@ vars:
   # Google billing account ID
   gcpBillingID: ''
 
+  # AWS variables
+  awsZoneA: ''
+  awsZoneB: ''
+  awsZoneC: ''
+  projectAWS: ''
+
 #secrets:
 #  - pluralKey
 #  - token
@@ -69,6 +75,10 @@ testcases:
         azureSubscriptionId: {{ .azureSubscriptionId }}
         azureTenantId: {{ .azureTenantId }}
         azureStorageAccount: {{ .azureStorageAccount }}
+        awsZoneA: {{ .awsZoneA }}
+        awsZoneB: {{ .awsZoneB }}
+        awsZoneC: {{ .awsZoneC }}
+        projectAWS: {{ .projectAWS }}
 
   - name: Setup context file
     steps:
@@ -99,28 +109,29 @@ testcases:
           plural up --commit "Plural up e2e cluster"
         retry: 3
         delay: 5
-
-  - name: Azure kubeconfig
-    skip:
-      - provider ShouldEqual azure
-    steps:
-      - type: azure-kubeconfig
-        name: {{ .username }}
-        project: {{ .project }}
-
-  - name: Google Cloud kubeconfig
-    skip:
-      - provider ShouldEqual gcp
-    steps:
-      - type: gcloud-kubeconfig
-        name: {{ .username }}
-        project: {{ .project }}
-        region: {{ .region }}
-
+#
+#  - name: Azure kubeconfig
+#    skip:
+#      - provider ShouldEqual azure
+#    steps:
+#      - type: azure-kubeconfig
+#        name: {{ .username }}
+#        project: {{ .project }}
+#
+#  - name: Google Cloud kubeconfig
+#    skip:
+#      - provider ShouldEqual gcp
+#    steps:
+#      - type: gcloud-kubeconfig
+#        name: {{ .username }}
+#        project: {{ .project }}
+#        region: {{ .region }}
+#
   - name: Test cluster
     steps:
       - type: cluster-setup
         name: {{ .username }}
+        directory: {{ .directory }}
       - type: cluster-services
 
   - name: Azure teardown

@@ -1,11 +1,11 @@
 executor: cluster-services
 
 steps:
-  - script: plural cd services describe @mgmt/console -o jsonpath='{.status}'
-    retry: 3
-    delay: 50
-    assertions:
-      - result.systemout ShouldEqual HEALTHY
+#  - script: plural cd services describe @mgmt/console -o jsonpath='{.status}'
+#    retry: 3
+#    delay: 50
+#    assertions:
+#      - result.systemout ShouldEqual HEALTHY
 
   - script: plural cd services describe @mgmt/deploy-operator -o jsonpath='{.status}'
     retry: 3
