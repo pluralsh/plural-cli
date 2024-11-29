@@ -6,14 +6,11 @@ input:
   project: ''
 
 steps:
-  - script: az aks get-credentials --overwrite-existing --name {{ .input.name }} --resource-group {{ .input.project }}
-    assertions:
-      - result.code ShouldEqual 0
   - script: plural ops cluster
     assertions:
       - result.code ShouldEqual 0
-#  - script: |
-#      export PLURAL_CONSOLE_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode) ;\
-#      plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $PLURAL_CONSOLE_TOKEN
-#    assertions:
-#      - result.code ShouldEqual 0
+  - script: |
+      export PLURAL_CONSOLE_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode) ;\
+      plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $PLURAL_CONSOLE_TOKEN
+    assertions:
+      - result.code ShouldEqual 0

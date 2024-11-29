@@ -25,7 +25,6 @@ env:
   VENOM_VAR_pluralKey: ${{ secrets.E2E_PLURAL_PRIVATE_KEY }}
 jobs:
   plural-up-gcp:
-    if: false
     name: plural up / GCP
     permissions:
       contents: 'read'
