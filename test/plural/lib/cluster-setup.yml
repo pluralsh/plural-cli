@@ -1,9 +1,6 @@
 executor: cluster-setup
 input:
   name: ''
-  provider: ''
-  region: ''
-  project: ''
 
 steps:
   - script: plural ops cluster
