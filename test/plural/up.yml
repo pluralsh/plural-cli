@@ -105,16 +105,16 @@ testcases:
       - provider ShouldEqual azure
     steps:
       - type: azure-kubeconfig
-        name: { { .username } }
-        project: { { .project } }
+        name: {{ .username }}
+        project: {{ .project }}
 
   - name: Google Cloud kubeconfig
     skip:
       - provider ShouldEqual gcp
     steps:
       - type: gcloud-kubeconfig
-        name: { { .username } }
-        project: { { .project } }
+        name: {{ .username }}
+        project: {{ .project }}
         region: {{ .region }}
 
   - name: Test cluster
