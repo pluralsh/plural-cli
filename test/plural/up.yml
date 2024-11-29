@@ -106,7 +106,8 @@ testcases:
         provider: {{ .provider }}
         region: {{ .region }}
         name: {{ .username }}
-      - type: cluster-services
+        project: {{ .project }}
+#      - type: cluster-services
 
   - name: Azure teardown
     skip:

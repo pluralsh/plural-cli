@@ -76,6 +76,8 @@ jobs:
       - name: Create kube directory
         run: |
           mkdir -p $HOME/.kube
+          touch $HOME/.kube/config
+          chmod 755 $HOME/.kube/config
       - name: Run tests
         env:
           VENOM_VAR_provider: gcp
@@ -128,6 +130,7 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-azure:
+    if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:

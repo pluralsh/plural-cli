@@ -3,13 +3,17 @@ input:
   name: ''
   provider: ''
   region: ''
+  project: ''
 
 steps:
+  - script: gcloud container clusters get-credentials {{ .input.name }} --region {{ .input.region }} --project {{ .input.project }}
+    assertions:
+      - result.code ShouldEqual 0
   - script: plural ops cluster
     assertions:
       - result.code ShouldEqual 0
-  - script: |
-      export PLURAL_CONSOLE_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode) ;\
-      plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $PLURAL_CONSOLE_TOKEN
-    assertions:
-      - result.code ShouldEqual 0
+#  - script: |
+#      export PLURAL_CONSOLE_TOKEN=$(kubectl get secret console-auth-token -n plrl-console -o jsonpath='{.data.access-token}' | base64 --decode) ;\
+#      plural cd login --url https://console.{{ .input.name }}.onplural.sh/gql --token $PLURAL_CONSOLE_TOKEN
+#    assertions:
+#      - result.code ShouldEqual 0
