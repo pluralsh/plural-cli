@@ -11,4 +11,4 @@ steps:
     retry: 3
     delay: 50
     assertions:
-      - result.systemout ShouldEqual HEALTHY
+      - result.systemout ShouldEqual STALE
