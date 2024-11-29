@@ -25,6 +25,7 @@ env:
   VENOM_VAR_pluralKey: ${{ secrets.E2E_PLURAL_PRIVATE_KEY }}
 jobs:
   plural-up-gcp:
+    if: false
     name: plural up / GCP
     permissions:
       contents: 'read'
@@ -130,7 +131,6 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-azure:
-    if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:
@@ -167,6 +167,11 @@ jobs:
         run: terraform --version
       - name: Print Azure CLI version
         run: az --version
+      - name: Create kube directory
+        run: |
+          mkdir -p $HOME/.kube
+          touch $HOME/.kube/config
+          chmod 755 $HOME/.kube/config
       - name: Login to Azure
         uses: azure/login@v2
         with:

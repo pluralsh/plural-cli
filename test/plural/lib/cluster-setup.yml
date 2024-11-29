@@ -6,7 +6,7 @@ input:
   project: ''
 
 steps:
-  - script: gcloud container clusters get-credentials {{ .input.name }} --region {{ .input.region }} --project {{ .input.project }}
+  - script: az aks get-credentials --overwrite-existing --name {{ .input.name }} --resource-group {{ .input.project }}
     assertions:
       - result.code ShouldEqual 0
   - script: plural ops cluster
