@@ -2,7 +2,7 @@ executor: cluster-services
 
 steps:
   - script: plural cd services describe @mgmt/deploy-operator -o jsonpath='{.status}'
-    retry: 6
+    retry: 36
     retry_if:
       - result.systemout ShouldEqual STALE
     delay: 5
