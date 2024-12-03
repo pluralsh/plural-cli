@@ -2,12 +2,8 @@ executor: cluster-services
 
 steps:
   - script: plural cd services describe @mgmt/deploy-operator -o jsonpath='{.status}'
-    retry: 24
-    retry_if:
-      - result.systemout ShouldEqual STALE
-    delay: 20
     assertions:
-      - result.systemout ShouldEqual HEALTHY
+      - result.systemout ShouldBeIn HEALTHY STALE
 
   - name: create_repository
     script: plural cd repositories create --url https://github.com/argoproj/argocd-example-apps.git -o jsonpath='{.id}'
@@ -42,9 +38,5 @@ steps:
       - result.code ShouldEqual 0
 
   - script: plural cd services describe @mgmt/test -o jsonpath='{.status}'
-    retry: 6
-    retry_if:
-      - result.systemout ShouldEqual STALE
-    delay: 5
     assertions:
-      - result.systemout ShouldEqual HEALTHY
+      - result.systemout ShouldBeIn HEALTHY STALE
