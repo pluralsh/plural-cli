@@ -1,11 +1,37 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
+	"strings"
+
+	"k8s.io/client-go/util/jsonpath"
 )
 
 var jsonRegexp = regexp.MustCompile(`^\{\.?([^{}]+)\}$|^\.?([^{}]+)$`)
+
+func ParseJSONPath(input string, data interface{}) error {
+	after, ok := strings.CutPrefix(input, "jsonpath=")
+	if !ok {
+		return fmt.Errorf("invalid jsonpath format: %s", input)
+	}
+	field, err := RelaxedJSONPathExpression(after)
+	if err != nil {
+		return err
+	}
+	parser := jsonpath.New("parsing").AllowMissingKeys(true)
+	err = parser.Parse(field)
+	if err != nil {
+		return fmt.Errorf("parsing error: %w", err)
+	}
+	buf := new(bytes.Buffer)
+	if err := parser.Execute(buf, data); err != nil {
+		return err
+	}
+	fmt.Print(buf.String())
+	return nil
+}
 
 func RelaxedJSONPathExpression(pathExpression string) (string, error) {
 	if len(pathExpression) == 0 {

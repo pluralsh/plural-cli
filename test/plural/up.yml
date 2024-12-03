@@ -109,24 +109,7 @@ testcases:
           plural up --commit "Plural up e2e cluster"
         retry: 3
         delay: 5
-#
-#  - name: Azure kubeconfig
-#    skip:
-#      - provider ShouldEqual azure
-#    steps:
-#      - type: azure-kubeconfig
-#        name: {{ .username }}
-#        project: {{ .project }}
-#
-#  - name: Google Cloud kubeconfig
-#    skip:
-#      - provider ShouldEqual gcp
-#    steps:
-#      - type: gcloud-kubeconfig
-#        name: {{ .username }}
-#        project: {{ .project }}
-#        region: {{ .region }}
-#
+
   - name: Test cluster
     steps:
       - type: cluster-setup

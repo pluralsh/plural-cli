@@ -2,6 +2,7 @@ package cd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -27,6 +28,13 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 			Usage:  "list repositories",
 		},
 		{
+			Name:      "get",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleGetCDRepository, []string{"ID"})),
+			Usage:     "get repository",
+			ArgsUsage: "{id}",
+			Flags:     []cli.Flag{cli.StringFlag{Name: "o", Usage: "output format"}},
+		},
+		{
 			Name:   "create",
 			Action: common.LatestVersion(p.handleCreateCDRepository),
 			Flags: []cli.Flag{
@@ -35,6 +43,7 @@ func (p *Plural) cdRepositoriesCommands() []cli.Command {
 				cli.StringFlag{Name: "passphrase", Usage: "git repo passphrase"},
 				cli.StringFlag{Name: "username", Usage: "git repo username"},
 				cli.StringFlag{Name: "password", Usage: "git repo password"},
+				cli.StringFlag{Name: "o", Usage: "output format"},
 			},
 			Usage: "create repository",
 		},
@@ -76,6 +85,27 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 
 }
 
+func (p *Plural) handleGetCDRepository(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	repo, err := p.ConsoleClient.GetRepository(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
+
+	output := c.String("o")
+	if strings.HasPrefix(output, "jsonpath=") {
+		return utils.ParseJSONPath(output, repo.GetGitRepository())
+	}
+
+	headers := []string{"ID", "URL"}
+	return utils.PrintTable([]gqlclient.GitRepositoryFragment{*repo.GitRepository}, headers, func(r gqlclient.GitRepositoryFragment) ([]string, error) {
+		return []string{r.ID, r.URL}, nil
+	})
+}
+
 func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -85,6 +115,11 @@ func (p *Plural) handleCreateCDRepository(c *cli.Context) error {
 		getFlag(c.String("passphrase")), getFlag(c.String("username")), getFlag(c.String("password")))
 	if err != nil {
 		return err
+	}
+
+	output := c.String("o")
+	if strings.HasPrefix(output, "jsonpath=") {
+		return utils.ParseJSONPath(output, repo.CreateGitRepository)
 	}
 
 	headers := []string{"ID", "URL"}

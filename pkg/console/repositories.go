@@ -37,3 +37,12 @@ func (c *consoleClient) UpdateRepository(id string, attrs gqlclient.GitAttribute
 	}
 	return res, nil
 }
+
+func (c *consoleClient) GetRepository(id string) (*gqlclient.GetGitRepository, error) {
+
+	res, err := c.client.GetGitRepository(c.ctx, &id, nil)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetGitRepository")
+	}
+	return res, nil
+}
