@@ -5,7 +5,7 @@ steps:
     retry: 24
     retry_if:
       - result.systemout ShouldEqual STALE
-    delay: 10
+    delay: 20
     assertions:
       - result.systemout ShouldEqual HEALTHY
 

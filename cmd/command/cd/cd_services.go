@@ -465,15 +465,17 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 		return fmt.Errorf("existing service deployment is empty")
 	}
 	output := c.String("o")
-	if output == "json" {
+	switch {
+	case output == "json":
 		utils.NewJsonPrinter(existing).PrettyPrint()
 		return nil
-	} else if output == "yaml" {
+	case output == "yaml":
 		utils.NewYAMLPrinter(existing).PrettyPrint()
 		return nil
-	} else if strings.HasPrefix(output, "jsonpath=") {
+	case strings.HasPrefix(output, "jsonpath="):
 		return utils.ParseJSONPath(output, existing)
 	}
+
 	desc, err := console.DescribeService(existing)
 	if err != nil {
 		return err
