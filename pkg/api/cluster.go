@@ -1,33 +1,8 @@
 package api
 
 import (
-	"github.com/pluralsh/gqlclient"
 	"github.com/samber/lo"
 )
-
-func (client *client) DestroyCluster(domain, name, provider string) error {
-	_, err := client.pluralClient.DestroyCluster(client.ctx, domain, name, gqlclient.Provider(ToGQLClientProvider(provider)))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (client *client) CreateDependency(source, dest string) error {
-	_, err := client.pluralClient.CreateDependency(client.ctx, source, dest)
-	return err
-}
-
-func (client *client) PromoteCluster() error {
-	_, err := client.pluralClient.PromoteCluster(client.ctx)
-	return err
-}
-
-func (client *client) TransferOwnership(name, email string) error {
-	_, err := client.pluralClient.TransferOwnership(client.ctx, name, email)
-	return err
-}
 
 func (client *client) Clusters() ([]*Cluster, error) {
 	resp, err := client.pluralClient.Clusters(client.ctx, nil)

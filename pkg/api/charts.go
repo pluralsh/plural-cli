@@ -1,10 +1,6 @@
 package api
 
 import (
-	"context"
-	"os"
-	"path"
-
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/gqlclient/pkg/utils"
 )
@@ -85,31 +81,6 @@ func (client *client) GetPackageInstallations(repoId string) (charts []*ChartIns
 	}
 
 	return
-}
-
-func (client *client) CreateCrd(repo string, chart string, file string) error {
-	name := path.Base(file)
-
-	rf, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-	defer func(rf *os.File) {
-		_ = rf.Close()
-	}(rf)
-
-	upload := gqlclient.Upload{
-		R:     rf,
-		Name:  file,
-		Field: "blob",
-	}
-	client.pluralClient.Client.CustomDo = gqlclient.WithFiles([]gqlclient.Upload{upload}, client.httpClient)
-	_, err = client.pluralClient.CreateCrd(context.Background(), gqlclient.ChartName{
-		Chart: &chart,
-		Repo:  &repo,
-	}, name, "blob")
-
-	return err
 }
 
 func (client *client) UninstallChart(id string) (err error) {

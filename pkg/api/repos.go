@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -172,15 +171,6 @@ func (client *client) ReleaseLock(repo, lock string) (*ApplyLock, error) {
 	}, nil
 }
 
-func (client *client) UnlockRepository(name string) error {
-	_, err := client.pluralClient.UnlockRepository(client.ctx, name)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (client *client) ListRepositories(query string) ([]*Repository, error) {
 	resp, err := client.pluralClient.ListRepositories(client.ctx, &query)
 	if err != nil {
@@ -208,17 +198,6 @@ func (client *client) ListRepositories(query string) ([]*Repository, error) {
 	}
 
 	return res, err
-}
-
-func (client *client) InstallVersion(tp, repo, name, vsn string) error {
-	tp = strings.ToUpper(tp)
-	dt := gqlclient.DependencyType(tp)
-	if !dt.IsValid() {
-		return fmt.Errorf("invalid package type %s", tp)
-	}
-
-	_, err := client.pluralClient.InstallVersion(context.Background(), dt, repo, name, vsn)
-	return err
 }
 
 func (client *client) Release(name string, tags []string) error {

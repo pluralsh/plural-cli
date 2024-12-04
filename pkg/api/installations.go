@@ -153,11 +153,6 @@ func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes
 	return err
 }
 
-func (client *client) MarkSynced(repo string) error {
-	_, err := client.pluralClient.MarkSynced(client.ctx, repo)
-	return err
-}
-
 func convertRedirectUris(uris []string) []*string {
 	res := make([]*string, len(uris))
 	for i := range uris {

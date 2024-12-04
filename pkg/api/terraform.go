@@ -11,20 +11,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
-func (client *client) GetTerraform(repoId string) ([]*Terraform, error) {
-
-	terraformResponse, err := client.pluralClient.GetTerraform(client.ctx, repoId)
-	if err != nil {
-		return nil, err
-	}
-
-	terraform := make([]*Terraform, 0)
-	for _, edge := range terraformResponse.Terraform.Edges {
-		terraform = append(terraform, convertTerraform(edge.Node))
-	}
-	return terraform, err
-}
-
 func (client *client) GetTerraformVersions(id string) ([]*Version, error) {
 	resp, err := client.pluralClient.GetTerraformVersions(client.ctx, id)
 	if err != nil {

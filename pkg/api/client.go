@@ -43,37 +43,25 @@ type Client interface {
 	CreateRepository(name string, publisher string, input *gqlclient.RepositoryAttributes) error
 	AcquireLock(repo string) (*ApplyLock, error)
 	ReleaseLock(repo string, lock string) (*ApplyLock, error)
-	UnlockRepository(name string) error
 	ListRepositories(query string) ([]*Repository, error)
 	Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error)
 	UpdateVersion(spec *VersionSpec, tags []string) error
-	CreateCrd(repo string, chart string, file string) error
 	CreateDomain(name string) error
 	CreateInstallation(id string) (string, error)
 	GetInstallation(name string) (*Installation, error)
 	GetInstallations() ([]*Installation, error)
 	OIDCProvider(id string, attributes *OidcProviderAttributes) error
-	GetShell() (CloudShell, error)
-	DeleteShell() error
-	GetTerraform(repoId string) ([]*Terraform, error)
 	CreateKeyBackup(attrs KeyBackupAttributes) error
 	GetKeyBackup(name string) (*KeyBackup, error)
 	ListKeyBackups() ([]*KeyBackup, error)
 	GetHelp(prompt string) (string, error)
-	DestroyCluster(domain, name, provider string) error
-	CreateDependency(source, dest string) error
-	PromoteCluster() error
 	Clusters() ([]*Cluster, error)
 	Cluster(id string) (*Cluster, error)
-	CreateUpgrade(queue, repository string, attrs gqlclient.UpgradeAttributes) error
-	TransferOwnership(name, email string) error
 	Release(name string, tags []string) error
 	Chat(history []*ChatMessage) (*ChatMessage, error)
-	InstallVersion(tp, repo, pkg, vsn string) error
 	CreateTrust(issuer, trust string) error
 	DeleteTrust(id string) error
 	OidcToken(provider gqlclient.ExternalOidcProvider, token, email string) (string, error)
-	MarkSynced(repo string) error
 	GetConsoleInstances() ([]*gqlclient.ConsoleInstanceFragment, error)
 	UpdateConsoleInstance(id string, attrs gqlclient.ConsoleInstanceUpdateAttributes) error
 }
