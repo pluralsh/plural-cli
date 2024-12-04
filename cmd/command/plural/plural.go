@@ -12,10 +12,8 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/down"
 	"github.com/pluralsh/plural-cli/cmd/command/info"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
-	"github.com/pluralsh/plural-cli/cmd/command/link"
 	"github.com/pluralsh/plural-cli/cmd/command/log"
 	"github.com/pluralsh/plural-cli/cmd/command/ops"
-	"github.com/pluralsh/plural-cli/cmd/command/output"
 	"github.com/pluralsh/plural-cli/cmd/command/pr"
 	"github.com/pluralsh/plural-cli/cmd/command/profile"
 	"github.com/pluralsh/plural-cli/cmd/command/proxy"
@@ -223,7 +221,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		clusters.Command(plural.Plural),
 		clone.Command(),
 		down.Command(),
-		output.Command(),
 		ops.Command(plural.Plural),
 		profile.Command(),
 		pr.Command(plural.Plural),
@@ -239,8 +236,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 	}
 	commands = append(commands, plural.getCommands()...)
 	app.Commands = commands
-	links := link.Commands()
-	app.Commands = append(app.Commands, links...)
 
 	return app
 }
