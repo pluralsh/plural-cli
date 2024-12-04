@@ -1,7 +1,6 @@
 package plural
 
 import (
-	"github.com/pluralsh/plural-cli/cmd/command/ai"
 	"github.com/pluralsh/plural-cli/cmd/command/api"
 	"github.com/pluralsh/plural-cli/cmd/command/auth"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
@@ -155,7 +154,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 	commands := []cli.Command{
 		api.Command(plural.Plural),
 		auth.Command(plural.Plural),
-		ai.Command(plural.Plural),
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
