@@ -27,33 +27,11 @@ builds:
       - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
       - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
     binary: plural
-  - id: plrlctl
-    main: ./cmd/plrlctl
-    targets:
-      - linux_amd64
-      - linux_arm64
-      - windows_amd64
-      - windows_arm64
-      - darwin_amd64
-      - darwin_arm64
-    env:
-      - CGO_ENABLED=0
-    ldflags:
-      - -s
-      - -w
-      - -X "github.com/pluralsh/plural-cli/pkg/common.Version={{.Version}}"
-      - -X "github.com/pluralsh/plural-cli/pkg/common.Commit={{.Commit}}"
-      - -X "github.com/pluralsh/plural-cli/pkg/common.Date={{.Date}}"
-      - -X "github.com/pluralsh/plural-cli/pkg/scm.GitlabClientSecret={{.Env.GITLAB_CLIENT_SECRET}}"
-    binary: pluralctl
 
 archives:
   - id: plural-cli
     builds: [plural-cli]
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}'
-  - id: plrlctl
-    builds: [plrlctl]
-    name_template: '{{ .Binary }}_{{ .Version }}_{{- title .Os -}}_{{- if eq .Arch "386" -}}i386{{- else -}}{{ .Arch }}{{- end -}}'
 
 checksum:
   name_template: 'checksums.txt'
@@ -160,70 +138,3 @@ brews:
 
     test: |
       system "#{bin}/plural", "--help"
-
-  - name: plrlctl
-    ids: [plrlctl]
-    repository:
-      owner: pluralsh
-      name: homebrew-plural
-
-      # Optionally a branch can be provided.
-      # Defaults to the default repository branch.
-      branch: main
-
-      # Optionally a token can be provided, if it differs from the token provided to GoReleaser
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-
-    # Template for the url which is determined by the given Token (github, gitlab or gitea)
-    #
-    # Default depends on the client.
-    url_template: "https://github.com/pluralsh/plural-cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-
-    # Allows you to set a custom download strategy. Note that you'll need
-    # to implement the strategy and add it to your tap repository.
-    # Example: https://docs.brew.sh/Formula-Cookbook#specifying-the-download-strategy-explicitly
-    # Default is empty.
-    download_strategy: CurlDownloadStrategy
-
-    # Git author used to commit to the repository.
-    # Defaults are shown.
-    commit_author:
-      name: plural-bot
-      email: gh-bot@plural.sh
-
-    # The project name and current git tag are used in the format string.
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-
-    # Folder inside the repository to put the formula.
-    # Default is the root folder.
-    directory: Formula
-
-    # Your app's homepage.
-    # Default is empty.
-    homepage: "https://docs.plural.sh"
-
-    # Template of your app's description.
-    # Default is empty.
-    description: "CLI to manage and operate a fleet of clusters"
-
-    # SPDX identifier of your app's license.
-    # Default is empty.
-    license: "MIT"
-
-    # Setting this will prevent goreleaser to actually try to commit the updated
-    # formula - instead, the formula file will be stored on the dist folder only,
-    # leaving the responsibility of publishing it to the user.
-    # If set to auto, the release will not be uploaded to the homebrew tap
-    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
-    # Default is false.
-    skip_upload: "auto"
-
-    # Custom block for brew.
-    # Can be used to specify alternate downloads for devel or head releases.
-    # Default is empty.
-    custom_block: |
-      head "https://github.com/pluralsh/plural-cli.git"
-
-    test: |
-      system "#{bin}/plrlctl", "--help"
-

@@ -136,7 +136,7 @@ func globalFlags() []cli.Flag {
 		cli.BoolFlag{
 			Name:        "bootstrap",
 			Usage:       "enable bootstrap mode",
-			Destination: &common.BootstrapMode,
+			Destination: &common.BootstrapMode, // TODO Remove
 			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 	}
