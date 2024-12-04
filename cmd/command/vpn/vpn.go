@@ -23,10 +23,9 @@ import (
 )
 
 const (
-	wireguardAppName           = "wireguard"
-	wireguardNamespace         = "wireguard"
-	wireguardServerName        = "wireguard"
-	wireguardNotInstalledError = "wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"
+	wireguardAppName    = "wireguard"
+	wireguardNamespace  = "wireguard"
+	wireguardServerName = "wireguard"
 )
 
 type Plural struct {

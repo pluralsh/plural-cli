@@ -55,40 +55,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Category: "Workspace",
 		},
 		{
-			Name:      "watch",
-			Usage:     "watches applications until they become ready",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.InitKubeconfig(common.RequireArgs(common.HandleWatch, []string{"REPO"}))),
-			Category:  "Debugging",
-		},
-		{
-			Name:      "wait",
-			Usage:     "waits on applications until they become ready",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.RequireArgs(common.HandleWait, []string{"REPO"})),
-			Category:  "Debugging",
-		},
-		{
-			Name:      "info",
-			Usage:     "generates a console dashboard for the namespace of this repo",
-			ArgsUsage: "REPO",
-			Action:    common.LatestVersion(common.RequireArgs(common.HandleInfo, []string{"REPO"})),
-			Category:  "Debugging",
-		},
-		{
-			Name:  "apply",
-			Usage: "applys the current pluralfile",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "file, f",
-					Usage: "pluralfile to use",
-				},
-			},
-			Action:   common.LatestVersion(common.Apply),
-			Category: "Publishing",
-		},
-
-		{
 			Name:     "readme",
 			Aliases:  []string{"b"},
 			Usage:    "generates the readme for your installation repo",
