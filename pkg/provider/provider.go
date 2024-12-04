@@ -5,15 +5,13 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 )
 
 var cloudFlag bool
@@ -30,7 +28,6 @@ type Provider interface {
 	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
 	CreateBucket() error
 	Context() map[string]interface{}
-	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
 	Permissions() (permissions.Checker, error)
 	Flush() error
