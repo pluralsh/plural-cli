@@ -44,6 +44,7 @@ vars:
   awsZoneB: ''
   awsZoneC: ''
   projectAWS: ''
+  bucketAWS: ''
 
 #secrets:
 #  - pluralKey
@@ -79,6 +80,7 @@ testcases:
         awsZoneB: {{ .awsZoneB }}
         awsZoneC: {{ .awsZoneC }}
         projectAWS: {{ .projectAWS }}
+        bucketAWS: {{ .bucketAWS }}
 
   - name: Setup context file
     steps:

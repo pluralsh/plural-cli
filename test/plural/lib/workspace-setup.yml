@@ -54,7 +54,7 @@ steps:
         name: {{ .input.name }}
       spec:
         cluster: {{ .input.name }}
-        bucket: {{ .input.name }}-tf-state
+        bucket: {{ .input.bucketAWS }}
         project: {{ .input.projectAWS }}
         provider: {{ .input.provider }}
         region: {{ .input.region }}
@@ -67,7 +67,7 @@ steps:
         - {{ .input.awsZoneA }}
         - {{ .input.awsZoneB }}
         - {{ .input.awsZoneC }}
-        bucketPrefix: {{ .input.name }}
+        bucketPrefix: e2e-tf-state
         context: {}
     assertions:
       - result.code ShouldEqual 0
