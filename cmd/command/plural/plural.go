@@ -12,8 +12,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/clusters"
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
-	"github.com/pluralsh/plural-cli/cmd/command/deploy"
-	"github.com/pluralsh/plural-cli/cmd/command/destroy"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
 	"github.com/pluralsh/plural-cli/cmd/command/info"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
@@ -232,8 +230,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cryptocmd.Command(plural.Plural),
 		clusters.Command(plural.Plural),
 		clone.Command(),
-		deploy.Command(plural.Plural),
-		destroy.Command(plural.Plural),
 		down.Command(),
 		output.Command(),
 		ops.Command(plural.Plural),
