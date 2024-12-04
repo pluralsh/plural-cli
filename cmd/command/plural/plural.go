@@ -19,8 +19,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/pr"
 	"github.com/pluralsh/plural-cli/cmd/command/profile"
 	"github.com/pluralsh/plural-cli/cmd/command/proxy"
-	"github.com/pluralsh/plural-cli/cmd/command/push"
-	"github.com/pluralsh/plural-cli/cmd/command/repo"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
 	"github.com/pluralsh/plural-cli/cmd/command/upgrade"
 	"github.com/pluralsh/plural-cli/cmd/command/version"
@@ -230,9 +228,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		profile.Command(),
 		pr.Command(plural.Plural),
 		proxy.Command(plural.Plural),
-		push.Command(plural.Plural),
-		repo.Command(plural.Plural),
-		repo.APICommand(plural.Plural),
 		log.Command(plural.Plural),
 		info.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
