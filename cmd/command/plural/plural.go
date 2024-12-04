@@ -222,8 +222,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		ops.Command(plural.Plural),
 		profile.Command(),
 		pr.Command(plural.Plural),
-		proxy.Command(plural.Plural),
-		log.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
 		workspace.Command(plural.Plural, plural.HelmConfiguration),
