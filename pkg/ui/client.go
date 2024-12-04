@@ -6,14 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/urfave/cli"
-	"golang.org/x/exp/maps"
-
 	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/urfave/cli"
 )
 
 type Application struct {
@@ -128,48 +125,6 @@ func (this *Client) Install(applications []Application, domains, buckets []strin
 	// Write to context.yaml only if there were no errors
 	err = context.Write(path)
 	return err
-}
-
-func (this *Client) doInstall(application Application, context *manifest.Context) error {
-	recipeID := application.Data["id"].(string)
-	oidc := application.Data["oidc"].(bool)
-	configuration := application.Data["context"].(map[string]interface{})
-	repoName := application.Label
-	mergedConfiguration, exists := context.Configuration[repoName]
-	if !exists {
-		mergedConfiguration = map[string]interface{}{}
-	}
-
-	recipe, err := this.client.GetRecipeByID(recipeID)
-	if err != nil {
-		return api.GetErrorResponse(err, "GetRecipeByID")
-	}
-
-	// Merge incoming configuration with existing one and update context
-	maps.Copy(mergedConfiguration, configuration)
-	context.Configuration[repoName] = mergedConfiguration
-
-	// Non-dependency apps need some additional handling
-	if !application.IsDependency {
-		// Add installed app to the context
-		context.AddBundle(repoName, recipe.Name)
-
-		// Install app recipe
-		if err := this.client.InstallRecipe(recipeID); err != nil {
-			return fmt.Errorf("error: %w", api.GetErrorResponse(err, "InstallRecipe"))
-		}
-	}
-
-	// Configure OIDC if enabled
-	if oidc {
-		confirm := true
-		err = bundle.ConfigureOidc(repoName, this.client, recipe, configuration, &confirm)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (this *Client) addDomains(context *manifest.Context, domains []string) {

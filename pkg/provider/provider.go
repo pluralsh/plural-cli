@@ -59,10 +59,6 @@ var (
 	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
 )
 
-func IgnoreProviders(prov []string) {
-	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
-}
-
 func GetProviderScaffold(provider, version string) (string, error) {
 	if providers.Scaffolds == nil {
 		providers.Scaffolds = make(map[string]string)

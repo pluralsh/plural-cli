@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/pluralsh/gqlclient"
 )
 
@@ -357,77 +355,3 @@ type ChatMessage struct {
 	Content string
 	Role    string
 }
-
-const CrdFragment = `
-	fragment CrdFragment on Crd {
-		id
-		name
-		blob
-	}
-`
-
-const DependenciesFragment = `
-	fragment DependenciesFragment on Dependencies {
-		dependencies {
-			type
-			name
-			repo
-		}
-		wait
-		application
-		providers
-		secrets
-		wirings { terraform helm }
-		providerWirings
-		outputs
-		providerVsn
-	}
-`
-
-var VersionFragment = fmt.Sprintf(`
-	fragment VersionFragment on Version {
-		id
-		readme
-		version
-		valuesTemplate
-		package
-		crds { ...CrdFragment }
-		dependencies { ...DependenciesFragment }
-	}
-	%s
-`, CrdFragment)
-
-var TerraformFragment = fmt.Sprintf(`
-	fragment TerraformFragment on Terraform {
-		id
-		name
-		package
-		description
-		dependencies { ...DependenciesFragment }
-		valuesTemplate
-	}
-	%s
-`, DependenciesFragment)
-
-var TerraformInstallationFragment = fmt.Sprintf(`
-	fragment TerraformInstallationFragment on TerraformInstallation {
-		id
-		terraform { ...TerraformFragment }
-		version { ...VersionFragment }
-	}
-	%s
-	%s
-`, TerraformFragment, VersionFragment)
-
-const ArtifactFragment = `
-	fragment ArtifactFragment on Artifact {
-		id
-		name
-		readme
-		platform
-		arch
-		blob
-		sha
-		filesize
-	}
-`

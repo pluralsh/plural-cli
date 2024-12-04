@@ -153,15 +153,6 @@ func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes
 	return err
 }
 
-func (client *client) ResetInstallations() (int, error) {
-	resp, err := client.pluralClient.ResetInstallations(client.ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	return int(*resp.ResetInstallations), err
-}
-
 func (client *client) MarkSynced(repo string) error {
 	_, err := client.pluralClient.MarkSynced(client.ctx, repo)
 	return err

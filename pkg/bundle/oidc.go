@@ -13,48 +13,6 @@ import (
 
 var oidcConfirmed bool
 
-func ConfigureOidc(repo string, client api.Client, recipe *api.Recipe, ctx map[string]interface{}, confirm *bool) error {
-	if recipe.OidcSettings == nil {
-		return nil
-	}
-
-	ok, err := confirmOidc(confirm)
-	if err != nil {
-		return err
-	}
-
-	if !ok {
-		return nil
-	}
-
-	settings := recipe.OidcSettings
-	redirectUris, err := formatRedirectUris(settings, ctx)
-	if err != nil {
-		return err
-	}
-
-	inst, err := client.GetInstallation(repo)
-	if err != nil {
-		return api.GetErrorResponse(err, "GetInstallation")
-	}
-
-	me, err := client.Me()
-	if err != nil {
-		return api.GetErrorResponse(err, "Me")
-	}
-
-	oidcSettings := &api.OidcProviderAttributes{
-		RedirectUris: redirectUris,
-		AuthMethod:   settings.AuthMethod,
-		Bindings: []api.Binding{
-			{UserId: me.Id},
-		},
-	}
-	mergeOidcAttributes(inst, oidcSettings)
-	err = client.OIDCProvider(inst.Id, oidcSettings)
-	return api.GetErrorResponse(err, "OIDCProvider")
-}
-
 func SetupOIDC(repo string, client api.Client, redirectUris []string, authMethod string) error {
 	inst, err := client.GetInstallation(repo)
 	if err != nil {

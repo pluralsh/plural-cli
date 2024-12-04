@@ -3,14 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	rawclient "github.com/Yamashou/gqlgenc/clientv2"
 	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
-
-	"github.com/samber/lo"
 
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -27,8 +24,6 @@ func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type Client interface {
-	ListArtifacts(repo string) ([]Artifact, error)
-	CreateArtifact(repo string, attrs ArtifactAttributes) (Artifact, error)
 	Me() (*Me, error)
 	LoginMethod(email string) (*LoginMethod, error)
 	PollLoginToken(token string) (string, error)
@@ -52,35 +47,15 @@ type Client interface {
 	ListRepositories(query string) ([]*Repository, error)
 	Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error)
 	UpdateVersion(spec *VersionSpec, tags []string) error
-	GetCharts(repoId string) ([]*Chart, error)
-	GetVersions(chartId string) ([]*Version, error)
-	GetTerraformVersions(id string) ([]*Version, error)
-	GetChartInstallations(repoId string) ([]*ChartInstallation, error)
-	GetPackageInstallations(repoId string) (charts []*ChartInstallation, tfs []*TerraformInstallation, err error)
 	CreateCrd(repo string, chart string, file string) error
 	CreateDomain(name string) error
 	CreateInstallation(id string) (string, error)
 	GetInstallation(name string) (*Installation, error)
-	GetInstallationById(id string) (*Installation, error)
 	GetInstallations() ([]*Installation, error)
-	DeleteInstallation(id string) error
 	OIDCProvider(id string, attributes *OidcProviderAttributes) error
-	ResetInstallations() (int, error)
-	CreateRecipe(repoName string, attrs gqlclient.RecipeAttributes) (string, error)
-	GetRecipe(repo string, name string) (*Recipe, error)
-	GetRecipeByID(id string) (*Recipe, error)
-	ListRecipes(repo string, provider string) ([]*Recipe, error)
-	InstallRecipe(id string) error
 	GetShell() (CloudShell, error)
 	DeleteShell() error
 	GetTerraform(repoId string) ([]*Terraform, error)
-	GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error)
-	UploadTerraform(dir string, repoName string) (Terraform, error)
-	GetStack(name, provider string) (*Stack, error)
-	CreateStack(attributes gqlclient.StackAttributes) (string, error)
-	ListStacks(featured bool) ([]*Stack, error)
-	UninstallChart(id string) error
-	UninstallTerraform(id string) error
 	CreateKeyBackup(attrs KeyBackupAttributes) error
 	GetKeyBackup(name string) (*KeyBackup, error)
 	ListKeyBackups() ([]*KeyBackup, error)
@@ -156,40 +131,4 @@ func GetErrorResponse(err error, methodName string) error {
 	}
 
 	return errList
-}
-
-func FindChart(client Client, repo, name string) (*Chart, error) {
-	r, err := client.GetRepository(repo)
-	if err != nil {
-		return nil, err
-	}
-
-	charts, err := client.GetCharts(r.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	chart, ok := lo.Find(charts, func(c *Chart) bool { return c.Name == name })
-	if !ok {
-		return nil, fmt.Errorf("No chart found for repo %s and name %s", repo, name)
-	}
-	return chart, nil
-}
-
-func FindTerraform(client Client, repo, name string) (*Terraform, error) {
-	r, err := client.GetRepository(repo)
-	if err != nil {
-		return nil, err
-	}
-
-	tfs, err := client.GetTerraform(r.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	tf, ok := lo.Find(tfs, func(c *Terraform) bool { return c.Name == name })
-	if !ok {
-		return nil, fmt.Errorf("No terraform module found for repo %s and name %s", repo, name)
-	}
-	return tf, nil
 }

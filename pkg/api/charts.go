@@ -16,24 +16,6 @@ type packageCacheEntry struct {
 
 var packageCache = make(map[string]*packageCacheEntry)
 
-func (client *client) GetCharts(repoId string) ([]*Chart, error) {
-	charts := make([]*Chart, 0)
-	resp, err := client.pluralClient.GetCharts(client.ctx, repoId)
-	if err != nil {
-		return nil, err
-	}
-	for _, edge := range resp.Charts.Edges {
-		charts = append(charts, &Chart{
-			Id:            utils.ConvertStringPointer(edge.Node.ID),
-			Name:          edge.Node.Name,
-			Description:   utils.ConvertStringPointer(edge.Node.Description),
-			LatestVersion: utils.ConvertStringPointer(edge.Node.LatestVersion),
-		})
-	}
-
-	return charts, err
-}
-
 func (client *client) GetVersions(chartId string) ([]*Version, error) {
 	versions := make([]*Version, 0)
 	resp, err := client.pluralClient.GetVersions(client.ctx, chartId)

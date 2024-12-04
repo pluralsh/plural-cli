@@ -2,14 +2,11 @@ package api
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/pluralsh/gqlclient"
 
 	"github.com/pluralsh/gqlclient/pkg/utils"
-	"github.com/samber/lo"
-
 	tarutils "github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
@@ -42,28 +39,6 @@ func (client *client) GetTerraformVersions(id string) ([]*Version, error) {
 	return versions, nil
 }
 
-func (client *client) GetTerraformInstallations(repoId string) ([]*TerraformInstallation, error) {
-	resp, err := client.pluralClient.GetTerraformInstallations(client.ctx, repoId)
-	if err != nil {
-		return nil, err
-	}
-
-	inst := make([]*TerraformInstallation, 0)
-	for _, edge := range resp.TerraformInstallations.Edges {
-		inst = append(inst, &TerraformInstallation{
-			Id:        utils.ConvertStringPointer(edge.Node.ID),
-			Terraform: convertTerraform(edge.Node.Terraform),
-			Version:   convertVersion(edge.Node.Version),
-		})
-	}
-	return inst, err
-}
-
-func (client *client) UninstallTerraform(id string) (err error) {
-	_, err = client.pluralClient.UninstallTerraform(client.ctx, id)
-	return
-}
-
 func tarDir(name, dir, regex string) (res string, err error) {
 	fullPath, err := filepath.Abs(dir)
 	if err != nil {
@@ -80,46 +55,6 @@ func tarDir(name, dir, regex string) (res string, err error) {
 
 	err = tarutils.Tar(fullPath, f, regex)
 	return
-}
-
-func (client *client) UploadTerraform(dir, repoName string) (Terraform, error) {
-	tf := Terraform{}
-	name := path.Base(dir)
-	tarFile, err := tarDir(name, dir, "\\.terraform")
-	if err != nil {
-		return tf, err
-	}
-
-	rf, err := os.Open(tarFile)
-	if err != nil {
-		return tf, err
-	}
-	defer rf.Close()
-	defer os.Remove(tarFile)
-
-	client.pluralClient.Client.CustomDo = gqlclient.WithFiles([]gqlclient.Upload{
-		{
-			Field: "package",
-			Name:  tarFile,
-			R:     rf,
-		},
-	}, client.httpClient)
-	resp, err := client.pluralClient.UploadTerraform(client.ctx, repoName, name, "package")
-	if err != nil {
-		return tf, err
-	}
-
-	upload := resp.UploadTerraform
-	tf.Name = lo.FromPtr(upload.Name)
-	tf.Id = lo.FromPtr(upload.ID)
-	tf.Description = lo.FromPtr(upload.Description)
-	tf.ValuesTemplate = lo.FromPtr(upload.ValuesTemplate)
-	tf.Package = lo.FromPtr(upload.Package)
-	if upload.Dependencies != nil {
-		tf.Dependencies = convertDependencies(upload.Dependencies)
-	}
-
-	return tf, err
 }
 
 func convertTerraform(ter *gqlclient.TerraformFragment) *Terraform {
