@@ -10,7 +10,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
-	"github.com/pluralsh/plural-cli/cmd/command/info"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
 	"github.com/pluralsh/plural-cli/cmd/command/log"
 	"github.com/pluralsh/plural-cli/cmd/command/ops"
@@ -18,7 +17,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/profile"
 	"github.com/pluralsh/plural-cli/cmd/command/proxy"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
-	"github.com/pluralsh/plural-cli/cmd/command/upgrade"
 	"github.com/pluralsh/plural-cli/cmd/command/version"
 	"github.com/pluralsh/plural-cli/cmd/command/vpn"
 	"github.com/pluralsh/plural-cli/cmd/command/workspace"
@@ -226,10 +224,8 @@ func CreateNewApp(plural *Plural) *cli.App {
 		pr.Command(plural.Plural),
 		proxy.Command(plural.Plural),
 		log.Command(plural.Plural),
-		info.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
-		upgrade.Command(plural.Plural),
 		workspace.Command(plural.Plural, plural.HelmConfiguration),
 		vpn.Command(plural.Plural),
 		version.Command(),
