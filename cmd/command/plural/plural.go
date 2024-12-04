@@ -6,7 +6,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/auth"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/cmd/command/clone"
-	"github.com/pluralsh/plural-cli/cmd/command/clusters"
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
@@ -41,19 +40,6 @@ type Plural struct {
 
 func (p *Plural) getCommands() []cli.Command {
 	return []cli.Command{
-		{
-			Name:      "diff",
-			Aliases:   []string{"df"},
-			Usage:     "diffs the state of the current workspace with the deployed version and dumps results to diffs/",
-			ArgsUsage: "APP",
-			Action:    common.LatestVersion(common.HandleDiff),
-		},
-		{
-			Name:     "create",
-			Usage:    "scaffolds the resources needed to create a new plural repository",
-			Action:   common.LatestVersion(common.HandleScaffold),
-			Category: "Workspace",
-		},
 		{
 			Name:     "readme",
 			Aliases:  []string{"b"},
@@ -126,12 +112,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   common.LatestVersion(common.HandleHelmTemplate),
 			Category: "Publishing",
 		},
-		{
-			Name:     "changed",
-			Usage:    "shows repos with pending changes",
-			Action:   common.LatestVersion(common.Diffed),
-			Category: "Workspace",
-		},
 	}
 }
 
@@ -180,7 +160,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
-		clusters.Command(plural.Plural),
 		clone.Command(),
 		down.Command(),
 		ops.Command(plural.Plural),

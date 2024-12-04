@@ -43,18 +43,6 @@ func (p *Plural) workspaceCommands() []cli.Command {
 			Action: common.LatestVersion(kubeInit),
 		},
 		{
-			Name:      "readme",
-			Usage:     "generate chart readme for an app",
-			ArgsUsage: "{app}",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "dry-run",
-					Usage: "output to stdout instead of to a file",
-				},
-			},
-			Action: common.LatestVersion(func(c *cli.Context) error { return common.AppReadme(c.Args().Get(0), c.Bool("dry-run")) }),
-		},
-		{
 			Name:      "helm",
 			Usage:     "upgrade/installs the helm chart for this subworkspace",
 			ArgsUsage: "{name}",

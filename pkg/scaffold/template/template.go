@@ -36,46 +36,6 @@ func templateInfo(path string) (t gqlclient.TemplateType, contents string, err e
 	return
 }
 
-func BuildValuesFromTemplate(vals map[string]interface{}, w *wkspace.Workspace) (map[string]map[string]interface{}, error) {
-	globals := map[string]interface{}{}
-	output := make(map[string]map[string]interface{})
-	for _, chartInst := range w.Charts {
-		chartName := chartInst.Chart.Name
-		tplate := chartInst.Version.ValuesTemplate
-		templateType := chartInst.Version.TemplateType
-
-		if w.Links != nil {
-			if path, ok := w.Links.Helm[chartName]; ok {
-				var err error
-				templateType, tplate, err = templateInfo(path)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		switch templateType {
-		case gqlclient.TemplateTypeGotemplate:
-			if err := FromGoTemplate(vals, globals, output, chartName, tplate); err != nil {
-				return nil, err
-			}
-		case gqlclient.TemplateTypeLua:
-			if err := FromLuaTemplate(vals, globals, output, chartName, tplate); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if len(globals) > 0 {
-		output["global"] = globals
-	}
-
-	output["plrl"] = map[string]interface{}{
-		"license": w.Installation.LicenseKey,
-	}
-	return output, nil
-}
-
 func TmpValuesFile(path string) (f *os.File, err error) {
 	conf := config.Read()
 	if strings.HasSuffix(path, "lua") {

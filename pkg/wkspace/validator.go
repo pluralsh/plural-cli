@@ -34,22 +34,6 @@ func Preflight() (bool, error) {
 	return true, nil
 }
 
-func (wk *Workspace) Validate() error {
-	for _, tf := range wk.Terraform {
-		if err := wk.providersValid(tf.Terraform.Dependencies.Providers); err != nil {
-			return err
-		}
-	}
-
-	for _, chart := range wk.Charts {
-		if err := wk.providersValid(chart.Chart.Dependencies.Providers); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (wk *Workspace) providersValid(providers []string) error {
 	if len(providers) == 0 {
 		return nil
