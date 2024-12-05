@@ -11,7 +11,7 @@ accounts:
         - property: Name
           value: "OrganizationAccountAccessRole"
         - property: Name
-          value: "admin"
+          value: "GitHubAction-AssumeRoleWithAction"
       IAMRolePolicyAttachment:
         - property: RoleName
           value: "OrganizationAccountAccessRole"
