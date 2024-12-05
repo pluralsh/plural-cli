@@ -42,6 +42,10 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
+      - uses: mcblair/configure-aws-profile-action@v1.0.0
+        with:
+          role-arn: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
+          profile-name: aws-nuke
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Setup test repository SSH key
