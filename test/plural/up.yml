@@ -43,8 +43,8 @@ vars:
   awsZoneA: ''
   awsZoneB: ''
   awsZoneC: ''
-  projectAWS: ''
-  bucketAWS: ''
+  awsProject: ''
+  awsBucket: ''
 
 #secrets:
 #  - pluralKey
@@ -79,8 +79,8 @@ testcases:
         awsZoneA: {{ .awsZoneA }}
         awsZoneB: {{ .awsZoneB }}
         awsZoneC: {{ .awsZoneC }}
-        projectAWS: {{ .projectAWS }}
-        bucketAWS: {{ .bucketAWS }}
+        awsProject: {{ .awsProject }}
+        awsBucket: {{ .awsBucket }}
 
   - name: Setup context file
     steps:
@@ -132,6 +132,12 @@ testcases:
     steps:
       - type: gcloud-teardown
         project: {{ .project }}
+
+  - name: AWS Cloud teardown
+    skip:
+      - provider ShouldEqual aws
+    steps:
+      - type: aws-teardown
 
   - name: Git teardown
     steps:

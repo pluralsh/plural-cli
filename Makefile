@@ -214,13 +214,14 @@ e2e: --ensure-venom
 	VENOM_VAR_awsZoneA=${PLRL_CLI_E2E_AWS_ZONE_A} \
 	VENOM_VAR_awsZoneB=${PLRL_CLI_E2E_AWS_ZONE_B} \
 	VENOM_VAR_awsZoneC=${PLRL_CLI_E2E_AWS_ZONE_C} \
-	VENOM_VAR_projectAWS=${PLRL_CLI_E2E_PROJECT} \
-	VENOM_VAR_bucketAWS=e2e-tf-state-${TIMESTAMP} \
+	VENOM_VAR_awsProject=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_awsBucket=e2e-tf-state-${TIMESTAMP} \
 	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
 	PLURAL_UP_AFFIRM_DEPLOY=true \
 	PLURAL_CD_USE_EXISTING_CREDENTIALS=true \
 	TF_VAR_network=plural-e2e-network-${TIMESTAMP} \
 	TF_VAR_subnetwork=plural-e2e-subnet-${TIMESTAMP} \
+	TF_VAR_deletion_protection=false \
  		venom run -vv --html-report --format=json --output-dir testout test/plural
 
 .PHONY: format

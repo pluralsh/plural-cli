@@ -16,7 +16,8 @@ input:
   awsZoneA: ''
   awsZoneB: ''
   awsZoneC: ''
-  projectAWS: ''
+  awsProject: ''
+  awsBucket: ''
 
 steps:
   - script: |
@@ -54,8 +55,8 @@ steps:
         name: {{ .input.name }}
       spec:
         cluster: {{ .input.name }}
-        bucket: {{ .input.bucketAWS }}
-        project: {{ .input.projectAWS }}
+        bucket: {{ .input.awsBucket }}
+        project: {{ .input.awsProject }}
         provider: {{ .input.provider }}
         region: {{ .input.region }}
         owner:

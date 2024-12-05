@@ -1,0 +1,9 @@
+executor: aws-teardown
+input:
+  resourceGroup: ''
+steps:
+  - script: aws-nuke run --config ../../nuke-config.yml --force --access-key-id $AWS_ACCESS_KEY_ID --secret-access-key $AWS_SECRET_ACCESS_KEY --no-dry-run
+    retry: 3
+    retry_if:
+      - result.code ShouldNotEqual 0
+    delay: 5
