@@ -45,13 +45,6 @@ jobs:
           chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
           eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.E2E_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.E2E_AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-          role-to-assume: arn:aws:iam::911167907168:user/aws-nuke
       - name: Install aws-nuke
         run: |
           wget -c https://github.com/ekristen/aws-nuke/releases/download/v3.34.0/aws-nuke-v3.34.0-linux-amd64.tar.gz -O - | tar -xz -C /usr/local/bin
