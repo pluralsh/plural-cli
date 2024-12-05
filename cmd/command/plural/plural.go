@@ -19,7 +19,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/common"
 	conf "github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
-	"github.com/pluralsh/plural-cli/pkg/exp"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
@@ -132,12 +131,6 @@ func globalFlags() []cli.Flag {
 			Usage:       "enable debug mode",
 			EnvVar:      "PLURAL_DEBUG_ENABLE",
 			Destination: &utils.EnableDebug,
-		},
-		cli.BoolFlag{
-			Name:        "bootstrap",
-			Usage:       "enable bootstrap mode",
-			Destination: &common.BootstrapMode, // TODO Remove
-			Hidden:      !exp.IsFeatureEnabled(exp.EXP_PLURAL_CAPI),
 		},
 	}
 }
