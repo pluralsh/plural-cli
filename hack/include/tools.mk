@@ -1,14 +1,14 @@
-WAILS_BINARY := $(shell which wails)
-WAILS_VERSION := v2.4.1
+VENOM_BINARY := $(shell which venom)
+VENOM_VERSION := v1.2.0
 
 GO_BINARY := $(shell which go)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 MIN_GO_MAJOR_VERSION = 1
-MIN_GO_MINOR_VERSION = 19
+MIN_GO_MINOR_VERSION = 22
 
 .PHONY: install-tools
-install-tools: --ensure-go --ensure-wails ## Install required dependencies to run make targets
+install-tools: --ensure-go --ensure-venom ## Install required dependencies to run make targets
 
 .PHONY: --ensure-go
 --ensure-go:
@@ -23,11 +23,11 @@ endif
 		exit 1; \
   fi
 
-.PHONY: --ensure-wails
---ensure-wails:
-ifndef WAILS_BINARY
-	@echo "[tools] downloading wails..."
-	@go install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+.PHONY: --ensure-venom
+--ensure-venom:
+ifndef VENOM_BINARY
+	@echo "[tools] downloading venom..."
+	@go install github.com/ovh/venom/cmd/venom@${VENOM_VERSION}
 else
-	@echo "[tools] wails already exists"
+	@echo "[tools] venom already exists"
 endif

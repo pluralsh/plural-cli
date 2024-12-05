@@ -1,0 +1,128 @@
+regions:
+  - eu-west-1
+  - global
+accounts:
+  911167907168:
+    filters:
+      EC2InternetGatewayAttachment:
+        - property: DefaultVPC
+          value: "true"        
+      IAMRole:
+        - property: Name
+          value: "OrganizationAccountAccessRole"
+        - property: Name
+          value: "GitHubAction-AssumeRoleWithAction"
+      IAMRolePolicyAttachment:
+        - property: RoleName
+          value: "OrganizationAccountAccessRole"
+        - property: PolicyName
+          value: "AdministratorAccess"      
+      EC2InternetGateway:
+        - property: DefaultVPC
+          value: "true"        
+      EC2DHCPOption:
+        - property: DefaultVPC
+          value: "true"
+      EC2Subnet:
+        - property: DefaultForAz
+          value: "true"
+      EC2VPC:
+        - property: IsDefault
+          value: "true"
+      EC2SecurityGroup:
+        - property: Name
+          value: default
+        - property: tag:Name
+          type: contains
+          value: "Default VPC"
+
+blocklist:
+  - 312272277431
+  - 654897662046
+
+resource-types:
+  # Specifying this in the configuration will ensure that only these three
+  # resources are targeted by aws-nuke during it's run.
+  # includes:
+  #   - S3Object
+  #   - S3Bucket
+  #   - IAMRole
+  #   - EC2VPC
+  excludes:
+    - EC2DefaultSecurityGroupRule
+    - IAMAccountSettingPasswordPolicy                        
+    - IAMGroup                                               
+    - IAMGroupPolicy                                         
+    - IAMGroupPolicyAttachment                               
+    - IAMInstanceProfile                                     
+    - IAMInstanceProfileRole                                 
+    - IAMLoginProfile                                        
+    - IAMOpenIDConnectProvider                               
+    - IAMPolicy                                              
+#    - IAMRole                                                
+    - IAMRolePolicy                                          
+#    - IAMRolePolicyAttachment                                
+#    - IAMRolesAnywhereCRL                                    
+#    - IAMRolesAnywhereProfile                                
+#    - IAMRolesAnywhereTrustAnchor                            
+    - IAMSAMLProvider                                        
+    - IAMServerCertificate                                   
+    - IAMServiceSpecificCredential                           
+    - IAMSigningCertificate                                  
+    - IAMUser                                                
+    - IAMUserAccessKey                                       
+    - IAMUserGroupAttachment                                 
+    - IAMUserHTTPSGitCredential                              
+    - IAMUserMFADevice                                       
+    - IAMUserPolicy                                          
+    - IAMUserPolicyAttachment                                
+    - IAMUserSSHPublicKey                                    
+    - IAMVirtualMFADevice 
+    - CloudWatchLogsLogGroup
+    - MachineLearningMLModel
+    - MachineLearningBranchPrediction
+    - MachineLearningEvaluation
+    - OpsWorksCMBackup
+    - OpsWorksUserProfile
+    - RoboMakerSimulationJob
+    - FMSPolicy
+    - OpsWorksCMServerState
+    - CloudSearchDomain
+    - BedrockPrompt
+    - OpsWorksCMServer
+    - RoboMakerRobotApplication
+    - RoboMakerSimulationApplication
+    - ElasticTranscoderPreset
+    - CodeStarProject
+    - IoTAuthorizer                                          
+    - IoTCACertificate                                       
+    - IoTCertificate                                         
+    - IoTJob                                                 
+    - IoTOTAUpdate                                           
+    - IoTPolicy                                              
+    - IoTRoleAlias                                           
+    - IoTSiteWiseAccessPolicy                                
+    - IoTSiteWiseAsset                                       
+    - IoTSiteWiseAssetModel                                  
+    - IoTSiteWiseDashboard                                   
+    - IoTSiteWiseGateway                                     
+    - IoTSiteWisePortal                                      
+    - IoTSiteWiseProject                                     
+    - IoTStream                                              
+    - IoTThing                                               
+    - IoTThingGroup                                          
+    - IoTThingType                                           
+    - IoTThingTypeState                                      
+    - IoTTopicRule                                           
+    - IoTTwinMakerComponentType                              
+    - IoTTwinMakerEntity                                     
+    - IoTTwinMakerScene                                      
+    - IoTTwinMakerSyncJob                                    
+    - IoTTwinMakerWorkspace
+    - FMSNotificationChannel
+    - MachineLearningDataSource
+    - OpsWorksLayer
+    - Cloud9Environment
+    - ElasticTranscoderPipeline
+    - OpsWorksApp
+    - OpsWorksInstance

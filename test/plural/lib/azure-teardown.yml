@@ -1,0 +1,9 @@
+executor: azure-teardown
+input:
+  resourceGroup: ''
+steps:
+  - script: az group delete --yes --no-wait --name {{ .input.resourceGroup }}
+    retry: 3
+    retry_if:
+      - result.code ShouldNotEqual 0
+    delay: 5

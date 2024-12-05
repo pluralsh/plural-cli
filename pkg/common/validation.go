@@ -185,26 +185,12 @@ func InitKubeconfig(fn func(*cli.Context) error) func(*cli.Context) error {
 			if err != nil {
 				return err
 			}
-			if BootstrapMode {
-				prov = &provider.KINDProvider{Clust: "bootstrap"}
-			}
 			if err := prov.KubeConfig(); err != nil {
 				return err
 			}
 			utils.LogInfo().Println("init", prov.Name(), "provider")
 		} else {
 			utils.LogInfo().Println("not found provider")
-		}
-
-		return fn(c)
-	}
-}
-
-func RequireKind(fn func(*cli.Context) error) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		exists, _ := utils.Which("kind")
-		if !exists {
-			return fmt.Errorf("The kind CLI is not installed")
 		}
 
 		return fn(c)

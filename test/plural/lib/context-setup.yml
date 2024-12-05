@@ -1,0 +1,23 @@
+executor: context-setup
+input:
+  directory: ''
+  gitRepo: ''
+  gitRepoPrivateKeyPath: ''
+steps:
+  - script: |
+      PRIVATE_KEY=$(cat {{ .input.gitRepoPrivateKeyPath }} | sed 's/^/        /') ;\
+      cat << EOF > {{ .input.directory }}/context.yaml
+      apiVersion: plural.sh/v1alpha1
+      kind: Context
+      spec:
+        bundles: []
+        buckets: []
+        domains: []
+        configuration:
+          console:
+            repo_url: {{ .input.gitRepo }}
+            private_key: |-
+      $PRIVATE_KEY
+      EOF
+    assertions:
+      - result.code ShouldEqual 0

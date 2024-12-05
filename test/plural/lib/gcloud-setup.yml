@@ -1,0 +1,23 @@
+executor: gcloud-setup
+input:
+  orgID: ''
+  project: ''
+  billingID: ''
+
+steps:
+  - script: |
+      gcloud projects describe {{ .input.project }} ;\
+      if [ $? -eq 1 ]; then \
+        echo "Project does not exist. Creating..." ;\
+        gcloud -q projects create {{ .input.project }} --name="{{ .input.project }}" --organization={{ .input.orgID }} --labels=type=e2e ;\
+        gcloud -q config set project {{ .input.project }} ;\
+        gcloud -q services enable cloudbilling.googleapis.com ;\
+        gcloud -q billing projects link {{ .input.project }} --billing-account={{ .input.billingID }} ;\
+      else
+        echo "Project already exists." ;\
+      fi ;\
+    assertions:
+      - result.code ShouldEqual 0
+  - script: gcloud -q components install gke-gcloud-auth-plugin
+    assertions:
+      - result.code ShouldEqual 0
