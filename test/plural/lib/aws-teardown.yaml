@@ -2,7 +2,7 @@ executor: aws-teardown
 input:
   resourceGroup: ''
 steps:
-  - script: aws-nuke run --config ../../nuke-config.yml --force --access-key-id $AWS_ACCESS_KEY_ID --secret-access-key $AWS_SECRET_ACCESS_KEY --no-dry-run --no-alias-check --max-wait-retries 10
+  - script: aws-nuke run --config ../../nuke-config.yml --force --profile aws-nuke --no-dry-run --no-alias-check --max-wait-retries 10
     retry: 5
     retry_if:
       - result.code ShouldNotEqual 0

@@ -43,6 +43,10 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
+      - uses: mcblair/configure-aws-profile-action@v1.0.0
+        with:
+          role-arn: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
+          profile-name: aws-nuke
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Setup test repository SSH key
@@ -97,8 +101,6 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_AWS_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AWS_SA_TOKEN }}
           TF_VAR_deletion_protection: false
-          AWS_ACCESS_KEY_ID: ${{ secrets.E2E_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.E2E_AWS_SECRET_ACCESS_KEY }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Post status on Slack
         id: slack_message
