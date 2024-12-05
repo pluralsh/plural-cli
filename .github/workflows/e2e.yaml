@@ -101,6 +101,9 @@ jobs:
           VENOM_VAR_email: ${{ secrets.E2E_AWS_SA_EMAIL }}
           VENOM_VAR_token: ${{ secrets.E2E_AWS_SA_TOKEN }}
           TF_VAR_deletion_protection: false
+          AWS_ACCESS_KEY_ID: ${{ steps.creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.creds.outputs.aws-session-token }}
         run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
       - name: Post status on Slack
         id: slack_message
