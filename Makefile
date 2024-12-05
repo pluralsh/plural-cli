@@ -218,6 +218,7 @@ e2e: --ensure-venom
 	VENOM_VAR_awsBucket=e2e-tf-state-${TIMESTAMP} \
 	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
 	PLURAL_UP_AFFIRM_DEPLOY=true \
+	PLURAL_DOWN_AFFIRM_DESTROY=true \
 	PLURAL_CD_USE_EXISTING_CREDENTIALS=true \
 	TF_VAR_network=plural-e2e-network-${TIMESTAMP} \
 	TF_VAR_subnetwork=plural-e2e-subnet-${TIMESTAMP} \

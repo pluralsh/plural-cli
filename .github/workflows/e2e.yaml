@@ -15,6 +15,7 @@ env:
   GOBIN: /home/runner/go/bin
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
+  PLURAL_DOWN_AFFIRM_DESTROY: true
   TESTOUT_PATH: /home/runner/testout
   SSH_PATH: /home/runner/.ssh
   VENOM_PATH: /usr/local/bin/venom
@@ -247,7 +248,7 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-azure:
-    if: false
+    # if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:

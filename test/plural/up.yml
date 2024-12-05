@@ -119,6 +119,14 @@ testcases:
         directory: {{ .directory }}
       - type: cluster-services
 
+  - name: Plural down
+    steps:
+      - script: |
+          cd {{ .directory }} ;\
+          plural down
+        retry: 3
+        delay: 5
+
   - name: Azure teardown
     skip:
       - provider ShouldEqual azure
