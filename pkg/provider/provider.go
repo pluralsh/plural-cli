@@ -25,7 +25,6 @@ type Provider interface {
 	Bucket() string
 	KubeConfig() error
 	KubeContext() string
-	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
 	CreateBucket() error
 	Context() map[string]interface{}
 	Preflights() []*Preflight
@@ -58,22 +57,6 @@ var (
 	providers       = Providers{}
 	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
 )
-
-func GetProviderScaffold(provider, version string) (string, error) {
-	if providers.Scaffolds == nil {
-		providers.Scaffolds = make(map[string]string)
-	}
-	_, ok := providers.Scaffolds[provider]
-	if !ok {
-		client := api.NewClient()
-		scaffold, err := client.GetTfProviderScaffold(provider, version)
-		providers.Scaffolds[provider] = scaffold
-		if err != nil {
-			return "", api.GetErrorResponse(err, "GetTfProviderScaffold")
-		}
-	}
-	return providers.Scaffolds[provider], nil
-}
 
 func GetProvider() (Provider, error) {
 	path := manifest.ProjectManifestPath()

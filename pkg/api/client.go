@@ -38,13 +38,7 @@ type Client interface {
 	DeleteEabCredential(cluster string, provider string) error
 	CreateEvent(event *UserEventAttributes) error
 	GetTfProviders() ([]string, error)
-	GetTfProviderScaffold(name string, version string) (string, error)
 	GetRepository(repo string) (*Repository, error)
-	CreateRepository(name string, publisher string, input *gqlclient.RepositoryAttributes) error
-	AcquireLock(repo string) (*ApplyLock, error)
-	ReleaseLock(repo string, lock string) (*ApplyLock, error)
-	ListRepositories(query string) ([]*Repository, error)
-	Scaffolds(in *ScaffoldInputs) ([]*ScaffoldFile, error)
 	UpdateVersion(spec *VersionSpec, tags []string) error
 	CreateDomain(name string) error
 	CreateInstallation(id string) (string, error)
@@ -57,7 +51,6 @@ type Client interface {
 	GetHelp(prompt string) (string, error)
 	Clusters() ([]*Cluster, error)
 	Cluster(id string) (*Cluster, error)
-	Release(name string, tags []string) error
 	Chat(history []*ChatMessage) (*ChatMessage, error)
 	CreateTrust(issuer, trust string) error
 	DeleteTrust(id string) error

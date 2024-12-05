@@ -3,7 +3,6 @@ package provider
 import (
 	"fmt"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
@@ -14,9 +13,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
-	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
 
 type KINDProvider struct {
@@ -72,33 +69,6 @@ func kindFromManifest(man *manifest.ProjectManifest) (*KINDProvider, error) {
 }
 
 func (kind *KINDProvider) CreateBucket() error { return nil }
-
-func (kind *KINDProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-
-	ctx["Region"] = kind.Region()
-	ctx["Bucket"] = kind.Bucket()
-	ctx["Prefix"] = prefix
-	ctx["ClusterCreated"] = false
-	ctx["__CLUSTER__"] = kind.Cluster()
-	if cluster, ok := ctx["cluster"]; ok {
-		ctx["Cluster"] = cluster
-		ctx["ClusterCreated"] = true
-	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, kind.Cluster())
-	}
-
-	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitignore")), []byte("!/**")); err != nil {
-		return "", err
-	}
-	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(kind.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
-		return "", err
-	}
-	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderKind), version)
-	if err != nil {
-		return "", err
-	}
-	return template.RenderString(scaffold, ctx)
-}
 
 func (kind *KINDProvider) KubeConfig() error {
 	if kubernetes.InKubernetes() {

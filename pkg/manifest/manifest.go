@@ -28,15 +28,6 @@ func ProjectManifestPath() string {
 	return pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml"))
 }
 
-func ManifestPath(repo string) (string, error) {
-	root, found := utils.ProjectRoot()
-	if !found {
-		return "", fmt.Errorf("You're not within an installation repo")
-	}
-
-	return pathing.SanitizeFilepath(filepath.Join(root, repo, "manifest.yaml")), nil
-}
-
 func (pMan *ProjectManifest) Write(path string) error {
 	versioned := &VersionedProjectManifest{
 		ApiVersion: "plural.sh/v1alpha1",
@@ -98,24 +89,6 @@ func (man *Manifest) Write(path string) error {
 	}
 
 	return os.WriteFile(path, io, 0644)
-}
-
-func Read(path string) (man *Manifest, err error) {
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return
-	}
-
-	versioned := &VersionedManifest{}
-	err = yaml.Unmarshal(contents, versioned)
-	if err != nil || versioned.Spec == nil {
-		man = &Manifest{}
-		err = yaml.Unmarshal(contents, man)
-		return
-	}
-
-	man = versioned.Spec
-	return
 }
 
 func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {

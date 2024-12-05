@@ -26,14 +26,6 @@ func (client *client) GetInstallation(name string) (*Installation, error) {
 
 }
 
-func (client *client) GetInstallationById(id string) (*Installation, error) {
-	resp, err := client.pluralClient.GetInstallationByID(client.ctx, &id)
-	if err != nil {
-		return nil, err
-	}
-	return convertInstallation(resp.Installation), nil
-}
-
 func (client *client) DeleteInstallation(id string) error {
 	_, err := client.pluralClient.DeleteInstallation(client.ctx, id)
 	return err

@@ -52,22 +52,6 @@ type MinimalWorkspace struct {
 	HelmConfig *action.Configuration
 }
 
-func Minimal(name string, helmConfig *action.Configuration) (*MinimalWorkspace, error) {
-	root, err := git.Root()
-	if err != nil {
-		return nil, err
-	}
-
-	prov, err := provider.GetProvider()
-	if err != nil {
-		return nil, err
-	}
-
-	project, _ := manifest.ReadProject(pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml")))
-	conf := config.Read()
-	return &MinimalWorkspace{Name: name, Provider: prov, Config: &conf, Manifest: project, HelmConfig: helmConfig}, nil
-}
-
 func FormatValues(w io.Writer, vals string, output *output.Output) (err error) {
 	tmpl, err := template.New("gotpl").Parse(vals)
 	if err != nil {
