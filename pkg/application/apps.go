@@ -72,12 +72,3 @@ func (c *applicationClient) Watch(ctx context.Context, opts metav1.ListOptions) 
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Watch(ctx)
 }
-
-func WatchNamespace(ctx context.Context, client ApplicationInterface) (watch.Interface, error) {
-	apps, err := client.List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	resourceVersion := apps.ListMeta.ResourceVersion
-	return client.Watch(ctx, metav1.ListOptions{ResourceVersion: resourceVersion})
-}
