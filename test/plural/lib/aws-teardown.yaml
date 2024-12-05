@@ -2,9 +2,8 @@ executor: aws-teardown
 input:
   resourceGroup: ''
 steps:
-  - script: aws-nuke run --config ../../nuke-config.yml --force --profile aws-nuke --no-dry-run --no-alias-check --max-wait-retries 100
-    retry: 5
-    timeout: 1800
+  - script: aws-nuke run --config ../../nuke-config.yml --force --profile aws-nuke --no-dry-run --no-alias-check --max-wait-retries 10
+    retry: 3
     retry_if:
       - result.code ShouldNotEqual 0
     delay: 20
