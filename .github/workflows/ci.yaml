@@ -265,6 +265,7 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: v1.62.2
+          skip-go-installation: true
   build:
     name: GoReleaser build
     runs-on: ubuntu-latest
