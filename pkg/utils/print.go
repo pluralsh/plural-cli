@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -49,7 +48,7 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 
 func ReadPwd(prompt string) (string, error) {
 	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
-	pwd, err := term.ReadPassword(syscall.Stdin)
+	pwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 	return strings.TrimSpace(string(pwd)), err
 }
 
