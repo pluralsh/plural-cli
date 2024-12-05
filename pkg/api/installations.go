@@ -26,14 +26,6 @@ func (client *client) GetInstallation(name string) (*Installation, error) {
 
 }
 
-func (client *client) GetInstallationById(id string) (*Installation, error) {
-	resp, err := client.pluralClient.GetInstallationByID(client.ctx, &id)
-	if err != nil {
-		return nil, err
-	}
-	return convertInstallation(resp.Installation), nil
-}
-
 func (client *client) DeleteInstallation(id string) error {
 	_, err := client.pluralClient.DeleteInstallation(client.ctx, id)
 	return err
@@ -150,20 +142,6 @@ func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes
 		Bindings:     bindings,
 		RedirectUris: redirectUris,
 	})
-	return err
-}
-
-func (client *client) ResetInstallations() (int, error) {
-	resp, err := client.pluralClient.ResetInstallations(client.ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	return int(*resp.ResetInstallations), err
-}
-
-func (client *client) MarkSynced(repo string) error {
-	_, err := client.pluralClient.MarkSynced(client.ctx, repo)
 	return err
 }
 

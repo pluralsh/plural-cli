@@ -15,22 +15,20 @@ import (
 
 // Each level has 2 spaces for PrefixWriter
 const (
-	LEVEL_0 = iota
-	LEVEL_1
-	LEVEL_2
-	LEVEL_3
-	LEVEL_4
+	Level0 = iota
+	Level1
+	Level2
 )
 
 func DescribeServiceContext(sc *consoleclient.ServiceContextFragment) (string, error) {
 	return tabbedString(func(out io.Writer) error {
 		w := NewPrefixWriter(out)
-		w.Write(LEVEL_0, "Id:\t%s\n", sc.ID)
-		w.Write(LEVEL_0, "Configuration:\n  \tName\tContext\n")
-		w.Write(LEVEL_1, "\t----\t------\n")
+		w.Write(Level0, "Id:\t%s\n", sc.ID)
+		w.Write(Level0, "Configuration:\n  \tName\tContext\n")
+		w.Write(Level1, "\t----\t------\n")
 		for name, value := range sc.Configuration {
 			configurationJson, _ := json.Marshal(value)
-			w.Write(LEVEL_1, "\t%v \t%v\n", name, string(configurationJson))
+			w.Write(Level1, "\t%v \t%v\n", name, string(configurationJson))
 		}
 		return nil
 	})
@@ -39,43 +37,43 @@ func DescribeServiceContext(sc *consoleclient.ServiceContextFragment) (string, e
 func DescribeCluster(cluster *consoleclient.ClusterFragment) (string, error) {
 	return tabbedString(func(out io.Writer) error {
 		w := NewPrefixWriter(out)
-		w.Write(LEVEL_0, "Id:\t%s\n", cluster.ID)
-		w.Write(LEVEL_0, "Name:\t%s\n", cluster.Name)
+		w.Write(Level0, "Id:\t%s\n", cluster.ID)
+		w.Write(Level0, "Name:\t%s\n", cluster.Name)
 		if cluster.Handle != nil {
-			w.Write(LEVEL_0, "Handle:\t@%s\n", *cluster.Handle)
+			w.Write(Level0, "Handle:\t@%s\n", *cluster.Handle)
 		}
 		if cluster.Version != nil {
-			w.Write(LEVEL_0, "Version:\t%s\n", *cluster.Version)
+			w.Write(Level0, "Version:\t%s\n", *cluster.Version)
 		}
 		if cluster.CurrentVersion != nil {
-			w.Write(LEVEL_0, "Current Version:\t%s\n", *cluster.CurrentVersion)
+			w.Write(Level0, "Current Version:\t%s\n", *cluster.CurrentVersion)
 		}
 		if cluster.PingedAt != nil {
-			w.Write(LEVEL_0, "Pinged At:\t%s\n", *cluster.PingedAt)
+			w.Write(Level0, "Pinged At:\t%s\n", *cluster.PingedAt)
 		}
 		if cluster.Self != nil {
-			w.Write(LEVEL_0, "Self:\t%v\n", *cluster.Self)
+			w.Write(Level0, "Self:\t%v\n", *cluster.Self)
 		}
 
 		if cluster.Provider != nil {
-			w.Write(LEVEL_0, "Provider:\n")
-			w.Write(LEVEL_1, "Id:\t%s\n", cluster.Provider.ID)
-			w.Write(LEVEL_1, "Name:\t%s\n", cluster.Provider.Name)
-			w.Write(LEVEL_1, "Namespace:\t%s\n", cluster.Provider.Namespace)
-			w.Write(LEVEL_1, "Editable:\t%v\n", *cluster.Provider.Editable)
-			w.Write(LEVEL_1, "Cloud:\t%v\n", cluster.Provider.Cloud)
+			w.Write(Level0, "Provider:\n")
+			w.Write(Level1, "Id:\t%s\n", cluster.Provider.ID)
+			w.Write(Level1, "Name:\t%s\n", cluster.Provider.Name)
+			w.Write(Level1, "Namespace:\t%s\n", cluster.Provider.Namespace)
+			w.Write(Level1, "Editable:\t%v\n", *cluster.Provider.Editable)
+			w.Write(Level1, "Cloud:\t%v\n", cluster.Provider.Cloud)
 			if cluster.Provider.Repository != nil {
-				w.Write(LEVEL_1, "Git:\n")
-				w.Write(LEVEL_2, "Id:\t%s\n", cluster.Provider.Repository.ID)
-				w.Write(LEVEL_2, "Url:\t%s\n", cluster.Provider.Repository.URL)
+				w.Write(Level1, "Git:\n")
+				w.Write(Level2, "Id:\t%s\n", cluster.Provider.Repository.ID)
+				w.Write(Level2, "Url:\t%s\n", cluster.Provider.Repository.URL)
 				if cluster.Provider.Repository.AuthMethod != nil {
-					w.Write(LEVEL_2, "Auth Method:\t%v\n", *cluster.Provider.Repository.AuthMethod)
+					w.Write(Level2, "Auth Method:\t%v\n", *cluster.Provider.Repository.AuthMethod)
 				}
 				if cluster.Provider.Repository.Health != nil {
-					w.Write(LEVEL_2, "Health:\t%v\n", *cluster.Provider.Repository.Health)
+					w.Write(Level2, "Health:\t%v\n", *cluster.Provider.Repository.Health)
 				}
 				if cluster.Provider.Repository.Error != nil {
-					w.Write(LEVEL_2, "Error:\t%s\n", *cluster.Provider.Repository.Error)
+					w.Write(Level2, "Error:\t%s\n", *cluster.Provider.Repository.Error)
 				}
 			}
 		}
@@ -87,17 +85,17 @@ func DescribeCluster(cluster *consoleclient.ClusterFragment) (string, error) {
 func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, error) {
 	return tabbedString(func(out io.Writer) error {
 		w := NewPrefixWriter(out)
-		w.Write(LEVEL_0, "Id:\t%s\n", service.ID)
-		w.Write(LEVEL_0, "Name:\t%s\n", service.Name)
-		w.Write(LEVEL_0, "Namespace:\t%s\n", service.Namespace)
-		w.Write(LEVEL_0, "Version:\t%s\n", service.Version)
+		w.Write(Level0, "Id:\t%s\n", service.ID)
+		w.Write(Level0, "Name:\t%s\n", service.Name)
+		w.Write(Level0, "Namespace:\t%s\n", service.Namespace)
+		w.Write(Level0, "Version:\t%s\n", service.Version)
 		if service.Tarball != nil {
-			w.Write(LEVEL_0, "Tarball:\t%s\n", *service.Tarball)
+			w.Write(Level0, "Tarball:\t%s\n", *service.Tarball)
 		} else {
-			w.Write(LEVEL_0, "Tarball:\t%s\n", "<none>")
+			w.Write(Level0, "Tarball:\t%s\n", "<none>")
 		}
 		if service.DeletedAt != nil {
-			w.Write(LEVEL_0, "Status:\tTerminating (lasts %s)\n", *service.DeletedAt)
+			w.Write(Level0, "Status:\tTerminating (lasts %s)\n", *service.DeletedAt)
 		}
 		dryRun := false
 		if service.DryRun != nil {
@@ -107,33 +105,33 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 		if service.Templated != nil {
 			templated = *service.Templated
 		}
-		w.Write(LEVEL_0, "Dry run:\t%v\n", dryRun)
-		w.Write(LEVEL_0, "Templated:\t%v\n", templated)
-		w.Write(LEVEL_0, "Git:\t\n")
-		w.Write(LEVEL_1, "Ref:\t%s\n", service.Git.Ref)
-		w.Write(LEVEL_1, "Folder:\t%s\n", service.Git.Folder)
+		w.Write(Level0, "Dry run:\t%v\n", dryRun)
+		w.Write(Level0, "Templated:\t%v\n", templated)
+		w.Write(Level0, "Git:\t\n")
+		w.Write(Level1, "Ref:\t%s\n", service.Git.Ref)
+		w.Write(Level1, "Folder:\t%s\n", service.Git.Folder)
 		if service.Revision != nil {
-			w.Write(LEVEL_1, "Revision:\t\n")
-			w.Write(LEVEL_2, "Id:\t%s\n", service.Revision.ID)
+			w.Write(Level1, "Revision:\t\n")
+			w.Write(Level2, "Id:\t%s\n", service.Revision.ID)
 
 		}
 		if service.Kustomize != nil {
-			w.Write(LEVEL_0, "Kustomize:\t\n")
-			w.Write(LEVEL_1, "Path:\t%s\n", service.Kustomize.Path)
+			w.Write(Level0, "Kustomize:\t\n")
+			w.Write(Level1, "Path:\t%s\n", service.Kustomize.Path)
 		}
 		if service.Repository != nil {
-			w.Write(LEVEL_0, "Repository:\t\n")
-			w.Write(LEVEL_1, "Id:\t%s\n", service.Repository.ID)
-			w.Write(LEVEL_1, "Url:\t%s\n", service.Repository.URL)
+			w.Write(Level0, "Repository:\t\n")
+			w.Write(Level1, "Id:\t%s\n", service.Repository.ID)
+			w.Write(Level1, "Url:\t%s\n", service.Repository.URL)
 			if service.Repository.AuthMethod != nil {
-				w.Write(LEVEL_1, "AuthMethod:\t%s\n", *service.Repository.AuthMethod)
+				w.Write(Level1, "AuthMethod:\t%s\n", *service.Repository.AuthMethod)
 			}
-			w.Write(LEVEL_1, "Status:\t\n")
+			w.Write(Level1, "Status:\t\n")
 			if service.Repository.Health != nil {
-				w.Write(LEVEL_2, "Health:\t%s\n", *service.Repository.Health)
+				w.Write(Level2, "Health:\t%s\n", *service.Repository.Health)
 			}
 			if service.Repository.Error != nil {
-				w.Write(LEVEL_2, "Error:\t%s\n", *service.Repository.Error)
+				w.Write(Level2, "Error:\t%s\n", *service.Repository.Error)
 			}
 			configMap := map[string]string{}
 			for _, conf := range service.Configuration {
@@ -141,8 +139,8 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 			}
 			printConfigMultiline(w, "Configuration", configMap)
 			if len(service.Components) > 0 {
-				w.Write(LEVEL_0, "Components:\n  Id\tName\tNamespace\tKind\tVersion\tState\tSynced\n")
-				w.Write(LEVEL_1, "----\t------\t------\t------\t------\t------\t------\n")
+				w.Write(Level0, "Components:\n  Id\tName\tNamespace\tKind\tVersion\tState\tSynced\n")
+				w.Write(Level1, "----\t------\t------\t------\t------\t------\t------\n")
 				for _, c := range service.Components {
 					namespace := "-"
 					version := "-"
@@ -157,20 +155,20 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 						state = string(*c.State)
 					}
 
-					w.Write(LEVEL_1, "%v \t%v\t%v\t%v\t%v\t%v\t%v\n", c.ID, c.Name, namespace, c.Kind, version, state, c.Synced)
+					w.Write(Level1, "%v \t%v\t%v\t%v\t%v\t%v\t%v\n", c.ID, c.Name, namespace, c.Kind, version, state, c.Synced)
 				}
 			} else {
-				w.Write(LEVEL_0, "Components: %s\n", "<none>")
+				w.Write(Level0, "Components: %s\n", "<none>")
 			}
 			if len(service.Errors) > 0 {
-				w.Write(LEVEL_0, "Errors:\n  Source\tMessage\n")
-				w.Write(LEVEL_1, "----\t------\n")
+				w.Write(Level0, "Errors:\n  Source\tMessage\n")
+				w.Write(Level1, "----\t------\n")
 				for _, c := range service.Errors {
 
-					w.Write(LEVEL_1, "%v \t%v\n", c.Source, c.Message)
+					w.Write(Level1, "%v \t%v\n", c.Source, c.Message)
 				}
 			} else {
-				w.Write(LEVEL_0, "Errors: %s\n", "<none>")
+				w.Write(Level0, "Errors: %s\n", "<none>")
 			}
 
 		}
@@ -181,7 +179,7 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 var maxConfigLen = 140
 
 func printConfigMultiline(w PrefixWriter, title string, configurations map[string]string) {
-	w.Write(LEVEL_0, "%s:\t", title)
+	w.Write(Level0, "%s:\t", title)
 
 	// to print labels in the sorted order
 	keys := make([]string, 0, len(configurations))
@@ -196,16 +194,16 @@ func printConfigMultiline(w PrefixWriter, title string, configurations map[strin
 	indent := "\t"
 	for i, key := range keys {
 		if i != 0 {
-			w.Write(LEVEL_0, indent)
+			w.Write(Level0, indent)
 		}
 		value := strings.TrimSuffix(configurations[key], "\n")
 		if (len(value)+len(key)+2) > maxConfigLen || strings.Contains(value, "\n") {
-			w.Write(LEVEL_0, "%s:\n", key)
+			w.Write(Level0, "%s:\n", key)
 			for _, s := range strings.Split(value, "\n") {
-				w.Write(LEVEL_0, "%s  %s\n", indent, shorten(s, maxConfigLen-2))
+				w.Write(Level0, "%s  %s\n", indent, shorten(s, maxConfigLen-2))
 			}
 		} else {
-			w.Write(LEVEL_0, "%s: %s\n", key, value)
+			w.Write(Level0, "%s: %s\n", key, value)
 		}
 	}
 }

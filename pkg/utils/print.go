@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -15,9 +14,9 @@ import (
 
 func ReadLine(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	color.New(color.Bold).Printf(prompt)
+	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
 	res, err := reader.ReadString('\n')
-	return strings.TrimSpace(string(res)), err
+	return strings.TrimSpace(res), err
 }
 
 func ReadAlphaNum(prompt string) (string, error) {
@@ -48,35 +47,30 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 }
 
 func ReadPwd(prompt string) (string, error) {
-	color.New(color.Bold).Printf(prompt)
-	pwd, err := term.ReadPassword(int(syscall.Stdin))
+	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
+	pwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 	return strings.TrimSpace(string(pwd)), err
 }
 
 func Warn(line string, args ...interface{}) {
-	color.New(color.FgYellow, color.Bold).Fprintf(color.Error, line, args...)
+	_, _ = color.New(color.FgYellow, color.Bold).Fprintf(color.Error, line, args...)
 }
 
 func Success(line string, args ...interface{}) {
-	color.New(color.FgGreen, color.Bold).Printf(line, args...)
+	_, _ = color.New(color.FgGreen, color.Bold).Printf(line, args...)
 }
 
 func Error(line string, args ...interface{}) {
-	color.New(color.FgRed, color.Bold).Fprintf(color.Error, line, args...)
+	_, _ = color.New(color.FgRed, color.Bold).Fprintf(color.Error, line, args...)
 }
 
 func Highlight(line string, args ...interface{}) {
-	color.New(color.Bold).Printf(line, args...)
-}
-
-func Note(line string, args ...interface{}) {
-	Warn("**NOTE** :: ")
-	Highlight(line, args...)
+	_, _ = color.New(color.Bold).Printf(line, args...)
 }
 
 func HighlightError(err error) error {
 	if err != nil {
-		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error()))
+		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error())) //nolint:all
 	}
 	return err
 }
@@ -98,15 +92,6 @@ func PrintTable[T any](list []T, headers []string, rowFun func(T) ([]string, err
 	}
 	table.Render()
 	return nil
-}
-
-func PrintAttributes(attrs map[string]string) {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Attribute", "Value"})
-	for k, v := range attrs {
-		table.Append([]string{k, v})
-	}
-	table.Render()
 }
 
 type Printer interface {

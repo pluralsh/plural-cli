@@ -44,7 +44,3 @@ func (this *PostHogProvider) init() Provider {
 
 	return this
 }
-
-func newPostHogProvider() Provider {
-	return (&PostHogProvider{}).init()
-}

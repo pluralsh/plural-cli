@@ -17,8 +17,6 @@ var (
 	BitbucketClientSecret string
 )
 
-const emailError = "Can't find the user email address"
-
 type Link struct {
 	Name string `json:"name"`
 	Href string `json:"href"`
@@ -66,7 +64,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 	emailAddress := ""
 	emailValues, ok := emails.(map[string]interface{})
 	if !ok {
-		return Context{}, fmt.Errorf(emailError)
+		return Context{}, fmt.Errorf("Can't find the user email address")
 	}
 	emailAddress, err = getEmailAddress(emailValues)
 	if err != nil {
@@ -243,7 +241,7 @@ func getEmailAddress(values map[string]interface{}) (string, error) {
 		}
 	}
 	if emailAddress == "" {
-		return "", fmt.Errorf(emailError)
+		return "", fmt.Errorf("Can't find the user email address")
 	}
 	return emailAddress, nil
 }

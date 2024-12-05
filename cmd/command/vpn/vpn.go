@@ -23,10 +23,9 @@ import (
 )
 
 const (
-	wireguardAppName           = "wireguard"
-	wireguardNamespace         = "wireguard"
-	wireguardServerName        = "wireguard"
-	wireguardNotInstalledError = "wireguard is not installed. run `plural bundle list wireguard` to find the bundle to install"
+	wireguardAppName    = "wireguard"
+	wireguardNamespace  = "wireguard"
+	wireguardServerName = "wireguard"
 )
 
 type Plural struct {
@@ -275,7 +274,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully\n", peer.Name))
+	utils.Highlight("Deleted peer %s successfully\n", peer.Name)
 	return nil
 }
 

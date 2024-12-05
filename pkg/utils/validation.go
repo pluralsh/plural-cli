@@ -1,6 +1,7 @@
 package utils
 
 import (
+	e "errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -38,14 +39,14 @@ func ValidateRegex(val, regex, message string) error {
 		return nil
 	}
 
-	return errors.ErrorWrap(fmt.Errorf(message), "Validation Failure")
+	return errors.ErrorWrap(e.New(message), "Validation Failure")
 }
 
 func RegexValidator(regex, message string) survey.Validator {
 	return func(val interface{}) error {
 		str, ok := val.(string)
 		if !ok {
-			return fmt.Errorf("Result is not a string")
+			return e.New("Result is not a string")
 		}
 
 		return ValidateRegex(str, regex, message)

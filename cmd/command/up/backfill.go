@@ -1,10 +1,9 @@
 package up
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
-
-	"encoding/base64"
 
 	"github.com/pluralsh/gqlclient"
 	"github.com/pluralsh/plural-cli/pkg/console"

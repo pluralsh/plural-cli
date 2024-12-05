@@ -29,7 +29,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 	provUtils "github.com/pluralsh/plural-cli/pkg/provider/utils"
-	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	utilerr "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
@@ -251,34 +250,6 @@ func (gcp *GCPProvider) Flush() error {
 func (gcp *GCPProvider) CreateBucket() error {
 	err := gcp.mkBucket(gcp.bucket)
 	return utilerr.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", gcp.Bucket()))
-}
-
-func (gcp *GCPProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := gcp.CreateBucket(); err != nil {
-		return "", err
-	}
-
-	ctx["Project"] = gcp.Project()
-	// Location is here for backwards compatibility
-	ctx["Location"] = gcp.Context()["Location"]
-	ctx["Region"] = gcp.Region()
-	ctx["Bucket"] = gcp.Bucket()
-	_, location := gcp.clusterLocation()
-	ctx["ClusterLocation"] = location
-	ctx["Prefix"] = prefix
-	ctx["ClusterCreated"] = false
-	ctx["__CLUSTER__"] = gcp.Cluster()
-	if cluster, ok := ctx["cluster"]; ok {
-		ctx["Cluster"] = cluster
-		ctx["ClusterCreated"] = true
-	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, gcp.Cluster())
-	}
-	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderGCP), version)
-	if err != nil {
-		return "", err
-	}
-	return template.RenderString(scaffold, ctx)
 }
 
 func (gcp *GCPProvider) mkBucket(name string) error {

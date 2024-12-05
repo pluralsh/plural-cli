@@ -1,6 +1,7 @@
 package git
 
 import (
+	e "errors"
 	"fmt"
 	"os"
 	"strings"
@@ -29,16 +30,16 @@ func Repair(root string) error {
 		return Sync(root, "committing new encrypted files", false)
 	}
 
-	return fmt.Errorf("There were non-repairable changes in your local git repository, you'll need to investigate them manually")
+	return e.New("There were non-repairable changes in your local git repository, you'll need to investigate them manually")
 }
 
 func Sync(root, msg string, force bool) error {
 	if res, err := git(root, "add", "."); err != nil {
-		return errors.ErrorWrap(fmt.Errorf(res), "`git add .` failed")
+		return errors.ErrorWrap(e.New(res), "`git add .` failed")
 	}
 
 	if res, err := git(root, "commit", "-m", msg); err != nil {
-		return errors.ErrorWrap(fmt.Errorf(res), "failed to commit changes")
+		return errors.ErrorWrap(e.New(res), "failed to commit changes")
 	}
 
 	branch, err := CurrentBranch()
@@ -52,7 +53,7 @@ func Sync(root, msg string, force bool) error {
 	}
 
 	if res, err := git(root, args...); err != nil {
-		return errors.ErrorWrap(fmt.Errorf(res), fmt.Sprintf("`git push origin %s` failed", branch))
+		return errors.ErrorWrap(e.New(res), fmt.Sprintf("`git push origin %s` failed", branch))
 	}
 
 	return nil

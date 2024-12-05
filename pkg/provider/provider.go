@@ -5,15 +5,13 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
 )
 
 var cloudFlag bool
@@ -27,10 +25,8 @@ type Provider interface {
 	Bucket() string
 	KubeConfig() error
 	KubeContext() string
-	CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error)
 	CreateBucket() error
 	Context() map[string]interface{}
-	Decommision(node *v1.Node) error
 	Preflights() []*Preflight
 	Permissions() (permissions.Checker, error)
 	Flush() error
@@ -61,26 +57,6 @@ var (
 	providers       = Providers{}
 	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
 )
-
-func IgnoreProviders(prov []string) {
-	filterProviders = containers.ToSet([]string{"GENERIC", "KIND"})
-}
-
-func GetProviderScaffold(provider, version string) (string, error) {
-	if providers.Scaffolds == nil {
-		providers.Scaffolds = make(map[string]string)
-	}
-	_, ok := providers.Scaffolds[provider]
-	if !ok {
-		client := api.NewClient()
-		scaffold, err := client.GetTfProviderScaffold(provider, version)
-		providers.Scaffolds[provider] = scaffold
-		if err != nil {
-			return "", api.GetErrorResponse(err, "GetTfProviderScaffold")
-		}
-	}
-	return providers.Scaffolds[provider], nil
-}
 
 func GetProvider() (Provider, error) {
 	path := manifest.ProjectManifestPath()
@@ -121,8 +97,6 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 		return AzureFromManifest(man, nil)
 	case api.ProviderEquinix:
 		return equinixFromManifest(man)
-	case api.ProviderKind:
-		return kindFromManifest(man)
 	case api.TEST:
 		return testFromManifest(man)
 	default:
@@ -141,8 +115,6 @@ func New(provider string) (Provider, error) {
 		return mkAzure(conf)
 	case api.ProviderEquinix:
 		return mkEquinix(conf)
-	case api.ProviderKind:
-		return mkKind(conf)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}

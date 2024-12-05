@@ -97,12 +97,12 @@ func homeDir(parts ...string) (string, error) {
 }
 
 func knownHosts() (string, error) {
-	known_hosts, err := homeDir(".ssh", "known_hosts")
+	knownHostsPath, err := homeDir(".ssh", "known_hosts")
 	if err != nil {
 		return "", err
 	}
 
-	res, _ := utils.ReadFile(known_hosts)
+	res, _ := utils.ReadFile(knownHostsPath)
 	return res, nil
 }
 
@@ -159,30 +159,6 @@ func secret(namespace, name string) map[string]interface{} {
 
 func importValue(tool, path string) string {
 	return fmt.Sprintf(`"{{ .Import.%s.%s }}"`, tool, path)
-}
-
-func chartInstalled(name, repoName string) (bool, error) {
-	client := api.NewClient()
-
-	repo, err := client.GetRepository(repoName)
-	if err != nil {
-		fmt.Printf("error: %s\n", err)
-		return false, nil
-	}
-
-	chartInstallations, err := client.GetChartInstallations(repo.Id)
-	if err != nil {
-		fmt.Printf("error: %s\n", err)
-		return false, nil
-	}
-
-	for _, chartInstallation := range chartInstallations {
-		if chartInstallation.Chart.Name == name {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 
 func toYaml(val interface{}) (string, error) {

@@ -46,10 +46,6 @@ func (t TestProvider) KubeContext() string {
 
 func (t TestProvider) CreateBucket() error { return nil }
 
-func (t TestProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	return "test", nil
-}
-
 func (t TestProvider) Context() map[string]interface{} {
 	return map[string]interface{}{}
 }
