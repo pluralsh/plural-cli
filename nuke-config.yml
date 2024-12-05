@@ -10,6 +10,8 @@ accounts:
       IAMRole:
         - property: Name
           value: "OrganizationAccountAccessRole"
+        - property: Name
+          value: "admin"
       IAMRolePolicyAttachment:
         - property: RoleName
           value: "OrganizationAccountAccessRole"
