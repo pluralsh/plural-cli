@@ -2,6 +2,9 @@
 .idea/
 .vscode/
 
+# OS files
+.DS_Store
+
 # Testing files
 context.yaml
 workspace.yaml
