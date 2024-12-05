@@ -43,10 +43,6 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
-      - uses: mcblair/configure-aws-profile-action@v1.0.0
-        with:
-          role-arn: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
-          profile-name: aws-nuke
       - name: Store test timestamp
         run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
       - name: Setup test repository SSH key
@@ -79,8 +75,8 @@ jobs:
           plural version
       - name: Print Terraform version
         run: terraform --version
-      - name: Print Google Cloud CLI version
-        run: gcloud --version
+      - name: Print AWS CLI version
+        run: aws --version
       - name: Create kube directory
         run: |
           mkdir -p $HOME/.kube
@@ -248,7 +244,7 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-azure:
-    # if: false
+    if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:
