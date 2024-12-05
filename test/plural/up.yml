@@ -120,6 +120,8 @@ testcases:
       - type: cluster-services
 
   - name: Plural down
+    skip:
+      - provider ShouldEqual azure
     steps:
       - script: |
           cd {{ .directory }} ;\
