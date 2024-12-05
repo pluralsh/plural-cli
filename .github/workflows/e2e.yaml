@@ -141,7 +141,6 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-gcp:
-    if: false
     name: plural up / GCP
     permissions:
       contents: 'read'
@@ -247,7 +246,6 @@ jobs:
               - file: ${{ env.TESTOUT_PATH }}/test_results.html
                 filename: rest_results.html
   plural-up-azure:
-    if: false
     name: plural up / Azure
     runs-on: ubuntu-latest
     steps:
