@@ -105,7 +105,7 @@ func Configure(ctx map[string]interface{}, item *api.ConfigurationItem, context 
 	}
 
 	fmt.Println("")
-	utils.Highlight(item.Name)
+	utils.Highlight(item.Name) //nolint:govet
 	fmt.Printf("\n>> %s\n", item.Documentation)
 	def := getDefault(item.Default, item, proj)
 

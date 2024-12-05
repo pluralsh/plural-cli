@@ -274,7 +274,7 @@ func (p *Plural) handleWireguardPeerDelete(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight(fmt.Sprintf("Deleted peer %s successfully\n", peer.Name))
+	utils.Highlight("Deleted peer %s successfully\n", peer.Name)
 	return nil
 }
 

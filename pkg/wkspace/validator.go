@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
@@ -32,36 +31,4 @@ func Preflight() (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (wk *Workspace) providersValid(providers []string) error {
-	if len(providers) == 0 {
-		return nil
-	}
-
-	pass := false
-	for _, provider := range providers {
-		if wk.match(provider) {
-			pass = true
-		}
-	}
-
-	if !pass {
-		return fmt.Errorf("provider %s is not supported for any of %v", wk.Provider.Name(), providers)
-	}
-
-	return nil
-}
-
-func (wk *Workspace) match(prov string) bool {
-	switch wk.Provider.Name() {
-	case api.ProviderGCP:
-		return prov == "GCP"
-	case api.ProviderAWS:
-		return prov == "AWS"
-	case api.ProviderAzure:
-		return prov == "AZURE"
-	default:
-		return false
-	}
 }

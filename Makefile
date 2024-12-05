@@ -167,7 +167,7 @@ test: setup-tests
 
 .PHONY: format
 format: ## formats all go code to prep for linting
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run --fix
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run --fix
 
 .PHONY: genmock
 genmock: ## generates mocks before running tests
@@ -175,7 +175,7 @@ genmock: ## generates mocks before running tests
 
 .PHONY: lint
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run
 
 .PHONY: delete-tag
 delete-tag:
