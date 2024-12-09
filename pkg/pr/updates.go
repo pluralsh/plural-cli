@@ -117,7 +117,13 @@ func processYamlOverlays(overlays []YamlOverlay, ctx map[string]interface{}) err
 			return mergeYaml(data, overlayYaml, overlay.ListMerge)
 		}
 
-		if err = replaceInPlace(overlay.File, mergeFunc); err != nil {
+		fileName := overlay.File
+		templated, err := templateReplacement([]byte(fileName), ctx)
+		if err == nil {
+			fileName = string(templated)
+		}
+
+		if err = replaceInPlace(fileName, mergeFunc); err != nil {
 			return err
 		}
 	}
