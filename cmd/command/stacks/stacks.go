@@ -1,28 +1,58 @@
-package cd
+package stacks
 
 import (
 	"fmt"
 
-	"github.com/pluralsh/plural-cli/pkg/common"
-
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/samber/lo"
-	"github.com/urfave/cli"
-
+	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/stacks"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/samber/lo"
+	"github.com/urfave/cli"
 )
 
-func (p *Plural) cdStacks() cli.Command {
+func init() {
+	consoleToken = ""
+	consoleURL = ""
+}
+
+var consoleToken string
+var consoleURL string
+
+type Plural struct {
+	client.Plural
+}
+
+func Command(clients client.Plural) cli.Command {
+	p := Plural{
+		Plural: clients,
+	}
 	return cli.Command{
 		Name:        "stacks",
-		Subcommands: p.cdStacksCommands(),
-		Usage:       "manage CD stacks",
+		Aliases:     []string{"s"},
+		Usage:       "manage infrastructure stacks",
+		Subcommands: p.stacksCommands(),
+		Category:    "CD",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:        "token",
+				Usage:       "console token",
+				EnvVar:      "PLURAL_CONSOLE_TOKEN",
+				Destination: &consoleToken,
+			},
+			cli.StringFlag{
+				Name:        "url",
+				Usage:       "console url address",
+				EnvVar:      "PLURAL_CONSOLE_URL",
+				Destination: &consoleURL,
+			},
+		},
 	}
 }
 
-func (p *Plural) cdStacksCommands() []cli.Command {
+func (p *Plural) stacksCommands() []cli.Command {
 	return []cli.Command{
 		{
 			Name:   "gen-backend",

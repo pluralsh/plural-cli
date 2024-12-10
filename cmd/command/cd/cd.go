@@ -74,7 +74,6 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 		p.cdPipelines(),
 		p.cdNotifications(),
 		p.cdSettings(),
-		p.cdStacks(),
 		{
 			Name:   "install",
 			Action: p.handleInstallDeploymentsOperator,

@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/mgmt"
 	"github.com/pluralsh/plural-cli/cmd/command/pr"
 	"github.com/pluralsh/plural-cli/cmd/command/profile"
+	"github.com/pluralsh/plural-cli/cmd/command/stacks"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
 	"github.com/pluralsh/plural-cli/cmd/command/version"
 	"github.com/pluralsh/plural-cli/pkg/client"
@@ -109,6 +110,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		down.Command(),
 		mgmt.Command(plural.Plural),
 		profile.Command(),
+		stacks.Command(plural.Plural),
 		pr.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
