@@ -17,7 +17,7 @@ func Command(clients client.Plural) cli.Command {
 	return cli.Command{
 		Name:        "management",
 		Aliases:     []string{"mgmt"},
-		Usage:       "Commands for managing installations in your workspace",
+		Usage:       "manages installations in your workspace",
 		Subcommands: p.managementCommands(),
 		Category:    "Workspace",
 	}
