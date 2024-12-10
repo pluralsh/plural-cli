@@ -434,36 +434,6 @@ func (_m *Client) GetInstallation(name string) (*api.Installation, error) {
 	return r0, r1
 }
 
-// GetInstallations provides a mock function with no fields
-func (_m *Client) GetInstallations() ([]*api.Installation, error) {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetInstallations")
-	}
-
-	var r0 []*api.Installation
-	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*api.Installation, error)); ok {
-		return rf()
-	}
-	if rf, ok := ret.Get(0).(func() []*api.Installation); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*api.Installation)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetKeyBackup provides a mock function with given fields: name
 func (_m *Client) GetKeyBackup(name string) (*api.KeyBackup, error) {
 	ret := _m.Called(name)
