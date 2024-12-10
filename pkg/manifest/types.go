@@ -37,7 +37,6 @@ type Manifest struct {
 	Terraform    []*TerraformManifest
 	Dependencies []*Dependency
 	Context      map[string]interface{}
-	Links        *Links `yaml:"links,omitempty"`
 }
 
 type Owner struct {

@@ -10,11 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pluralsh/plural-cli/pkg/application"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	platformv1alpha1 "github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
-	vpnv1alpha1 "github.com/pluralsh/plural-operator/apis/vpn/v1alpha1"
 	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/client/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -59,12 +57,6 @@ type Kube interface {
 	LogTail(namespace string, name string) (*platformv1alpha1.LogTail, error)
 	ProxyList(namespace string) (*platformv1alpha1.ProxyList, error)
 	Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error)
-	WireguardServerList(namespace string) (*vpnv1alpha1.WireguardServerList, error)
-	WireguardServer(namespace string, name string) (*vpnv1alpha1.WireguardServer, error)
-	WireguardPeerList(namespace string) (*vpnv1alpha1.WireguardPeerList, error)
-	WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error)
-	WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error)
-	WireguardPeerDelete(namespace string, name string) error
 	Apply(path string, force bool) error
 	CreateNamespace(namespace string, managedByPlural bool) error
 	GetClient() *kubernetes.Clientset
@@ -74,13 +66,12 @@ type Kube interface {
 var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 type kube struct {
-	Kube        *kubernetes.Clientset
-	Plural      *pluralv1alpha1.Clientset
-	Application *application.ApplicationV1Beta1Client
-	Dynamic     dynamic.Interface
-	Discovery   discovery.DiscoveryInterface
-	Mapper      *restmapper.DeferredDiscoveryRESTMapper
-	RestClient  *restclient.RESTClient
+	Kube       *kubernetes.Clientset
+	Plural     *pluralv1alpha1.Clientset
+	Dynamic    dynamic.Interface
+	Discovery  discovery.DiscoveryInterface
+	Mapper     *restmapper.DeferredDiscoveryRESTMapper
+	RestClient *restclient.RESTClient
 }
 
 func (k *kube) GetRestClient() *restclient.RESTClient {
@@ -124,22 +115,6 @@ func Kubernetes() (Kube, error) {
 	return buildKubeFromConfig(conf)
 }
 
-func KubernetesWithContext(context string) (Kube, error) {
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	kubeconfigPath := pathing.SanitizeFilepath(filepath.Join(homedir, ".kube", "config"))
-
-	conf, err := buildConfigFromFlags(context, kubeconfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return buildKubeFromConfig(conf)
-}
-
 func buildConfigFromFlags(context, kubeconfigPath string) (*rest.Config, error) {
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
@@ -153,11 +128,6 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 	}
 
 	plural, err := pluralv1alpha1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	app, err := application.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +151,7 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 		return nil, err
 	}
 
-	return &kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn, Discovery: dc, Mapper: mapper, RestClient: restClient}, nil
+	return &kube{Kube: clientset, Plural: plural, Dynamic: dyn, Discovery: dc, Mapper: mapper, RestClient: restClient}, nil
 }
 
 func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {
@@ -243,36 +213,6 @@ func (k *kube) ProxyList(namespace string) (*platformv1alpha1.ProxyList, error) 
 func (k *kube) Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error) {
 	ctx := context.Background()
 	return k.Plural.PlatformV1alpha1().Proxies(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (k *kube) WireguardServerList(namespace string) (*vpnv1alpha1.WireguardServerList, error) {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardServers(namespace).List(ctx, metav1.ListOptions{})
-}
-
-func (k *kube) WireguardServer(namespace string, name string) (*vpnv1alpha1.WireguardServer, error) {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardServers(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (k *kube) WireguardPeerList(namespace string) (*vpnv1alpha1.WireguardPeerList, error) {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).List(ctx, metav1.ListOptions{})
-}
-
-func (k *kube) WireguardPeer(namespace string, name string) (*vpnv1alpha1.WireguardPeer, error) {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (k *kube) WireguardPeerCreate(namespace string, wireguardPeer *vpnv1alpha1.WireguardPeer) (*vpnv1alpha1.WireguardPeer, error) {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Create(ctx, wireguardPeer, metav1.CreateOptions{})
-}
-
-func (k *kube) WireguardPeerDelete(namespace string, name string) error {
-	ctx := context.Background()
-	return k.Plural.VpnV1alpha1().WireguardPeers(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func (k *kube) GetClient() *kubernetes.Clientset {

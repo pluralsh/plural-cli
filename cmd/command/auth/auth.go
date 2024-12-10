@@ -22,7 +22,7 @@ func Command(clients client.Plural) cli.Command {
 	}
 	return cli.Command{
 		Name:        "auth",
-		Usage:       "Handles authentication to the plural api",
+		Usage:       "handles authentication to the plural api",
 		Subcommands: p.authCommands(),
 	}
 }

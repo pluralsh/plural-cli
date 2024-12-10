@@ -6,7 +6,6 @@ include $(ROOT_DIRECTORY)/hack/include/build.mk
 
 GCP_PROJECT ?= pluralsh
 APP_NAME ?= plural-cli
-APP_CTL_NAME ?= plrlctl
 APP_VSN ?= $(shell git describe --tags --always --dirty)
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
@@ -22,12 +21,7 @@ LDFLAGS ?= $(BASE_LDFLAGS) $\
 	-X "$(PACKAGE)/pkg/common.Date=$(APP_DATE)" $\
 	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
 	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
-WAILS_TAGS ?= desktop,production,ui,debug
-WAILS_BINDINGS_TAGS ?= bindings,generate
-WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
-TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
-OUTCTLFILE ?= plrlctl.o
 GOBIN ?= go env GOBIN
 
 # Targets to run before other targets
@@ -42,43 +36,14 @@ git-push:
 .PHONY: install
 install:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
-	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plrlctl ./cmd/plrlctl
 
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
 	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
 
-.PHONY: build-ctl
-build-ctl: ## Build a CLI binary for the fleet management
-	go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plrlctl
-
-.PHONY: build-cli-ui
-build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
-	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-
-.PHONY: build-web
-build-web: ## Build just the embedded UI
-	cd pkg/ui/web && yarn --immutable && yarn build
-
-.PHONY: run-web
-run-web: $(PRE) ## Run the UI for development
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) wails dev -tags ui -browser -skipbindings
-
-# This is somewhat an equivalent of wails `GenerateBindings` method.
-# Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
-.PHONY: generate-bindings
-generate-bindings: build-web ## Generate backend bindings for the embedded UI
-	@echo Building bindings binary
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
-	@echo Generating bindings
-	@./$(WAILS_BINDINGS_BINARY_NAME) > /dev/null 2>&1
-	@echo Cleaning up
-	@rm $(WAILS_BINDINGS_BINARY_NAME)
-
 .PHONY: release
 release:
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTCTLFILE) ./cmd/plrlctl
 
 .PHONY: goreleaser
 goreleaser:
@@ -102,17 +67,6 @@ build: ## Build the Docker image
 		-t $(APP_NAME):latest \
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
-
-.PHONY: build-ctl
-build-ctl: ## Build the plrctl Docker image
-	docker build --build-arg APP_NAME=$(APP_CTL_NAME) \
-		--build-arg APP_VSN=$(APP_VSN) \
-		--build-arg APP_DATE=$(APP_DATE) \
-		--build-arg APP_COMMIT=$(BUILD) \
-		-t $(APP_CTL_NAME):$(APP_VSN) \
-		-t $(APP_CTL_NAME):latest \
-		-t gcr.io/$(GCP_PROJECT)/$(APP_CTL_NAME):$(APP_VSN) \
-		-t $(DKR_HOST)/plural/$(APP_CTL_NAME):$(APP_VSN) -f dockerfiles/plrlctl/Dockerfile  .
 
 .PHONY: build-cloud
 build-cloud: ## build the cloud docker image
@@ -186,7 +140,7 @@ test: setup-tests
 
 .PHONY: format
 format: ## formats all go code to prep for linting
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run --fix
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run --fix
 
 .PHONY: genmock
 genmock: ## generates mocks before running tests
@@ -194,7 +148,7 @@ genmock: ## generates mocks before running tests
 
 .PHONY: lint
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run
 
 .PHONY: delete-tag
 delete-tag:

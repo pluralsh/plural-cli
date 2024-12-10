@@ -173,10 +173,6 @@ func (l *LinodeProvider) CreateBucket() error {
 	return godotenv.Load(envPath)
 }
 
-func (l *LinodeProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	return "", nil
-}
-
 func (l *LinodeProvider) KubeConfig() error {
 	if kubernetes.InKubernetes() {
 		return nil

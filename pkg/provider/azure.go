@@ -27,7 +27,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
-	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	pluralerr "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
@@ -211,31 +210,6 @@ func (az *AzureProvider) CreateBucket() error {
 	}
 
 	return nil
-}
-
-func (az *AzureProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := az.CreateBucket(); err != nil {
-		return "", err
-	}
-
-	ctx["Region"] = az.Region()
-	ctx["Bucket"] = az.Bucket()
-	ctx["Prefix"] = prefix
-	ctx["ResourceGroup"] = az.Project()
-	ctx["__CLUSTER__"] = az.Cluster()
-	ctx["Context"] = az.Context()
-	if cluster, ok := ctx["cluster"]; ok {
-		ctx["Cluster"] = cluster
-		ctx["ClusterCreated"] = true
-	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, az.Cluster())
-	}
-
-	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAzure), version)
-	if err != nil {
-		return "", err
-	}
-	return template.RenderString(scaffold, ctx)
 }
 
 func (az *AzureProvider) createContainer(bucket string) (err error) {

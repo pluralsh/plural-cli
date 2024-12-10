@@ -33,7 +33,7 @@ func Command(clients client.Plural) cli.Command {
 	return cli.Command{
 		Name:        "pull-requests",
 		Aliases:     []string{"pr"},
-		Usage:       "Generate and manage pull requests",
+		Usage:       "generates and manages pull requests",
 		Subcommands: p.prCommands(),
 		Category:    "CD",
 		Flags: []cli.Flag{
