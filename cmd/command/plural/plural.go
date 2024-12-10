@@ -37,13 +37,6 @@ type Plural struct {
 func (p *Plural) getCommands() []cli.Command {
 	return []cli.Command{
 		{
-			Name:     "readme",
-			Aliases:  []string{"b"},
-			Usage:    "generates the readme for your installation repo",
-			Category: "Workspace",
-			Action:   common.LatestVersion(common.DownloadReadme),
-		},
-		{
 			Name:     "preflights",
 			Usage:    "runs provider preflight checks",
 			Category: "Workspace",
@@ -70,18 +63,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Usage:    "imports plural config from another file",
 			Action:   common.LatestVersion(common.HandleImport),
 			Category: "User Profile",
-		},
-		{
-			Name:     "repair",
-			Usage:    "commits any new encrypted changes in your local workspace automatically",
-			Action:   common.LatestVersion(common.HandleRepair),
-			Category: "Workspace",
-		},
-		{
-			Name:     "serve",
-			Usage:    "launch the server",
-			Action:   common.LatestVersion(common.HandleServe),
-			Category: "Workspace",
 		},
 	}
 }

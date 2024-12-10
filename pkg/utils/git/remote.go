@@ -4,7 +4,6 @@ import (
 	e "errors"
 	"fmt"
 	"os"
-	"strings"
 
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
@@ -17,20 +16,6 @@ func Clone(auth transport.AuthMethod, url, path string) (*gogit.Repository, erro
 		URL:      url,
 		Progress: os.Stdout,
 	})
-}
-
-func Repair(root string) error {
-	_, err := git(root, "diff-index", "--quiet", "HEAD", "--")
-	if err == nil {
-		return nil
-	}
-
-	diff, _ := git(root, "--no-pager", "diff")
-	if strings.TrimSpace(diff) == "" && err != nil {
-		return Sync(root, "committing new encrypted files", false)
-	}
-
-	return e.New("There were non-repairable changes in your local git repository, you'll need to investigate them manually")
 }
 
 func Sync(root, msg string, force bool) error {

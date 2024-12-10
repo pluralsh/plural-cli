@@ -13,10 +13,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/provider"
-	"github.com/pluralsh/plural-cli/pkg/server"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"github.com/pluralsh/plural-cli/pkg/wkspace"
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -153,10 +151,6 @@ func HandleClone(c *cli.Context) error {
 	return nil
 }
 
-func DownloadReadme(c *cli.Context) error {
-	return wkspace.DownloadReadme()
-}
-
 func HandleImport(c *cli.Context) error {
 	dir, err := filepath.Abs(c.Args().Get(0))
 	if err != nil {
@@ -187,10 +181,6 @@ func HandleImport(c *cli.Context) error {
 
 	utils.Success("Workspace properly imported\n")
 	return nil
-}
-
-func HandleServe(c *cli.Context) error {
-	return server.Run()
 }
 
 func GetIdAndName(input string) (id, name *string) {
