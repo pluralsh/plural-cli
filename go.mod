@@ -285,7 +285,7 @@ require (
 )
 
 replace (
-	github.com/docker/cli => github.com/docker/cli v24.0.6+incompatible
+	github.com/docker/cli => github.com/docker/cli v24.0.9+incompatible
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 	github.com/docker/docker => github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-connections => github.com/docker/go-connections v0.4.0
