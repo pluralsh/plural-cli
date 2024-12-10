@@ -14,7 +14,6 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/profile"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
 	"github.com/pluralsh/plural-cli/cmd/command/version"
-	"github.com/pluralsh/plural-cli/cmd/command/vpn"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	conf "github.com/pluralsh/plural-cli/pkg/config"
@@ -132,7 +131,6 @@ func CreateNewApp(plural *Plural) *cli.App {
 		pr.Command(plural.Plural),
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
-		vpn.Command(plural.Plural),
 		version.Command(),
 	}
 	commands = append(commands, plural.getCommands()...)
