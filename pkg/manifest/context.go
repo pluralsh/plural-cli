@@ -28,7 +28,6 @@ type Globals struct {
 }
 
 type Context struct {
-	Bundles       []*Bundle
 	Buckets       []string
 	Domains       []string
 	Protect       []string `yaml:"protect,omitempty" json:"protect,omitempty"`
@@ -41,7 +40,6 @@ func (this *Context) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
-		Bundles       []*Bundle                         `json:"bundles"`
 		Buckets       []string                          `json:"buckets"`
 		Domains       []string                          `json:"domains"`
 		Protect       []string                          `yaml:"protect,omitempty" json:"protect,omitempty"`
@@ -49,7 +47,6 @@ func (this *Context) MarshalJSON() ([]byte, error) {
 		Globals       *Globals                          `yaml:"globals,omitempty" json:"globals,omitempty"`
 		Configuration map[string]map[string]interface{} `json:"configuration"`
 	}{
-		Bundles:       this.Bundles,
 		Buckets:       this.Buckets,
 		Domains:       this.Domains,
 		Protect:       this.Protect,
@@ -88,7 +85,6 @@ func ReadContext(path string) (c *Context, err error) {
 
 func NewContext() *Context {
 	return &Context{
-		Bundles: make([]*Bundle, 0),
 		// Globals:       &Globals{CertIssuer: "plural"},
 		Configuration: make(map[string]map[string]interface{}),
 	}

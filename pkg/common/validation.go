@@ -40,12 +40,6 @@ func Affirmed(fn func(*cli.Context) error, msg string, envKey string) func(*cli.
 	}
 }
 
-func Highlighted(fn func(*cli.Context) error) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		return utils.HighlightError(fn(c))
-	}
-}
-
 func Tracked(fn func(*cli.Context) error, event string) func(*cli.Context) error {
 	return func(c *cli.Context) error {
 		event := api.UserEventAttributes{Data: "", Event: event, Status: "OK"}

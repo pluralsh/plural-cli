@@ -90,13 +90,6 @@ type Wirings struct {
 	Helm      map[string]string
 }
 
-type TerraformInstallation struct {
-	Id           string
-	Installation *Installation
-	Terraform    *Terraform
-	Version      *Version
-}
-
 type OAuthConfiguration struct {
 	Issuer                string
 	AuthorizationEndpoint string
@@ -125,40 +118,6 @@ type Installation struct {
 	AcmeSecret   string
 }
 
-type CloudShell struct {
-	Id     string
-	AesKey string `json:"aesKey"`
-	GitUrl string `json:"gitUrl"`
-}
-
-type RepositoryEdge struct {
-	Node *Repository
-}
-
-type InstallationEdge struct {
-	Node *Installation
-}
-
-type ChartEdge struct {
-	Node *Chart
-}
-
-type TerraformEdge struct {
-	Node *Terraform
-}
-
-type VersionEdge struct {
-	Node *Version
-}
-
-type ChartInstallationEdge struct {
-	Node *ChartInstallation
-}
-
-type TerraformInstallationEdge struct {
-	Node *TerraformInstallation
-}
-
 type Token struct {
 	Token string
 }
@@ -181,15 +140,6 @@ type Recipe struct {
 	RecipeSections     []*RecipeSection
 	OidcSettings       *OIDCSettings `yaml:"oidcSettings" json:"oidcSettings"`
 	RecipeDependencies []*Recipe     `yaml:"recipeDependencies" json:"recipeDependencies"`
-}
-
-type Stack struct {
-	Id          string
-	Name        string
-	Provider    string
-	Featured    bool
-	Description string
-	Bundles     []*Recipe
 }
 
 type RecipeTest struct {

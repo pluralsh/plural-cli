@@ -21,10 +21,6 @@ LDFLAGS ?= $(BASE_LDFLAGS) $\
 	-X "$(PACKAGE)/pkg/common.Date=$(APP_DATE)" $\
 	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
 	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
-WAILS_TAGS ?= desktop,production,ui,debug
-WAILS_BINDINGS_TAGS ?= bindings,generate
-WAILS_BINDINGS_BINARY_NAME ?= wailsbindings
-TAGS ?= $(WAILS_TAGS)
 OUTFILE ?= plural.o
 GOBIN ?= go env GOBIN
 
@@ -44,29 +40,6 @@ install:
 .PHONY: build-cli
 build-cli: ## Build a CLI binary for the host architecture without embedded UI
 	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-
-.PHONY: build-cli-ui
-build-cli-ui: $(PRE) generate-bindings ## Build a CLI binary for the host architecture with embedded UI
-	CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_TAGS) -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
-
-.PHONY: build-web
-build-web: ## Build just the embedded UI
-	cd pkg/ui/web && yarn --immutable && yarn build
-
-.PHONY: run-web
-run-web: $(PRE) ## Run the UI for development
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) wails dev -tags ui -browser -skipbindings
-
-# This is somewhat an equivalent of wails `GenerateBindings` method.
-# Ref: https://github.com/wailsapp/wails/blob/master/v2/pkg/commands/bindings/bindings.go#L28
-.PHONY: generate-bindings
-generate-bindings: build-web ## Generate backend bindings for the embedded UI
-	@echo Building bindings binary
-	@CGO_LDFLAGS=$(CGO_LDFLAGS) go build -tags $(WAILS_BINDINGS_TAGS) -ldflags='$(LDFLAGS)' -o $(WAILS_BINDINGS_BINARY_NAME) .
-	@echo Generating bindings
-	@./$(WAILS_BINDINGS_BINARY_NAME) > /dev/null 2>&1
-	@echo Cleaning up
-	@rm $(WAILS_BINDINGS_BINARY_NAME)
 
 .PHONY: release
 release:

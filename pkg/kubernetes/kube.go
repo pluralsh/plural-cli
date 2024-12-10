@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pluralsh/plural-cli/pkg/application"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	platformv1alpha1 "github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
@@ -67,13 +66,12 @@ type Kube interface {
 var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 type kube struct {
-	Kube        *kubernetes.Clientset
-	Plural      *pluralv1alpha1.Clientset
-	Application *application.ApplicationV1Beta1Client
-	Dynamic     dynamic.Interface
-	Discovery   discovery.DiscoveryInterface
-	Mapper      *restmapper.DeferredDiscoveryRESTMapper
-	RestClient  *restclient.RESTClient
+	Kube       *kubernetes.Clientset
+	Plural     *pluralv1alpha1.Clientset
+	Dynamic    dynamic.Interface
+	Discovery  discovery.DiscoveryInterface
+	Mapper     *restmapper.DeferredDiscoveryRESTMapper
+	RestClient *restclient.RESTClient
 }
 
 func (k *kube) GetRestClient() *restclient.RESTClient {
@@ -134,11 +132,6 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 		return nil, err
 	}
 
-	app, err := application.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
 	dyn, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, err
@@ -158,7 +151,7 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 		return nil, err
 	}
 
-	return &kube{Kube: clientset, Plural: plural, Application: app, Dynamic: dyn, Discovery: dc, Mapper: mapper, RestClient: restClient}, nil
+	return &kube{Kube: clientset, Plural: plural, Dynamic: dyn, Discovery: dc, Mapper: mapper, RestClient: restClient}, nil
 }
 
 func (k *kube) Secret(namespace string, name string) (*v1.Secret, error) {

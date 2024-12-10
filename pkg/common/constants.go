@@ -10,7 +10,5 @@ const (
 )
 
 var (
-	ErrNoGit      = fmt.Errorf("Could not compare current workspace to origin. Do you have an `origin` remote configured, or does your repo not have an initial commit?")
-	ErrRemoteDiff = fmt.Errorf("Your local workspace is not in sync with remote. Either `git pull` recent changes or `git push` any missed changes.  Also confirm you can authenticate to the origin remote, which you can see with `git remote -v`")
-	ErrUnlock     = fmt.Errorf("could not decrypt your repo, this is likely due to using the wrong key at ~/.plural/key. The original key might be in a backup or on your previous machine.")
+	ErrUnlock = fmt.Errorf("could not decrypt your repo, this is likely due to using the wrong key at ~/.plural/key. The original key might be in a backup or on your previous machine.")
 )

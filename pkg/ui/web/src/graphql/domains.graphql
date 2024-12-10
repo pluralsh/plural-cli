@@ -1,5 +1,0 @@
-mutation CreateDomain($name: String!) {
-  provisionDomain(name: $name) {
-    ...DnsDomain
-  }
-}
