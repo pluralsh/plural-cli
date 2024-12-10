@@ -1,7 +1,6 @@
 package helm
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -14,7 +13,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
@@ -46,30 +44,6 @@ func GetActionConfig(namespace string) (*action.Configuration, error) {
 		return nil, err
 	}
 	return actionConfig, nil
-}
-
-func Template(conf *action.Configuration, name, namespace, path string, isUpgrade, validate bool, values map[string]interface{}) ([]byte, error) {
-	// load chart from the path
-	chart, err := loader.Load(path)
-	if err != nil {
-		return nil, err
-	}
-
-	client := action.NewInstall(conf)
-	client.DryRun = true
-	client.ReleaseName = name
-	client.Replace = true // Skip the name check
-	client.ClientOnly = !validate
-	client.IsUpgrade = isUpgrade
-	client.Namespace = namespace
-	client.IncludeCRDs = false
-	rel, err := client.Run(chart, values)
-	if err != nil {
-		return nil, err
-	}
-	var manifests bytes.Buffer
-	fmt.Fprintln(&manifests, strings.TrimSpace(rel.Manifest))
-	return manifests.Bytes(), nil
 }
 
 func AddRepo(repoName, repoUrl string) error {

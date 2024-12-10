@@ -43,7 +43,6 @@ type Client interface {
 	CreateDomain(name string) error
 	CreateInstallation(id string) (string, error)
 	GetInstallation(name string) (*Installation, error)
-	GetInstallations() ([]*Installation, error)
 	OIDCProvider(id string, attributes *OidcProviderAttributes) error
 	CreateKeyBackup(attrs KeyBackupAttributes) error
 	GetKeyBackup(name string) (*KeyBackup, error)

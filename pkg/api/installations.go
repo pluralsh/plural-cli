@@ -26,11 +26,6 @@ func (client *client) GetInstallation(name string) (*Installation, error) {
 
 }
 
-func (client *client) DeleteInstallation(id string) error {
-	_, err := client.pluralClient.DeleteInstallation(client.ctx, id)
-	return err
-}
-
 func (client *client) CreateInstallation(id string) (string, error) {
 	resp, err := client.pluralClient.CreateInstallation(client.ctx, id)
 	if err != nil {
@@ -108,21 +103,6 @@ func convertInstallation(installation *gqlclient.InstallationFragment) *Installa
 	}
 
 	return i
-}
-
-func (client *client) GetInstallations() ([]*Installation, error) {
-	result := make([]*Installation, 0)
-
-	resp, err := client.pluralClient.GetInstallations(client.ctx)
-	if err != nil {
-		return result, err
-	}
-
-	for _, edge := range resp.Installations.Edges {
-		result = append(result, convertInstallation(edge.Node))
-	}
-
-	return result, err
 }
 
 func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {

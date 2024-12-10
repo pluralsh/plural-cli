@@ -84,31 +84,6 @@ func (p *Plural) getCommands() []cli.Command {
 			Action:   common.LatestVersion(common.HandleServe),
 			Category: "Workspace",
 		},
-		{
-			Name:     "test",
-			Usage:    "validate a values templace",
-			Action:   common.LatestVersion(common.TestTemplate),
-			Category: "Publishing",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "templateType",
-					Usage: "Determines the template type. Go template by default",
-				},
-			},
-		},
-		{
-			Name:    "template",
-			Aliases: []string{"tpl"},
-			Usage:   "templates a helm chart to be uploaded to plural",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "values",
-					Usage: "the values file",
-				},
-			},
-			Action:   common.LatestVersion(common.HandleHelmTemplate),
-			Category: "Publishing",
-		},
 	}
 }
 
