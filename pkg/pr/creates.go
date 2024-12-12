@@ -21,6 +21,9 @@ func applyCreates(creates *CreateSpec, ctx map[string]interface{}) error {
 		if tpl.External {
 			source = filepath.Join(creates.ExternalDir, source)
 		}
+		if templatedSource, err := templateReplacement([]byte(source), ctx); err == nil {
+			source = string(templatedSource)
+		}
 
 		destPath := []byte(tpl.Destination)
 		dest, err := templateReplacement(destPath, ctx)
