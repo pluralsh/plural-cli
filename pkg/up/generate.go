@@ -24,7 +24,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "add-core-infra-stack", dir); err != nil {
 		return
 	}
 
@@ -64,6 +64,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 	copies := []templatePair{
 		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
 		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
+		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
 		{from: ctx.path("setup"), to: "bootstrap"},
 		{from: ctx.path("templates"), to: "templates"},
 		{from: ctx.path("resources"), to: "resources"},
