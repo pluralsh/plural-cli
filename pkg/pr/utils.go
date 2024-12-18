@@ -40,3 +40,18 @@ func replaceTo(from, to string, rep func(data []byte) ([]byte, error)) error {
 func replaceInPlace(path string, rep func(data []byte) ([]byte, error)) error {
 	return replaceTo(path, path, rep)
 }
+
+func removeMatches(glob string) error {
+	matches, err := filepath.Glob(glob)
+	if err != nil {
+		return err
+	}
+
+	for _, match := range matches {
+		if err := os.Remove(match); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
