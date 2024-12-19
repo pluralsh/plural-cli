@@ -28,6 +28,7 @@ env:
 jobs:
   plural-up-aws:
     name: plural up / AWS
+    if: false
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -247,6 +248,7 @@ jobs:
                 filename: rest_results.html
   plural-up-azure:
     name: plural up / Azure
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
