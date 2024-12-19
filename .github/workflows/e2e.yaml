@@ -1,0 +1,354 @@
+name: E2E
+on:
+  schedule:
+    - cron: 0 0 * * 1-5 # At 00:00 on every day-of-week from Monday through Friday
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+env:
+  GOPATH: /home/runner/go/
+  GOBIN: /home/runner/go/bin
+  PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
+  PLURAL_UP_AFFIRM_DEPLOY: true
+  PLURAL_DOWN_AFFIRM_DESTROY: true
+  TESTOUT_PATH: /home/runner/testout
+  SSH_PATH: /home/runner/.ssh
+  VENOM_PATH: /usr/local/bin/venom
+  AWS_NUKE_PATH: /usr/local/bin/aws-nuke
+  VENOM_VAR_pluralHome: /home/runner/.plural
+  VENOM_VAR_directory: /home/runner/testout/azure
+  VENOM_VAR_gitRepo: git@github.com:pluralsh/plural-cli-e2e.git
+  VENOM_VAR_gitRepoPrivateKeyPath: /home/runner/.ssh/id_rsa
+  VENOM_VAR_pluralKey: ${{ secrets.E2E_PLURAL_PRIVATE_KEY }}
+jobs:
+  plural-up-aws:
+    name: plural up / AWS
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+      - uses: mcblair/configure-aws-profile-action@v1.0.0
+        with:
+          role-arn: arn:aws:iam::911167907168:role/GitHubAction-AssumeRoleWithAction
+          profile-name: aws-nuke
+      - name: Store test timestamp
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+      - name: Setup test repository SSH key
+        run: |
+          mkdir -p ${{ env.SSH_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) > ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          eval "$(ssh-agent -s)"
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+      - name: Install aws-nuke
+        run: |
+          wget -c https://github.com/ekristen/aws-nuke/releases/download/v3.34.0/aws-nuke-v3.34.0-linux-amd64.tar.gz -O - | tar -xz -C /usr/local/bin
+          chmod +x ${{ env.AWS_NUKE_PATH }}
+          aws-nuke version
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Venom
+        run: |
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+          chmod +x ${{ env.VENOM_PATH }}
+          venom version
+      - name: Setup Plural CLI
+        run: |
+          make install-cli
+          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+          plural version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Print AWS CLI version
+        run: aws --version
+      - name: Create kube directory
+        run: |
+          mkdir -p $HOME/.kube
+          touch $HOME/.kube/config
+          chmod 755 $HOME/.kube/config
+      - name: Run tests
+        env:
+          VENOM_VAR_provider: aws
+          VENOM_VAR_region: eu-west-1
+          VENOM_VAR_awsZoneA: eu-west-1a
+          VENOM_VAR_awsZoneB: eu-west-1b
+          VENOM_VAR_awsZoneC: eu-west-1c
+          VENOM_VAR_awsProject: ${{ secrets.E2E_AWS_PROJECT_ID }}
+          VENOM_VAR_awsBucket: e2e-tf-state-${{ env.TIMESTAMP }}
+          VENOM_VAR_project: ${{ secrets.E2E_AWS_PROJECT_ID }}
+          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-aws
+          VENOM_VAR_username: ${{ secrets.E2E_AWS_SA_USERNAME }}
+          VENOM_VAR_email: ${{ secrets.E2E_AWS_SA_EMAIL }}
+          VENOM_VAR_token: ${{ secrets.E2E_AWS_SA_TOKEN }}
+          TF_VAR_deletion_protection: false
+          AWS_PROFILE: aws-nuke
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+      - name: Post status on Slack
+        id: slack_message
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            blocks:
+            - type: section
+              text:
+                type: mrkdwn
+                text: "${{ github.workflow }} workflow finished."
+            - type: section
+              fields:
+              - type: mrkdwn
+                text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              - type: mrkdwn
+                text: "*Job*\n`${{ github.job }}`"
+              - type: mrkdwn
+                text: "*Status*\n`${{ job.status }}`"
+              - type: mrkdwn
+                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+      - name: Upload artifacts to Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ steps.slack_message.outputs.ts }}"
+            file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
+              - file: ${{ env.TESTOUT_PATH }}/test_results.html
+                filename: rest_results.html
+  plural-up-gcp:
+    name: plural up / GCP
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Store test timestamp
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+      - name: Setup test repository SSH key
+        run: |
+          mkdir -p ${{ env.SSH_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) > ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          eval "$(ssh-agent -s)"
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+      - name: GCloud Auth
+        uses: google-github-actions/auth@v2
+        with:
+          service_account: ${{ secrets.E2E_GCP_EMAIL }}
+          workload_identity_provider: projects/657418122889/locations/global/workloadIdentityPools/github/providers/github
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: '>= 363.0.0'
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Venom
+        run: |
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+          chmod +x ${{ env.VENOM_PATH }}
+          venom version
+      - name: Setup Plural CLI
+        run: |
+          make install-cli
+          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+          plural version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Print Google Cloud CLI version
+        run: gcloud --version
+      - name: Create kube directory
+        run: |
+          mkdir -p $HOME/.kube
+          touch $HOME/.kube/config
+          chmod 755 $HOME/.kube/config
+      - name: Run tests
+        env:
+          VENOM_VAR_provider: gcp
+          VENOM_VAR_region: us-central1
+          VENOM_VAR_gcpOrgID: ${{ secrets.E2E_GCP_ORG_ID }}
+          VENOM_VAR_gcpBillingID: ${{ secrets.E2E_GCP_BILLING_ID }}
+          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-gcp
+          VENOM_VAR_username: ${{ secrets.E2E_GCP_SA_USERNAME }}
+          VENOM_VAR_email: ${{ secrets.E2E_GCP_SA_EMAIL }}
+          VENOM_VAR_token: ${{ secrets.E2E_GCP_SA_TOKEN }}
+          TF_VAR_network: plural-e2e-network-${{ env.TIMESTAMP }}
+          TF_VAR_subnetwork: plural-e2e-subnet-${{ env.TIMESTAMP }}
+        run: venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+      - name: Post status on Slack
+        id: slack_message
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            blocks:
+            - type: section
+              text:
+                type: mrkdwn
+                text: "${{ github.workflow }} workflow finished."
+            - type: section
+              fields:
+              - type: mrkdwn
+                text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              - type: mrkdwn
+                text: "*Job*\n`${{ github.job }}`"
+              - type: mrkdwn
+                text: "*Status*\n`${{ job.status }}`"
+              - type: mrkdwn
+                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+      - name: Upload artifacts to Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ steps.slack_message.outputs.ts }}"
+            file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
+              - file: ${{ env.TESTOUT_PATH }}/test_results.html
+                filename: rest_results.html
+  plural-up-azure:
+    name: plural up / Azure
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Store test timestamp
+        run: echo "TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+      - name: Setup test repository SSH key
+        run: |
+          mkdir -p ${{ env.SSH_PATH }}
+          (base64 -d <<< ${{ secrets.E2E_REPO_PRIVATE_KEY }}) >> ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          chmod 600 ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+          eval "$(ssh-agent -s)"
+          ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
+      - name: Setup Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version-file: go.mod
+      - name: Add GOBIN to PATH
+        run: echo $GOBIN >> $GITHUB_PATH
+      - name: Setup Venom
+        run: |
+          curl https://github.com/ovh/venom/releases/download/v1.2.0/venom.linux-amd64 -L -o ${{ env.VENOM_PATH }}
+          chmod +x ${{ env.VENOM_PATH }}
+          venom version
+      - name: Setup Plural CLI
+        run: |
+          make install-cli
+          mkdir -p ${{ env.VENOM_VAR_pluralHome }}
+          plural version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Print Azure CLI version
+        run: az --version
+      - name: Create kube directory
+        run: |
+          mkdir -p $HOME/.kube
+          touch $HOME/.kube/config
+          chmod 755 $HOME/.kube/config
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+      - name: Run tests
+        env:
+          ARM_USE_AKS_WORKLOAD_IDENTITY: true
+          ARM_SUBSCRIPTION_ID: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.E2E_AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          VENOM_VAR_provider: azure
+          VENOM_VAR_region: polandcentral
+          VENOM_VAR_azureTenantId: ${{ secrets.E2E_AZURE_TENANT_ID }}
+          VENOM_VAR_azureSubscriptionId: ${{ secrets.E2E_AZURE_SUBSCRIPTION_ID }}
+          VENOM_VAR_azureStorageAccount: e2e${{ env.TIMESTAMP }}
+          VENOM_VAR_project: e2e-${{ env.TIMESTAMP }}
+          VENOM_VAR_branch: e2e-${{ env.TIMESTAMP }}-azure
+          VENOM_VAR_username: ${{ secrets.E2E_AZURE_SA_USERNAME }}
+          VENOM_VAR_email: ${{ secrets.E2E_AZURE_SA_EMAIL }}
+          VENOM_VAR_token: ${{ secrets.E2E_AZURE_SA_TOKEN }}
+        run: |
+          # Create resource group and storage account
+          az group create --name ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }} --output none
+          az storage account create --name ${{ env.VENOM_VAR_azureStorageAccount }} --resource-group ${{ env.VENOM_VAR_project }} --location ${{ env.VENOM_VAR_region }} --sku Standard_LRS --kind StorageV2 --output none
+          
+          # Export access key that is required to authenticate to Terraform azurerm backend
+          export ARM_ACCESS_KEY=$(az storage account keys list --resource-group ${{ env.VENOM_VAR_project }} --account-name ${{ env.VENOM_VAR_azureStorageAccount }} --query '[0].value' -o tsv)
+          
+          # Run tests
+          venom run -vv --html-report --format=json --output-dir ${{ env.TESTOUT_PATH }} test/plural
+      - name: Post status on Slack
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            blocks:
+            - type: section
+              text:
+                type: mrkdwn
+                text: "${{ github.workflow }} workflow finished."
+            - type: section
+              fields:
+              - type: mrkdwn
+                text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
+              - type: mrkdwn
+                text: "*Job*\n`${{ github.job }}`"
+              - type: mrkdwn
+                text: "*Status*\n`${{ job.status }}`"
+              - type: mrkdwn
+                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+      - name: Upload artifacts to Slack on failure
+        id: slack_message
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: files.uploadV2
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ steps.slack_message.outputs.ts }}"
+            file_uploads:
+              - file: ${{ env.TESTOUT_PATH }}/venom.log
+                filename: venom.log
+              - file: ${{ env.TESTOUT_PATH }}/test_results.html
+                filename: rest_results.html

@@ -9,6 +9,7 @@ APP_NAME ?= plural-cli
 APP_VSN ?= $(shell git describe --tags --always --dirty)
 APP_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%S%z")
 BUILD ?= $(shell git rev-parse --short HEAD)
+TIMESTAMP ?= $(shell date +%s)
 DKR_HOST ?= dkr.plural.sh
 GOOS ?= darwin
 GOARCH ?= arm64
@@ -34,7 +35,10 @@ git-push:
 	git push
 
 .PHONY: install
-install:
+install: install-cli
+
+.PHONY: install-cli
+install-cli:
 	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
 
 .PHONY: build-cli
@@ -68,8 +72,8 @@ build: ## Build the Docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
 
-.PHONY: build-cloud
-build-cloud: ## build the cloud docker image
+.PHONY: build-cloud-image
+build-cloud-image: ## build the cloud docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -79,8 +83,8 @@ build-cloud: ## build the cloud docker image
 		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
 		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
 
-.PHONY: build-dind
-build-dind: ## build the dind docker image
+.PHONY: build-dind-image
+build-dind-image: ## build the dind docker image
 	docker build --build-arg APP_NAME=$(APP_NAME) \
 		--build-arg APP_VSN=$(APP_VSN) \
 		--build-arg APP_DATE=$(APP_DATE) \
@@ -118,7 +122,7 @@ pull: ## pulls new server image
 	docker-compose pull
 
 .PHONY: serve
-serve: build-cloud ## build cloud version of plural-cli and start plural serve in docker
+serve: build-cloud-image ## build cloud version of plural-cli and start plural serve in docker
 	docker kill plural-cli || true
 	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
 
@@ -137,6 +141,40 @@ setup-tests:
 .PHONY: test
 test: setup-tests
 	gotestsum --format testname -- -v -race ./pkg/... ./cmd/command/...
+
+.PHONY: e2e
+e2e: --ensure-venom
+	@rm -rf testout ;\
+	VENOM_VAR_branch=e2e-${PLRL_CLI_E2E_PROVIDER}-${TIMESTAMP} \
+	VENOM_VAR_directory=../../testout/${PLRL_CLI_E2E_PROVIDER} \
+	VENOM_VAR_email=${PLRL_CLI_E2E_SA_EMAIL} \
+	VENOM_VAR_gitRepo=${PLRL_CLI_E2E_GIT_REPO} \
+	VENOM_VAR_gitRepoPrivateKeyPath=${PLRL_CLI_E2E_PRIVATE_KEY_PATH} \
+	VENOM_VAR_username=${PLRL_CLI_E2E_SA_USERNAME} \
+	VENOM_VAR_token=${PLRL_CLI_E2E_SA_TOKEN} \
+	VENOM_VAR_pluralHome=${HOME}/.plural \
+	VENOM_VAR_pluralKey=${PLRL_CLI_E2E_PLURAL_KEY} \
+	VENOM_VAR_project=${PLRL_CLI_E2E_PROJECT}-${TIMESTAMP} \
+	VENOM_VAR_provider=${PLRL_CLI_E2E_PROVIDER} \
+	VENOM_VAR_region=${PLRL_CLI_E2E_REGION} \
+	VENOM_VAR_azureSubscriptionId=${PLRL_CLI_E2E_AZURE_SUBSCRIPTION_ID} \
+	VENOM_VAR_azureTenantId=${PLRL_CLI_E2E_AZURE_TENANT_ID} \
+	VENOM_VAR_azureStorageAccount=${PLRL_CLI_E2E_AZURE_STORAGE_ACCOUNT}${TIMESTAMP} \
+	VENOM_VAR_gcpOrgID=${PLRL_CLI_E2E_GCLOUD_ORG_ID} \
+	VENOM_VAR_gcpBillingID=${PLRL_CLI_E2E_GCLOUD_BILLING_ID} \
+	VENOM_VAR_awsZoneA=${PLRL_CLI_E2E_AWS_ZONE_A} \
+	VENOM_VAR_awsZoneB=${PLRL_CLI_E2E_AWS_ZONE_B} \
+	VENOM_VAR_awsZoneC=${PLRL_CLI_E2E_AWS_ZONE_C} \
+	VENOM_VAR_awsProject=${PLRL_CLI_E2E_PROJECT} \
+	VENOM_VAR_awsBucket=e2e-tf-state-${TIMESTAMP} \
+	PLURAL_LOGIN_AFFIRM_CURRENT_USER=true \
+	PLURAL_UP_AFFIRM_DEPLOY=true \
+	PLURAL_DOWN_AFFIRM_DESTROY=true \
+	PLURAL_CD_USE_EXISTING_CREDENTIALS=true \
+	TF_VAR_network=plural-e2e-network-${TIMESTAMP} \
+	TF_VAR_subnetwork=plural-e2e-subnet-${TIMESTAMP} \
+	TF_VAR_deletion_protection=false \
+ 		venom run -vv --html-report --format=json --output-dir testout test/plural
 
 .PHONY: format
 format: ## formats all go code to prep for linting

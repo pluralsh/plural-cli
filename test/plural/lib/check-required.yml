@@ -1,0 +1,81 @@
+executor: check-required
+input:
+  branch: ''
+  directory: ''
+  email: ''
+  gitRepo: ''
+  gitRepoPrivateKeyPath: ''
+  gitRepoPrivateKey: ''
+  username: ''
+  token: ''
+  pluralHome: ''
+  project: ''
+  provider: ''
+  region: ''
+
+steps:
+  - name: Branch
+    script: "echo Branch {{ .input.branch }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Branch .+$'
+      - result.code ShouldEqual 0
+
+  - name: Directory
+    script: "echo Directory {{ .input.directory }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Directory .+$'
+      - result.code ShouldEqual 0
+
+  - name: Email
+    script: "echo Email {{ .input.email }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Email .+$'
+      - result.code ShouldEqual 0
+
+  - name: Git Repo
+    script: "echo Git Repo {{ .input.gitRepo }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Git Repo .+$'
+      - result.code ShouldEqual 0
+
+  - name: Private Key Path
+    script: "echo Private Key Path {{ .input.gitRepoPrivateKeyPath }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Private Key Path .+$'
+      - result.code ShouldEqual 0
+
+  - name: Username
+    script: "echo Username {{ .input.username }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Username .+$'
+      - result.code ShouldEqual 0
+
+  - name: Token
+    script: "echo Token {{ .input.token }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Token .+$'
+      - result.code ShouldEqual 0
+
+  - name: Plural Home
+    script: "echo Plural Home {{ .input.pluralHome }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Plural Home .+$'
+      - result.code ShouldEqual 0
+
+  - name: Project
+    script: "echo Project {{ .input.project }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Project .+$'
+      - result.code ShouldEqual 0
+
+  - name: Provider
+    script: "echo Provider {{ .input.provider }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Provider .+$'
+      - result.code ShouldEqual 0
+
+  - name: Region
+    script: "echo Region {{ .input.region }}"
+    assertions:
+      - result.systemout ShouldMatchRegex '^Region .+$'
+      - result.code ShouldEqual 0
