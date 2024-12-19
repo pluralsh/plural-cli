@@ -32,8 +32,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
-	"github.com/pluralsh/plural-cli/pkg/template"
-	"github.com/pluralsh/plural-cli/pkg/utils"
 	pluralErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
@@ -119,33 +117,6 @@ func equinixFromManifest(man *manifest.ProjectManifest) (*EQUINIXProvider, error
 
 func (equinix *EQUINIXProvider) CreateBucket() error {
 	return nil
-}
-
-func (equinix *EQUINIXProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-
-	ctx["Region"] = equinix.Region()
-	ctx["Bucket"] = equinix.Bucket()
-	ctx["Prefix"] = prefix
-	ctx["ClusterCreated"] = false
-	ctx["__CLUSTER__"] = equinix.Cluster()
-	if cluster, ok := ctx["cluster"]; ok {
-		ctx["Cluster"] = cluster
-		ctx["ClusterCreated"] = true
-	} else {
-		ctx["Cluster"] = fmt.Sprintf(`"%s"`, equinix.Cluster())
-	}
-
-	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitignore")), []byte("!/**")); err != nil {
-		return "", err
-	}
-	if err := utils.WriteFile(pathing.SanitizeFilepath(filepath.Join(equinix.Bucket(), ".gitattributes")), []byte("/** filter=plural-crypt diff=plural-crypt\n.gitattributes !filter !diff")); err != nil {
-		return "", err
-	}
-	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderEquinix), version)
-	if err != nil {
-		return "", err
-	}
-	return template.RenderString(scaffold, ctx)
 }
 
 func (equinix *EQUINIXProvider) KubeConfig() error {

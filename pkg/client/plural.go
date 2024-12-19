@@ -21,8 +21,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
-const DemoingErrorMsg = "You're currently running a gcp demo cluster. Spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation"
-
 type Plural struct {
 	api.Client
 	ConsoleClient console.ConsoleClient
@@ -144,7 +142,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return api.GetErrorResponse(err, "Me")
 	}
 	if me.Demoing {
-		return fmt.Errorf(DemoingErrorMsg)
+		return fmt.Errorf("You're currently running a gcp demo cluster. Spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation")
 	}
 
 	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !common.Affirm("This repository's workspace.yaml already exists. Would you like to use it?", "PLURAL_INIT_AFFIRM_CURRENT_REPO") {

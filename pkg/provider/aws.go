@@ -21,7 +21,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
-	"github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	plrlErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 
@@ -207,25 +206,6 @@ func getAwsConfig(ctx context.Context) (aws.Config, error) {
 
 func (aws *AWSProvider) CreateBucket() error {
 	return aws.mkBucket(aws.bucket)
-}
-
-func (aws *AWSProvider) CreateBackend(prefix string, version string, ctx map[string]interface{}) (string, error) {
-	if err := aws.mkBucket(aws.bucket); err != nil {
-		return "", plrlErrors.ErrorWrap(err, fmt.Sprintf("Failed to create terraform state bucket %s", aws.bucket))
-	}
-
-	ctx["Region"] = aws.Region()
-	ctx["Bucket"] = aws.Bucket()
-	ctx["Prefix"] = prefix
-	ctx["__CLUSTER__"] = aws.Cluster()
-	if _, ok := ctx["Cluster"]; !ok {
-		ctx["Cluster"] = fmt.Sprintf("\"%s\"", aws.Cluster())
-	}
-	scaffold, err := GetProviderScaffold(api.ToGQLClientProvider(api.ProviderAWS), version)
-	if err != nil {
-		return "", err
-	}
-	return template.RenderString(scaffold, ctx)
 }
 
 func (aws *AWSProvider) KubeConfig() error {

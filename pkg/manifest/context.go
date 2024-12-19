@@ -1,14 +1,11 @@
 package manifest
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/yaml.v2"
-
-	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
 type Bundle struct {
@@ -31,7 +28,6 @@ type Globals struct {
 }
 
 type Context struct {
-	Bundles       []*Bundle
 	Buckets       []string
 	Domains       []string
 	Protect       []string `yaml:"protect,omitempty" json:"protect,omitempty"`
@@ -44,7 +40,6 @@ func (this *Context) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
-		Bundles       []*Bundle                         `json:"bundles"`
 		Buckets       []string                          `json:"buckets"`
 		Domains       []string                          `json:"domains"`
 		Protect       []string                          `yaml:"protect,omitempty" json:"protect,omitempty"`
@@ -52,7 +47,6 @@ func (this *Context) MarshalJSON() ([]byte, error) {
 		Globals       *Globals                          `yaml:"globals,omitempty" json:"globals,omitempty"`
 		Configuration map[string]map[string]interface{} `json:"configuration"`
 	}{
-		Bundles:       this.Bundles,
 		Buckets:       this.Buckets,
 		Domains:       this.Domains,
 		Protect:       this.Protect,
@@ -73,18 +67,6 @@ func ContextPath() string {
 	return path
 }
 
-func BuildContext(path string, insts []*api.Installation) error {
-	ctx := &Context{
-		Configuration: make(map[string]map[string]interface{}),
-	}
-
-	for _, inst := range insts {
-		ctx.Configuration[inst.Repository.Name] = inst.Context
-	}
-
-	return ctx.Write(path)
-}
-
 func FetchContext() (*Context, error) {
 	return ReadContext(ContextPath())
 }
@@ -103,25 +85,9 @@ func ReadContext(path string) (c *Context, err error) {
 
 func NewContext() *Context {
 	return &Context{
-		Bundles: make([]*Bundle, 0),
 		// Globals:       &Globals{CertIssuer: "plural"},
 		Configuration: make(map[string]map[string]interface{}),
 	}
-}
-
-func (c *Context) Repo(name string) (res map[string]interface{}, ok bool) {
-	res, ok = c.Configuration[name]
-	return
-}
-
-func (c *Context) AddBundle(repo, name string) {
-	for _, b := range c.Bundles {
-		if b.Name == name && b.Repository == repo {
-			return
-		}
-	}
-
-	c.Bundles = append(c.Bundles, &Bundle{Repository: repo, Name: name})
 }
 
 func (c *Context) AddBucket(bucket string) {
@@ -140,16 +106,6 @@ func (c *Context) HasBucket(bucket string) bool {
 
 func (c *Context) AddDomain(domain string) {
 	c.Domains = append(c.Domains, domain)
-}
-
-func (c *Context) Protected(name string) bool {
-	for _, r := range c.Protect {
-		if r == name {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (c *Context) HasDomain(domain string) bool {
@@ -180,18 +136,6 @@ func (c *Context) Write(path string) error {
 	}
 
 	return os.WriteFile(path, io, 0644)
-}
-
-func (c *Context) ContainsString(str, msg, ignoreRepo, ignoreKey string) error {
-	for r, section := range c.Configuration {
-		for k, val := range section {
-			if v, ok := val.(string); ok && v == str && (r != ignoreRepo || k != ignoreKey) {
-				return fmt.Errorf(msg)
-			}
-		}
-	}
-
-	return nil
 }
 
 func (smtp *SMTP) GetServer() string {

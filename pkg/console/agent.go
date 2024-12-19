@@ -45,9 +45,7 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 func InstallAgent(url, token, namespace, version string, values map[string]interface{}) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
-		"secrets": map[string]string{
-			"deployToken": token,
-		},
+		"secrets":    map[string]string{"deployToken": token},
 		"consoleUrl": url,
 	}
 	vals = algorithms.Merge(vals, values)

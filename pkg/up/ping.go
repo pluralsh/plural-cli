@@ -60,8 +60,7 @@ func doTestDns(domain string) error {
 
 func ping(url string) error {
 	ping := fmt.Sprintf("Pinging %s...\n", url)
-	success := "Found status code 200, console up!\n"
-	return retrier(ping, success, func() error {
+	return retrier(ping, "Found status code 200, console up!\n", func() error {
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == 200 {
 			return nil
@@ -82,7 +81,7 @@ func retrier(retryMsg, successMsg string, f func() error) error {
 			fmt.Print(retryMsg)
 			err := f()
 			if err == nil {
-				utils.Success(successMsg)
+				utils.Success(successMsg) //nolint:govet
 				done <- true
 				return
 			}

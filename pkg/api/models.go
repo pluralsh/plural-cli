@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/pluralsh/gqlclient"
 )
 
@@ -92,13 +90,6 @@ type Wirings struct {
 	Helm      map[string]string
 }
 
-type TerraformInstallation struct {
-	Id           string
-	Installation *Installation
-	Terraform    *Terraform
-	Version      *Version
-}
-
 type OAuthConfiguration struct {
 	Issuer                string
 	AuthorizationEndpoint string
@@ -127,40 +118,6 @@ type Installation struct {
 	AcmeSecret   string
 }
 
-type CloudShell struct {
-	Id     string
-	AesKey string `json:"aesKey"`
-	GitUrl string `json:"gitUrl"`
-}
-
-type RepositoryEdge struct {
-	Node *Repository
-}
-
-type InstallationEdge struct {
-	Node *Installation
-}
-
-type ChartEdge struct {
-	Node *Chart
-}
-
-type TerraformEdge struct {
-	Node *Terraform
-}
-
-type VersionEdge struct {
-	Node *Version
-}
-
-type ChartInstallationEdge struct {
-	Node *ChartInstallation
-}
-
-type TerraformInstallationEdge struct {
-	Node *TerraformInstallation
-}
-
 type Token struct {
 	Token string
 }
@@ -183,15 +140,6 @@ type Recipe struct {
 	RecipeSections     []*RecipeSection
 	OidcSettings       *OIDCSettings `yaml:"oidcSettings" json:"oidcSettings"`
 	RecipeDependencies []*Recipe     `yaml:"recipeDependencies" json:"recipeDependencies"`
-}
-
-type Stack struct {
-	Id          string
-	Name        string
-	Provider    string
-	Featured    bool
-	Description string
-	Bundles     []*Recipe
 }
 
 type RecipeTest struct {
@@ -357,77 +305,3 @@ type ChatMessage struct {
 	Content string
 	Role    string
 }
-
-const CrdFragment = `
-	fragment CrdFragment on Crd {
-		id
-		name
-		blob
-	}
-`
-
-const DependenciesFragment = `
-	fragment DependenciesFragment on Dependencies {
-		dependencies {
-			type
-			name
-			repo
-		}
-		wait
-		application
-		providers
-		secrets
-		wirings { terraform helm }
-		providerWirings
-		outputs
-		providerVsn
-	}
-`
-
-var VersionFragment = fmt.Sprintf(`
-	fragment VersionFragment on Version {
-		id
-		readme
-		version
-		valuesTemplate
-		package
-		crds { ...CrdFragment }
-		dependencies { ...DependenciesFragment }
-	}
-	%s
-`, CrdFragment)
-
-var TerraformFragment = fmt.Sprintf(`
-	fragment TerraformFragment on Terraform {
-		id
-		name
-		package
-		description
-		dependencies { ...DependenciesFragment }
-		valuesTemplate
-	}
-	%s
-`, DependenciesFragment)
-
-var TerraformInstallationFragment = fmt.Sprintf(`
-	fragment TerraformInstallationFragment on TerraformInstallation {
-		id
-		terraform { ...TerraformFragment }
-		version { ...VersionFragment }
-	}
-	%s
-	%s
-`, TerraformFragment, VersionFragment)
-
-const ArtifactFragment = `
-	fragment ArtifactFragment on Artifact {
-		id
-		name
-		readme
-		platform
-		arch
-		blob
-		sha
-		filesize
-	}
-`

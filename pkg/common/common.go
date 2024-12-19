@@ -13,69 +13,16 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/provider"
-	"github.com/pluralsh/plural-cli/pkg/server"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"github.com/pluralsh/plural-cli/pkg/wkspace"
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural-cli/pkg/scaffold"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
 var (
 	loggedIn = false
 )
-
-func AppReadme(name string, dryRun bool) error {
-	repoRoot, err := git.Root()
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Join(repoRoot, name, "helm", name)
-	return scaffold.Readme(dir, dryRun)
-}
-
-func DoBuild(client api.Client, installation *api.Installation, force bool) error {
-	repoName := installation.Repository.Name
-	fmt.Printf("Building workspace for %s\n", repoName)
-
-	if !wkspace.Configured(repoName) {
-		fmt.Printf("You have not locally configured %s but have it registered as an installation in our api, ", repoName)
-		fmt.Printf("either delete it with `plural apps uninstall %s` or install it locally via a bundle in `plural bundle list %s`\n", repoName, repoName)
-		return nil
-	}
-
-	workspace, err := wkspace.New(client, installation)
-	if err != nil {
-		return err
-	}
-
-	vsn, ok := workspace.RequiredCliVsn()
-	if ok && !VersionValid(vsn) {
-		return fmt.Errorf("Your cli version is not sufficient to complete this build, please update to at least %s", vsn)
-	}
-
-	if err := workspace.Prepare(); err != nil {
-		return err
-	}
-
-	build, err := scaffold.Scaffolds(workspace)
-	if err != nil {
-		return err
-	}
-
-	err = build.Execute(workspace, force)
-	if err == nil {
-		utils.Success("Finished building %s\n\n", repoName)
-	}
-
-	workspace.PrintLinks()
-
-	AppReadme(repoName, false) // nolint:errcheck
-	return err
-}
 
 func HandleLogin(c *cli.Context) error {
 	if loggedIn {
@@ -204,10 +151,6 @@ func HandleClone(c *cli.Context) error {
 	return nil
 }
 
-func DownloadReadme(c *cli.Context) error {
-	return wkspace.DownloadReadme()
-}
-
 func HandleImport(c *cli.Context) error {
 	dir, err := filepath.Abs(c.Args().Get(0))
 	if err != nil {
@@ -238,10 +181,6 @@ func HandleImport(c *cli.Context) error {
 
 	utils.Success("Workspace properly imported\n")
 	return nil
-}
-
-func HandleServe(c *cli.Context) error {
-	return server.Run()
 }
 
 func GetIdAndName(input string) (id, name *string) {

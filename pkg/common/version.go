@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"strings"
 
-	"golang.org/x/mod/semver"
-
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -21,14 +19,6 @@ var (
 	Commit  = ""
 	Date    = ""
 )
-
-func VersionValid(vsn string) bool {
-	current := Version
-	if !strings.HasPrefix(current, "v") {
-		current = fmt.Sprintf("v%s", current)
-	}
-	return semver.Compare(vsn, current) <= 0
-}
 
 func checkRecency() error {
 	if os.Getenv("CLOUD_SHELL") == "1" || os.Getenv("PLURAL_CONSOLE") == "1" {

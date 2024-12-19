@@ -15,7 +15,7 @@ func applyDeletes(deletes *DeleteSpec, ctx map[string]interface{}) error {
 			dest = []byte(f)
 		}
 
-		if err := os.Remove(string(dest)); err != nil {
+		if err := removeMatches(string(dest)); err != nil {
 			return err
 		}
 	}

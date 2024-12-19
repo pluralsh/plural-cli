@@ -5,9 +5,7 @@ import (
 	"reflect"
 
 	jsonpatch "github.com/evanphx/json-patch"
-	"github.com/google/go-cmp/cmp"
 	jsoniter "github.com/json-iterator/go"
-	"golang.org/x/exp/maps"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -79,57 +77,6 @@ func PatchInterfaceMap(defaultValues, values map[string]map[string]interface{}) 
 		return map[string]map[string]interface{}{}, nil
 	}
 	return patch, nil
-}
-
-type DiffCondition func(key string, value, diffValue any) bool
-
-var (
-	equalDiffCondition DiffCondition = func(_ string, value, diffValue any) bool {
-		return cmp.Equal(value, diffValue)
-	}
-)
-
-// DiffMap removes keys from the base map based on provided DiffCondition match against the same keys in provided
-// diff map. It always uses an equal comparison for the values, but specific keys can use extended comparison
-// if needed by passing custom DiffCondition function.
-//
-// Example:
-//
-//	A: {a: 1, b: 1, c: 2}
-//	B: {a: 1, d: 2, c: 3}
-//	Result: {b: 1, c: 2}
-//
-// Note: It does not remove null value keys by default.
-func DiffMap(base, diff map[string]interface{}, conditions ...DiffCondition) map[string]interface{} {
-	result := make(map[string]interface{})
-	maps.Copy(result, base)
-
-	if diff == nil {
-		diff = make(map[string]interface{})
-	}
-
-	for k, v := range base {
-		switch t := v.(type) {
-		case map[string]interface{}:
-			dValue, _ := diff[k].(map[string]interface{})
-			if dMap := DiffMap(t, dValue, conditions...); len(dMap) > 0 {
-				result[k] = dMap
-				break
-			}
-
-			delete(result, k)
-		default:
-			diffV := diff[k]
-			for _, condition := range append(conditions, equalDiffCondition) {
-				if condition(k, v, diffV) {
-					delete(result, k)
-					break
-				}
-			}
-		}
-	}
-
-	return result
 }
 
 func cleanUpInterfaceArray(in []interface{}) []interface{} {

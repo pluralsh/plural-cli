@@ -12,7 +12,7 @@ import (
 func Command() cli.Command {
 	return cli.Command{
 		Name:        "profile",
-		Usage:       "Commands for managing config profiles for plural",
+		Usage:       "manages config profiles for plural",
 		Subcommands: profileCommands(),
 		Category:    "User Profile",
 	}
