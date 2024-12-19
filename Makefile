@@ -35,7 +35,7 @@ git-push:
 	git push
 
 .PHONY: install
-install: install-cli install-ctl
+install: install-cli
 
 .PHONY: install-cli
 install-cli:
