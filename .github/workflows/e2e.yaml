@@ -1,11 +1,7 @@
 name: E2E
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  schedule:
+    - cron: 0 0 * * 1-5 # At 00:00 on every day-of-week from Monday through Friday
   workflow_dispatch:
 permissions:
   id-token: write
@@ -28,7 +24,6 @@ env:
 jobs:
   plural-up-aws:
     name: plural up / AWS
-    if: false
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -248,7 +243,6 @@ jobs:
                 filename: rest_results.html
   plural-up-azure:
     name: plural up / Azure
-    if: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
