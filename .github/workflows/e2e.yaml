@@ -31,7 +31,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -77,8 +77,8 @@ jobs:
           make install-cli
           mkdir -p ${{ env.VENOM_VAR_pluralHome }}
           plural version
-      - name: Print Terraform version
-        run: terraform --version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
       - name: Print AWS CLI version
         run: aws --version
       - name: Create kube directory
@@ -145,7 +145,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -185,8 +185,8 @@ jobs:
           make install-cli
           mkdir -p ${{ env.VENOM_VAR_pluralHome }}
           plural version
-      - name: Print Terraform version
-        run: terraform --version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
       - name: Print Google Cloud CLI version
         run: gcloud --version
       - name: Create kube directory
@@ -247,7 +247,7 @@ jobs:
                 filename: rest_results.html
   plural-up-azure:
     name: plural up / Azure
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -278,8 +278,8 @@ jobs:
           make install-cli
           mkdir -p ${{ env.VENOM_VAR_pluralHome }}
           plural version
-      - name: Print Terraform version
-        run: terraform --version
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
       - name: Print Azure CLI version
         run: az --version
       - name: Create kube directory
@@ -334,17 +334,13 @@ jobs:
             - type: section
               fields:
               - type: mrkdwn
-                text: "*Timestamp*\n`${{ env.TIMESTAMP }}`"
-              - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
-              - type: mrkdwn
-                text: "*Workflow*\n`${{ github.workflow }}`"
               - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
               - type: mrkdwn
-                text: "*Commit*\n<${{ github.event.head_commit.url }}|${{ env.SHORT_SHA }}>"
+                text: "*Status*\n`${{ job.status }}`"
               - type: mrkdwn
-                text: "*Message*\n${{ github.event.head_commit.message }}"
+                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
       - name: Upload artifacts to Slack on failure
         id: slack_message
         if: failure()

@@ -6,7 +6,7 @@ input:
 steps:
   - script: |
       cd {{ .input.directory }} ;\
-      plural ops cluster
+      plural mgmt cluster
     assertions:
       - result.code ShouldEqual 0
   - script: |
