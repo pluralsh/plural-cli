@@ -88,8 +88,9 @@ func (ctx *Context) Generate() (dir string, err error) {
 
 	ctx.changeDelims()
 	overwrites := []templatePair{
-		{from: "bootstrap/setup.yaml", to: "bootstrap/setup.yaml"},
-		{from: "bootstrap/pr-automation", to: "bootstrap/pr-automation"},
+		{from: "resources/monitoring/services", to: "resources/monitoring/services"},
+		{from: "resources/policy/services", to: "resources/policy/services"},
+		{from: "bootstrap", to: "bootstrap"},
 	}
 
 	for _, tpl := range overwrites {

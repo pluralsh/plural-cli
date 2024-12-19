@@ -1,0 +1,156 @@
+name: Plural up
+description: TODO
+
+vars:
+  ### Core variables
+  # Branch that will be created to run 'plural up'
+  branch: ''
+  # Local directory used to set up git repository (clone, checkout)
+  directory: ''
+  # Plural user email to run 'plural up' with
+  email: ''
+  # Git repository address used to run 'plural up' and store generated files
+  gitRepo: ''
+  # SSH key path used to access git repository
+  gitRepoPrivateKeyPath: ''
+  # Plural user name
+  username: ''
+  # Plural user acess token
+  token: ''
+  # Local plural home directory used to store plural files
+  pluralHome: ''
+  # Provider-specific project name/id
+  project: ''
+  # Provider name: gcp, azure, aws
+  provider: ''
+  # Provider region used to spin up the cluster
+  region: ''
+  # Plural aes key used to encrypt/decrypt git repository files
+  pluralKey: ''
+
+  # Azure variables
+  azureSubscriptionId: ''
+  azureTenantId: ''
+  azureStorageAccount: ''
+
+  ### GCP variables
+  # Google organization ID
+  gcpOrgID: ''
+  # Google billing account ID
+  gcpBillingID: ''
+
+  # AWS variables
+  awsZoneA: ''
+  awsZoneB: ''
+  awsZoneC: ''
+  awsProject: ''
+  awsBucket: ''
+
+#secrets:
+#  - pluralKey
+#  - token
+#  - gcpOrgID
+#  - gcpBillingID
+#  - azureSubscriptionId
+#  - azureTenantId
+#  - azureStorageAccount
+
+testcases:
+  - name: Check required arguments
+    steps:
+      - type: check-required
+
+  - name: Setup Git
+    steps:
+      - type: git-setup
+
+  - name: Setup workspace file
+    steps:
+      - type: workspace-setup
+        name: {{ .username }}
+        directory: {{ .directory }}
+        provider: {{ .provider }}
+        region: {{ .region }}
+        email: {{ .email }}
+        project: {{ .project }}
+        azureSubscriptionId: {{ .azureSubscriptionId }}
+        azureTenantId: {{ .azureTenantId }}
+        azureStorageAccount: {{ .azureStorageAccount }}
+        awsZoneA: {{ .awsZoneA }}
+        awsZoneB: {{ .awsZoneB }}
+        awsZoneC: {{ .awsZoneC }}
+        awsProject: {{ .awsProject }}
+        awsBucket: {{ .awsBucket }}
+
+  - name: Setup context file
+    steps:
+      - type: context-setup
+
+  - name: Plural login
+    steps:
+      - type: plural-login
+        email: {{ .email }}
+        name: {{ .username }}
+        pluralHome: {{ .pluralHome }}
+        token: {{ .token }}
+        key: {{ .pluralKey }}
+
+  - name: Google Cloud Setup
+    skip:
+      - provider ShouldEqual gcp
+    steps:
+      - type: gcloud-setup
+        orgID: {{ .gcpOrgID }}
+        billingID: {{ .gcpBillingID }}
+        project: {{ .project }}
+
+  - name: Plural up
+    steps:
+      - script: |
+          cd {{ .directory }} ;\
+          plural up --commit "Plural up e2e cluster"
+        retry: 3
+        delay: 5
+
+  - name: Test cluster
+    steps:
+      - type: cluster-setup
+        name: {{ .username }}
+        directory: {{ .directory }}
+      - type: cluster-services
+
+  - name: Plural down
+    skip:
+      - provider ShouldEqual azure
+    steps:
+      - script: |
+          cd {{ .directory }} ;\
+          plural down
+        retry: 3
+        delay: 5
+
+  - name: Azure teardown
+    skip:
+      - provider ShouldEqual azure
+    steps:
+      - type: azure-teardown
+        resourceGroup: {{ .project }}
+
+  - name: Google Cloud teardown
+    skip:
+      - provider ShouldEqual gcp
+    steps:
+      - type: gcloud-teardown
+        project: {{ .project }}
+
+  - name: AWS Cloud teardown
+    skip:
+      - provider ShouldEqual aws
+    steps:
+      - type: aws-teardown
+
+  - name: Git teardown
+    steps:
+        - type: git-teardown
+          branch: {{ .branch }}
+          directory: {{ .directory }}

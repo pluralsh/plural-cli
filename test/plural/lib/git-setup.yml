@@ -1,0 +1,20 @@
+executor: git-setup
+input:
+  branch: ''
+  directory: ''
+  email: ''
+  gitRepo: ''
+  gitRepoPrivateKeyPath: ''
+  username: ''
+steps:
+  - script: |
+      git -c core.sshCommand="ssh -i {{ .input.gitRepoPrivateKeyPath }}" clone {{ .input.gitRepo }} "{{ .input.directory }}" ;\
+      cd {{ .input.directory }} ;\
+      git config --local user.email {{ .input.email }} ;\
+      git config --local user.name {{ .input.username }} ;\
+      git checkout -b {{ .input.branch }} ;\
+      GIT_SSH_COMMAND='ssh -i {{ .input.gitRepoPrivateKeyPath }} -o IdentitiesOnly=yes -F /dev/null' git push -u origin {{ .input.branch }}
+    info:
+      - 'Git Repository: {{ .input.gitRepo }}'
+    assertions:
+      - result.code ShouldEqual 0

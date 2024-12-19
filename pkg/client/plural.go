@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pluralsh/plural-cli/pkg/utils/git"
+
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
-	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
@@ -95,9 +98,33 @@ func (p *Plural) AssumeServiceAccount(conf config.Config, man *manifest.ProjectM
 func (p *Plural) HandleInit(c *cli.Context) error {
 	gitCreated := false
 	repo := ""
+	p.InitPluralClient()
 
 	if utils.Exists("./workspace.yaml") {
-		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized...\n")
+		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
+		utils.Highlight("Checking domain...\n")
+		proj, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+		if proj.Network.PluralDns {
+			if err := p.Client.CreateDomain(proj.Network.Subdomain); err != nil {
+				return err
+			}
+		}
+		utils.Highlight("Domain OK \n")
+		branch, err := git.CurrentBranch()
+		if err != nil {
+			return err
+		}
+		proj.Context["Branch"] = branch
+		if err := proj.Flush(); err != nil {
+			return err
+		}
+		if err := common.CryptoInit(c); err != nil {
+			return err
+		}
+		_ = wkspace.DownloadReadme()
 		return nil
 	}
 
@@ -109,8 +136,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	if err := common.HandleLogin(c); err != nil {
 		return err
 	}
-
-	p.InitPluralClient()
 
 	me, err := p.Me()
 	if err != nil {

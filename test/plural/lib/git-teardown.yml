@@ -1,0 +1,12 @@
+executor: git-teardown
+input:
+  branch: ''
+  directory: ''
+steps:
+  - script: |
+      cd {{ .input.directory }} ;\
+      git push -d origin {{ .input.branch }}
+    retry: 3
+    retry_if:
+      - result.code ShouldNotEqual 0
+    delay: 5

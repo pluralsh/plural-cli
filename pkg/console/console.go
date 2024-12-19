@@ -32,6 +32,7 @@ type ConsoleClient interface {
 	DetachCluster(id string) error
 	ListClusterServices(clusterId, handle *string) ([]*consoleclient.ServiceDeploymentEdgeFragment, error)
 	CreateRepository(url string, privateKey, passphrase, username, password *string) (*consoleclient.CreateGitRepository, error)
+	GetRepository(id string) (*consoleclient.GetGitRepository, error)
 	ListRepositories() (*consoleclient.ListGitRepositories, error)
 	UpdateRepository(id string, attrs consoleclient.GitAttributes) (*consoleclient.UpdateGitRepository, error)
 	CreateClusterService(clusterId, clusterName *string, attr consoleclient.ServiceDeploymentAttributes) (*consoleclient.ServiceDeploymentExtended, error)
