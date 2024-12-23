@@ -24,7 +24,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "add-core-infra-stack", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
 		return
 	}
 
@@ -134,6 +134,28 @@ func (ctx *Context) afterSetup() error {
 	for _, tpl := range overwrites {
 		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			return err
+		}
+	}
+
+	redacts := []templatePair{
+		{from: "./terraform/mgmt/provider.tf"},
+	}
+
+	for _, redact := range redacts {
+		if err := ctx.redact(redact.from); err != nil {
+			return err
+		}
+	}
+
+	uncomments := []templatePair{
+		{from: "./terraform/mgmt/cluster/eks.tf"},
+	}
+
+	for _, uncomment := range uncomments {
+		if utils.Exists(uncomment.from) {
+			if err := ctx.uncomment(uncomment.from); err != nil {
+				return err
+			}
 		}
 	}
 
