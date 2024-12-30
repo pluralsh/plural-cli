@@ -107,7 +107,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if proj.Network.PluralDns {
+		if proj.Network != nil && proj.Network.PluralDns {
 			if err := p.Client.CreateDomain(proj.Network.Subdomain); err != nil {
 				return err
 			}

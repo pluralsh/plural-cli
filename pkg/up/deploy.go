@@ -80,6 +80,7 @@ func (ctx *Context) Deploy(commit func() error) error {
 	utils.Highlight("\nSetting up gitops management...\n")
 
 	if err := runAll([]terraformCmd{
+		{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
 		{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
 		{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
 	}); err != nil {
