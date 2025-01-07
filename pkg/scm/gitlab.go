@@ -2,7 +2,7 @@ package scm
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
