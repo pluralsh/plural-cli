@@ -579,6 +579,8 @@ github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 h1:GFCKgm
 github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10/go.mod h1:t/avpk3KcrXxUnYOhZhMXJlSEyie6gQbtLq5NM3loB8=
 github.com/pluralsh/console/go/client v1.25.4 h1:Uf5lP6r9XWO4wZJCPf7fn0Jn52Cd2uP+Lt2zWa53xqw=
 github.com/pluralsh/console/go/client v1.25.4/go.mod h1:lpoWASYsM9keNePS3dpFiEisUHEfObIVlSL3tzpKn8k=
+github.com/pluralsh/console/go/client v1.25.6 h1:w7koH76+RklS/e+ML+6LDGqSiCX+h1mDlKNj7KIbfUY=
+github.com/pluralsh/console/go/client v1.25.6/go.mod h1:lpoWASYsM9keNePS3dpFiEisUHEfObIVlSL3tzpKn8k=
 github.com/pluralsh/console/go/controller v0.0.0-20250106171545-b65ee8bd2d2e h1:5F8VW9teXxpziNcOnvn3fJIX7PPoTFajP8WqivSpELc=
 github.com/pluralsh/console/go/controller v0.0.0-20250106171545-b65ee8bd2d2e/go.mod h1:iVks8N4IuSw8zTFmShK77q6b2zRaQOnsqHYgnNUie7Y=
 github.com/pluralsh/controller-reconcile-helper v0.1.0 h1:BV3dYZFH5rn8ZvZjtpkACSv/GmLEtRftNQj/Y4ddHEo=
