@@ -64,6 +64,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 	copies := []templatePair{
 		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
 		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
+		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
 		{from: ctx.path("setup"), to: "bootstrap"},
 		{from: ctx.path("templates"), to: "templates"},
 		{from: ctx.path("resources"), to: "resources"},
@@ -133,6 +134,28 @@ func (ctx *Context) afterSetup() error {
 	for _, tpl := range overwrites {
 		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			return err
+		}
+	}
+
+	redacts := []templatePair{
+		{from: "./terraform/mgmt/provider.tf"},
+	}
+
+	for _, redact := range redacts {
+		if err := ctx.redact(redact.from); err != nil {
+			return err
+		}
+	}
+
+	uncomments := []templatePair{
+		{from: "./terraform/mgmt/cluster/eks.tf"},
+	}
+
+	for _, uncomment := range uncomments {
+		if utils.Exists(uncomment.from) {
+			if err := ctx.uncomment(uncomment.from); err != nil {
+				return err
+			}
 		}
 	}
 

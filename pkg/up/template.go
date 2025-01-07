@@ -2,6 +2,7 @@ package up
 
 import (
 	"bytes"
+	"regexp"
 	"text/template"
 	"time"
 
@@ -9,6 +10,24 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/retry"
 )
+
+func (ctx *Context) redact(file string) error {
+	buf, err := utils.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	re := regexp.MustCompile(`(?msU)# BEGIN REMOVE(.*)# END REMOVE`)
+	return utils.WriteFile(file, []byte(re.ReplaceAllString(buf, "")))
+}
+
+func (ctx *Context) uncomment(file string) error {
+	buf, err := utils.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	re := regexp.MustCompile(`# UNCOMMENT\s+`)
+	return utils.WriteFile(file, []byte(re.ReplaceAllString(buf, "")))
+}
 
 func (ctx *Context) templateFrom(file, to string) error {
 	buf, err := utils.ReadFile(file)

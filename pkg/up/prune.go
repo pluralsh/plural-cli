@@ -10,7 +10,7 @@ import (
 
 func (ctx *Context) Prune() error {
 	if ctx.Cloud {
-		return nil
+		return ctx.pruneCloud()
 	}
 
 	utils.Highlight("\nCleaning up unneeded resources...\n\n")
@@ -34,6 +34,18 @@ func (ctx *Context) Prune() error {
 	}
 
 	if err := os.Remove("./terraform/mgmt/console.tf"); err != nil {
+		return err
+	}
+
+	_ = os.RemoveAll("./terraform/apps")
+
+	return git.Sync(repoRoot, "Post-setup resource cleanup", true)
+}
+
+func (ctx *Context) pruneCloud() error {
+	utils.Highlight("\nCleaning up unneeded resources...\n\n")
+	repoRoot, err := git.Root()
+	if err != nil {
 		return err
 	}
 
