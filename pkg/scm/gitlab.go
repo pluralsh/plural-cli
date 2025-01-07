@@ -4,7 +4,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 var (
