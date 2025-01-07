@@ -14,14 +14,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/kubernetes"
-
+	"dario.cat/mergo"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
-	"github.com/imdario/mergo"
 	metal "github.com/packethost/packngo"
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"

@@ -29,7 +29,6 @@ require (
 	github.com/google/go-github/v45 v45.2.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
-	github.com/imdario/mergo v0.3.16
 	github.com/joho/godotenv v1.3.0
 	github.com/ktrysmt/go-bitbucket v0.9.55
 	github.com/likexian/doh v0.7.1
@@ -115,6 +114,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
+	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/likexian/gokit v0.25.15 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
