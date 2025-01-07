@@ -2,10 +2,9 @@ package scm
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/xanzy/go-gitlab"
-
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 var (
@@ -59,7 +58,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	}
 
 	groups, _, err := gl.Client.Groups.ListGroups(&gitlab.ListGroupsOptions{
-		MinAccessLevel: gitlab.AccessLevel(gitlab.DeveloperPermissions),
+		MinAccessLevel: gitlab.Ptr(gitlab.DeveloperPermissions),
 	})
 	if err != nil {
 		return
@@ -92,14 +91,14 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 		return
 	}
 	opts := &gitlab.CreateProjectOptions{
-		Name:                 gitlab.String(repoName),
-		Visibility:           gitlab.Visibility(gitlab.PrivateVisibility),
-		Description:          gitlab.String("my plural installation repository"),
-		InitializeWithReadme: gitlab.Bool(true),
+		Name:                 gitlab.Ptr(repoName),
+		Visibility:           gitlab.Ptr(gitlab.PrivateVisibility),
+		Description:          gitlab.Ptr("my plural installation repository"),
+		InitializeWithReadme: gitlab.Ptr(true),
 	}
 
 	if org != user.Username {
-		opts.NamespaceID = gitlab.Int(namespaces[org])
+		opts.NamespaceID = gitlab.Ptr(namespaces[org])
 	}
 
 	utils.Highlight("\ncreating gitlab repository %s/%s...\n", org, repoName)
@@ -110,9 +109,9 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 
 	utils.Highlight("Setting up a read-write deploy key for this repo...\n")
 	_, _, err = gl.Client.DeployKeys.AddDeployKey(repo.ID, &gitlab.AddDeployKeyOptions{
-		Title:   gitlab.String("Plural Deploy Key"),
-		Key:     gitlab.String(pub),
-		CanPush: gitlab.Bool(true),
+		Title:   gitlab.Ptr("Plural Deploy Key"),
+		Key:     gitlab.Ptr(pub),
+		CanPush: gitlab.Ptr(true),
 	})
 	if err != nil {
 		return
