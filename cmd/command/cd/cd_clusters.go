@@ -490,6 +490,6 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	}
 
 	deployToken := *existing.CreateCluster.DeployToken
-	utils.Highlight("installing agent on %s with url %s and initial deploy token %s\n", c.String("name"), p.ConsoleClient.Url(), deployToken)
+	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
 	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
