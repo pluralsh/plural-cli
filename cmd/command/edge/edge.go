@@ -91,11 +91,13 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return err
 	}
 
+	utils.Highlight("registering new cluster on %s machine\n", machineID)
 	_, err = p.ConsoleClient.CreateClusterRegistration(*registrationAttributes) // TODO: Handle the case when it already exists, i.e. after reboot.
 	if err != nil {
 		return err
 	}
 
+	utils.Highlight("waiting for registration to be completed\n")
 	var complete bool
 	var registration *gqlclient.ClusterRegistrationFragment
 	_ = wait.PollUntilContextCancel(context.Background(), 30*time.Second, true, func(_ context.Context) (done bool, err error) {
@@ -108,6 +110,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return err
 	}
 
+	utils.Highlight("creating %s cluster\n", registration.Name)
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
 		if errors.Like(err, "handle") {
@@ -129,8 +132,8 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		url = agentUrl
 	}
 
-	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
-	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, c.String("values"))
+	utils.Highlight("installing agent on %s cluster with %s URL\n", registration.Name, p.ConsoleClient.Url())
+	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "")
 }
 
 func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*gqlclient.ClusterRegistrationCreateAttributes, error) {
