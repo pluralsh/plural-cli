@@ -3,19 +3,13 @@ package edge
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	gqlclient "github.com/pluralsh/console/go/client"
-	"github.com/pluralsh/plural-cli/pkg/common"
-	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/yaml"
 )
 
 func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
@@ -66,7 +60,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	}
 
 	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
-	return p.doInstallOperator(url, *cluster.CreateCluster.DeployToken, c.String("values"))
+	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, c.String("values"))
 }
 
 func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*gqlclient.ClusterRegistrationCreateAttributes, error) {
@@ -99,68 +93,4 @@ func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistratio
 	}
 
 	return attributes
-}
-
-func (p *Plural) doInstallOperator(url, token, values string) error {
-	err := p.InitKube()
-	if err != nil {
-		return err
-	}
-	alreadyExists, err := console.IsAlreadyAgentInstalled(p.Kube.GetClient())
-	if err != nil {
-		return err
-	}
-	if alreadyExists && !common.Confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
-		utils.Success("deployment operator is already installed, skip installation\n")
-		return nil
-	}
-
-	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	vals := map[string]interface{}{}
-	globalVals := map[string]interface{}{}
-	version := ""
-
-	if p.ConsoleClient != nil {
-		settings, err := p.ConsoleClient.GetGlobalSettings()
-		if err == nil && settings != nil {
-			version = strings.Trim(settings.AgentVsn, "v")
-			if settings.AgentHelmValues != nil {
-				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	if values != "" {
-		if err := utils.YamlFile(values, &vals); err != nil {
-			return err
-		}
-	}
-	vals = algorithms.Merge(vals, globalVals)
-	err = console.InstallAgent(url, token, console.OperatorNamespace, version, vals)
-	if err == nil {
-		utils.Success("deployment operator installed successfully\n")
-	}
-	return err
-}
-
-func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
-	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
-	if err != nil {
-		return err
-	}
-
-	url := p.ConsoleClient.ExtUrl()
-	if cluster, err := p.ConsoleClient.GetCluster(id, handle); err == nil {
-		if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.ID); err == nil {
-			url = agentUrl
-		}
-	}
-
-	return p.doInstallOperator(url, deployToken, c.String("values"))
 }
