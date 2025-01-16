@@ -60,6 +60,7 @@ type ConsoleClient interface {
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
+	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
 }
 
 type authedTransport struct {

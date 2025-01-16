@@ -12,3 +12,7 @@ func (c *consoleClient) CreateClusterRegistration(attributes consoleclient.Clust
 	}
 	return response.CreateClusterRegistration, nil
 }
+
+func (c *consoleClient) IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment) {
+	return true, &consoleclient.ClusterRegistrationFragment{} // TODO: Check if ClusterRegistration already has name assigned.
+}
