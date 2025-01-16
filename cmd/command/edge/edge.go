@@ -2,6 +2,7 @@ package edge
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -69,7 +70,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{
 					Name:     "project",
 					Usage:    "the project this cluster will belong to",
-					Required: false, // TODO: It can be inferred from bootstrap token.
+					Required: false,
 				},
 			},
 		},
@@ -101,18 +102,23 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return complete, nil
 	})
 
-	cluster, err := p.ConsoleClient.CreateCluster(p.getClusterAttributes(registration))
-	//if err != nil {
-	//	if errors.Like(err, "handle") && common.Affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
-	//		handle := lo.ToPtr(attrs.Name)
-	//		if attrs.Handle != nil {
-	//			handle = attrs.Handle
-	//		}
-	//		return p.ReinstallOperator(c, nil, handle)
-	//	}
-	//
-	//	return err
-	//}
+	clusterAttributes, err := p.getClusterAttributes(registration)
+	if err != nil {
+		return err
+	}
+
+	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
+	if err != nil {
+		//	if errors.Like(err, "handle") && common.Affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+		//		handle := lo.ToPtr(attrs.Name)
+		//		if attrs.Handle != nil {
+		//			handle = attrs.Handle
+		//		}
+		//		return p.ReinstallOperator(c, nil, handle)
+		//	}
+
+		return err
+	}
 
 	if cluster.CreateCluster.DeployToken == nil {
 		return fmt.Errorf("could not fetch deploy token from cluster")
@@ -144,17 +150,36 @@ func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*g
 	return &attributes, nil
 }
 
-func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) gqlclient.ClusterAttributes {
+func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) (*gqlclient.ClusterAttributes, error) {
 	attributes := gqlclient.ClusterAttributes{
 		Name:   registration.Name,
 		Handle: &registration.Handle,
-		// TODO: Tags: registration.Tags,
-		// TODO: Metadata: registration.Metadata,
+	}
+
+	if registration.Tags != nil {
+		attributes.Tags = lo.Map(registration.Tags, func(tag *gqlclient.ClusterTags, index int) *gqlclient.TagAttributes {
+			if tag == nil {
+				return nil
+			}
+
+			return &gqlclient.TagAttributes{
+				Name:  tag.Name,
+				Value: tag.Value,
+			}
+		})
+	}
+
+	if registration.Metadata != nil {
+		metadata, err := json.Marshal(registration.Metadata)
+		if err != nil {
+			return nil, err
+		}
+		attributes.Metadata = lo.ToPtr(string(metadata))
 	}
 
 	if registration.Project != nil {
 		attributes.ProjectID = &registration.Project.ID
 	}
 
-	return attributes
+	return &attributes, nil
 }
