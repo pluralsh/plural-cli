@@ -96,7 +96,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 
 	var complete bool
 	var registration *gqlclient.ClusterRegistrationFragment
-	_ = wait.PollUntilContextCancel(context.Background(), time.Minute, true, func(_ context.Context) (done bool, err error) { // TODO: Add backoff?
+	_ = wait.PollUntilContextCancel(context.Background(), 30*time.Second, true, func(_ context.Context) (done bool, err error) {
 		complete, registration = p.ConsoleClient.IsClusterRegistrationComplete(machineID)
 		return complete, nil
 	})
