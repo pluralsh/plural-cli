@@ -96,7 +96,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 
 	var complete bool
 	var registration *gqlclient.ClusterRegistrationFragment
-	_ = wait.PollUntilContextCancel(context.Background(), 1*time.Minute, true, func(_ context.Context) (done bool, err error) { // TODO: Add backoff?
+	_ = wait.PollUntilContextCancel(context.Background(), time.Minute, true, func(_ context.Context) (done bool, err error) { // TODO: Add backoff?
 		complete, registration = p.ConsoleClient.IsClusterRegistrationComplete(machineID)
 		return complete, nil
 	})
@@ -128,7 +128,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 }
 
 func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*gqlclient.ClusterRegistrationCreateAttributes, error) {
-	attrs := gqlclient.ClusterRegistrationCreateAttributes{MachineID: machineID}
+	attributes := gqlclient.ClusterRegistrationCreateAttributes{MachineID: machineID}
 
 	if project != "" {
 		p, err := p.ConsoleClient.GetProject(project)
@@ -138,10 +138,10 @@ func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*g
 		if p == nil {
 			return nil, fmt.Errorf("cannot find %s project", project)
 		}
-		attrs.ProjectID = lo.ToPtr(p.ID)
+		attributes.ProjectID = lo.ToPtr(p.ID)
 	}
 
-	return &attrs, nil
+	return &attributes, nil
 }
 
 func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) gqlclient.ClusterAttributes {
