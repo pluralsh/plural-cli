@@ -66,28 +66,14 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Usage:  "registers edge cluster and installs agent onto it using the current kubeconfig",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:     "name",
-					Usage:    "The name you'll give the cluster",
+					Name:     "machine-id",
+					Usage:    "the unique id of the edge device on which this cluster runs",
 					Required: true,
-				},
-				cli.StringFlag{
-					Name:     "handle",
-					Usage:    "optional handle for the cluster",
-					Required: false,
-				},
-				cli.StringFlag{
-					Name:     "values",
-					Usage:    "values file to use for the deployment agent helm chart",
-					Required: false,
 				},
 				cli.StringFlag{
 					Name:     "project",
 					Usage:    "the project this cluster will belong to",
-					Required: false,
-				},
-				cli.StringSliceFlag{
-					Name:  "tag",
-					Usage: "a cluster tag to add, useful for targeting with global services",
+					Required: false, // TODO: It can be inferred from bootstrap token.
 				},
 			},
 		},
