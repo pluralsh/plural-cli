@@ -444,7 +444,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	if c.String("project") != "" {
 		project, err := p.ConsoleClient.GetProject(c.String("project"))
 		if err != nil {
-			return nil
+			return err
 		}
 		if project == nil {
 			return fmt.Errorf("Could not find project %s", c.String("project"))
