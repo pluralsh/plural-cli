@@ -8,6 +8,7 @@ import (
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/client"
+	"github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -109,14 +110,13 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
-		//	if errors.Like(err, "handle") && common.Affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
-		//		handle := lo.ToPtr(attrs.Name)
-		//		if attrs.Handle != nil {
-		//			handle = attrs.Handle
-		//		}
-		//		return p.ReinstallOperator(c, nil, handle)
-		//	}
-
+		if errors.Like(err, "handle") {
+			handle := lo.ToPtr(clusterAttributes.Name)
+			if clusterAttributes.Handle != nil {
+				handle = clusterAttributes.Handle
+			}
+			return p.ReinstallOperator(c, nil, handle)
+		}
 		return err
 	}
 
