@@ -2,6 +2,8 @@ package edge
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,12 +14,12 @@ import (
 )
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
-	image := c.String("image")
+	image := c.String("image") // TODO: Move to bundles.yaml.
 	username := c.String("username")
 	password := c.String("password")
 	outputDir := c.String("output-dir")
-	_ = c.String("override-config")  // TODO
-	_ = c.String("override-bundles") // TODO
+	_ = c.String("override-config") // TODO
+	bundlesOverride := c.String("override-bundles")
 
 	currentDir, err := os.Getwd()
 	outputDirPath := filepath.Join(currentDir, outputDir)
@@ -40,15 +42,12 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
 
-	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-bundle:0.1.4", "/rootfs/plural-bundle.tar"); err != nil {
+	_, err = p.getBundlesConfiguration(bundlesOverride) // TODO
+	if err != nil {
 		return err
 	}
 
-	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-images-bundle:0.1.2", "/rootfs/plural-images-bundle.tar"); err != nil {
-		return err
-	}
-
-	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-trust-manager-bundle:0.1.0", "/rootfs/plural-trust-manager-bundle.tar"); err != nil {
+	if err = p.writeBundles(); err != nil {
 		return err
 	}
 
@@ -75,7 +74,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 }
 
 func (p *Plural) writeCloudConfig(username, password, path string) error {
-	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/hack/cloud-config.yaml")
+	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml")
 	if err != nil {
 		return err
 	}
@@ -100,6 +99,54 @@ func (p *Plural) writeCloudConfig(username, password, path string) error {
 
 	_, err = file.WriteString(template)
 	return err
+}
+
+func (p *Plural) getBundlesConfiguration(overridePath string) (map[string]string, error) {
+	var bundlesContent []byte
+	if overridePath == "" {
+		response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/bundles.yaml")
+		if err != nil {
+			return nil, err
+		}
+
+		defer response.Body.Close()
+		buffer := new(bytes.Buffer)
+		if _, err = buffer.ReadFrom(response.Body); err != nil {
+			return nil, err
+		}
+
+		bundlesContent = buffer.Bytes()
+	} else {
+		file, err := os.Open(overridePath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		bundlesContent, err = io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	fmt.Println(string(bundlesContent)) // TODO: yaml.Unmarshal(bundlesContent)
+	return nil, nil
+}
+
+func (p *Plural) writeBundles() error {
+	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-bundle:0.1.4", "/rootfs/plural-bundle.tar"); err != nil {
+		return err
+	}
+
+	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-images-bundle:0.1.2", "/rootfs/plural-images-bundle.tar"); err != nil {
+		return err
+	}
+
+	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-trust-manager-bundle:0.1.0", "/rootfs/plural-trust-manager-bundle.tar"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *Plural) writeBundle(bundleImage, targetPath string) error {
