@@ -14,5 +14,10 @@ func (c *consoleClient) CreateClusterRegistration(attributes consoleclient.Clust
 }
 
 func (c *consoleClient) IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment) {
-	return true, &consoleclient.ClusterRegistrationFragment{} // TODO: Check if ClusterRegistration already has name assigned.
+	response, err := c.client.GetClusterRegistration(c.ctx, nil, &machineID)
+	if err != nil {
+		return false, nil // TODO: Log error?
+	}
+
+	return response.ClusterRegistration.Name != "", response.ClusterRegistration
 }
