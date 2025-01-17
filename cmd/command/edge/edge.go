@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -122,6 +123,11 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
+	buildScriptPath := filepath.Join(outputDirPath, "build-arm-image.sh")
+	if err = p.writeBuildScript(buildScriptPath); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -150,6 +156,23 @@ func (p *Plural) writeCloudConfig(username, password, path string) error {
 	defer file.Close()
 
 	_, err = file.WriteString(template)
+	return err
+}
+
+func (p *Plural) writeBuildScript(path string) error {
+	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/hack/build-arm-image.sh")
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, response.Body)
 	return err
 }
 

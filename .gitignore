@@ -34,3 +34,4 @@ vendor/
 
 # Files that should stay private
 cloud-config.yaml
+build-arm-image.sh
