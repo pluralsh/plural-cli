@@ -131,15 +131,23 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
+	if err = os.Chmod(buildScriptPath, os.ModePerm); err != nil {
+		return err
+	}
+
 	buildDirPath := filepath.Join(outputDirPath, "build")
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
 
-	dockerClient, err := client2.NewClientWithOpts(client2.FromEnv)
+	dockerClient, err := client2.NewClientWithOpts(client2.FromEnv, client2.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
+	defer dockerClient.Close()
+
+	// TODO: Pull?
+	// https://docs.docker.com/reference/api/engine/sdk/examples/
 
 	response, err := dockerClient.ContainerCreate(context.Background(),
 		&container.Config{
@@ -162,7 +170,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 				{Type: mount.TypeBind, Source: buildScriptPath, Target: "/build-arm-image.sh"},
 				{Type: mount.TypeBind, Source: buildDirPath, Target: "/tmp/build"},
 			},
-		}, nil, nil, "")
+		}, nil, nil, "plural-image-builder")
 	if err != nil {
 		return err
 	}
@@ -170,6 +178,8 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = dockerClient.ContainerStart(context.Background(), response.ID, container.StartOptions{}); err != nil {
 		return err
 	}
+
+	// TODO: Wait.
 
 	utils.Success("successfully built image\n")
 	return nil
