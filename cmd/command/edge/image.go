@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -37,10 +36,10 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	if err = exec.Command("docker", "volume", "create", "edge-rootfs").Run(); err != nil {
+	if err = utils.Exec("docker", "volume", "create", "edge-rootfs"); err != nil {
 		return err
 	}
-	defer exec.Command("docker", "volume", "rm", "edge-rootfs").Run()
+	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
 
 	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-bundle:0.1.4", "/rootfs/plural-bundle.tar"); err != nil {
 		return err
@@ -54,13 +53,13 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	if err = exec.Command("docker", "run", "-i", "--rm", "--privileged",
+	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
 		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
-		"util", "unpack", rpi4Image, "/rootfs").Run(); err != nil {
+		"util", "unpack", rpi4Image, "/rootfs"); err != nil {
 		return err
 	}
 
-	if err = exec.Command("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
+	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
 		"-v", configPath+":/cloud-config.yaml",
 		"--mount", "source=edge-rootfs,target=/rootfs",
@@ -68,7 +67,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		"--entrypoint=/build-arm-image.sh", "quay.io/kairos/auroraboot:v0.4.3",
 		"--model", "rpi4",
 		"--directory", "/rootfs",
-		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img").Run(); err != nil {
+		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img"); err != nil {
 		return err
 	}
 
@@ -105,8 +104,8 @@ func (p *Plural) writeCloudConfig(username, password, path string) error {
 }
 
 func (p *Plural) writeBundle(bundleImage, targetPath string) error {
-	return exec.Command(
+	return utils.Exec(
 		"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
 		"gcr.io/go-containerregistry/crane:latest", "--platform=linux/arm64",
-		"pull", bundleImage, targetPath).Run()
+		"pull", bundleImage, targetPath)
 }
