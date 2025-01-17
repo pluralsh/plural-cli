@@ -8,6 +8,7 @@
 # Testing files
 context.yaml
 workspace.yaml
+cloud-config.yaml
 
 # Build files and binaries
 dist/
@@ -31,7 +32,3 @@ plural*.o
 
 # Vendored dependencies
 vendor/
-
-# Files that should stay private
-cloud-config.yaml
-build-arm-image.sh
