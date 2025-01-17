@@ -5,16 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	client2 "github.com/docker/docker/client"
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"
@@ -23,6 +20,10 @@ import (
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
 	"k8s.io/apimachinery/pkg/util/wait"
+)
+
+const (
+	rpi4Image = "quay.io/kairos/alpine:3.19-standard-arm64-rpi4-v3.2.4-k3sv1.31.3-k3s1"
 )
 
 var consoleToken string
@@ -127,60 +128,45 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	buildScriptPath := filepath.Join(outputDirPath, "build-arm-image.sh")
-	if err = p.writeBuildScript(buildScriptPath); err != nil {
-		return err
-	}
-
-	if err = os.Chmod(buildScriptPath, os.ModePerm); err != nil {
-		return err
-	}
-
 	buildDirPath := filepath.Join(outputDirPath, "build")
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
 
-	dockerClient, err := client2.NewClientWithOpts(client2.FromEnv, client2.WithAPIVersionNegotiation())
-	if err != nil {
+	if err = exec.Command("docker", "volume", "create", "edge-rootfs").Run(); err != nil {
 		return err
 	}
-	defer dockerClient.Close()
+	defer exec.Command("docker", "volume", "rm", "edge-rootfs").Run()
 
-	// TODO: Pull?
-	// https://docs.docker.com/reference/api/engine/sdk/examples/
-
-	response, err := dockerClient.ContainerCreate(context.Background(),
-		&container.Config{
-			Image: "quay.io/kairos/auroraboot:v0.4.3",
-			Entrypoint: []string{
-				"/build-arm-image.sh",
-				"--model", "rpi4",
-				"--config", "/cloud-config.yaml",
-				"--docker-image", "quay.io/kairos/alpine:3.19-standard-arm64-rpi4-v3.2.4-k3sv1.31.3-k3s1",
-				"/tmp/build/kairos.img",
-			},
-			Tty: true,
-		},
-		&container.HostConfig{
-			AutoRemove: true,
-			Privileged: true,
-			Mounts: []mount.Mount{
-				{Type: mount.TypeBind, Source: "/var/run/docker.sock", Target: "/var/run/docker.sock"},
-				{Type: mount.TypeBind, Source: configPath, Target: "/cloud-config.yaml"},
-				{Type: mount.TypeBind, Source: buildScriptPath, Target: "/build-arm-image.sh"},
-				{Type: mount.TypeBind, Source: buildDirPath, Target: "/tmp/build"},
-			},
-		}, nil, nil, "plural-image-builder")
-	if err != nil {
+	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-bundle:0.1.4", "/rootfs/plural-bundle.tar"); err != nil {
 		return err
 	}
 
-	if err = dockerClient.ContainerStart(context.Background(), response.ID, container.StartOptions{}); err != nil {
+	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-images-bundle:0.1.2", "/rootfs/plural-images-bundle.tar"); err != nil {
 		return err
 	}
 
-	// TODO: Wait.
+	if err = p.writeBundle("ghcr.io/pluralsh/kairos-plural-trust-manager-bundle:0.1.0", "/rootfs/plural-trust-manager-bundle.tar"); err != nil {
+		return err
+	}
+
+	if err = exec.Command("docker", "run", "-i", "--rm", "--privileged",
+		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
+		"util", "unpack", rpi4Image, "/rootfs").Run(); err != nil {
+		return err
+	}
+
+	if err = exec.Command("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
+		"-v", buildDirPath+":/tmp/build",
+		"-v", configPath+":/cloud-config.yaml",
+		"--mount", "source=edge-rootfs,target=/rootfs",
+		"--privileged", "-i", "--rm",
+		"--entrypoint=/build-arm-image.sh", "quay.io/kairos/auroraboot:v0.4.3",
+		"--model", "rpi4",
+		"--directory", "/rootfs",
+		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img").Run(); err != nil {
+		return err
+	}
 
 	utils.Success("successfully saved image to %s directory\n", outputDir)
 	return nil
@@ -214,21 +200,11 @@ func (p *Plural) writeCloudConfig(username, password, path string) error {
 	return err
 }
 
-func (p *Plural) writeBuildScript(path string) error {
-	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/hack/build-arm-image.sh")
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, response.Body)
-	return err
+func (p *Plural) writeBundle(bundleImage, targetPath string) error {
+	return exec.Command(
+		"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
+		"gcr.io/go-containerregistry/crane:latest", "--platform=linux/arm64",
+		"pull", bundleImage, targetPath).Run()
 }
 
 func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {

@@ -23,7 +23,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.3
 	github.com/briandowns/spinner v1.23.1
 	github.com/chartmuseum/helm-push v0.10.4
-	github.com/docker/docker v27.5.0+incompatible
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-git/v5 v5.13.1
 	github.com/gofrs/flock v0.12.1
@@ -102,10 +101,10 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/cli v27.4.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
+	github.com/docker/docker v27.5.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
-	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.3 // indirect
 	github.com/envoyproxy/go-control-plane/ratelimit v0.1.0 // indirect
@@ -128,7 +127,6 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/likexian/gokit v0.25.15 // indirect
 	github.com/mmcloughlin/avo v0.6.0 // indirect
-	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/osteele/liquid v1.6.0 // indirect
