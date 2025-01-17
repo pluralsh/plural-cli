@@ -2,7 +2,6 @@ package edge
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -11,15 +10,27 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
+	"sigs.k8s.io/yaml"
 )
 
+type Configuration struct {
+	Image   string            `json:"image"`
+	Bundles map[string]string `json:"bundles"`
+}
+
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
-	image := c.String("image") // TODO: Move to bundles.yaml.
 	username := c.String("username")
 	password := c.String("password")
 	outputDir := c.String("output-dir")
-	_ = c.String("override-config") // TODO
-	bundlesOverride := c.String("override-bundles")
+	_ = c.String("cloud-config") // TODO
+	pluralConfig := c.String("plural-config")
+
+	config, err := p.readConfig(pluralConfig)
+	if err != nil {
+		return err
+	}
+
+	// TODO
 
 	currentDir, err := os.Getwd()
 	outputDirPath := filepath.Join(currentDir, outputDir)
@@ -42,18 +53,13 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
 
-	_, err = p.getBundlesConfiguration(bundlesOverride) // TODO
-	if err != nil {
-		return err
-	}
-
 	if err = p.writeBundles(); err != nil {
 		return err
 	}
 
 	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
 		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
-		"util", "unpack", image, "/rootfs"); err != nil {
+		"util", "unpack", config.Image, "/rootfs"); err != nil {
 		return err
 	}
 
@@ -71,6 +77,51 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Success("successfully saved image to %s directory\n", outputDir)
 	return nil
+}
+
+func (p *Plural) readConfig(path string) (*Configuration, error) {
+	var content []byte
+	var err error
+	if path == "" {
+		content, err = p.readDefaultConfig()
+	} else {
+		content, err = p.readFile(path)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var config *Configuration
+	err = yaml.Unmarshal(content, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func (p *Plural) readDefaultConfig() ([]byte, error) {
+	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+	buffer := new(bytes.Buffer)
+	if _, err = buffer.ReadFrom(response.Body); err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+func (p *Plural) readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return io.ReadAll(file)
 }
 
 func (p *Plural) writeCloudConfig(username, password, path string) error {
@@ -99,38 +150,6 @@ func (p *Plural) writeCloudConfig(username, password, path string) error {
 
 	_, err = file.WriteString(template)
 	return err
-}
-
-func (p *Plural) getBundlesConfiguration(overridePath string) (map[string]string, error) {
-	var bundlesContent []byte
-	if overridePath == "" {
-		response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/bundles.yaml")
-		if err != nil {
-			return nil, err
-		}
-
-		defer response.Body.Close()
-		buffer := new(bytes.Buffer)
-		if _, err = buffer.ReadFrom(response.Body); err != nil {
-			return nil, err
-		}
-
-		bundlesContent = buffer.Bytes()
-	} else {
-		file, err := os.Open(overridePath)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-
-		bundlesContent, err = io.ReadAll(file)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	fmt.Println(string(bundlesContent)) // TODO: yaml.Unmarshal(bundlesContent)
-	return nil, nil
 }
 
 func (p *Plural) writeBundles() error {
