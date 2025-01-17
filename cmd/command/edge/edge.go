@@ -12,6 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	client2 "github.com/docker/docker/client"
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"
@@ -128,6 +131,47 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
+	buildDirPath := filepath.Join(outputDirPath, "build")
+	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
+		return err
+	}
+
+	dockerClient, err := client2.NewClientWithOpts(client2.FromEnv)
+	if err != nil {
+		return err
+	}
+
+	response, err := dockerClient.ContainerCreate(context.Background(),
+		&container.Config{
+			Image: "quay.io/kairos/auroraboot:v0.4.3",
+			Entrypoint: []string{
+				"/build-arm-image.sh",
+				"--model", "rpi4",
+				"--config", "/cloud-config.yaml",
+				"--docker-image", "quay.io/kairos/alpine:3.19-standard-arm64-rpi4-v3.2.4-k3sv1.31.3-k3s1",
+				"/tmp/build/kairos.img",
+			},
+			Tty: true,
+		},
+		&container.HostConfig{
+			AutoRemove: true,
+			Privileged: true,
+			Mounts: []mount.Mount{
+				{Type: mount.TypeBind, Source: "/var/run/docker.sock", Target: "/var/run/docker.sock"},
+				{Type: mount.TypeBind, Source: configPath, Target: "/cloud-config.yaml"},
+				{Type: mount.TypeBind, Source: buildScriptPath, Target: "/build-arm-image.sh"},
+				{Type: mount.TypeBind, Source: buildDirPath, Target: "/tmp/build"},
+			},
+		}, nil, nil, "")
+	if err != nil {
+		return err
+	}
+
+	if err = dockerClient.ContainerStart(context.Background(), response.ID, container.StartOptions{}); err != nil {
+		return err
+	}
+
+	utils.Success("successfully built image\n")
 	return nil
 }
 
