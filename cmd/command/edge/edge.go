@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -76,6 +78,12 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage:    "password for the initial user account",
 					Required: true,
 				},
+				cli.StringFlag{
+					Name:     "output-dir",
+					Usage:    "output directory where the image will be stored",
+					Value:    "image",
+					Required: false,
+				},
 			},
 		},
 		{
@@ -101,27 +109,32 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	username := c.String("username")
 	password := c.String("password")
+	outputDir := c.String("output-dir")
 
-	cloudConfig, err := p.getCloudConfig(username, password)
-	if err != nil {
+	currentDir, err := os.Getwd()
+	outputDirPath := filepath.Join(currentDir, outputDir)
+	if err = os.MkdirAll(outputDirPath, os.ModePerm); err != nil {
 		return err
 	}
 
-	fmt.Println(cloudConfig) // TODO
+	configPath := filepath.Join(outputDirPath, "cloud-config.yaml")
+	if err = p.writeCloudConfig(username, password, configPath); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (p *Plural) getCloudConfig(username, password string) (string, error) {
+func (p *Plural) writeCloudConfig(username, password, path string) error {
 	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/hack/cloud-config.yaml")
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer response.Body.Close()
 	buffer := new(bytes.Buffer)
 	if _, err = buffer.ReadFrom(response.Body); err != nil {
-		return "", err
+		return err
 	}
 
 	template := buffer.String()
@@ -130,7 +143,14 @@ func (p *Plural) getCloudConfig(username, password string) (string, error) {
 	template = strings.ReplaceAll(template, "@URL@", consoleURL)
 	template = strings.ReplaceAll(template, "@TOKEN@", consoleToken)
 
-	return template, nil
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(template)
+	return err
 }
 
 func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {

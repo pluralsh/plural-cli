@@ -31,3 +31,6 @@ plural*.o
 
 # Vendored dependencies
 vendor/
+
+# Files that should stay private
+cloud-config.yaml
