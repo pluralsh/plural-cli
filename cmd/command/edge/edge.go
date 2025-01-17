@@ -54,6 +54,12 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Usage:  "prepares image ready to be used on Raspberry Pi 4",
 			Flags: []cli.Flag{
 				cli.StringFlag{
+					Name:     "image",
+					Usage:    "Kairos image to use",
+					Value:    "quay.io/kairos/alpine:3.19-standard-arm64-rpi4-v3.2.4-k3sv1.31.3-k3s1",
+					Required: false,
+				},
+				cli.StringFlag{
 					Name:     "username",
 					Usage:    "name for the initial user account",
 					Value:    "plural",
@@ -68,6 +74,16 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Name:     "output-dir",
 					Usage:    "output directory where the image will be stored",
 					Value:    "image",
+					Required: false,
+				},
+				cli.StringFlag{
+					Name:     "override-config",
+					Usage:    "path to configuration file, if provided templating will be skipped",
+					Required: false,
+				},
+				cli.StringFlag{
+					Name:     "override-bundles",
+					Usage:    "path to bundles file",
 					Required: false,
 				},
 			},

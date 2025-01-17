@@ -11,14 +11,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-const (
-	rpi4Image = "quay.io/kairos/alpine:3.19-standard-arm64-rpi4-v3.2.4-k3sv1.31.3-k3s1"
-)
-
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
+	image := c.String("image")
 	username := c.String("username")
 	password := c.String("password")
 	outputDir := c.String("output-dir")
+	_ = c.String("override-config")  // TODO
+	_ = c.String("override-bundles") // TODO
 
 	currentDir, err := os.Getwd()
 	outputDirPath := filepath.Join(currentDir, outputDir)
@@ -55,7 +54,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
 		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
-		"util", "unpack", rpi4Image, "/rootfs"); err != nil {
+		"util", "unpack", image, "/rootfs"); err != nil {
 		return err
 	}
 
