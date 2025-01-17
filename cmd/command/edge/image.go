@@ -13,6 +13,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const (
+	cloudConfigURL  = "https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml"
+	pluralConfigURL = "https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml"
+)
+
 type Configuration struct {
 	Image   string            `json:"image"`
 	Bundles map[string]string `json:"bundles"`
@@ -25,21 +30,16 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	_ = c.String("cloud-config") // TODO
 	pluralConfig := c.String("plural-config")
 
+	utils.Highlight("reading configuration\n")
 	config, err := p.readConfig(pluralConfig)
 	if err != nil {
 		return err
 	}
 
-	// TODO
-
+	utils.Highlight("preparing output directory\n")
 	currentDir, err := os.Getwd()
 	outputDirPath := filepath.Join(currentDir, outputDir)
 	if err = os.MkdirAll(outputDirPath, os.ModePerm); err != nil {
-		return err
-	}
-
-	configPath := filepath.Join(outputDirPath, "cloud-config.yaml")
-	if err = p.writeCloudConfig(username, password, configPath); err != nil {
 		return err
 	}
 
@@ -47,6 +47,14 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
+
+	utils.Highlight("writing configuration\n")
+	configPath := filepath.Join(outputDirPath, "cloud-config.yaml")
+	if err = p.writeCloudConfig(username, password, configPath); err != nil {
+		return err
+	}
+
+	// TODO
 
 	if err = utils.Exec("docker", "volume", "create", "edge-rootfs"); err != nil {
 		return err
@@ -100,7 +108,7 @@ func (p *Plural) readConfig(path string) (*Configuration, error) {
 }
 
 func (p *Plural) readDefaultConfig() ([]byte, error) {
-	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml")
+	response, err := http.Get(pluralConfigURL)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +133,7 @@ func (p *Plural) readFile(path string) ([]byte, error) {
 }
 
 func (p *Plural) writeCloudConfig(username, password, path string) error {
-	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml")
+	response, err := http.Get(cloudConfigURL)
 	if err != nil {
 		return err
 	}
