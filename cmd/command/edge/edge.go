@@ -1,9 +1,12 @@
 package edge
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -59,6 +62,23 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 	}
 	return []cli.Command{
 		{
+			Name:   "image",
+			Action: p.handleEdgeImage,
+			Usage:  "prepares image ready to be used on Raspberry Pi 4",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:     "username",
+					Usage:    "name for the initial user account",
+					Required: true,
+				},
+				cli.StringFlag{
+					Name:     "password",
+					Usage:    "password for the initial user account",
+					Required: true,
+				},
+			},
+		},
+		{
 			Name:   "bootstrap",
 			Action: p.handleEdgeBootstrap,
 			Usage:  "registers edge cluster and installs agent onto it using the current kubeconfig",
@@ -76,6 +96,41 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			},
 		},
 	}
+}
+
+func (p *Plural) handleEdgeImage(c *cli.Context) error {
+	username := c.String("username")
+	password := c.String("password")
+
+	cloudConfig, err := p.getCloudConfig(username, password)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(cloudConfig) // TODO
+
+	return nil
+}
+
+func (p *Plural) getCloudConfig(username, password string) (string, error) {
+	response, err := http.Get("https://raw.githubusercontent.com/pluralsh/edge/main/hack/cloud-config.yaml")
+	if err != nil {
+		return "", err
+	}
+
+	defer response.Body.Close()
+	buffer := new(bytes.Buffer)
+	if _, err = buffer.ReadFrom(response.Body); err != nil {
+		return "", err
+	}
+
+	template := buffer.String()
+	template = strings.ReplaceAll(template, "@USERNAME@", username)
+	template = strings.ReplaceAll(template, "@PASSWORD@", password)
+	template = strings.ReplaceAll(template, "@URL@", consoleURL)
+	template = strings.ReplaceAll(template, "@TOKEN@", consoleToken)
+
+	return template, nil
 }
 
 func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
@@ -140,14 +195,14 @@ func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*g
 	attributes := gqlclient.ClusterRegistrationCreateAttributes{MachineID: machineID}
 
 	if project != "" {
-		p, err := p.ConsoleClient.GetProject(project)
+		proj, err := p.ConsoleClient.GetProject(project)
 		if err != nil {
 			return nil, err
 		}
-		if p == nil {
+		if proj == nil {
 			return nil, fmt.Errorf("cannot find %s project", project)
 		}
-		attributes.ProjectID = lo.ToPtr(p.ID)
+		attributes.ProjectID = lo.ToPtr(proj.ID)
 	}
 
 	return &attributes, nil
