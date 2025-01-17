@@ -16,6 +16,8 @@ import (
 const (
 	cloudConfigURL  = "https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml"
 	pluralConfigURL = "https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml"
+	buildDir        = "build"
+	cloudConfigFile = "cloud-config.yaml"
 )
 
 type Configuration struct {
@@ -43,24 +45,25 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	buildDirPath := filepath.Join(outputDirPath, "build")
+	buildDirPath := filepath.Join(outputDirPath, buildDir)
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
 
 	utils.Highlight("writing configuration\n")
-	configPath := filepath.Join(outputDirPath, "cloud-config.yaml")
-	if err = p.writeCloudConfig(username, password, configPath, cloudConfig); err != nil {
+	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
+	if err = p.writeCloudConfig(username, password, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
 
-	// TODO
-	// https://github.com/moby/moby/issues/9527
-
+	utils.Highlight("preparing build volume\n")
 	if err = utils.Exec("docker", "volume", "create", "edge-rootfs"); err != nil {
 		return err
 	}
 	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
+
+	// TODO
+	// https://github.com/moby/moby/issues/9527
 
 	if err = p.writeBundles(); err != nil {
 		return err
@@ -74,7 +77,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
-		"-v", configPath+":/cloud-config.yaml",
+		"-v", cloudConfigPath+":/cloud-config.yaml",
 		"--mount", "source=edge-rootfs,target=/rootfs",
 		"--privileged", "-i", "--rm",
 		"--entrypoint=/build-arm-image.sh", "quay.io/kairos/auroraboot:v0.4.3",
