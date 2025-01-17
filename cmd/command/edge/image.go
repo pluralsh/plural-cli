@@ -27,7 +27,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	username := c.String("username")
 	password := c.String("password")
 	outputDir := c.String("output-dir")
-	_ = c.String("cloud-config") // TODO
+	cloudConfig := c.String("cloud-config")
 	pluralConfig := c.String("plural-config")
 
 	utils.Highlight("reading configuration\n")
@@ -50,11 +50,12 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("writing configuration\n")
 	configPath := filepath.Join(outputDirPath, "cloud-config.yaml")
-	if err = p.writeCloudConfig(username, password, configPath); err != nil {
+	if err = p.writeCloudConfig(username, password, configPath, cloudConfig); err != nil {
 		return err
 	}
 
 	// TODO
+	// https://github.com/moby/moby/issues/9527
 
 	if err = utils.Exec("docker", "volume", "create", "edge-rootfs"); err != nil {
 		return err
@@ -87,13 +88,13 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) readConfig(path string) (*Configuration, error) {
+func (p *Plural) readConfig(override string) (*Configuration, error) {
 	var content []byte
 	var err error
-	if path == "" {
+	if override == "" {
 		content, err = p.readDefaultConfig()
 	} else {
-		content, err = p.readFile(path)
+		content, err = p.readFile(override)
 	}
 	if err != nil {
 		return nil, err
@@ -132,7 +133,7 @@ func (p *Plural) readFile(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (p *Plural) writeCloudConfig(username, password, path string) error {
+func (p *Plural) writeCloudConfig(username, password, path, override string) error { // TODO: Override.
 	response, err := http.Get(cloudConfigURL)
 	if err != nil {
 		return err
