@@ -75,7 +75,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{
 					Name:     "username",
 					Usage:    "name for the initial user account",
-					Required: true,
+					Value:    "plural",
+					Required: false,
 				},
 				cli.StringFlag{
 					Name:     "password",
@@ -181,7 +182,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	// TODO: Wait.
 
-	utils.Success("successfully built image\n")
+	utils.Success("successfully saved image to %s directory\n", outputDir)
 	return nil
 }
 
