@@ -64,7 +64,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 	defer func() {
 		utils.Highlight("removing %s volume\n", volumeName)
-		utils.Exec("docker", "volume", "rm", volumeName)
+		_ = utils.Exec("docker", "volume", "rm", volumeName)
 	}()
 
 	for bundle, image := range config.Bundles {
