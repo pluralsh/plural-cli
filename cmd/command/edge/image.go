@@ -64,17 +64,19 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	// TODO
 	// https://github.com/moby/moby/issues/9527
-
+	utils.Highlight("writing bundles\n")
 	if err = p.writeBundles(); err != nil {
 		return err
 	}
 
+	utils.Highlight("unpacking image contents\n")
 	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
 		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
 		"util", "unpack", config.Image, "/rootfs"); err != nil {
 		return err
 	}
 
+	utils.Highlight("building image\n")
 	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
 		"-v", cloudConfigPath+":/cloud-config.yaml",
@@ -87,7 +89,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	utils.Success("successfully saved image to %s directory\n", outputDir)
+	utils.Success("image saved to %s directory\n", outputDir)
 	return nil
 }
 
