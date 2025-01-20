@@ -114,8 +114,7 @@ func (p *Plural) readConfig(override string) (*Configuration, error) {
 	}
 
 	var config *Configuration
-	err = yaml.Unmarshal(content, &config)
-	if err != nil {
+	if err = yaml.Unmarshal(content, &config); err != nil {
 		return nil, err
 	}
 	return config, nil
