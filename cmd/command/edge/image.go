@@ -19,6 +19,7 @@ const (
 	pluralConfigURL = "https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml"
 	buildDir        = "build"
 	cloudConfigFile = "cloud-config.yaml"
+	volumeName      = "edge-rootfs"
 )
 
 type Configuration struct {
@@ -57,15 +58,21 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight("preparing build volume\n")
-	if err = utils.Exec("docker", "volume", "create", "edge-rootfs"); err != nil {
+	utils.Highlight("preparing %s volume\n", volumeName)
+	if err = utils.Exec("docker", "volume", "create", volumeName); err != nil {
 		return err
 	}
-	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
+	defer func() {
+		utils.Highlight("removing %s volume\n", volumeName)
+		utils.Exec("docker", "volume", "rm", volumeName)
+	}()
 
 	for bundle, image := range config.Bundles {
 		utils.Highlight("writing %s bundle\n", bundle)
-		if err = p.writeBundle(image, fmt.Sprintf("/rootfs/%s.tar", bundle)); err != nil {
+		if err = utils.Exec(
+			"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
+			"gcr.io/go-containerregistry/crane:latest", "--platform=linux/arm64",
+			"pull", image, fmt.Sprintf("/rootfs/%s.tar", bundle)); err != nil {
 			return err
 		}
 	}
@@ -165,11 +172,4 @@ func (p *Plural) writeCloudConfig(username, password, path, override string) err
 
 	_, err = file.WriteString(template)
 	return err
-}
-
-func (p *Plural) writeBundle(bundleImage, targetPath string) error {
-	return utils.Exec(
-		"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
-		"gcr.io/go-containerregistry/crane:latest", "--platform=linux/arm64",
-		"pull", bundleImage, targetPath)
 }
