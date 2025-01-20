@@ -2,6 +2,7 @@ package edge
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -62,11 +63,11 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 	defer utils.Exec("docker", "volume", "rm", "edge-rootfs")
 
-	// TODO
-	// https://github.com/moby/moby/issues/9527
-	utils.Highlight("writing bundles\n")
-	if err = p.writeBundles(); err != nil {
-		return err
+	for bundle, image := range config.Bundles {
+		utils.Highlight("writing %s bundle\n", bundle)
+		if err = p.writeBundle(image, fmt.Sprintf("/rootfs/%s.tar", bundle)); err != nil {
+			return err
+		}
 	}
 
 	utils.Highlight("unpacking image contents\n")
@@ -164,22 +165,6 @@ func (p *Plural) writeCloudConfig(username, password, path, override string) err
 
 	_, err = file.WriteString(template)
 	return err
-}
-
-func (p *Plural) writeBundles() error {
-	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-bundle:0.1.4", "/rootfs/plural-bundle.tar"); err != nil {
-		return err
-	}
-
-	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-images-bundle:0.1.2", "/rootfs/plural-images-bundle.tar"); err != nil {
-		return err
-	}
-
-	if err := p.writeBundle("ghcr.io/pluralsh/kairos-plural-trust-manager-bundle:0.1.0", "/rootfs/plural-trust-manager-bundle.tar"); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (p *Plural) writeBundle(bundleImage, targetPath string) error {
