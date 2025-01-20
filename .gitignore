@@ -20,6 +20,7 @@ testout/
 *.so
 *.o
 *.dylib
+*.img
 __debug_bin
 
 # Test binary, built with `go test -c`
