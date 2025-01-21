@@ -70,7 +70,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		url = agentUrl
 	}
 
-	utils.Highlight("installing agent on %s cluster with %s URL\n", registration.Name, p.ConsoleClient.Url())
+	utils.Highlight("installing agent on %s cluster with %s URL\n", lo.FromPtr(registration.Name), p.ConsoleClient.Url())
 	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "")
 }
 
