@@ -8,7 +8,6 @@ import (
 	"time"
 
 	gqlclient "github.com/pluralsh/console/go/client"
-	consoleErrors "github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -49,10 +48,10 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight("creating %s cluster\n", registration.Name)
+	utils.Highlight("creating %s cluster\n", lo.FromPtr(registration.Name))
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
-		if consoleErrors.Like(err, "handle") {
+		if strings.Contains(err.Error(), "handle has already been taken") {
 			handle := lo.ToPtr(clusterAttributes.Name)
 			if clusterAttributes.Handle != nil {
 				handle = clusterAttributes.Handle
