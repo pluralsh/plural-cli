@@ -1,16 +1,22 @@
 package console
 
 import (
+	"errors"
+
 	consoleclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/api"
 )
 
-func (c *consoleClient) CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (*consoleclient.BootstrapTokenBase, error) {
+func (c *consoleClient) CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error) {
 	response, err := c.client.CreateBootstrapToken(c.ctx, attributes)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "CreateBootstrapToken")
+		return "", api.GetErrorResponse(err, "CreateBootstrapToken")
 	}
-	return response.CreateBootstrapToken, nil
+	if response.CreateBootstrapToken == nil {
+		return "", errors.New("CreateBootstrapToken returned nil response")
+	}
+
+	return response.CreateBootstrapToken.Token, nil
 }
 
 func (c *consoleClient) CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error) {
@@ -18,6 +24,7 @@ func (c *consoleClient) CreateClusterRegistration(attributes consoleclient.Clust
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "CreateClusterRegistration")
 	}
+
 	return response.CreateClusterRegistration, nil
 }
 

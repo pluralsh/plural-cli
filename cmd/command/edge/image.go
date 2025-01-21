@@ -78,7 +78,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
-	if err = p.writeCloudConfig(token.Token, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
+	if err = p.writeCloudConfig(token, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
 
@@ -125,26 +125,26 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) createBootstrapToken(project, user string) (*gqlclient.BootstrapTokenBase, error) {
+func (p *Plural) createBootstrapToken(project, user string) (string, error) {
 	attrributes := gqlclient.BootstrapTokenAttributes{}
 
 	if user != "" {
 		usr, err := p.ConsoleClient.GetUser(user)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		if usr == nil {
-			return nil, fmt.Errorf("cannot find %s user", user)
+			return "", fmt.Errorf("cannot find %s user", user)
 		}
 		attrributes.UserID = &usr.ID
 	}
 
 	proj, err := p.ConsoleClient.GetProject(project)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if proj == nil {
-		return nil, fmt.Errorf("cannot find %s project", project)
+		return "", fmt.Errorf("cannot find %s project", project)
 	}
 	attrributes.ProjectID = proj.ID
 
