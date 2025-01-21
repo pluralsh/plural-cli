@@ -91,8 +91,11 @@ func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*g
 
 func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) (*gqlclient.ClusterAttributes, error) {
 	attributes := gqlclient.ClusterAttributes{
-		Name:   registration.Name,
-		Handle: &registration.Handle,
+		Handle: registration.Handle,
+	}
+
+	if registration.Name != nil {
+		attributes.Name = *registration.Name
 	}
 
 	if registration.Tags != nil {
