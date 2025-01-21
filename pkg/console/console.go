@@ -62,6 +62,7 @@ type ConsoleClient interface {
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (*consoleclient.BootstrapTokenBase, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
+	GetUser(email string) (*consoleclient.UserFragment, error)
 }
 
 type authedTransport struct {
