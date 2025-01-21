@@ -72,7 +72,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				},
 				cli.StringFlag{
 					Name:     "password",
-					Usage:    "password for the initial user account",
+					Usage:    "password for the initial user account, required if cloud configuration file is not provided",
 					Required: false,
 				},
 				cli.StringFlag{
@@ -82,7 +82,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				},
 				cli.StringFlag{
 					Name:     "wifi-password",
-					Usage:    "password for the wifi network, required if cloud configuration file is not provided",
+					Usage:    "password for the wifi network",
 					Required: false,
 				},
 				cli.StringFlag{
