@@ -15,11 +15,20 @@ import (
 )
 
 const (
-	cloudConfigURL  = "https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml"
-	pluralConfigURL = "https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml"
-	buildDir        = "build"
-	cloudConfigFile = "cloud-config.yaml"
-	volumeName      = "edge-rootfs"
+	cloudConfigURL     = "https://raw.githubusercontent.com/pluralsh/edge/main/cloud-config.yaml"
+	pluralConfigURL    = "https://raw.githubusercontent.com/pluralsh/edge/main/plural-config.yaml"
+	buildDir           = "build"
+	cloudConfigFile    = "cloud-config.yaml"
+	volumeName         = "edge-rootfs"
+	wifiConfigTemplate = `
+stages:
+  boot:
+    - name: Enable wireless
+      commands:
+        - connmanctl enable wifi
+        - wpa_passphrase '@WIFI_SSID@' '@WIFI_PASSWORD@' > /etc/wpa_supplicant/wpa_supplicant.conf
+        - wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
+        - udhcpc -i wlan0 &`
 )
 
 type Configuration struct {
@@ -30,6 +39,8 @@ type Configuration struct {
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	username := c.String("username")
 	password := c.String("password")
+	wifiSsid := c.String("wifi-ssid")
+	wifiPassword := c.String("wifi-password")
 	outputDir := c.String("output-dir")
 	cloudConfig := c.String("cloud-config")
 	pluralConfig := c.String("plural-config")
@@ -54,7 +65,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
-	if err = p.writeCloudConfig(username, password, cloudConfigPath, cloudConfig); err != nil {
+	if err = p.writeCloudConfig(username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
 
@@ -145,7 +156,7 @@ func (p *Plural) readFile(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (p *Plural) writeCloudConfig(username, password, path, override string) error { // TODO: Override.
+func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, path, override string) error { // TODO: Override.
 	response, err := http.Get(cloudConfigURL)
 	if err != nil {
 		return err
@@ -162,6 +173,12 @@ func (p *Plural) writeCloudConfig(username, password, path, override string) err
 	template = strings.ReplaceAll(template, "@PASSWORD@", password)
 	template = strings.ReplaceAll(template, "@URL@", consoleURL)
 	template = strings.ReplaceAll(template, "@TOKEN@", consoleToken)
+
+	if wifiSsid != "" && wifiPassword != "" {
+		wifiConfig := strings.ReplaceAll(wifiConfigTemplate, "@WIFI_SSID@", wifiSsid)
+		wifiConfig = strings.ReplaceAll(wifiConfig, "@WIFI_PASSWORD@", wifiPassword)
+		template += wifiConfig
+	}
 
 	file, err := os.Create(path)
 	if err != nil {

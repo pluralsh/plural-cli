@@ -65,6 +65,16 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Required: true,
 				},
 				cli.StringFlag{
+					Name:     "wifi-ssid",
+					Usage:    "ssid of the wifi network",
+					Required: false,
+				},
+				cli.StringFlag{
+					Name:     "wifi-password",
+					Usage:    "password for the wifi network",
+					Required: false,
+				},
+				cli.StringFlag{
 					Name:     "output-dir",
 					Usage:    "output directory where the image will be stored",
 					Value:    "image",

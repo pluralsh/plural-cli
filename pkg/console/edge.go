@@ -19,5 +19,5 @@ func (c *consoleClient) IsClusterRegistrationComplete(machineID string) (bool, *
 		return false, nil // TODO: Log error?
 	}
 
-	return response.ClusterRegistration.Name != "", response.ClusterRegistration
+	return response.ClusterRegistration.Name != nil, response.ClusterRegistration
 }
