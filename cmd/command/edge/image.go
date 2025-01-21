@@ -3,7 +3,6 @@ package edge
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,7 +11,6 @@ import (
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
-	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -59,13 +57,17 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 
 	utils.Highlight("reading configuration\n")
-	config, err := p.readConfig(pluralConfig)
+	config, err := p.readPluralConfig(pluralConfig)
 	if err != nil {
 		return err
 	}
 
 	utils.Highlight("preparing output directory\n")
 	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	outputDirPath := filepath.Join(currentDir, outputDir)
 	if err = os.MkdirAll(outputDirPath, os.ModePerm); err != nil {
 		return err
@@ -151,58 +153,18 @@ func (p *Plural) createBootstrapToken(project, user string) (string, error) {
 	return p.ConsoleClient.CreateBootstrapToken(attrributes)
 }
 
-func (p *Plural) readConfig(override string) (*Configuration, error) {
-	var content []byte
-	var err error
-	if override == "" {
-		content, err = p.readDefaultConfig()
+func (p *Plural) readPluralConfig(override string) (config *Configuration, err error) {
+	if override != "" {
+		err = utils.YamlFile(override, &config)
 	} else {
-		content, err = p.readFile(override)
+		err = utils.RemoteYamlFile(pluralConfigURL, &config)
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	var config *Configuration
-	if err = yaml.Unmarshal(content, &config); err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
-func (p *Plural) readDefaultConfig() ([]byte, error) {
-	response, err := http.Get(pluralConfigURL)
-	if err != nil {
-		return nil, err
-	}
-
-	defer response.Body.Close()
-	buffer := new(bytes.Buffer)
-	if _, err = buffer.ReadFrom(response.Body); err != nil {
-		return nil, err
-	}
-
-	return buffer.Bytes(), nil
-}
-
-func (p *Plural) readFile(path string) ([]byte, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	return io.ReadAll(file)
+	return config, err
 }
 
 func (p *Plural) writeCloudConfig(token, username, password, wifiSsid, wifiPassword, path, override string) error {
 	if override != "" {
-		config, err := os.ReadFile(override)
-		if err != nil {
-			return err
-		}
-
-		return os.WriteFile(path, config, os.ModePerm)
+		return utils.CopyFile(override, path)
 	}
 
 	response, err := http.Get(cloudConfigURL)
