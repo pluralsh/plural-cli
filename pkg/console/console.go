@@ -59,6 +59,7 @@ type ConsoleClient interface {
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
+	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (*consoleclient.BootstrapTokenBase, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
 }
