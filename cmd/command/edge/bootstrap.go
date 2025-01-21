@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	gqlclient "github.com/pluralsh/console/go/client"
-	"github.com/pluralsh/plural-cli/pkg/console/errors"
+	consoleErrors "github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -28,9 +29,11 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	}
 
 	utils.Highlight("registering new cluster on %s machine\n", machineID)
-	_, err = p.ConsoleClient.CreateClusterRegistration(*registrationAttributes) // TODO: Handle the case when it already exists, i.e. after reboot.
-	if err != nil {
-		return err
+	if _, err = p.ConsoleClient.CreateClusterRegistration(*registrationAttributes); err != nil {
+		if !strings.Contains(err.Error(), "machine_id has already been taken") {
+			return err
+		}
+		utils.Highlight("cluster registration already exists\n")
 	}
 
 	utils.Highlight("waiting for registration to be completed\n")
@@ -49,7 +52,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	utils.Highlight("creating %s cluster\n", registration.Name)
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
-		if errors.Like(err, "handle") {
+		if consoleErrors.Like(err, "handle") {
 			handle := lo.ToPtr(clusterAttributes.Name)
 			if clusterAttributes.Handle != nil {
 				handle = clusterAttributes.Handle
