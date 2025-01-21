@@ -104,7 +104,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				},
 				cli.StringFlag{
 					Name:     "project",
-					Usage:    "the project this cluster will belong to",
+					Usage:    "the project this cluster will belong to, if bootstrap token is used then it will inferred from it",
 					Required: false,
 				},
 			},
