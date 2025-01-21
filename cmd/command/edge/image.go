@@ -167,6 +167,10 @@ func (p *Plural) writeCloudConfig(token, username, password, wifiSsid, wifiPassw
 		return utils.CopyFile(override, path)
 	}
 
+	if password == "" {
+		return fmt.Errorf("password cannot be empty when cloud config is not specified")
+	}
+
 	response, err := http.Get(cloudConfigURL)
 	if err != nil {
 		return err

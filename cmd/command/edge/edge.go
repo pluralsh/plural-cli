@@ -73,7 +73,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{
 					Name:     "password",
 					Usage:    "password for the initial user account",
-					Required: true,
+					Required: false,
 				},
 				cli.StringFlag{
 					Name:     "wifi-ssid",
