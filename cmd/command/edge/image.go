@@ -156,7 +156,16 @@ func (p *Plural) readFile(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, path, override string) error { // TODO: Override.
+func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, path, override string) error {
+	if override != "" {
+		config, err := os.ReadFile(override)
+		if err != nil {
+			return err
+		}
+
+		return os.WriteFile(path, config, os.ModePerm)
+	}
+
 	response, err := http.Get(cloudConfigURL)
 	if err != nil {
 		return err
