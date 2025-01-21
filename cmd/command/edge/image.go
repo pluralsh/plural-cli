@@ -186,7 +186,7 @@ func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, pa
 	if wifiSsid != "" && wifiPassword != "" {
 		wifiConfig := strings.ReplaceAll(wifiConfigTemplate, "@WIFI_SSID@", wifiSsid)
 		wifiConfig = strings.ReplaceAll(wifiConfig, "@WIFI_PASSWORD@", wifiPassword)
-		template += wifiConfig
+		template += "\n" + wifiConfig
 	}
 
 	file, err := os.Create(path)
