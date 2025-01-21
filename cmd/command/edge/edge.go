@@ -54,6 +54,17 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Usage:  "prepares image ready to be used on Raspberry Pi 4",
 			Flags: []cli.Flag{
 				cli.StringFlag{
+					Name:     "project",
+					Usage:    "name of the project to use",
+					Value:    "default",
+					Required: false,
+				},
+				cli.StringFlag{
+					Name:     "user",
+					Usage:    "optional external user email to be the user identity for bootstrap token in audit logs",
+					Required: false,
+				},
+				cli.StringFlag{
 					Name:     "username",
 					Usage:    "name for the initial user account",
 					Value:    "plural",

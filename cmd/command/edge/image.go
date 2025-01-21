@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"
@@ -37,6 +38,8 @@ type Configuration struct {
 }
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
+	project := c.String("project")
+	user := c.String("user")
 	username := c.String("username")
 	password := c.String("password")
 	wifiSsid := c.String("wifi-ssid")
@@ -44,6 +47,16 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	outputDir := c.String("output-dir")
 	cloudConfig := c.String("cloud-config")
 	pluralConfig := c.String("plural-config")
+
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	utils.Highlight("creating bootstrap token for %s project\n", project)
+	token, err := p.createBootstrapToken(project, user)
+	if err != nil {
+		return err
+	}
 
 	utils.Highlight("reading configuration\n")
 	config, err := p.readConfig(pluralConfig)
@@ -65,7 +78,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
-	if err = p.writeCloudConfig(username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
+	if err = p.writeCloudConfig(token.Token, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
 
@@ -112,6 +125,32 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	return nil
 }
 
+func (p *Plural) createBootstrapToken(project, user string) (*gqlclient.BootstrapTokenBase, error) {
+	attrributes := gqlclient.BootstrapTokenAttributes{}
+
+	if user != "" {
+		usr, err := p.ConsoleClient.GetUser(user)
+		if err != nil {
+			return nil, err
+		}
+		if usr == nil {
+			return nil, fmt.Errorf("cannot find %s user", user)
+		}
+		attrributes.UserID = &usr.ID
+	}
+
+	proj, err := p.ConsoleClient.GetProject(project)
+	if err != nil {
+		return nil, err
+	}
+	if proj == nil {
+		return nil, fmt.Errorf("cannot find %s project", project)
+	}
+	attrributes.ProjectID = proj.ID
+
+	return p.ConsoleClient.CreateBootstrapToken(attrributes)
+}
+
 func (p *Plural) readConfig(override string) (*Configuration, error) {
 	var content []byte
 	var err error
@@ -156,7 +195,7 @@ func (p *Plural) readFile(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, path, override string) error {
+func (p *Plural) writeCloudConfig(token, username, password, wifiSsid, wifiPassword, path, override string) error {
 	if override != "" {
 		config, err := os.ReadFile(override)
 		if err != nil {
@@ -181,7 +220,7 @@ func (p *Plural) writeCloudConfig(username, password, wifiSsid, wifiPassword, pa
 	template = strings.ReplaceAll(template, "@USERNAME@", username)
 	template = strings.ReplaceAll(template, "@PASSWORD@", password)
 	template = strings.ReplaceAll(template, "@URL@", consoleURL)
-	template = strings.ReplaceAll(template, "@TOKEN@", consoleToken)
+	template = strings.ReplaceAll(template, "@TOKEN@", token)
 
 	if wifiSsid != "" && wifiPassword != "" {
 		wifiConfig := strings.ReplaceAll(wifiConfigTemplate, "@WIFI_SSID@", wifiSsid)
