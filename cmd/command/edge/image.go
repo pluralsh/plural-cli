@@ -31,8 +31,10 @@ stages:
 )
 
 type Configuration struct {
-	Image   string            `json:"image"`
-	Bundles map[string]string `json:"bundles"`
+	Image           string            `json:"image"`
+	AurorabootImage string            `json:"aurorabootImage"`
+	CraneImage      string            `json:"craneImage"`
+	Bundles         map[string]string `json:"bundles"`
 }
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
@@ -97,7 +99,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		utils.Highlight("writing %s bundle\n", bundle)
 		if err = utils.Exec(
 			"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
-			"gcr.io/go-containerregistry/crane:latest", "--platform=linux/arm64",
+			config.CraneImage, "--platform=linux/arm64",
 			"pull", image, fmt.Sprintf("/rootfs/%s.tar", bundle)); err != nil {
 			return err
 		}
@@ -116,7 +118,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		"-v", cloudConfigPath+":/cloud-config.yaml",
 		"--mount", "source=edge-rootfs,target=/rootfs",
 		"--privileged", "-i", "--rm",
-		"--entrypoint=/build-arm-image.sh", "quay.io/kairos/auroraboot:v0.4.3",
+		"--entrypoint=/build-arm-image.sh", config.AurorabootImage,
 		"--model", "rpi4",
 		"--directory", "/rootfs",
 		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img"); err != nil {
