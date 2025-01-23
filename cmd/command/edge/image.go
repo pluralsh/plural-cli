@@ -101,16 +101,14 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		utils.Highlight("writing %s bundle\n", bundle)
 		if err = utils.Exec(
 			"docker", "run", "-i", "--rm", "--user", "root", "--mount", volumeMount,
-			config.CraneImage, "--platform=linux/arm64",
-			"pull", image, fmt.Sprintf("%s/%s.tar", volumeMountPath, bundle)); err != nil {
+			config.CraneImage, "--platform=linux/arm64", "pull", image, fmt.Sprintf("%s/%s.tar", volumeMountPath, bundle)); err != nil {
 			return err
 		}
 	}
 
 	utils.Highlight("unpacking image contents\n")
-	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
-		"--mount", volumeMount, "quay.io/luet/base",
-		"util", "unpack", config.Image, volumeMountPath); err != nil {
+	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged", "--mount", volumeMount,
+		"quay.io/luet/base", "util", "unpack", config.Image, volumeMountPath); err != nil {
 		return err
 	}
 
