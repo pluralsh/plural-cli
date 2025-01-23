@@ -19,6 +19,8 @@ const (
 	buildDir           = "build"
 	cloudConfigFile    = "cloud-config.yaml"
 	volumeName         = "edge-rootfs"
+	volumeMountPath    = "/rootfs"
+	volumeMount        = "source=edge-rootfs,target=/rootfs"
 	wifiConfigTemplate = `
 stages:
   boot:
@@ -98,17 +100,17 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	for bundle, image := range config.Bundles {
 		utils.Highlight("writing %s bundle\n", bundle)
 		if err = utils.Exec(
-			"docker", "run", "-i", "--rm", "--user", "root", "--mount", "source=edge-rootfs,target=/rootfs",
+			"docker", "run", "-i", "--rm", "--user", "root", "--mount", volumeMount,
 			config.CraneImage, "--platform=linux/arm64",
-			"pull", image, fmt.Sprintf("/rootfs/%s.tar", bundle)); err != nil {
+			"pull", image, fmt.Sprintf("%s/%s.tar", volumeMountPath, bundle)); err != nil {
 			return err
 		}
 	}
 
 	utils.Highlight("unpacking image contents\n")
 	if err = utils.Exec("docker", "run", "-i", "--rm", "--privileged",
-		"--mount", "source=edge-rootfs,target=/rootfs", "quay.io/luet/base",
-		"util", "unpack", config.Image, "/rootfs"); err != nil {
+		"--mount", volumeMount, "quay.io/luet/base",
+		"util", "unpack", config.Image, volumeMountPath); err != nil {
 		return err
 	}
 
@@ -116,11 +118,11 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
 		"-v", cloudConfigPath+":/cloud-config.yaml",
-		"--mount", "source=edge-rootfs,target=/rootfs",
+		"--mount", volumeMount,
 		"--privileged", "-i", "--rm",
 		"--entrypoint=/build-arm-image.sh", config.AurorabootImage,
 		"--model", "rpi4",
-		"--directory", "/rootfs",
+		"--directory", volumeMountPath,
 		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img"); err != nil {
 		return err
 	}
