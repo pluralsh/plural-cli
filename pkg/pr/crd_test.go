@@ -10,10 +10,11 @@ import (
 
 func TestBuildCRD(t *testing.T) {
 	tests := []struct {
-		name        string
-		path        string
-		envs        map[string]string
-		expectedCtx map[string]interface{}
+		name                          string
+		path                          string
+		envs                          map[string]string
+		expectedCtx                   map[string]interface{}
+		expectedCreateTemplateContext map[string]interface{}
 	}{
 		{
 			name: "test PR automation",
@@ -21,6 +22,11 @@ func TestBuildCRD(t *testing.T) {
 			envs: map[string]string{"PLURAL__NAME": "test", "PLURAL__REGION": "eu-central-1", "PLURAL__TYPE": "s3"},
 			expectedCtx: map[string]interface{}{
 				"name": "test", "region": "eu-central-1", "type": "s3",
+			},
+			expectedCreateTemplateContext: map[string]interface{}{
+				"test": map[string]interface{}{
+					"a": "b",
+				},
 			},
 		},
 	}
@@ -33,6 +39,7 @@ func TestBuildCRD(t *testing.T) {
 			prTemplate, err := pr.BuildCRD(test.path, "")
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedCtx, prTemplate.Context)
+			assert.Equal(t, test.expectedCreateTemplateContext, prTemplate.Spec.Creates.Templates[0].Context)
 
 		})
 	}
