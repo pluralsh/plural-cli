@@ -40,15 +40,15 @@ type Configuration struct {
 }
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
+	outputDir := c.String("output-dir")
 	project := c.String("project")
 	user := c.String("user")
+	pluralConfig := c.String("plural-config")
+	cloudConfig := c.String("cloud-config")
 	username := c.String("username")
 	password := c.String("password")
 	wifiSsid := c.String("wifi-ssid")
 	wifiPassword := c.String("wifi-password")
-	outputDir := c.String("output-dir")
-	cloudConfig := c.String("cloud-config")
-	pluralConfig := c.String("plural-config")
 
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
