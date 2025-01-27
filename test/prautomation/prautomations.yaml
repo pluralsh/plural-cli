@@ -11,9 +11,9 @@ spec:
       - source: templates/blob/stack.yaml
         destination: "services/blobstores/{{ context.type }}/{{ context.name }}.yaml"
         external: false
-      - source: templates/blob/service.yaml
-        destination: "bootstrap/blobstores.yaml"
-        external: false
+        context:
+          test:
+            a: b
   scmConnectionRef:
     name: github
   title: "Adding a {{ context.type }} bucket {{ context.name }}"
