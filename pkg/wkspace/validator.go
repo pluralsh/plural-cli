@@ -1,6 +1,7 @@
 package wkspace
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -56,13 +57,12 @@ func checkGitSSH() error {
 	}(dir)
 
 	cmd := exec.Command("git", "clone", "git@github.com:pluralsh/scaffolds.git", dir)
+	var b bytes.Buffer
 	// Configure the output to display progress as dots
-	output := &executor.OutputWriter{Delegate: os.Stdout}
-	cmd.Stdout = output
-	cmd.Stderr = output
-
+	cmd.Stdout = &executor.OutputWriter{Delegate: os.Stdout}
+	cmd.Stderr = &b
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to clone: %w", err)
+		return fmt.Errorf("failed to clone: %s", b.String())
 	}
 
 	return nil
