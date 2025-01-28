@@ -24,8 +24,8 @@ round: "{{ 123.55555 | round: 3 }}"
 ceil: "{{ 123.001 | ceil }}"
 floor: "{{ 123.999 | floor }}"
 
-{%- assign beatles = "," | split: "John, Paul, George, Ringo" -%}
+{% assign beatles = ", "  | split: "John, Paul, George, Ringo"  %}
 
-{% for member in beatles -%}
+{% for member in beatles %}
   {{ member }}
-{%- endfor %}
+{% endfor %}
