@@ -62,7 +62,7 @@ func checkGitSSH() error {
 	cmd.Stderr = output
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to clone: %v\n", err)
+		return fmt.Errorf("failed to clone: %w", err)
 	}
 
 	return nil
