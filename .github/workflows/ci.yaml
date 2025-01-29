@@ -7,6 +7,17 @@ on:
     branches:
       - main
 jobs:
+  contract-validation:
+    name: Validate PR Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Plural PR Contracts Validation
+        run: |
+          plural pr contracts --file test/contracts.yaml --validate || { echo "❌ Contract validation failed! Blocking merge."; exit 1; }
+
   image:
     name: Build image
     runs-on: ubuntu-latest
