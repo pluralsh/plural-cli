@@ -11,12 +11,16 @@ jobs:
     name: Validate PR Contracts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: checkout repo
 
-      - uses: pluralsh/setup-plural@v0.4.0
+      - uses: actions/setup-go@v5
         with:
-          vsn: 0.11.0
+          go-version-file: go.mod
+
+      - run: make install-cli
+
+      - run: echo "$(go env GOBIN)" >> $GITHUB_PATH
 
       - name: Run Plural PR Contracts Validation
         run: |
