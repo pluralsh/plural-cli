@@ -20,8 +20,6 @@ jobs:
 
       - run: make install-cli
 
-      - run: echo "$(go env GOBIN)" >> $GITHUB_PATH
-
       - name: Run Plural PR Contracts Validation
         run: |
           plural pr contracts --file test/contracts.yaml --validate || { echo "❌ Contract validation failed! Blocking merge."; exit 1; }

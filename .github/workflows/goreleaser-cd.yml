@@ -22,9 +22,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - uses: pluralsh/setup-plural@v0.4.0
-        with:
-          vsn: 0.11.0
+      - run: make install-cli
 
       - name: Run Plural PR Contracts Validation
         run: |
