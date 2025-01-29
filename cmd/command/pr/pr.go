@@ -5,13 +5,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/samber/lo"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/pr"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
-	"github.com/samber/lo"
-	"github.com/urfave/cli"
 )
 
 func init() {

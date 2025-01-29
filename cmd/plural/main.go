@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+
 	"github.com/pluralsh/plural-cli/cmd/command/plural"
 )
 

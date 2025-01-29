@@ -23,7 +23,9 @@ LDFLAGS ?= $(BASE_LDFLAGS) $\
 	-X "$(PACKAGE)/pkg/scm.GitlabClientSecret=${GITLAB_CLIENT_SECRET}" $\
 	-X "$(PACKAGE)/pkg/scm.BitbucketClientSecret=${BITBUCKET_CLIENT_SECRET}"
 OUTFILE ?= plural.o
-GOBIN ?= go env GOBIN
+
+GOBIN := $(shell go env GOBIN)
+GOBIN := $(if $(GOBIN),$(GOBIN),$(HOME)/go/bin)
 
 # Targets to run before other targets
 # install-tools - Install binaries required to run targets
