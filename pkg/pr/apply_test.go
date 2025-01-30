@@ -214,6 +214,80 @@ func TestApply(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "should work with multi line regex replacements, example 1",
+			files: map[string]string{
+				filepath.Join(dir, "workload.tf"): `Line 1
+Line 2
+Line 3`,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{},
+				Spec: pr.PrTemplateSpec{
+					Updates: &pr.UpdateSpec{
+						RegexReplacements: []pr.RegexReplacement{
+							{
+								Regex:       `Line (\d+)`,
+								Replacement: "Replaced $1",
+								File:        filepath.Join(dir, "workload.tf"),
+								Templated:   false,
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				filepath.Join(dir, "workload.tf"): `Replaced 1
+Replaced 2
+Replaced 3`,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "should work with multi line regex replacements, example 2",
+			files: map[string]string{
+				filepath.Join(dir, "workload.tf"): `
+					module "staging" {
+					  source       = "./eks"
+					  START
+					  vpc_name     = "plural-stage"
+					  kubernetes_version = "1.28"
+					  create_db    = false
+                      END
+					  providers = {
+						helm = helm.staging
+					  }
+					}`,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Updates: &pr.UpdateSpec{
+						RegexReplacements: []pr.RegexReplacement{
+							{
+								Regex:       `START.*END`,
+								Replacement: "kubernetes_version = \"{{ context.version }}\"",
+								File:        filepath.Join(dir, "workload.tf"),
+								Templated:   false,
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				filepath.Join(dir, "workload.tf"): `
+					module "staging" {
+					  source       = "./eks"
+					  kubernetes_version = "1.28"
+					  providers = {
+						helm = helm.staging
+					  }
+					}`,
+			},
+			expectedErr: nil,
+		},
+		{
 			name: "should template and overlay with overwrite yaml file",
 			files: map[string]string{
 				filepath.Join(dir, "base.yaml"): baseYAMLIn,
