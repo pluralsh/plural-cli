@@ -16,19 +16,13 @@ import (
 
 func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	machineID := c.String("machine-id")
-	project := c.String("project")
 
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
 
-	registrationAttributes, err := p.getClusterRegistrationAttributes(machineID, project)
-	if err != nil {
-		return err
-	}
-
 	utils.Highlight("registering new cluster on %s machine\n", machineID)
-	if _, err = p.ConsoleClient.CreateClusterRegistration(*registrationAttributes); err != nil {
+	if _, err := p.ConsoleClient.CreateClusterRegistration(gqlclient.ClusterRegistrationCreateAttributes{MachineID: machineID}); err != nil {
 		if !strings.Contains(err.Error(), "machine_id has already been taken") {
 			return err
 		}
@@ -72,23 +66,6 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 
 	utils.Highlight("installing agent on %s cluster with %s URL\n", lo.FromPtr(registration.Name), p.ConsoleClient.Url())
 	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "")
-}
-
-func (p *Plural) getClusterRegistrationAttributes(machineID, project string) (*gqlclient.ClusterRegistrationCreateAttributes, error) {
-	attributes := gqlclient.ClusterRegistrationCreateAttributes{MachineID: machineID}
-
-	if project != "" {
-		proj, err := p.ConsoleClient.GetProject(project)
-		if err != nil {
-			return nil, err
-		}
-		if proj == nil {
-			return nil, fmt.Errorf("cannot find %s project", project)
-		}
-		attributes.ProjectID = lo.ToPtr(proj.ID)
-	}
-
-	return &attributes, nil
 }
 
 func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) (*gqlclient.ClusterAttributes, error) {

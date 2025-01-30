@@ -104,10 +104,6 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage:    "the unique id of the edge device on which this cluster runs",
 					Required: true,
 				},
-				cli.StringFlag{
-					Name:  "project",
-					Usage: "the project this cluster will belong to, if bootstrap token is used then it will be inferred from it",
-				},
 			},
 		},
 	}
