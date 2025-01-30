@@ -45,16 +45,8 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	utils.Highlight("creating %s cluster\n", lo.FromPtr(registration.Name))
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
-		if strings.Contains(err.Error(), "handle has already been taken") {
-			handle := lo.ToPtr(clusterAttributes.Name)
-			if clusterAttributes.Handle != nil {
-				handle = clusterAttributes.Handle
-			}
-			return p.ReinstallOperator(c, nil, handle)
-		}
 		return err
 	}
-
 	if cluster.CreateCluster.DeployToken == nil {
 		return fmt.Errorf("could not fetch deploy token from cluster")
 	}
