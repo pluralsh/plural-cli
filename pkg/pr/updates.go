@@ -2,13 +2,14 @@ package pr
 
 import (
 	"bytes"
-	"dario.cat/mergo"
-	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
 	"io/fs"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"dario.cat/mergo"
+	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 )
 
 func applyUpdates(updates *UpdateSpec, ctx map[string]interface{}) error {
