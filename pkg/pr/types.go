@@ -76,6 +76,7 @@ type CreateTemplate struct {
 	Source      string `json:"source"`
 	Destination string `json:"destination"`
 	External    bool   `json:"external"`
+	Condition   string `json:"condition"`
 }
 
 type RegexReplacement struct {

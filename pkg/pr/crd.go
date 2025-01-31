@@ -215,6 +215,7 @@ func creates(pr *v1alpha1.PrAutomation) *CreateSpec {
 			Source:      t.Source,
 			Destination: t.Destination,
 			External:    t.External,
+			Condition:   lo.FromPtr(t.Condition),
 		}
 		prCreates.Templates = append(prCreates.Templates, createTemplate)
 	}

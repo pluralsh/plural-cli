@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	"gotest.tools/v3/assert"
 
@@ -21,10 +22,10 @@ func createFile(path, content string) (*os.File, error) {
 	return f, err
 }
 
-func createFiles(fileMap map[string]string) (func(), error) {
+func createFiles(dir string, fileMap map[string]string) (func(), error) {
 	files := make([]*os.File, len(fileMap))
 	for path, content := range fileMap {
-		f, err := createFile(path, content)
+		f, err := createFile(filepath.Join(dir, path), content)
 		if err != nil {
 			return nil, err
 		}
@@ -39,10 +40,10 @@ func createFiles(fileMap map[string]string) (func(), error) {
 	}, nil
 }
 
-func readFiles(paths []string) (map[string]string, error) {
+func readFiles(dir string, paths []string) (map[string]string, error) {
 	files := make(map[string]string, len(paths))
 	for _, path := range paths {
-		content, err := os.ReadFile(path)
+		content, err := os.ReadFile(filepath.Join(dir, path))
 		if err != nil {
 			return nil, err
 		}
@@ -51,6 +52,15 @@ func readFiles(paths []string) (map[string]string, error) {
 	}
 
 	return files, nil
+}
+
+func countFiles(dir string) (int, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+
+	return len(files), nil
 }
 
 // Notes:
@@ -128,18 +138,18 @@ stringtest: new
 )
 
 func TestApply(t *testing.T) {
-	dir := t.TempDir()
 	cases := []struct {
 		name          string
 		files         map[string]string
 		template      *pr.PrTemplate
 		expectedFiles map[string]string
+		expectedDir   string
 		expectedErr   error
 	}{
 		{
 			name: "should work with single line regex replacements",
 			files: map[string]string{
-				filepath.Join(dir, "workload.tf"): `
+				"workload.tf": `
 					module "staging" {
 					  source       = "./eks"
 					  cluster_name = "boot-staging"
@@ -161,7 +171,7 @@ func TestApply(t *testing.T) {
 							{
 								Regex:       "kubernetes_version = \"1.[0-9]+\"",
 								Replacement: "kubernetes_version = \"{{ context.version }}\"",
-								File:        filepath.Join(dir, "workload.tf"),
+								File:        "workload.tf",
 								Templated:   false,
 							},
 						},
@@ -169,7 +179,7 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{
-				filepath.Join(dir, "workload.tf"): `
+				"workload.tf": `
 					module "staging" {
 					  source       = "./eks"
 					  cluster_name = "boot-staging"
@@ -186,7 +196,7 @@ func TestApply(t *testing.T) {
 		{
 			name: "should template and overlay with overwrite yaml file",
 			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLIn,
+				"base.yaml": baseYAMLIn,
 			},
 			template: &pr.PrTemplate{
 				Context: map[string]interface{}{
@@ -196,7 +206,7 @@ func TestApply(t *testing.T) {
 					Updates: &pr.UpdateSpec{
 						YamlOverlays: []pr.YamlOverlay{
 							{
-								File:      filepath.Join(dir, "base.yaml"),
+								File:      "base.yaml",
 								Yaml:      overlayYAML,
 								ListMerge: pr.ListMergeOverwrite,
 								Templated: true,
@@ -206,14 +216,14 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLTemplated,
+				"base.yaml": baseYAMLTemplated,
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "should not template and overlay with overwrite yaml file",
 			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLIn,
+				"base.yaml": baseYAMLIn,
 			},
 			template: &pr.PrTemplate{
 				Context: map[string]interface{}{
@@ -223,7 +233,7 @@ func TestApply(t *testing.T) {
 					Updates: &pr.UpdateSpec{
 						YamlOverlays: []pr.YamlOverlay{
 							{
-								File:      filepath.Join(dir, "base.yaml"),
+								File:      "base.yaml",
 								Yaml:      overlayYAML,
 								ListMerge: pr.ListMergeOverwrite,
 								Templated: false,
@@ -233,14 +243,14 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLNonTemplated,
+				"base.yaml": baseYAMLNonTemplated,
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "should template and overlay with append yaml file",
 			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLIn,
+				"base.yaml": baseYAMLIn,
 			},
 			template: &pr.PrTemplate{
 				Context: map[string]interface{}{
@@ -250,7 +260,7 @@ func TestApply(t *testing.T) {
 					Updates: &pr.UpdateSpec{
 						YamlOverlays: []pr.YamlOverlay{
 							{
-								File:      filepath.Join(dir, "base.yaml"),
+								File:      "base.yaml",
 								Yaml:      overlayYAML,
 								ListMerge: pr.ListMergeAppend,
 								Templated: true,
@@ -260,14 +270,14 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLAppend,
+				"base.yaml": baseYAMLAppend,
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "should not template and overlay with append yaml file",
 			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLIn,
+				"base.yaml": baseYAMLIn,
 			},
 			template: &pr.PrTemplate{
 				Context: map[string]interface{}{
@@ -277,7 +287,7 @@ func TestApply(t *testing.T) {
 					Updates: &pr.UpdateSpec{
 						YamlOverlays: []pr.YamlOverlay{
 							{
-								File:      filepath.Join(dir, "base.yaml"),
+								File:      "base.yaml",
 								Yaml:      overlayYAML,
 								ListMerge: pr.ListMergeAppend,
 								Templated: false,
@@ -287,23 +297,137 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLAppendNonTemplated,
+				"base.yaml": baseYAMLAppendNonTemplated,
 			},
+			expectedErr: nil,
+		},
+		{
+			name: "should not skip file when condition field is missing",
+			files: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			expectedDir: t.TempDir(),
+			expectedErr: nil,
+		},
+		{
+			name: "should not skip file when condition field is empty",
+			files: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+								Condition:   "",
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			expectedDir: t.TempDir(),
+			expectedErr: nil,
+		},
+		{
+			name: "should not skip file when condition field evaluates to true",
+			files: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+								Condition:   "context.version == `1.28`",
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			expectedDir: t.TempDir(),
+			expectedErr: nil,
+		},
+		{
+			name: "should skip file when condition field evaluates to false",
+			files: map[string]string{
+				"base.yaml": baseYAMLIn,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+								Condition:   "context.version != `1.28`",
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{},
+			expectedDir: t.TempDir(),
 			expectedErr: nil,
 		},
 	}
 
+	t.Parallel()
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			cleanupFunc, err := createFiles(c.files)
+			dir := t.TempDir()
+			outdir := lo.Ternary(len(c.expectedDir) > 0, c.expectedDir, dir)
+
+			cleanupFunc, err := createFiles(dir, c.files)
 			assert.NilError(t, err)
 			defer cleanupFunc()
 
-			err = pr.Apply(c.template)
+			err = pr.Apply(transform(c.template, dir, outdir))
 			assert.ErrorIs(t, err, c.expectedErr)
 
-			files, err := readFiles(lo.Keys(c.expectedFiles))
+			files, err := readFiles(dir, lo.Keys(c.expectedFiles))
 			assert.NilError(t, err)
+
+			fileCount, err := countFiles(outdir)
+			assert.NilError(t, err)
+
+			assert.Equal(t, fileCount, len(c.expectedFiles))
 
 			for file, content := range files {
 				expectedContent, exists := c.expectedFiles[file]
@@ -312,4 +436,39 @@ func TestApply(t *testing.T) {
 			}
 		})
 	}
+}
+
+func transform(template *pr.PrTemplate, dir, outdir string) *pr.PrTemplate {
+	if template.Spec.Creates != nil {
+		template.Spec.Creates.Templates = algorithms.Map(template.Spec.Creates.Templates, func(cTemplate *pr.CreateTemplate) *pr.CreateTemplate {
+			cTemplate.Source = filepath.Join(dir, cTemplate.Source)
+			cTemplate.Destination = filepath.Join(outdir, cTemplate.Destination)
+
+			return cTemplate
+		})
+	}
+
+	if template.Spec.Updates != nil {
+		template.Spec.Updates.Files = algorithms.Map(template.Spec.Updates.Files, func(f string) string {
+			return filepath.Join(dir, f)
+		})
+
+		template.Spec.Updates.RegexReplacements = algorithms.Map(template.Spec.Updates.RegexReplacements, func(r pr.RegexReplacement) pr.RegexReplacement {
+			r.File = filepath.Join(dir, r.File)
+			return r
+		})
+
+		template.Spec.Updates.YamlOverlays = algorithms.Map(template.Spec.Updates.YamlOverlays, func(r pr.YamlOverlay) pr.YamlOverlay {
+			r.File = filepath.Join(dir, r.File)
+			return r
+		})
+	}
+
+	if template.Spec.Deletes != nil {
+		template.Spec.Deletes.Files = algorithms.Map(template.Spec.Deletes.Files, func(f string) string {
+			return filepath.Join(dir, f)
+		})
+	}
+
+	return template
 }
