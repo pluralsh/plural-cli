@@ -332,6 +332,73 @@ func TestApply(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "should create yaml file",
+			files: map[string]string{
+				"base.yaml": baseYAMLsourceCreate,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						ExternalDir: "",
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+								External:    false,
+								Context: map[string]interface{}{
+									"test": map[string]interface{}{
+										"name":      "test-name",
+										"namespace": "test-namespace",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				"base.yaml": baseYAMLsourceCreateTemplated,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "should create yaml file and override context",
+			files: map[string]string{
+				"base.yaml": baseYAMLsourceCreate,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						ExternalDir: "",
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      "base.yaml",
+								Destination: "base.yaml",
+								External:    false,
+								Context: map[string]interface{}{
+									"version": "1.29",
+									"test": map[string]interface{}{
+										"name":      "test-name",
+										"namespace": "test-namespace",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				"base.yaml": baseYAMLsourceCreateOverrideTemplated,
+			},
+			expectedErr: nil,
+		},
+		{
 			name: "should not skip file when condition field is missing",
 			files: map[string]string{
 				"base.yaml": baseYAMLIn,
@@ -384,74 +451,6 @@ func TestApply(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "should create yaml file",
-			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreate,
-			},
-			template: &pr.PrTemplate{
-				Context: map[string]interface{}{
-					"version": "1.28",
-				},
-				Spec: pr.PrTemplateSpec{
-					Creates: &pr.CreateSpec{
-						ExternalDir: "",
-						Templates: []*pr.CreateTemplate{
-							{
-								Source:      filepath.Join(dir, "base.yaml"),
-								Destination: filepath.Join(dir, "base.yaml"),
-								External:    false,
-								Context: map[string]interface{}{
-									"test": map[string]interface{}{
-										"name":      "test-name",
-										"namespace": "test-namespace",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreateTemplated,
-			},
-			expectedErr: nil,
-		},
-		{
-			name: "should create yaml file and override context",
-			files: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreate,
-			},
-			template: &pr.PrTemplate{
-				Context: map[string]interface{}{
-					"version": "1.28",
-				},
-				Spec: pr.PrTemplateSpec{
-					Creates: &pr.CreateSpec{
-						ExternalDir: "",
-						Templates: []*pr.CreateTemplate{
-							{
-								Source:      filepath.Join(dir, "base.yaml"),
-								Destination: filepath.Join(dir, "base.yaml"),
-								External:    false,
-								Context: map[string]interface{}{
-									"version": "1.29",
-									"test": map[string]interface{}{
-										"name":      "test-name",
-										"namespace": "test-namespace",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedFiles: map[string]string{
-				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreateOverrideTemplated,
-			},
-			expectedDir: t.TempDir(),
-			expectedErr: nil,
-		},
-		{
 			name: "should not skip file when condition field evaluates to true",
 			files: map[string]string{
 				"base.yaml": baseYAMLIn,
@@ -500,8 +499,8 @@ func TestApply(t *testing.T) {
 				},
 			},
 			expectedFiles: map[string]string{},
-			expectedDir: t.TempDir(),
-			expectedErr: nil,
+			expectedDir:   t.TempDir(),
+			expectedErr:   nil,
 		},
 	}
 
