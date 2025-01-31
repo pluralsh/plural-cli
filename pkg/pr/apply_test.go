@@ -135,6 +135,36 @@ stringtest: new
 nulltest: null
 stringtest: new
 `
+	baseYAMLsourceCreate = `apiVersion: deployments.plural.sh/v1alpha1
+kind: ServiceDeployment
+metadata:
+    name: {{ context.test.name }}
+    namespace: infra
+spec:
+    namespace: {{ context.test.namespace }}
+    helm:
+        version: {{ context.version }}
+`
+	baseYAMLsourceCreateTemplated = `apiVersion: deployments.plural.sh/v1alpha1
+kind: ServiceDeployment
+metadata:
+    name: test-name
+    namespace: infra
+spec:
+    namespace: test-namespace
+    helm:
+        version: 1.28
+`
+	baseYAMLsourceCreateOverrideTemplated = `apiVersion: deployments.plural.sh/v1alpha1
+kind: ServiceDeployment
+metadata:
+    name: test-name
+    namespace: infra
+spec:
+    namespace: test-namespace
+    helm:
+        version: 1.29
+`
 )
 
 func TestApply(t *testing.T) {
@@ -350,6 +380,73 @@ func TestApply(t *testing.T) {
 			},
 			expectedFiles: map[string]string{
 				"base.yaml": baseYAMLIn,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "should create yaml file",
+			files: map[string]string{
+				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreate,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						ExternalDir: "",
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      filepath.Join(dir, "base.yaml"),
+								Destination: filepath.Join(dir, "base.yaml"),
+								External:    false,
+								Context: map[string]interface{}{
+									"test": map[string]interface{}{
+										"name":      "test-name",
+										"namespace": "test-namespace",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreateTemplated,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "should create yaml file and override context",
+			files: map[string]string{
+				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreate,
+			},
+			template: &pr.PrTemplate{
+				Context: map[string]interface{}{
+					"version": "1.28",
+				},
+				Spec: pr.PrTemplateSpec{
+					Creates: &pr.CreateSpec{
+						ExternalDir: "",
+						Templates: []*pr.CreateTemplate{
+							{
+								Source:      filepath.Join(dir, "base.yaml"),
+								Destination: filepath.Join(dir, "base.yaml"),
+								External:    false,
+								Context: map[string]interface{}{
+									"version": "1.29",
+									"test": map[string]interface{}{
+										"name":      "test-name",
+										"namespace": "test-namespace",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedFiles: map[string]string{
+				filepath.Join(dir, "base.yaml"): baseYAMLsourceCreateOverrideTemplated,
 			},
 			expectedDir: t.TempDir(),
 			expectedErr: nil,

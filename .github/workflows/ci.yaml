@@ -7,6 +7,23 @@ on:
     branches:
       - main
 jobs:
+  contract-validation:
+    name: Validate PR Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: checkout repo
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: make install-cli
+
+      - name: Run Plural PR Contracts Validation
+        run: |
+          plural pr contracts --file test/contracts.yaml --validate || { echo "❌ Contract validation failed! Blocking merge."; exit 1; }
+
   image:
     name: Build image
     runs-on: ubuntu-latest

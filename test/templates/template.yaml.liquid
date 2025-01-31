@@ -1,0 +1,41 @@
+stringFilters:
+camelcase: "{{ 'http_server' | camelcase }}"
+kebabcase: "{{ 'FirstName' | kebabcase }}"
+snakecase: "{{ 'FirstName' | snakecase }}"
+swapcase: "{{ 'This Is A.Test' | swapcase }}"
+title: "{{ 'hello world' | title }}"
+contains: "{{ 'hello world' | contains: 'world' }}"
+replace: "{{ 'hello world' | replace: 'world', 'Liquid' }}"
+trim: "{{ '  hello  ' | trim }}"
+nospace: "{{ 'h e l l o ' | nospace }}"
+indent: {{ "hello world" | indent: 4 }}
+nindent: {{ "hello world" | nindent: 4 }}
+default: "{{ '' | default: 'fallback value' }}"
+ternaryTrue: "{{ 'foo' | ternary: 'bar', true }}"
+ternaryFalse: "{{ 'foo' | ternary: 'bar', false }}"
+
+numberFilters:
+add: "{{ 1 | add: 2, 3 }}"
+add1: "{{ 3 | add1 }}"
+addf: "{{ 1.1 | addf: 2.2, 3.3 }}"
+div: "{{ 6 | div: 2 }}"
+mul: "{{ 2 | mul: 3 }}"
+round: "{{ 123.55555 | round: 3 }}"
+ceil: "{{ 123.001 | ceil }}"
+floor: "{{ 123.999 | floor }}"
+
+split: {% assign beatles = "John, Paul, George, Ringo" | split: ", "  %}
+{% for member in beatles %}
+  {{ member }}
+{% endfor %}
+
+splitn: {% assign nlist = "," |  splitn: 3, "a,b,c,d,e" %}
+{% for item in nlist %}
+    {{ item }}
+{% endfor %}
+
+splitList: {% assign nlist = "," |  splitList: "a,b,c,d,e" %}
+{% for item in nlist %}
+    {{ item }}
+{% endfor %}
+

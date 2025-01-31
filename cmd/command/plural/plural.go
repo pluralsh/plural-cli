@@ -8,6 +8,7 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
+	"github.com/pluralsh/plural-cli/cmd/command/edge"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
 	"github.com/pluralsh/plural-cli/cmd/command/mgmt"
 	"github.com/pluralsh/plural-cli/cmd/command/pr"
@@ -20,6 +21,7 @@ import (
 	conf "github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
 )
@@ -108,6 +110,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cryptocmd.Command(plural.Plural),
 		clone.Command(),
 		down.Command(),
+		edge.Command(plural.Plural, plural.HelmConfiguration),
 		mgmt.Command(plural.Plural),
 		profile.Command(),
 		stacks.Command(plural.Plural),

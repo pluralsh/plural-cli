@@ -8,6 +8,7 @@
 # Testing files
 context.yaml
 workspace.yaml
+cloud-config.yaml
 
 # Build files and binaries
 dist/
@@ -19,6 +20,7 @@ testout/
 *.so
 *.o
 *.dylib
+*.img
 __debug_bin
 
 # Test binary, built with `go test -c`

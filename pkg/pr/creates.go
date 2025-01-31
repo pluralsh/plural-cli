@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/polly/algorithms"
 )
 
 type replacement struct {
@@ -27,6 +28,10 @@ func applyCreates(creates *CreateSpec, ctx map[string]interface{}) error {
 		}
 
 		source := tpl.Source
+		if len(tpl.Context) > 0 {
+			ctx = algorithms.Merge(ctx, tpl.Context)
+		}
+
 		if tpl.External {
 			source = filepath.Join(creates.ExternalDir, source)
 		}

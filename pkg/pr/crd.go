@@ -217,6 +217,15 @@ func creates(pr *v1alpha1.PrAutomation) *CreateSpec {
 			External:    t.External,
 			Condition:   lo.FromPtr(t.Condition),
 		}
+		if t.Context != nil {
+			ctx := map[string]interface{}{}
+			if err := yaml.Unmarshal(t.Context.Raw, &ctx); err == nil {
+				createTemplate.Context = ctx
+			} else {
+				utils.Error("Failed to unmarshal PrAutomationTemplate context: %v \n", err)
+			}
+
+		}
 		prCreates.Templates = append(prCreates.Templates, createTemplate)
 	}
 

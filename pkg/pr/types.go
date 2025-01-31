@@ -73,9 +73,10 @@ type DeleteSpec struct {
 }
 
 type CreateTemplate struct {
-	Source      string `json:"source"`
-	Destination string `json:"destination"`
-	External    bool   `json:"external"`
+	Source      string                 `json:"source"`
+	Destination string                 `json:"destination"`
+	External    bool                   `json:"external"`
+	Context     map[string]interface{} `json:"context,omitempty"`
 	Condition   string `json:"condition"`
 }
 

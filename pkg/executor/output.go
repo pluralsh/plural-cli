@@ -8,20 +8,20 @@ import (
 )
 
 type OutputWriter struct {
-	delegate    io.WriteCloser
-	useDelegate bool
+	Delegate    io.WriteCloser
+	UseDelegate bool
 	lines       []string
 }
 
 func (out *OutputWriter) Write(line []byte) (int, error) {
-	if out.useDelegate {
-		return out.delegate.Write(line)
+	if out.UseDelegate {
+		return out.Delegate.Write(line)
 	}
 
 	out.lines = append(out.lines, string(line))
 	utils.LogInfo().Println(string(line))
 	if !utils.EnableDebug {
-		_, err := out.delegate.Write([]byte("."))
+		_, err := out.Delegate.Write([]byte("."))
 		if err != nil {
 			return 0, err
 		}
@@ -31,7 +31,7 @@ func (out *OutputWriter) Write(line []byte) (int, error) {
 }
 
 func (out *OutputWriter) Close() error {
-	return out.delegate.Close()
+	return out.Delegate.Close()
 }
 
 func (out *OutputWriter) Format() string {

@@ -1,0 +1,16 @@
+apiVersion: deployments.plural.sh/v1alpha1
+kind: PrAutomation
+metadata:
+  name: ci-test-pr-automation
+spec:
+  name: ci-test-pr-automation
+  documentation: |
+    Sets up a PR to test polly functions as part of CI workflow
+  creates:
+    templates:
+      - source: ../templates/template.yaml.liquid
+        destination: ../outputs/template.yaml.liquid
+        external: false
+  scmConnectionRef:
+    name: github
+
