@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -91,6 +92,20 @@ func ReadFile(name string) (string, error) {
 	return string(content), err
 }
 
+func ReadRemoteFile(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	buffer := new(bytes.Buffer)
+	if _, err = buffer.ReadFrom(resp.Body); err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
+}
+
 func YamlFile(name string, out interface{}) error {
 	content, err := os.ReadFile(name)
 	if err != nil {
@@ -98,6 +113,15 @@ func YamlFile(name string, out interface{}) error {
 	}
 
 	return yaml.Unmarshal(content, out)
+}
+
+func RemoteYamlFile(url string, out interface{}) error {
+	content, err := ReadRemoteFile(url)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal([]byte(content), out)
 }
 
 func Exists(path string) bool {
@@ -114,22 +138,18 @@ func CompareFileContent(filename, content string) (bool, error) {
 }
 
 func DownloadFile(filepath string, url string) error {
-
-	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	return err
 }

@@ -415,22 +415,6 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	return p.ReinstallOperator(c, id, name)
 }
 
-func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
-	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
-	if err != nil {
-		return err
-	}
-
-	url := p.ConsoleClient.ExtUrl()
-	if cluster, err := p.ConsoleClient.GetCluster(id, handle); err == nil {
-		if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.ID); err == nil {
-			url = agentUrl
-		}
-	}
-
-	return p.doInstallOperator(url, deployToken, c.String("values"))
-}
-
 func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -444,7 +428,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	if c.String("project") != "" {
 		project, err := p.ConsoleClient.GetProject(c.String("project"))
 		if err != nil {
-			return nil
+			return err
 		}
 		if project == nil {
 			return fmt.Errorf("Could not find project %s", c.String("project"))
@@ -491,5 +475,5 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	deployToken := *existing.CreateCluster.DeployToken
 	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
-	return p.doInstallOperator(url, deployToken, c.String("values"))
+	return p.DoInstallOperator(url, deployToken, c.String("values"))
 }

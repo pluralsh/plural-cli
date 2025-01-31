@@ -3,8 +3,11 @@ package client
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	"github.com/pluralsh/polly/algorithms"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/urfave/cli"
 
@@ -19,6 +22,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"sigs.k8s.io/yaml"
 )
 
 type Plural struct {
@@ -190,4 +194,68 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
 	}
 	return nil
+}
+
+func (p *Plural) DoInstallOperator(url, token, values string) error {
+	err := p.InitKube()
+	if err != nil {
+		return err
+	}
+	alreadyExists, err := console.IsAlreadyAgentInstalled(p.Kube.GetClient())
+	if err != nil {
+		return err
+	}
+	if alreadyExists && !common.Confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+		utils.Success("deployment operator is already installed, skip installation\n")
+		return nil
+	}
+
+	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return err
+	}
+
+	vals := map[string]interface{}{}
+	globalVals := map[string]interface{}{}
+	version := ""
+
+	if p.ConsoleClient != nil {
+		settings, err := p.ConsoleClient.GetGlobalSettings()
+		if err == nil && settings != nil {
+			version = strings.Trim(settings.AgentVsn, "v")
+			if settings.AgentHelmValues != nil {
+				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if values != "" {
+		if err := utils.YamlFile(values, &vals); err != nil {
+			return err
+		}
+	}
+	vals = algorithms.Merge(vals, globalVals)
+	err = console.InstallAgent(url, token, console.OperatorNamespace, version, vals)
+	if err == nil {
+		utils.Success("deployment operator installed successfully\n")
+	}
+	return err
+}
+
+func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
+	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
+	if err != nil {
+		return err
+	}
+
+	url := p.ConsoleClient.ExtUrl()
+	if cluster, err := p.ConsoleClient.GetCluster(id, handle); err == nil {
+		if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.ID); err == nil {
+			url = agentUrl
+		}
+	}
+
+	return p.DoInstallOperator(url, deployToken, c.String("values"))
 }

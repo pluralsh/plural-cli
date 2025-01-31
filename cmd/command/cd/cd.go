@@ -3,7 +3,6 @@ package cd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
@@ -11,11 +10,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -140,7 +136,7 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	// we don't care if this fails to init as this command can be auth-less
 	_ = p.InitConsoleClient(consoleToken, consoleURL)
 
-	return p.doInstallOperator(c.String("url"), c.String("token"), c.String("values"))
+	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"))
 }
 
 func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
@@ -149,54 +145,6 @@ func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
 		return err
 	}
 	return console.UninstallAgent(console.OperatorNamespace)
-}
-
-func (p *Plural) doInstallOperator(url, token, values string) error {
-	err := p.InitKube()
-	if err != nil {
-		return err
-	}
-	alreadyExists, err := console.IsAlreadyAgentInstalled(p.Kube.GetClient())
-	if err != nil {
-		return err
-	}
-	if alreadyExists && !common.Confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
-		utils.Success("deployment operator is already installed, skip installation\n")
-		return nil
-	}
-
-	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	vals := map[string]interface{}{}
-	globalVals := map[string]interface{}{}
-	version := ""
-
-	if p.ConsoleClient != nil {
-		settings, err := p.ConsoleClient.GetGlobalSettings()
-		if err == nil && settings != nil {
-			version = strings.Trim(settings.AgentVsn, "v")
-			if settings.AgentHelmValues != nil {
-				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	if values != "" {
-		if err := utils.YamlFile(values, &vals); err != nil {
-			return err
-		}
-	}
-	vals = algorithms.Merge(vals, globalVals)
-	err = console.InstallAgent(url, token, console.OperatorNamespace, version, vals)
-	if err == nil {
-		utils.Success("deployment operator installed successfully\n")
-	}
-	return err
 }
 
 func confirmCluster(url, token string) (bool, error) {
