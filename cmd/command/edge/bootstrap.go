@@ -37,12 +37,12 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return complete, nil
 	})
 
+	utils.Highlight("creating %s cluster\n", lo.FromPtr(registration.Name))
 	clusterAttributes, err := p.getClusterAttributes(registration)
 	if err != nil {
 		return err
 	}
 
-	utils.Highlight("creating %s cluster\n", lo.FromPtr(registration.Name))
 	cluster, err := p.ConsoleClient.CreateCluster(*clusterAttributes)
 	if err != nil {
 		return err
@@ -51,12 +51,11 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 		return fmt.Errorf("could not fetch deploy token from cluster")
 	}
 
+	utils.Highlight("installing agent on %s cluster with %s URL\n", lo.FromPtr(registration.Name), p.ConsoleClient.Url())
 	url := p.ConsoleClient.ExtUrl()
 	if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.CreateCluster.ID); err == nil {
 		url = agentUrl
 	}
-
-	utils.Highlight("installing agent on %s cluster with %s URL\n", lo.FromPtr(registration.Name), p.ConsoleClient.Url())
 	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "")
 }
 
