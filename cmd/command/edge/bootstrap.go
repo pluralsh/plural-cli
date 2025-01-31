@@ -61,11 +61,8 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 
 func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) (*gqlclient.ClusterAttributes, error) {
 	attributes := gqlclient.ClusterAttributes{
+		Name:   lo.FromPtr(registration.Name),
 		Handle: registration.Handle,
-	}
-
-	if registration.Name != nil {
-		attributes.Name = *registration.Name
 	}
 
 	if registration.Tags != nil {
@@ -74,10 +71,7 @@ func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistratio
 				return nil
 			}
 
-			return &gqlclient.TagAttributes{
-				Name:  tag.Name,
-				Value: tag.Value,
-			}
+			return &gqlclient.TagAttributes{Name: tag.Name, Value: tag.Value}
 		})
 	}
 
