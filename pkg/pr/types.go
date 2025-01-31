@@ -77,7 +77,7 @@ type CreateTemplate struct {
 	Destination string                 `json:"destination"`
 	External    bool                   `json:"external"`
 	Context     map[string]interface{} `json:"context,omitempty"`
-	Condition   string `json:"condition"`
+	Condition   string                 `json:"condition"`
 }
 
 type RegexReplacement struct {
