@@ -6,6 +6,7 @@ plural.lock
 .github/
 .goreleaser.yaml
 .golangci.yml
+.DS_Store
 docker-compose.yml
 *.md
 renovate.json
