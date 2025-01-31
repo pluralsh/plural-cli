@@ -438,6 +438,9 @@ func TestApply(t *testing.T) {
 	}
 }
 
+// transform updates file paths in PrTemplate since we want
+// to be able to dynamically provide the input/output dirs.
+// If tests would operate on same directories, it would cause conflicts.
 func transform(template *pr.PrTemplate, dir, outdir string) *pr.PrTemplate {
 	if template.Spec.Creates != nil {
 		template.Spec.Creates.Templates = algorithms.Map(template.Spec.Creates.Templates, func(cTemplate *pr.CreateTemplate) *pr.CreateTemplate {
