@@ -125,6 +125,14 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
+	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
+		return err
+	}
+
+	if err = os.RemoveAll(buildDirPath); err != nil {
+		return err
+	}
+
 	utils.Success("image saved to %s directory\n", outputDir)
 	return nil
 }
