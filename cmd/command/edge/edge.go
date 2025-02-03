@@ -95,6 +95,28 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			},
 		},
 		{
+			Name:   "flash",
+			Action: p.handleEdgeFlash,
+			Usage:  "flashes image onto storage device",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:     "image",
+					Usage:    "image file path",
+					Required: true,
+				},
+				cli.StringFlag{
+					Name:     "device",
+					Usage:    "storage device path",
+					Required: true,
+				},
+				cli.IntFlag{
+					Name:  "block-size",
+					Usage: "block size in bytes",
+					Value: 512,
+				},
+			},
+		},
+		{
 			Name:   "bootstrap",
 			Action: p.handleEdgeBootstrap,
 			Usage:  "registers edge cluster and installs agent onto it using the current kubeconfig",
