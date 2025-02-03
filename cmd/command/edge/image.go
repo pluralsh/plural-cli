@@ -113,9 +113,24 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 
 	utils.Highlight("building image\n")
+
+	// Override /oem/defaults.yaml file to get rid of the default password for the kairos user
+	dir, err := os.MkdirTemp("", "image")
+	if err != nil {
+		return err
+	}
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(dir)
+	defaultsFile := filepath.Join(dir, "defaults.yaml")
+	if err := utils.WriteFile(defaultsFile, []byte("#cloud-config\n")); err != nil {
+		return err
+	}
+
 	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
 		"-v", cloudConfigPath+":/cloud-config.yaml",
+		"-v", defaultsFile+":/defaults.yaml",
 		"--mount", volumeMount,
 		"--privileged", "-i", "--rm",
 		"--entrypoint=/build-arm-image.sh", config.AurorabootImage,
