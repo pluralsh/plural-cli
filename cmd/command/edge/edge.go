@@ -59,6 +59,10 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Value: "image",
 				},
 				cli.StringFlag{
+					Name:  "device",
+					Usage: "storage device path, if provided image will be flashed on it once it is prepared",
+				},
+				cli.StringFlag{
 					Name:  "project",
 					Usage: "name of the project to use",
 					Value: "default",

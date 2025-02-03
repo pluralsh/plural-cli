@@ -41,6 +41,7 @@ type Configuration struct {
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	outputDir := c.String("output-dir")
+	device := c.String("device")
 	project := c.String("project")
 	user := c.String("user")
 	pluralConfig := c.String("plural-config")
@@ -128,12 +129,18 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
 		return err
 	}
-
 	if err = os.RemoveAll(buildDirPath); err != nil {
 		return err
 	}
-
 	utils.Success("image saved to %s directory\n", outputDir)
+
+	if device != "" {
+		if err = p.flashImage(filepath.Join(outputDirPath, "kairos.img"), device); err != nil {
+			return err
+		}
+		utils.Success("image flashed on %s device\n", device)
+	}
+
 	return nil
 }
 

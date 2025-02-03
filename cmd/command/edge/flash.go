@@ -11,31 +11,31 @@ import (
 )
 
 func (p *Plural) handleEdgeFlash(c *cli.Context) error {
-	imagePath := c.String("image")
-	devicePath := c.String("device")
+	image := c.String("image")
+	device := c.String("device")
 
-	if err := p.flashImage(imagePath, devicePath); err != nil {
+	if err := p.flashImage(image, device); err != nil {
 		return err
 	}
 
-	utils.Success("image flashed on %s device\n", devicePath)
+	utils.Success("image flashed on %s device\n", device)
 	return nil
 }
 
-func (p *Plural) flashImage(imagePath, devicePath string) error {
-	out, err := os.OpenFile(devicePath, os.O_WRONLY, 0644)
+func (p *Plural) flashImage(image, device string) error {
+	out, err := os.OpenFile(device, os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("could not open device: %v", err)
 	}
 	defer out.Close()
 
-	in, err := os.Open(imagePath)
+	in, err := os.Open(image)
 	if err != nil {
 		return fmt.Errorf("could not open image: %v", err)
 	}
 	defer in.Close()
 
-	stat, err := os.Stat(imagePath)
+	stat, err := os.Stat(image)
 	if err != nil {
 		return err
 	}
