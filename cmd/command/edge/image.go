@@ -127,10 +127,10 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 
 	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
-		return err
+		return fmt.Errorf("cannot move output files: %v", err)
 	}
 	if err = os.RemoveAll(buildDirPath); err != nil {
-		return err
+		return fmt.Errorf("cannot remove build directory: %v", err)
 	}
 	utils.Success("image saved to %s directory\n", outputDir)
 
