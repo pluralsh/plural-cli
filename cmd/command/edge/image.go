@@ -88,6 +88,9 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
+	defer func() {
+		_ = os.RemoveAll(buildDirPath)
+	}()
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
@@ -144,9 +147,6 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
 		return fmt.Errorf("cannot move output files: %v", err)
-	}
-	if err = os.RemoveAll(buildDirPath); err != nil {
-		return fmt.Errorf("cannot remove build directory: %v", err)
 	}
 	utils.Success("image saved to %s directory\n", outputDir)
 
