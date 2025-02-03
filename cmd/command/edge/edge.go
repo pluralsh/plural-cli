@@ -109,11 +109,6 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage:    "storage device path",
 					Required: true,
 				},
-				cli.IntFlag{
-					Name:  "block-size",
-					Usage: "block size in bytes",
-					Value: 512,
-				},
 			},
 		},
 		{
