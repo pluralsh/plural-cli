@@ -24,7 +24,7 @@ const (
 	wifiConfigTemplate = `
 stages:
   boot:
-    - name: Enable wireless
+    - name: Setup Wi-Fi
       commands:
         - connmanctl enable wifi
         - wpa_passphrase '@WIFI_SSID@' '@WIFI_PASSWORD@' > /etc/wpa_supplicant/wpa_supplicant.conf
@@ -33,7 +33,7 @@ stages:
 	defaults = `#cloud-config
 stages:
   boot:
-    - name: "delete kairos"
+    - name: Delete default Kairos user
       commands:
         - deluser --remove-home kairos`
 )
