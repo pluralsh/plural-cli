@@ -30,6 +30,12 @@ stages:
         - wpa_passphrase '@WIFI_SSID@' '@WIFI_PASSWORD@' > /etc/wpa_supplicant/wpa_supplicant.conf
         - wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
         - udhcpc -i wlan0 &`
+	defaults = `#cloud-config
+stages:
+  boot:
+    - name: "delete kairos"
+      commands:
+        - deluser --remove-home kairos`
 )
 
 type Configuration struct {
@@ -91,7 +97,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("overwriting default configuration to remove default user\n")
 	defaultsPath := filepath.Join(outputDirPath, "defaults.yaml")
-	if err := utils.WriteFile(defaultsPath, []byte("#cloud-config\n")); err != nil {
+	if err := utils.WriteFile(defaultsPath, []byte(defaults)); err != nil {
 		return err
 	}
 	defer func() {
