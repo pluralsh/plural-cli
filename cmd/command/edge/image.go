@@ -148,15 +148,8 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
 		return fmt.Errorf("cannot move output files: %v", err)
 	}
+
 	utils.Success("image saved to %s directory\n", outputDir)
-
-	if device != "" {
-		if err = p.flashImage(filepath.Join(outputDirPath, "kairos.img"), device); err != nil {
-			return err
-		}
-		utils.Success("image flashed on %s device\n", device)
-	}
-
 	return nil
 }
 
