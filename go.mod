@@ -27,6 +27,7 @@ require (
 	github.com/go-git/go-git/v5 v5.13.1
 	github.com/gofrs/flock v0.12.1
 	github.com/google/go-github/v45 v45.2.0
+	github.com/hashicorp/go-bexpr v0.1.14
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.35.0
 	github.com/joho/godotenv v1.5.1
@@ -39,8 +40,8 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/packethost/packngo v0.31.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pluralsh/console/go/client v1.26.4
-	github.com/pluralsh/console/go/controller v0.0.0-20250124073105-7100db0ff9e4
+	github.com/pluralsh/console/go/client v1.27.1
+	github.com/pluralsh/console/go/controller v0.0.0-20250131003334-70da5fba4a49
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.2.0
@@ -126,6 +127,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/likexian/gokit v0.25.15 // indirect
+	github.com/mitchellh/pointerstructure v1.2.1 // indirect
 	github.com/mmcloughlin/avo v0.6.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect

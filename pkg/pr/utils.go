@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hashicorp/go-bexpr"
 	"github.com/pluralsh/polly/template"
 )
 
@@ -54,4 +55,17 @@ func removeMatches(glob string) error {
 	}
 
 	return nil
+}
+
+func evaluateCondition(condition string, context map[string]interface{}) (bool, error) {
+	if len(condition) == 0 {
+		return true, nil
+	}
+
+	eval, err := bexpr.CreateEvaluator(condition, bexpr.WithUnknownValue(""))
+	if err != nil {
+		return false, err
+	}
+
+	return eval.Evaluate(map[string]interface{}{"context": context})
 }

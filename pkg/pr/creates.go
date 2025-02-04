@@ -18,6 +18,15 @@ func applyCreates(creates *CreateSpec, ctx map[string]interface{}) error {
 	}
 
 	for _, tpl := range creates.Templates {
+		enabled, err := evaluateCondition(tpl.Condition, ctx)
+		if err != nil {
+			return err
+		}
+
+		if !enabled {
+			continue
+		}
+
 		source := tpl.Source
 		if len(tpl.Context) > 0 {
 			ctx = algorithms.Merge(ctx, tpl.Context)
