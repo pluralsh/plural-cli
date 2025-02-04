@@ -25,13 +25,13 @@ func (p *Plural) handleEdgeFlash(c *cli.Context) error {
 func (p *Plural) flashImage(image, device string) error {
 	out, err := os.OpenFile(device, os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("could not open device: %v", err)
+		return fmt.Errorf("could not open device: %w", err)
 	}
 	defer out.Close()
 
 	in, err := os.Open(image)
 	if err != nil {
-		return fmt.Errorf("could not open image: %v", err)
+		return fmt.Errorf("could not open image: %w", err)
 	}
 	defer in.Close()
 
