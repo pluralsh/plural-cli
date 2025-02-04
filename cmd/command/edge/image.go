@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -60,12 +61,6 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
-	utils.Highlight("creating bootstrap token for %s project\n", project)
-	token, err := p.createBootstrapToken(project, user)
-	if err != nil {
-		return err
-	}
-
 	utils.Highlight("reading configuration\n")
 	config, err := p.readPluralConfig(pluralConfig)
 	if err != nil {
@@ -93,7 +88,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
-	if err = p.writeCloudConfig(token, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
+	if err = p.writeCloudConfig(project, user, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
 
@@ -187,9 +182,31 @@ func (p *Plural) readPluralConfig(override string) (config *Configuration, err e
 	return config, err
 }
 
-func (p *Plural) writeCloudConfig(token, username, password, wifiSsid, wifiPassword, path, override string) error {
+func (p *Plural) writeCloudConfig(project, user, username, password, wifiSsid, wifiPassword, path, override string) error {
 	if override != "" {
 		return utils.CopyFile(override, path)
+	}
+
+	url := consoleURL
+	if url == "" {
+		url = console.ReadConfig().Url // Read URL from config if it was not provided via args or env var
+	}
+
+	token, err := p.createBootstrapToken(project, user)
+	if err != nil {
+		return err
+	}
+
+	if url == "" {
+		return fmt.Errorf("url cannot be empty when cloud config is not specified")
+	}
+
+	if token == "" {
+		return fmt.Errorf("token cannot be empty when cloud config is not specified")
+	}
+
+	if username == "" {
+		return fmt.Errorf("username cannot be empty when cloud config is not specified")
 	}
 
 	if password == "" {
@@ -208,10 +225,10 @@ func (p *Plural) writeCloudConfig(token, username, password, wifiSsid, wifiPassw
 	}
 
 	template := buffer.String()
+	template = strings.ReplaceAll(template, "@URL@", url)
+	template = strings.ReplaceAll(template, "@TOKEN@", token)
 	template = strings.ReplaceAll(template, "@USERNAME@", username)
 	template = strings.ReplaceAll(template, "@PASSWORD@", password)
-	template = strings.ReplaceAll(template, "@URL@", consoleURL)
-	template = strings.ReplaceAll(template, "@TOKEN@", token)
 
 	if wifiSsid != "" && wifiPassword != "" {
 		wifiConfig := strings.ReplaceAll(wifiConfigTemplate, "@WIFI_SSID@", wifiSsid)
