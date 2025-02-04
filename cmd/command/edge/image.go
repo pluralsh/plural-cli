@@ -47,7 +47,6 @@ type Configuration struct {
 
 func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	outputDir := c.String("output-dir")
-	device := c.String("device")
 	project := c.String("project")
 	user := c.String("user")
 	pluralConfig := c.String("plural-config")
