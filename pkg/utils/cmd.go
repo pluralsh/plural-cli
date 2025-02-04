@@ -6,13 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 )
-
-func Cmd(conf *config.Config, program string, args ...string) error {
-	return MkCmd(conf, program, args...).Run()
-}
 
 func Exec(program string, args ...string) error {
 	cmd := exec.Command(program, args...)
@@ -45,14 +40,4 @@ func Which(command string) (exists bool, path string) {
 	path, err := exec.LookPath(command)
 	exists = err == nil
 	return
-}
-
-func MkCmd(conf *config.Config, program string, args ...string) *exec.Cmd {
-	cmd := exec.Command(program, args...)
-	root, _ := ProjectRoot()
-	os.Setenv("HELM_REPO_ACCESS_TOKEN", conf.Token)
-	os.Setenv("PATH", fmt.Sprintf("%s:%s", pathing.SanitizeFilepath(filepath.Join(root, "bin")), os.Getenv("PATH")))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd
 }

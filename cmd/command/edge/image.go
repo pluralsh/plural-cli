@@ -24,12 +24,18 @@ const (
 	wifiConfigTemplate = `
 stages:
   boot:
-    - name: Enable wireless
+    - name: Setup Wi-Fi
       commands:
         - connmanctl enable wifi
         - wpa_passphrase '@WIFI_SSID@' '@WIFI_PASSWORD@' > /etc/wpa_supplicant/wpa_supplicant.conf
         - wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
         - udhcpc -i wlan0 &`
+	defaults = `#cloud-config
+stages:
+  boot:
+    - name: Delete default Kairos user
+      commands:
+        - deluser --remove-home kairos`
 )
 
 type Configuration struct {
@@ -81,12 +87,24 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if err = os.MkdirAll(buildDirPath, os.ModePerm); err != nil {
 		return err
 	}
+	defer func() {
+		_ = os.RemoveAll(buildDirPath)
+	}()
 
 	utils.Highlight("writing configuration\n")
 	cloudConfigPath := filepath.Join(outputDirPath, cloudConfigFile)
 	if err = p.writeCloudConfig(token, username, password, wifiSsid, wifiPassword, cloudConfigPath, cloudConfig); err != nil {
 		return err
 	}
+
+	utils.Highlight("overwriting default configuration to remove default user\n")
+	defaultsPath := filepath.Join(outputDirPath, "defaults.yaml")
+	if err := utils.WriteFile(defaultsPath, []byte(defaults)); err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Remove(defaultsPath)
+	}()
 
 	utils.Highlight("preparing %s volume\n", volumeName)
 	if err = utils.Exec("docker", "volume", "create", volumeName); err != nil {
@@ -113,24 +131,10 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 
 	utils.Highlight("building image\n")
-
-	// Override /oem/defaults.yaml file to get rid of the default password for the kairos user
-	dir, err := os.MkdirTemp("", "image")
-	if err != nil {
-		return err
-	}
-	defer func(path string) {
-		_ = os.RemoveAll(path)
-	}(dir)
-	defaultsFile := filepath.Join(dir, "defaults.yaml")
-	if err := utils.WriteFile(defaultsFile, []byte("#cloud-config\n")); err != nil {
-		return err
-	}
-
 	if err = utils.Exec("docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", buildDirPath+":/tmp/build",
 		"-v", cloudConfigPath+":/cloud-config.yaml",
-		"-v", defaultsFile+":/defaults.yaml",
+		"-v", defaultsPath+":/defaults.yaml",
 		"--mount", volumeMount,
 		"--privileged", "-i", "--rm",
 		"--entrypoint=/build-arm-image.sh", config.AurorabootImage,
@@ -138,6 +142,10 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		"--directory", volumeMountPath,
 		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img"); err != nil {
 		return err
+	}
+
+	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
+		return fmt.Errorf("cannot move output files: %w", err)
 	}
 
 	utils.Success("image saved to %s directory\n", outputDir)
