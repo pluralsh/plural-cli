@@ -1,4 +1,4 @@
-name: CI
+name: Edge
 on:
   schedule:
     - cron: 0 0 * * 1-5 # At 00:00 on every day-of-week from Monday through Friday
@@ -10,8 +10,8 @@ on:
     branches:
       - main
 jobs:
-  contract-validation:
-    name: Validate PR Contracts
+  image:
+    name: Check image build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,4 +19,7 @@ jobs:
         with:
           go-version-file: go.mod
       - run: make install-cli
-      - run: plural edge image --username=test --password=test --output-dir=image
+      - env:
+          PLURAL_CONSOLE_URL: some.url
+          PLURAL_CONSOLE_TOKEN: c29tZSB0b2tlbgo=
+        run: plural edge image --username=test --password=test --output-dir=image
