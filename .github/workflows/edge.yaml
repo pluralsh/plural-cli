@@ -19,7 +19,6 @@ jobs:
         with:
           go-version-file: go.mod
       - run: make install-cli
-      - env:
-          PLURAL_CONSOLE_URL: some.url
-          PLURAL_CONSOLE_TOKEN: c29tZSB0b2tlbgo=
-        run: plural edge image --username=test --password=test --output-dir=image
+      - run: |
+          touch cloud-config.yaml
+          plural edge image --console-url=test --console-token=dGVzdAo= --cloud-config=cloud-config.yaml
