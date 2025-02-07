@@ -21,4 +21,4 @@ jobs:
       - run: make install-cli
       - run: |
           touch cloud-config.yaml
-          plural edge image --url=test --token=dGVzdAo= --cloud-config=cloud-config.yaml
+          plural edge --url=test --token=dGVzdAo= image --cloud-config=cloud-config.yaml
