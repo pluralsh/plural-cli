@@ -53,7 +53,7 @@ func (p *Plural) InitConsoleClient(token, url string) error {
 			token = conf.Token
 			url = conf.Url
 		}
-		consoleClient, err := console.NewConsoleClient(token, url)
+		consoleClient, err := console.NewConsoleClient(token, console.NormalizeUrl(url))
 		if err != nil {
 			return err
 		}
