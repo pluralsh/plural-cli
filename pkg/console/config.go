@@ -46,7 +46,7 @@ func ReadConfig() (conf Config) {
 func (conf *Config) Validate() error {
 	url, err := url.Parse(conf.Url)
 	if err != nil {
-		return fmt.Errorf("invalid url: %w", err)
+		return fmt.Errorf("invalid url: %s", err.Error())
 	}
 
 	if url.Scheme != "https" {
