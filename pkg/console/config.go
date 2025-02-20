@@ -14,10 +14,6 @@ const (
 	ConfigName = "console.yml"
 )
 
-var (
-	errUrlFormat = fmt.Errorf("Url must be of format https://{your-console-domain}")
-)
-
 type VersionedConfig struct {
 	ApiVersion string  `json:"apiVersion"`
 	Kind       string  `json:"kind"`
@@ -50,11 +46,11 @@ func ReadConfig() (conf Config) {
 func (conf *Config) Validate() error {
 	url, err := url.Parse(conf.Url)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid url: %w", err)
 	}
 
 	if url.Scheme != "https" {
-		return errUrlFormat
+		return fmt.Errorf("url scheme must be https")
 	}
 
 	return nil
