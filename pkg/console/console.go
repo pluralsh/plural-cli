@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
+	neturl "net/url"
 	"strings"
 
 	consoleclient "github.com/pluralsh/console/go/client"
@@ -93,13 +93,7 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 }
 
 func NormalizeExtUrl(uri string) string {
-	uri = strings.TrimSuffix(uri, "/")
-
-	if !strings.HasPrefix(uri, "https://") {
-		uri = fmt.Sprintf("https://%s", uri)
-	}
-
-	parsed, err := url.Parse(uri)
+	parsed, err := neturl.Parse(uri)
 	if err != nil {
 		panic(err)
 	}
@@ -108,11 +102,13 @@ func NormalizeExtUrl(uri string) string {
 }
 
 func NormalizeUrl(url string) string {
-	url = strings.TrimSuffix(url, "/")
-
-	if !strings.HasPrefix(url, "https://") {
-		url = fmt.Sprintf("https://%s", url)
+	parsed, err := neturl.Parse(url)
+	if err != nil {
+		panic(err)
 	}
+
+	parsed.Scheme = "https"
+	url = strings.TrimSuffix(parsed.String(), "/")
 
 	if !strings.HasSuffix(url, "/gql") {
 		url = fmt.Sprintf("%s/gql", url)
