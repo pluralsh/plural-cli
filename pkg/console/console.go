@@ -93,11 +93,11 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 }
 
 func NormalizeExtUrl(uri string) string {
+	uri = strings.TrimSuffix(uri, "/")
+
 	if !strings.HasPrefix(uri, "https://") {
 		uri = fmt.Sprintf("https://%s", uri)
 	}
-
-	uri = strings.TrimSuffix(uri, "/")
 
 	parsed, err := url.Parse(uri)
 	if err != nil {
@@ -108,14 +108,15 @@ func NormalizeExtUrl(uri string) string {
 }
 
 func NormalizeUrl(url string) string {
+	url = strings.TrimSuffix(url, "/")
+
 	if !strings.HasPrefix(url, "https://") {
 		url = fmt.Sprintf("https://%s", url)
 	}
+
 	if !strings.HasSuffix(url, "/gql") {
 		url = fmt.Sprintf("%s/gql", url)
 	}
-
-	url = strings.TrimSuffix(url, "/")
 
 	return url
 }
