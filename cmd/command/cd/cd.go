@@ -77,9 +77,9 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
-				cli.StringFlag{Name: "repo-url", Usage: "helm repository URL", Required: false},
-				cli.StringFlag{Name: "chart-name", Usage: "helm chart name", Required: false},
-				cli.StringFlag{Name: "release-name", Usage: "helm release name", Required: false},
+				cli.StringFlag{Name: "repo-url", Usage: "helm repository URL (if not using default)", Required: false},
+				cli.StringFlag{Name: "chart-name", Usage: "helm chart name (if not using default)", Required: false},
+				cli.StringFlag{Name: "release-name", Usage: "helm release name (if not using default)", Required: false},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
 			},

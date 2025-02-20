@@ -97,10 +97,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
-				cli.StringFlag{Name: "repo-url", Usage: "helm repository URL", Required: false},
-				cli.StringFlag{Name: "chart-name", Usage: "helm chart name", Required: false},
-				cli.StringFlag{Name: "release-name", Usage: "helm release name", Required: false},
-				cli.StringFlag{Name: "namespace", Usage: "operator namespace", Required: false},
+				cli.StringFlag{Name: "repo-url", Usage: "helm repository URL (if not using default)", Required: false},
+				cli.StringFlag{Name: "chart-name", Usage: "helm chart name (if not using default)", Required: false},
+				cli.StringFlag{Name: "release-name", Usage: "helm release name (if not using default)", Required: false},
+				cli.StringFlag{Name: "namespace", Usage: "operator namespace (if not using default)", Required: false},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.StringFlag{Name: "project", Usage: "the project this cluster will belong to", Required: false},
 				cli.StringSliceFlag{
