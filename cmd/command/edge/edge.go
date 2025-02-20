@@ -121,6 +121,10 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage:    "the unique id of the edge device on which this cluster runs",
 					Required: true,
 				},
+				cli.StringFlag{Name: "repo-url", Usage: "helm repository URL", Required: false},
+				cli.StringFlag{Name: "chart-name", Usage: "helm chart name", Required: false},
+				cli.StringFlag{Name: "release-name", Usage: "helm release name", Required: false},
+				cli.StringFlag{Name: "namespace", Usage: "operator namespace", Required: false},
 			},
 		},
 	}

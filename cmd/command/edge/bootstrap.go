@@ -56,7 +56,7 @@ func (p *Plural) handleEdgeBootstrap(c *cli.Context) error {
 	if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.CreateCluster.ID); err == nil {
 		url = agentUrl
 	}
-	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "")
+	return p.DoInstallOperator(url, *cluster.CreateCluster.DeployToken, "", "", "", "", "")
 }
 
 func (p *Plural) getClusterAttributes(registration *gqlclient.ClusterRegistrationFragment) (*gqlclient.ClusterAttributes, error) {

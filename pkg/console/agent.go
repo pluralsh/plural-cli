@@ -42,7 +42,7 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	return false, nil
 }
 
-func InstallAgent(url, token, namespace, version string, values map[string]interface{}) error {
+func InstallAgent(url, token, namespace, version string, values map[string]interface{}, repo_url, chart_name, release_name string) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
@@ -50,7 +50,17 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 	}
 	vals = algorithms.Merge(vals, values)
 
-	if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
+	if repo_url == "" {
+		repo_url = RepoUrl
+	}
+	if chart_name == "" {
+		chart_name = ChartName
+	}
+	if release_name == "" {
+		release_name = ReleaseName
+	}
+
+	if err := helm.AddRepo(release_name, repo_url); err != nil {
 		return err
 	}
 
@@ -62,7 +72,7 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 	newInstallAction := action.NewInstall(helmConfig)
 	newInstallAction.ChartPathOptions.Version = version
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", release_name, chart_name), settings)
 	if err != nil {
 		return err
 	}
@@ -75,11 +85,11 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 	histClient := action.NewHistory(helmConfig)
 	histClient.Max = 5
 
-	if _, err = histClient.Run(ReleaseName); errors.Is(err, driver.ErrReleaseNotFound) {
+	if _, err = histClient.Run(release_name); errors.Is(err, driver.ErrReleaseNotFound) {
 		fmt.Println("installing deployment operator...")
 		instClient := action.NewInstall(helmConfig)
 		instClient.Namespace = namespace
-		instClient.ReleaseName = ReleaseName
+		instClient.ReleaseName = release_name
 		instClient.Timeout = time.Minute * 5
 		_, err = instClient.Run(chart, vals)
 		if err != nil {
@@ -91,7 +101,7 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 	client := action.NewUpgrade(helmConfig)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 5
-	_, err = client.Run(ReleaseName, chart, vals)
+	_, err = client.Run(release_name, chart, vals)
 	return err
 }
 
