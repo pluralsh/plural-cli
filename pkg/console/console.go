@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	neturl "net/url"
-	"strings"
 
 	consoleclient "github.com/pluralsh/console/go/client"
 )
@@ -107,14 +106,7 @@ func NormalizeUrl(url string) string {
 		panic(err)
 	}
 
-	parsed.Scheme = "https"
-	url = strings.TrimSuffix(parsed.String(), "/")
-
-	if !strings.HasSuffix(url, "/gql") {
-		url = fmt.Sprintf("%s/gql", url)
-	}
-
-	return url
+	return fmt.Sprintf("https://%s/gql", parsed.Host)
 }
 
 func (c *consoleClient) Url() string {
