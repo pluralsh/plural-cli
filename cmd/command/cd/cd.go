@@ -78,6 +78,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
+				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
 			},
 		},
@@ -136,7 +137,7 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	// we don't care if this fails to init as this command can be auth-less
 	_ = p.InitConsoleClient(consoleToken, consoleURL)
 
-	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"))
+	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"), c.String("chart-loc"))
 }
 
 func (p *Plural) handleUninstallOperator(_ *cli.Context) error {

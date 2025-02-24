@@ -196,7 +196,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) DoInstallOperator(url, token, values string) error {
+func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 	err := p.InitKube()
 	if err != nil {
 		return err
@@ -237,14 +237,14 @@ func (p *Plural) DoInstallOperator(url, token, values string) error {
 		}
 	}
 	vals = algorithms.Merge(vals, globalVals)
-	err = console.InstallAgent(url, token, console.OperatorNamespace, version, vals)
+	err = console.InstallAgent(url, token, console.OperatorNamespace, version, chart_loc, vals)
 	if err == nil {
 		utils.Success("deployment operator installed successfully\n")
 	}
 	return err
 }
 
-func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
+func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string, chart_loc string) error {
 	deployToken, err := p.ConsoleClient.GetDeployToken(id, handle)
 	if err != nil {
 		return err
@@ -257,5 +257,5 @@ func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string) error {
 		}
 	}
 
-	return p.DoInstallOperator(url, deployToken, c.String("values"))
+	return p.DoInstallOperator(url, deployToken, c.String("values"), chart_loc)
 }
