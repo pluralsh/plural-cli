@@ -42,7 +42,7 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	return false, nil
 }
 
-func InstallAgent(url, token, namespace, version string, values map[string]interface{}) error {
+func InstallAgent(url, token, namespace, version, helmChartLoc string, values map[string]interface{}) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
@@ -50,19 +50,26 @@ func InstallAgent(url, token, namespace, version string, values map[string]inter
 	}
 	vals = algorithms.Merge(vals, values)
 
-	if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
-		return err
-	}
-
 	helmConfig, err := helm.GetActionConfig(namespace)
 	if err != nil {
 		return err
 	}
 
+	chartLoc := fmt.Sprintf("%s/%s", ReleaseName, ChartName)
+	if helmChartLoc == "" {
+		fmt.Println("Adding default Repo for deployment operator chart:", RepoUrl)
+		if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("Using custom helm chart url:", chartLoc)
+		chartLoc = helmChartLoc
+	}
+
 	newInstallAction := action.NewInstall(helmConfig)
 	newInstallAction.ChartPathOptions.Version = version
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(fmt.Sprintf("%s/%s", ReleaseName, ChartName), settings)
+	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(chartLoc, settings)
 	if err != nil {
 		return err
 	}

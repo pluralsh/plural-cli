@@ -121,6 +121,11 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage:    "the unique id of the edge device on which this cluster runs",
 					Required: true,
 				},
+				cli.StringFlag{
+					Name:     "chart-loc",
+					Usage:    "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.",
+					Required: false,
+				},
 			},
 		},
 	}

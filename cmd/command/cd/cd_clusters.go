@@ -98,6 +98,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "name", Usage: "The name you'll give the cluster", Required: true},
 				cli.StringFlag{Name: "handle", Usage: "optional handle for the cluster"},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
+				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 				cli.StringFlag{Name: "project", Usage: "the project this cluster will belong to", Required: false},
 				cli.StringSliceFlag{
 					Name:  "tag",
@@ -110,6 +111,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Action: common.LatestVersion(p.handleClusterReinstall),
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
+				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 			},
 			Usage:     "reinstalls the deployment operator into a cluster",
 			ArgsUsage: "@{cluster-handle}",
@@ -412,7 +414,7 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	}
 
 	id, name := common.GetIdAndName(handle)
-	return p.ReinstallOperator(c, id, name)
+	return p.ReinstallOperator(c, id, name, c.String("chart-loc"))
 }
 
 func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
@@ -458,7 +460,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 			if attrs.Handle != nil {
 				handle = attrs.Handle
 			}
-			return p.ReinstallOperator(c, nil, handle)
+			return p.ReinstallOperator(c, nil, handle, c.String("chart-loc"))
 		}
 
 		return err
@@ -475,5 +477,5 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	deployToken := *existing.CreateCluster.DeployToken
 	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
-	return p.DoInstallOperator(url, deployToken, c.String("values"))
+	return p.DoInstallOperator(url, deployToken, c.String("values"), c.String("chart-loc"))
 }
