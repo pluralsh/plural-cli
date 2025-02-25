@@ -31,7 +31,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     -X "github.com/pluralsh/plural-cli/pkg/common.Date=${APP_DATE}"' \
     -o plural ./cmd/plural
 
-FROM golang:1.23.4-alpine3.20 AS final
+FROM golang:1.23.6-alpine3.20 AS final
 
 WORKDIR /
 
