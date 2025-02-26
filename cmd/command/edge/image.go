@@ -56,6 +56,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	password := c.String("password")
 	wifiSsid := c.String("wifi-ssid")
 	wifiPassword := c.String("wifi-password")
+	model := c.String("model")
 
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -133,7 +134,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		"--mount", volumeMount,
 		"--privileged", "-i", "--rm",
 		"--entrypoint=/build-arm-image.sh", config.AurorabootImage,
-		"--model", "rpi4",
+		"--model", model,
 		"--directory", volumeMountPath,
 		"--config", "/cloud-config.yaml", "/tmp/build/kairos.img"); err != nil {
 		return err

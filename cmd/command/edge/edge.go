@@ -92,6 +92,11 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Name:  "wifi-password",
 					Usage: "password for the wifi network, needs to be used with wifi-ssid, used during cloud config templating",
 				},
+				cli.StringFlag{
+					Name:  "model",
+					Usage: "the board model",
+					Value: "rpi5",
+				},
 			},
 		},
 		{
