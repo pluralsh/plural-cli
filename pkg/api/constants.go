@@ -5,6 +5,5 @@ const (
 	ProviderGCP           = "gcp"
 	ProviderAWS           = "aws"
 	ProviderAzure         = "azure"
-	ProviderEquinix       = "equinix"
 	TEST                  = "test"
 )
