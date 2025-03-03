@@ -55,7 +55,7 @@ type Providers struct {
 
 var (
 	providers       = Providers{}
-	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE"})
+	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE", "EQUINIX"})
 )
 
 func GetProvider() (Provider, error) {
@@ -95,8 +95,6 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 		return awsFromManifest(man)
 	case api.ProviderAzure:
 		return AzureFromManifest(man, nil)
-	case api.ProviderEquinix:
-		return equinixFromManifest(man)
 	case api.TEST:
 		return testFromManifest(man)
 	default:
@@ -113,8 +111,6 @@ func New(provider string) (Provider, error) {
 		return mkAWS(conf)
 	case api.ProviderAzure:
 		return mkAzure(conf)
-	case api.ProviderEquinix:
-		return mkEquinix(conf)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}
