@@ -15,14 +15,7 @@ const (
 	GitIgnoreFile     = ".gitignore"
 )
 
-const Gitattributes = `/**/helm/**/values.yaml filter=plural-crypt diff=plural-crypt
-/**/helm/**/values.yaml* filter=plural-crypt diff=plural-crypt
-/**/helm/**/README.md* filter=plural-crypt diff=plural-crypt
-/**/helm/**/default-values.yaml* filter=plural-crypt diff=plural-crypt
-/**/manifest.yaml filter=plural-crypt diff=plural-crypt
-/**/output.yaml filter=plural-crypt diff=plural-crypt
-/diffs/**/* filter=plural-crypt diff=plural-crypt
-context.yaml filter=plural-crypt diff=plural-crypt
+const Gitattributes = `context.yaml filter=plural-crypt diff=plural-crypt
 workspace.yaml filter=plural-crypt diff=plural-crypt
 context.yaml* filter=plural-crypt diff=plural-crypt
 workspace.yaml* filter=plural-crypt diff=plural-crypt
