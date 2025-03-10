@@ -108,10 +108,10 @@ func getGCPSurvey() []*survey.Question {
 func setProject() (survey.Prompt, survey.Validator) {
 	projects, err := getGcpProjects()
 	if err != nil {
-		return &survey.Input{Message: "Enter the name of its gcp project"}, utils.ValidateAlphaNumeric
+		return &survey.Input{Message: "Enter the GCP project ID: "}, utils.ValidateAlphaNumeric
 	}
 
-	return &survey.Select{Message: "Select the name of gcp project?", Options: projects}, survey.Required
+	return &survey.Select{Message: "Select the GCP project ID:", Options: projects}, survey.Required
 }
 
 func getGcpProjects() ([]string, error) {
