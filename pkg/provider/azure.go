@@ -141,7 +141,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		},
 		{
 			Name:     "storage",
-			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
+			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription:"},
 			Validate: utils.ValidateStorageAccountName,
 		},
 		{
@@ -151,7 +151,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		},
 		{
 			Name:     "resource",
-			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
+			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default:"},
 			Validate: utils.ValidateResourceGroupName,
 		},
 	}
