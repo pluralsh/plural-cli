@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/samber/lo"
@@ -75,13 +76,7 @@ func processRegexReplacements(replacements []RegexReplacement, ctx map[string]in
 			if err != nil {
 				rx = []byte(replacement.Regex)
 			}
-
-			r, err := regexp.Compile(string(rx))
-			if err != nil {
-				return data, err
-			}
-
-			return r.ReplaceAll(data, replaceWith), nil
+			return replaceMultiline(rx, replaceWith, data)
 		}
 
 		dest, err := templateReplacement([]byte(replacement.File), ctx)
@@ -95,6 +90,24 @@ func processRegexReplacements(replacements []RegexReplacement, ctx map[string]in
 	}
 
 	return nil
+}
+
+// replaceMultiline applies regex-based replacements on a multiline string
+func replaceMultiline(pattern, replacement, text []byte) ([]byte, error) {
+	// Replace all newlines with a unique placeholder
+	placeholder := "__NL__"
+	flattenedText := strings.ReplaceAll(string(text), "\n", placeholder)
+
+	// Apply the regex replacement on the flattened text
+	re, err := regexp.Compile(string(pattern))
+	if err != nil {
+		return nil, err
+	}
+	flattenedText = re.ReplaceAllString(flattenedText, string(replacement))
+
+	// Revert the placeholder back to newlines
+	finalText := strings.ReplaceAll(flattenedText, placeholder, "\n")
+	return []byte(finalText), nil
 }
 
 func processYamlOverlays(overlays []YamlOverlay, ctx map[string]interface{}) error {
