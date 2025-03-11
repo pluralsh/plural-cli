@@ -29,11 +29,6 @@ split: {% assign beatles = "John, Paul, George, Ringo" | split: ", "  %}
   {{ member }}
 {% endfor %}
 
-splitn: {% assign nlist = "," |  splitn: 3, "a,b,c,d,e" %}
-{% for item in nlist %}
-    {{ item }}
-{% endfor %}
-
 splitList: {% assign nlist = "," |  splitList: "a,b,c,d,e" %}
 {% for item in nlist %}
     {{ item }}
