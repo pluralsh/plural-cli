@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	v1 "k8s.io/api/core/v1"
 
@@ -50,14 +51,24 @@ type ContainerClient interface {
 	Create(ctx context.Context, metadata azblob.Metadata, publicAccessType azblob.PublicAccessType) (*azblob.ContainerCreateResponse, error)
 }
 
+type SubscriptionClient interface {
+	NewListLocationsPager(subscriptionID string, options *armsubscription.SubscriptionsClientListLocationsOptions) *runtime.Pager[armsubscription.SubscriptionsClientListLocationsResponse]
+}
+
 type ClientSet struct {
-	Groups     ResourceGroupClient
-	Accounts   AccountsClient
-	Containers ContainerClient
+	Subscriptions SubscriptionClient
+	Groups        ResourceGroupClient
+	Accounts      AccountsClient
+	Containers    ContainerClient
 }
 
 func GetClientSet(subscriptionId string) (*ClientSet, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionsClient, err := armsubscription.NewSubscriptionsClient(cred, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +84,9 @@ func GetClientSet(subscriptionId string) (*ClientSet, error) {
 	}
 
 	return &ClientSet{
-		Groups:   resourceGroupClient,
-		Accounts: storageAccountsClient,
+		Subscriptions: subscriptionsClient,
+		Groups:        resourceGroupClient,
+		Accounts:      storageAccountsClient,
 	}, nil
 }
 
@@ -88,34 +100,33 @@ type AzureProvider struct {
 	clients       *ClientSet
 }
 
-var (
-	azureRegions = []string{
-		"eastus",
-		"eastus2",
-		"southcentralus",
-		"westus2",
-		"westus3",
-		"australiaeast",
-		"southeastasia",
-		"northeurope",
-		"swedencentral",
-		"uksouth",
-		"westeurope",
-		"centralus",
-		"southafricanorth",
-		"centralindia",
-		"eastasia",
-		"japaneast",
-		"koreacentral",
-		"canadacentral",
-		"francecentral",
-		"germanywestcentral",
-		"norwayeast",
-		"brazilsouth",
-	}
-)
-
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
+	subId, tenID, err := GetAzureAccount()
+	if err != nil {
+		return
+	}
+
+	clients, err := GetClientSet(subId)
+	if err != nil {
+		return
+	}
+
+	ctx := context.Background()
+	locations := []string{}
+	locationsPager := clients.Subscriptions.NewListLocationsPager(subId, nil)
+	for locationsPager.More() {
+		page, err := locationsPager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Value {
+			if v != nil {
+				locations = append(locations, *v.Name)
+			}
+		}
+	}
+
 	var resp struct {
 		Cluster  string
 		Storage  string
@@ -130,32 +141,22 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		},
 		{
 			Name:     "storage",
-			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription: "},
+			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription:"},
 			Validate: utils.ValidateStorageAccountName,
 		},
 		{
 			Name:     "region",
-			Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: azureRegions},
+			Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: locations},
 			Validate: survey.Required,
 		},
 		{
 			Name:     "resource",
-			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default: "},
+			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use:"},
 			Validate: utils.ValidateResourceGroupName,
 		},
 	}
 
 	err = survey.Ask(azureSurvey, &resp)
-	if err != nil {
-		return
-	}
-
-	subId, tenID, err := GetAzureAccount()
-	if err != nil {
-		return
-	}
-
-	clients, err := GetClientSet(subId)
 	if err != nil {
 		return
 	}

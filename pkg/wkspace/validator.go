@@ -17,7 +17,7 @@ func Preflight() (bool, error) {
 			return true, utils.HighlightError(fmt.Errorf("%s not installed", req))
 		}
 	}
-	fmt.Print("\ntesting if git ssh is properly configured ")
+	fmt.Print("\nTesting if git ssh is properly configured...")
 	if err := checkGitSSH(); err != nil {
 		return true, err
 	}

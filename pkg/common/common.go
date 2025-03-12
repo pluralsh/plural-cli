@@ -80,7 +80,7 @@ func postLogin(conf *config.Config, client api.Client, c *cli.Context, persist b
 	}
 
 	conf.Email = me.Email
-	fmt.Printf("\nlogged in as %s!\n", me.Email)
+	fmt.Printf("\nLogged in as %s!\n", me.Email)
 
 	saEmail := c.String("service-account")
 	if saEmail != "" {

@@ -92,15 +92,21 @@ func (man *Manifest) Write(path string) error {
 }
 
 func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {
-	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
-
 	pMan.BucketPrefix = cluster
 	pMan.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
 
 	if !cloud {
-		res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
-		pMan.BucketPrefix = res
-		pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
+		answer := ""
+		input := &survey.Input{Message: "Enter a unique, memorable string to use for bucket naming, e.g. an abbreviation for your company:"}
+		if err := survey.AskOne(input, &answer, survey.WithValidator(func(val interface{}) error {
+			res, _ := val.(string)
+			return utils.ValidateRegex(res, "[a-z][0-9\\-a-z]+", "String can only contain alphanumeric characters or hyphens")
+		})); err != nil {
+			return nil
+		}
+
+		pMan.BucketPrefix = answer
+		pMan.Bucket = fmt.Sprintf("%s-tf-state", answer)
 		if err := pMan.ConfigureNetwork(); err != nil {
 			return nil
 		}
@@ -113,20 +119,17 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 		return nil
 	}
 
-	utils.Highlight("\nOk, let's get your network configuration set up now...\n")
-
-	modifier := ", must be a subdomain under onplural.sh"
-
 	subdomain := ""
-	input := &survey.Input{Message: fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier)}
+	input := &survey.Input{Message: fmt.Sprintf("Enter subdomain of %s domain that you want to use:", pluralDomain)}
 	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
 		res, _ := val.(string)
-		if err := utils.ValidateDns(res); err != nil {
-			return err
-		}
 
 		if !strings.HasSuffix(res, pluralDomain) {
-			return fmt.Errorf("Not an onplural.sh domain")
+			res += "." + pluralDomain
+		}
+
+		if err := utils.ValidateDns(res); err != nil {
+			return err
 		}
 
 		client := api.NewClient()
