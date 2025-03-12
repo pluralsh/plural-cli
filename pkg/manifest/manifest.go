@@ -92,15 +92,21 @@ func (man *Manifest) Write(path string) error {
 }
 
 func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {
-	utils.Highlight("\nLet's get some final information about your workspace set up\n\n")
-
 	pMan.BucketPrefix = cluster
 	pMan.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
 
 	if !cloud {
-		res, _ := utils.ReadAlphaNum("Give us a unique, memorable string to use for bucket naming, eg an abbreviation for your company: ")
-		pMan.BucketPrefix = res
-		pMan.Bucket = fmt.Sprintf("%s-tf-state", res)
+		answer := ""
+		input := &survey.Input{Message: fmt.Sprintf("Enter a unique, memorable string to use for bucket naming, e.g. an abbreviation for your company:")}
+		if err := survey.AskOne(input, &answer, survey.WithValidator(func(val interface{}) error {
+			res, _ := val.(string)
+			return utils.ValidateRegex(res, "[a-z][0-9\\-a-z]+", "String can only contain alphanumeric characters or hyphens")
+		})); err != nil {
+			return nil
+		}
+
+		pMan.BucketPrefix = answer
+		pMan.Bucket = fmt.Sprintf("%s-tf-state", answer)
 		if err := pMan.ConfigureNetwork(); err != nil {
 			return nil
 		}

@@ -69,13 +69,12 @@ func GetProvider() (Provider, error) {
 
 	provider := ""
 	prompt := &survey.Select{
-		Message: "Select one of the following providers:",
+		Message: "Select the cloud provider:",
 		Options: providers.AvailableProviders,
 	}
 	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
 		return nil, err
 	}
-	utils.Success("Using provider %s\n", provider)
 	return New(provider)
 }
 
