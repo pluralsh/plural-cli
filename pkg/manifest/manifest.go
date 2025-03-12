@@ -113,20 +113,17 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 		return nil
 	}
 
-	utils.Highlight("\nOk, let's get your network configuration set up now...\n")
-
-	modifier := ", must be a subdomain under onplural.sh"
-
 	subdomain := ""
-	input := &survey.Input{Message: fmt.Sprintf("\nWhat do you want to use as your domain%s: ", modifier)}
+	input := &survey.Input{Message: fmt.Sprintf("Enter subdomain of %s domain that you want to use:", pluralDomain)}
 	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
 		res, _ := val.(string)
-		if err := utils.ValidateDns(res); err != nil {
-			return err
-		}
 
 		if !strings.HasSuffix(res, pluralDomain) {
-			return fmt.Errorf("Not an onplural.sh domain")
+			res += "." + pluralDomain
+		}
+
+		if err := utils.ValidateDns(res); err != nil {
+			return err
 		}
 
 		client := api.NewClient()
