@@ -151,7 +151,7 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		},
 		{
 			Name:     "resource",
-			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use as default:"},
+			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use:"},
 			Validate: utils.ValidateResourceGroupName,
 		},
 	}

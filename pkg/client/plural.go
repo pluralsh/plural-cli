@@ -159,7 +159,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return err
 	}
 
-	if !git && common.Affirm("you're attempting to setup plural outside a git repository. would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
+	if !git && common.Affirm("You're attempting to setup plural outside a git repository. Would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
 		repo, err = scm.Setup()
 		if err != nil {
 			return err
