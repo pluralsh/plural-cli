@@ -121,9 +121,8 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 
 	subdomain := ""
 	input := &survey.Input{Message: fmt.Sprintf("Enter subdomain of %s domain that you want to use:", pluralDomain)}
-	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
-		res, _ := val.(string)
-		d := domain(res)
+	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val any) error {
+		d := domain(val.(string))
 		if err := utils.ValidateDns(d); err != nil {
 			return err
 		}
