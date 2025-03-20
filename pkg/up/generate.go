@@ -107,7 +107,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 					return dir, err
 				}
 
-				destFile = filepath.Join(string(tpl.to), destFile)
+				destFile = filepath.Join(tpl.to, destFile)
 				if err = ctx.templateFrom(file, destFile); err != nil {
 					return dir, err
 				}
@@ -128,6 +128,7 @@ func (ctx *Context) afterSetup() error {
 	prov := ctx.Provider.Name()
 	overwrites := []templatePair{
 		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "bootstrap/stacks/serviceaccount.yaml"},
+		{from: "bootstrap/stacks/mgmt.yaml", to: "bootstrap/stacks/mgmt.yaml"},
 	}
 
 	ctx.Delims = nil
