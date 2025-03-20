@@ -121,19 +121,14 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 
 	subdomain := ""
 	input := &survey.Input{Message: fmt.Sprintf("Enter subdomain of %s domain that you want to use:", pluralDomain)}
-	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val interface{}) error {
-		res, _ := val.(string)
-
-		if !strings.HasSuffix(res, pluralDomain) {
-			res += "." + pluralDomain
-		}
-
-		if err := utils.ValidateDns(res); err != nil {
+	if err := survey.AskOne(input, &subdomain, survey.WithValidator(func(val any) error {
+		d := domain(val.(string))
+		if err := utils.ValidateDns(d); err != nil {
 			return err
 		}
 
 		client := api.NewClient()
-		if err := client.CreateDomain(res); err != nil {
+		if err := client.CreateDomain(d); err != nil {
 			return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
 		}
 
@@ -142,7 +137,15 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 		return err
 	}
 
-	pMan.Network = &NetworkConfig{Subdomain: subdomain, PluralDns: true}
+	pMan.Network = &NetworkConfig{Subdomain: domain(subdomain), PluralDns: true}
 
 	return nil
+}
+
+func domain(subdomain string) string {
+	if strings.HasSuffix(subdomain, pluralDomain) {
+		return subdomain
+	}
+
+	return subdomain + "." + pluralDomain
 }
