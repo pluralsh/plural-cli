@@ -13,6 +13,7 @@ func TestNormalizeUrl(t *testing.T) {
 		url, expectedResult string
 		expectError         bool
 	}{
+
 		{
 			name:           `valid url should stay the same`,
 			url:            "https://console.test.onplural.sh/gql",
@@ -26,6 +27,16 @@ func TestNormalizeUrl(t *testing.T) {
 		{
 			name:           `protocol should be set to https`,
 			url:            "http://console.test.onplural.sh/gql",
+			expectedResult: "https://console.test.onplural.sh/gql",
+		},
+		{
+			name:           `protocol should be set to https`,
+			url:            "console.test.onplural.sh/gql",
+			expectedResult: "https://console.test.onplural.sh/gql",
+		},
+		{
+			name:           `/gql path should be added`,
+			url:            "https://console.test.onplural.sh",
 			expectedResult: "https://console.test.onplural.sh/gql",
 		},
 	}
@@ -55,6 +66,16 @@ func TestNormalizeExtUrl(t *testing.T) {
 		{
 			name:           `protocol should be set to https`,
 			url:            "http://console.test.onplural.sh/ext/gql",
+			expectedResult: "https://console.test.onplural.sh/ext/gql",
+		},
+		{
+			name:           `protocol should be set to https`,
+			url:            "console.test.onplural.sh/ext/gql",
+			expectedResult: "https://console.test.onplural.sh/ext/gql",
+		},
+		{
+			name:           `/gql/ext path should be added`,
+			url:            "https://console.test.onplural.sh",
 			expectedResult: "https://console.test.onplural.sh/ext/gql",
 		},
 	}

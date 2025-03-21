@@ -91,10 +91,19 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 	}, nil
 }
 
-func NormalizeExtUrl(uri string) string {
-	parsed, err := neturl.Parse(uri)
+func NormalizeExtUrl(url string) string {
+	parsed, err := neturl.Parse(url)
 	if err != nil {
 		panic(err)
+	}
+
+	// Trying to parse a hostname and path without a scheme is invalid but may not necessarily return an error,
+	// due to parsing ambiguities.
+	// The following block was added to support URLs without scheme set as we change it to HTTPS anyway.
+	if parsed.Scheme == "" && parsed.Host == "" {
+		if parsed, err = neturl.Parse("//" + url); err != nil {
+			panic(err)
+		}
 	}
 
 	return fmt.Sprintf("https://%s/ext/gql", parsed.Host)
@@ -104,6 +113,15 @@ func NormalizeUrl(url string) string {
 	parsed, err := neturl.Parse(url)
 	if err != nil {
 		panic(err)
+	}
+
+	// Trying to parse a hostname and path without a scheme is invalid but may not necessarily return an error,
+	// due to parsing ambiguities.
+	// The following block was added to support URLs without scheme set as we change it to HTTPS anyway.
+	if parsed.Scheme == "" && parsed.Host == "" {
+		if parsed, err = neturl.Parse("//" + url); err != nil {
+			panic(err)
+		}
 	}
 
 	return fmt.Sprintf("https://%s/gql", parsed.Host)
