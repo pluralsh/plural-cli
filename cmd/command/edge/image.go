@@ -145,7 +145,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	if imagePushURL != "" {
 		dockerfilePath := filepath.Join(buildDirPath, "Dockerfile")
 		if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
-			return fmt.Errorf("cannot create Docker file: %w", err)
+			return fmt.Errorf("cannot create Dockerfile: %w", err)
 		}
 		if err = utils.Exec("docker", "build", "-t", imagePushURL, "-f", dockerfilePath, buildDirPath); err != nil {
 			return err
