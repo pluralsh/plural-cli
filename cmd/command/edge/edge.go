@@ -144,7 +144,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:     "url",
-					Usage:    "the url to download the image",
+					Usage:    "the url of the image to download",
 					Required: true,
 				},
 				cli.StringFlag{
