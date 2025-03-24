@@ -58,7 +58,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	wifiSsid := c.String("wifi-ssid")
 	wifiPassword := c.String("wifi-password")
 	model := c.String("model")
-	imagePushURL := c.String("image-push-url")
+	imagePushURL := c.String("oci-url")
 
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err

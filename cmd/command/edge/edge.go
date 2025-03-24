@@ -98,7 +98,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Value: "rpi5",
 				},
 				cli.StringFlag{
-					Name:  "image-push-url",
+					Name:  "oci-url",
 					Usage: "push an image to the repository",
 				},
 			},
