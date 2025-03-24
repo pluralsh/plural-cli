@@ -37,6 +37,7 @@ stages:
     - name: Delete default Kairos user
       commands:
         - deluser --remove-home kairos`
+	dockerfile = "FROM scratch\nWORKDIR /build\nCOPY kairos.img /build"
 )
 
 type Configuration struct {
@@ -142,7 +143,6 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	}
 
 	if imagePushURL != "" {
-		dockerfile := "FROM scratch\nWORKDIR /build\nCOPY kairos.img /build"
 		dockerfilePath := filepath.Join(buildDirPath, "Dockerfile")
 		if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
 			return fmt.Errorf("cannot create Docker file: %w", err)
