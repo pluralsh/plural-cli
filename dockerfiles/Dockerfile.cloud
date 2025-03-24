@@ -26,7 +26,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     -X "github.com/pluralsh/plural-cli/cmd/plural.Date=${APP_DATE}"' \
     -o plural ./cmd/plural
 
-FROM alpine:3.17.2 as tools
+FROM alpine:3.17.8 as tools
 
 ARG TARGETARCH
 
