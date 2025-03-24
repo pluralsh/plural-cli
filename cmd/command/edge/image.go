@@ -266,8 +266,17 @@ func (p *Plural) writeCloudConfig(project, user, username, password, wifiSsid, w
 }
 
 func (p *Plural) handleEdgeDownload(c *cli.Context) error {
+	var err error
+
 	outputDir := c.String("to")
 	url := c.String("url")
+
+	if outputDir == "" {
+		outputDir, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+	}
 
 	utils.Highlight("unpacking image contents\n")
 	if err := utils.Exec("docker", "run", "-i", "--rm", "--privileged", "-v", fmt.Sprintf("%s:/image", outputDir),

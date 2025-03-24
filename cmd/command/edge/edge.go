@@ -148,9 +148,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Required: true,
 				},
 				cli.StringFlag{
-					Name:     "to",
-					Usage:    "the image destination path",
-					Required: true,
+					Name:  "to",
+					Usage: "the image destination path",
 				},
 			},
 		},
