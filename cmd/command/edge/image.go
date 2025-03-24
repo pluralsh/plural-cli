@@ -37,6 +37,7 @@ stages:
     - name: Delete default Kairos user
       commands:
         - deluser --remove-home kairos`
+	dockerfile = "FROM scratch\nWORKDIR /build\nCOPY kairos.img /build"
 )
 
 type Configuration struct {
@@ -57,6 +58,7 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 	wifiSsid := c.String("wifi-ssid")
 	wifiPassword := c.String("wifi-password")
 	model := c.String("model")
+	imagePushURL := c.String("oci-url")
 
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -140,11 +142,27 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 		return err
 	}
 
+	if imagePushURL != "" {
+		dockerfilePath := filepath.Join(buildDirPath, "Dockerfile")
+		if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
+			return fmt.Errorf("cannot create Dockerfile: %w", err)
+		}
+		if err = utils.Exec("docker", "build", "-t", imagePushURL, "-f", dockerfilePath, buildDirPath); err != nil {
+			return err
+		}
+		if err = utils.Exec("docker", "push", imagePushURL); err != nil {
+			return err
+		}
+
+		utils.Success("image pushed successfully to %s\n", imagePushURL)
+	}
+
 	if err = utils.CopyDir(buildDirPath, outputDirPath); err != nil {
 		return fmt.Errorf("cannot move output files: %w", err)
 	}
 
 	utils.Success("image saved to %s directory\n", outputDir)
+
 	return nil
 }
 
@@ -245,4 +263,26 @@ func (p *Plural) writeCloudConfig(project, user, username, password, wifiSsid, w
 
 	_, err = file.WriteString(template)
 	return err
+}
+
+func (p *Plural) handleEdgeDownload(c *cli.Context) error {
+	var err error
+
+	outputDir := c.String("to")
+	url := c.String("url")
+
+	if outputDir == "" {
+		outputDir, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+	}
+
+	utils.Highlight("unpacking image contents\n")
+	if err := utils.Exec("docker", "run", "-i", "--rm", "--privileged", "-v", fmt.Sprintf("%s:/image", outputDir),
+		"quay.io/luet/base", "util", "unpack", url, "/image"); err != nil {
+		return err
+	}
+
+	return nil
 }

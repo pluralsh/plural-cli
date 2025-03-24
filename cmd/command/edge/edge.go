@@ -97,6 +97,10 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Usage: "the board model",
 					Value: "rpi5",
 				},
+				cli.StringFlag{
+					Name:  "oci-url",
+					Usage: "push an image to the repository",
+				},
 			},
 		},
 		{
@@ -130,6 +134,22 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 					Name:     "chart-loc",
 					Usage:    "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.",
 					Required: false,
+				},
+			},
+		},
+		{
+			Name:   "download",
+			Action: p.handleEdgeDownload,
+			Usage:  "pull and extract the edge image",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:     "url",
+					Usage:    "the url of the image to download",
+					Required: true,
+				},
+				cli.StringFlag{
+					Name:  "to",
+					Usage: "the image destination path",
 				},
 			},
 		},
