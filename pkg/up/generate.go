@@ -24,7 +24,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "azure-core-infra", dir); err != nil { // TODO: Revert to main.
 		return
 	}
 
@@ -129,6 +129,7 @@ func (ctx *Context) afterSetup() error {
 	overwrites := []templatePair{
 		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "bootstrap/stacks/serviceaccount.yaml"},
 		{from: "bootstrap/stacks/mgmt.yaml", to: "bootstrap/stacks/mgmt.yaml"},
+		{from: "bootstrap/stacks/core-infra.yaml", to: "bootstrap/stacks/core-infra.yaml"},
 	}
 
 	ctx.Delims = nil
