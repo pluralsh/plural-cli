@@ -205,8 +205,8 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 	if err != nil {
 		return err
 	}
-	if alreadyExists && !common.Confirm("the deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
-		utils.Success("deployment operator is already installed, skip installation\n")
+	if alreadyExists && !common.Confirm("Deployment operator is already installed. Do you want to replace it", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
+		utils.Success("Deployment operator is already installed, skipping installation\n")
 		return nil
 	}
 
@@ -221,14 +221,26 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 
 	if p.ConsoleClient != nil {
 		settings, err := p.ConsoleClient.GetGlobalSettings()
+		if err != nil {
+			utils.Warn("Failed to get the the agent config from global settings, got error: %s", err.Error())
+		}
+		if err == nil && settings == nil {
+			utils.Warn("Failed to get the the agent config from global settings, got no error")
+		}
 		if err == nil && settings != nil {
 			version = strings.Trim(settings.AgentVsn, "v")
+			utils.Highlight("Using Agent v%s\n", version)
+
 			if settings.AgentHelmValues != nil {
 				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
 					return err
 				}
+			} else {
+				utils.Highlight("No additional Agent Helm values found\n")
 			}
 		}
+	} else {
+		utils.Warn("Console client not initialized, the agent config from global settings will not be used")
 	}
 
 	if values != "" {
@@ -239,7 +251,7 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 	vals = algorithms.Merge(vals, globalVals)
 	err = console.InstallAgent(url, token, console.OperatorNamespace, version, chart_loc, vals)
 	if err == nil {
-		utils.Success("deployment operator installed successfully\n")
+		utils.Success("Deployment operator installed successfully\n")
 	}
 	return err
 }

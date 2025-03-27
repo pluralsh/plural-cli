@@ -135,7 +135,9 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 	}
 
 	// we don't care if this fails to init as this command can be auth-less
-	_ = p.InitConsoleClient(consoleToken, consoleURL)
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		utils.Warn("Console client was not initialized, reason: %s", err.Error())
+	}
 
 	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"), c.String("chart-loc"))
 }
