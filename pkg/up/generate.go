@@ -24,7 +24,7 @@ func (ctx *Context) Generate() (dir string, err error) {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "azure-core-infra", dir); err != nil { // TODO: Revert to main.
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
 		return
 	}
 
