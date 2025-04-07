@@ -143,7 +143,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Usage:  "pull and extract the edge image",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:     "url",
+					Name:     "oci-url",
 					Usage:    "the url of the image to download",
 					Required: true,
 				},
