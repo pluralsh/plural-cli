@@ -2,7 +2,6 @@ package edge
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	containerdarchive "github.com/containerd/containerd/archive"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -313,15 +311,11 @@ func unpackImage(outputDir, ociUrl string) error {
 	defer func(reader io.ReadCloser) {
 		err := reader.Close()
 		if err != nil {
-			utils.Error(err.Error())
+			utils.Error("%s", err.Error())
 		}
 	}(reader)
 	go progress(done)
-	_, err = containerdarchive.Apply(context.Background(), outputDir, reader, containerdarchive.WithNoSameOwner())
-	if err != nil {
-		return err
-	}
-	return nil
+	return utils.Untar(outputDir, reader)
 }
 
 func progress(done <-chan struct{}) {
