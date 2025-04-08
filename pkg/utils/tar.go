@@ -2,177 +2,122 @@ package utils
 
 import (
 	"archive/tar"
-	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
-	"time"
-
-	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"sync"
 )
 
-func Tar(src string, w io.Writer, regex string) error {
-	// ensure the src actually exists before trying to tar it
-	dir := filepath.Dir(src)
-	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files: %w", err)
-	}
-
-	gzw := gzip.NewWriter(w)
-	defer func(gzw *gzip.Writer) {
-		_ = gzw.Close()
-	}(gzw)
-
-	tw := tar.NewWriter(gzw)
-	defer func(tw *tar.Writer) {
-		_ = tw.Close()
-	}(tw)
-
-	// walk path
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
-		if regex != "" {
-			matched, err := regexp.MatchString(regex, file)
-			if matched || err != nil {
-				return err
-			}
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if !fi.Mode().IsRegular() {
-			return nil
-		}
-
-		// create a new dir/file header
-		header, err := tar.FileInfoHeader(fi, fi.Name())
-		if err != nil {
-			return err
-		}
-		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, dir, ""), string(filepath.Separator))
-
-		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
-
-		f, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-
-		if _, err := io.Copy(tw, f); err != nil {
-			return err
-		}
-
-		if err := f.Close(); err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func Untar(r io.Reader, dir, relpath string) error {
-	return untar(r, dir, relpath)
-}
-
-func untar(r io.Reader, dir, relpath string) (err error) {
-	t0 := time.Now()
-	nFiles := 0
+func Untar(dst string, r io.Reader) error {
+	tr := tar.NewReader(r)
 	madeDir := map[string]bool{}
-	zr, err := gzip.NewReader(r)
-	if err != nil {
-		return fmt.Errorf("requires gzip-compressed body: %w", err)
-	}
-	tr := tar.NewReader(zr)
-	loggedChtimesError := false
 	for {
-		f, err := tr.Next()
-		if errors.Is(err, io.EOF) {
-			break
+		header, err := tr.Next()
+		switch {
+
+		// if no more files are found return
+		case err == io.EOF:
+			return nil
+
+		// return any other error
+		case err != nil:
+			return err
+
+		// if the header is nil, just skip it (not sure how this happens)
+		case header == nil:
+			continue
 		}
-		if err != nil {
-			return fmt.Errorf("tar error: %w", err)
+
+		// the target location where the dir/file should be created
+		target := filepath.Join(dst, header.Name)
+		// the following switch could also be done using fi.Mode(), not sure if there
+		// a benefit of using one vs. the other.
+		// fi := header.FileInfo()
+
+		// check the file type
+		switch header.Typeflag {
+
+		// if its a dir and it doesn't exist create it
+		case tar.TypeDir:
+			if err := makeDir(target, madeDir); err != nil {
+				return err
+			}
+
+		// if it's a file create it
+		case tar.TypeReg:
+			if err := makeDir(filepath.Dir(target), madeDir); err != nil {
+				return err
+			}
+
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				fmt.Println("could not open file")
+				return err
+			}
+
+			// copy over contents
+			_, err = copyBuffered(f, tr)
+			if err1 := f.Close(); err == nil {
+				err = err1
+			}
+			if err != nil {
+				return err
+			}
 		}
-		if !validRelPath(f.Name) {
-			return fmt.Errorf("tar contained invalid name error %q", f.Name)
-		}
-		rel, err := filepath.Rel(relpath, filepath.FromSlash(f.Name))
-		if err != nil {
+	}
+}
+
+func makeDir(target string, made map[string]bool) error {
+	if made[target] {
+		return nil
+	}
+
+	if _, err := os.Stat(target); err != nil {
+		if err := os.MkdirAll(target, 0755); err != nil {
 			return err
 		}
-		abs := pathing.SanitizeFilepath(filepath.Join(dir, rel))
-
-		fi := f.FileInfo()
-		mode := fi.Mode()
-		switch {
-		case mode.IsRegular():
-			// Make the directory. This is redundant because it should
-			// already be made by a directory entry in the tar
-			// beforehand. Thus, don't check for errors; the next
-			// write will fail with the same error.
-			dir := filepath.Dir(abs)
-			if !madeDir[dir] {
-				if err := os.MkdirAll(filepath.Dir(abs), 0755); err != nil {
-					return err
-				}
-				madeDir[dir] = true
-			}
-			wf, err := os.OpenFile(abs, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode.Perm())
-			if err != nil {
-				return err
-			}
-			n, err := io.Copy(wf, tr)
-			if closeErr := wf.Close(); closeErr != nil && err == nil {
-				err = closeErr
-			}
-			if err != nil {
-				return fmt.Errorf("error writing to %s: %w", abs, err)
-			}
-			if n != f.Size {
-				return fmt.Errorf("only wrote %d bytes to %s; expected %d", n, abs, f.Size)
-			}
-			modTime := f.ModTime
-			if modTime.After(t0) {
-				// Clamp modtimes at system time. See
-				// golang.org/issue/19062 when clock on
-				// buildlet was behind the gitmirror server
-				// doing the git-archive.
-				modTime = t0
-			}
-			if !modTime.IsZero() {
-				if err := os.Chtimes(abs, modTime, modTime); err != nil && !loggedChtimesError {
-					// benign error. Gerrit doesn't even set the
-					// modtime in these, and we don't end up relying
-					// on it anywhere (the gomote push command relies
-					// on digests only), so this is a little pointless
-					// for now.
-					log.Printf("error changing modtime: %v (further Chtimes errors suppressed)", err)
-					loggedChtimesError = true // once is enough
-				}
-			}
-			nFiles++
-		case mode.IsDir():
-			if err := os.MkdirAll(abs, 0755); err != nil {
-				return err
-			}
-			madeDir[abs] = true
-		default:
-			return fmt.Errorf("tar file entry %s contained unsupported file type %v", f.Name, mode)
-		}
 	}
+
+	made[target] = true
 	return nil
 }
 
-func validRelPath(p string) bool {
-	if p == "" || strings.Contains(p, `\`) || strings.HasPrefix(p, "/") || strings.Contains(p, "../") {
-		return false
+var bufPool = &sync.Pool{
+	New: func() interface{} {
+		buffer := make([]byte, 64*1024)
+		return &buffer
+	},
+}
+
+func copyBuffered(dst io.Writer, src io.Reader) (written int64, err error) {
+	buf := bufPool.Get().(*[]byte)
+	defer bufPool.Put(buf)
+
+	for {
+
+		nr, er := src.Read(*buf)
+		if nr > 0 {
+			nw, ew := dst.Write((*buf)[0:nr])
+			if nw > 0 {
+				written += int64(nw)
+			}
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
+			break
+		}
 	}
-	return true
+	return written, err
+
 }
