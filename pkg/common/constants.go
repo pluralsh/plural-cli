@@ -10,5 +10,5 @@ const (
 )
 
 var (
-	ErrUnlock = fmt.Errorf("could not decrypt your repo, this is likely due to using the wrong key at ~/.plural/key. The original key might be in a backup or on your previous machine.")
+	ErrUnlock = fmt.Errorf("could not decrypt your repo, this is likely due to using the wrong key at ~/.plural/key, the original key might be in a backup or on your previous machine")
 )

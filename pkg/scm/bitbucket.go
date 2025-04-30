@@ -61,12 +61,11 @@ func (b *Bitbucket) Setup() (Context, error) {
 	if err != nil {
 		return Context{}, err
 	}
-	emailAddress := ""
 	emailValues, ok := emails.(map[string]interface{})
 	if !ok {
 		return Context{}, fmt.Errorf("Can't find the user email address")
 	}
-	emailAddress, err = getEmailAddress(emailValues)
+	emailAddress, err := getEmailAddress(emailValues)
 	if err != nil {
 		return Context{}, err
 	}

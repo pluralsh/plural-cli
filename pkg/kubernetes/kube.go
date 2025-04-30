@@ -28,7 +28,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/kubectl/pkg/scheme"
@@ -60,7 +59,7 @@ type Kube interface {
 	Apply(path string, force bool) error
 	CreateNamespace(namespace string, managedByPlural bool) error
 	GetClient() *kubernetes.Clientset
-	GetRestClient() *restclient.RESTClient
+	GetRestClient() *rest.RESTClient
 }
 
 var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
@@ -71,10 +70,10 @@ type kube struct {
 	Dynamic    dynamic.Interface
 	Discovery  discovery.DiscoveryInterface
 	Mapper     *restmapper.DeferredDiscoveryRESTMapper
-	RestClient *restclient.RESTClient
+	RestClient *rest.RESTClient
 }
 
-func (k *kube) GetRestClient() *restclient.RESTClient {
+func (k *kube) GetRestClient() *rest.RESTClient {
 	return k.RestClient
 }
 

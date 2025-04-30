@@ -340,13 +340,13 @@ func (gcp *GCPProvider) validateEnabled() error {
 	ctx := context.Background()
 	c, err := serviceusage.NewClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Could not set up gcp client. Are your credentials valid?")
+		return fmt.Errorf("could not set up GCP client, check your credentials")
 	}
 	defer func(c *serviceusage.Client) {
 		_ = c.Close()
 	}(c)
 
-	errEnabled := fmt.Errorf("You don't have necessary services enabled. Please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console.")
+	errEnabled := fmt.Errorf("you don't have necessary services enabled, please run: `gcloud services enable serviceusage.googleapis.com cloudresourcemanager.googleapis.com container.googleapis.com` with an owner of the project to enable or enable them in the GCP console")
 	proj, err := gcp.getProject()
 	if err != nil {
 		utils.LogError().Println(err)

@@ -85,8 +85,8 @@ type jsonPrinter struct {
 	i any
 }
 
-func (this *jsonPrinter) PrettyPrint() {
-	s, _ := json.MarshalIndent(this.i, "", "  ")
+func (jp *jsonPrinter) PrettyPrint() {
+	s, _ := json.MarshalIndent(jp.i, "", "  ")
 	fmt.Println(string(s))
 }
 
@@ -94,8 +94,8 @@ type yamlPrinter struct {
 	i any
 }
 
-func (this *yamlPrinter) PrettyPrint() {
-	s, _ := yaml.Marshal(this.i)
+func (yp *yamlPrinter) PrettyPrint() {
+	s, _ := yaml.Marshal(yp.i)
 	fmt.Println(string(s))
 }
 

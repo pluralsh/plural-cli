@@ -14,7 +14,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
-	utiltest "github.com/pluralsh/plural-cli/pkg/test"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -381,7 +380,7 @@ func TestCheckKeyFingerprint(t *testing.T) {
 			_, err = common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 
-			utiltest.CheckFingerprint(t, keyFingerprint)
+			pluraltest.CheckFingerprint(t, keyFingerprint)
 		})
 	}
 }
