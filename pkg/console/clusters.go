@@ -18,7 +18,6 @@ func (c *consoleClient) GetProject(name string) (*consoleclient.ProjectFragment,
 }
 
 func (c *consoleClient) ListClusters() (*consoleclient.ListClusters, error) {
-
 	result, err := c.client.ListClusters(c.ctx, nil, nil, nil)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "ListClusters")
@@ -73,7 +72,6 @@ func (c *consoleClient) GetDeployToken(clusterId, clusterName *string) (string, 
 }
 
 func (c *consoleClient) UpdateCluster(id string, attr consoleclient.ClusterUpdateAttributes) (*consoleclient.UpdateCluster, error) {
-
 	result, err := c.client.UpdateCluster(c.ctx, id, attr)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "UpdateCluster")

@@ -50,7 +50,7 @@ func (p *Plural) aiHelp(c *cli.Context) error {
 		s.Prefix = "Thinking "
 		s.Start()
 
-		msg, err := p.Client.Chat(chat)
+		msg, err := p.Chat(chat)
 		if err != nil {
 			return err
 		}

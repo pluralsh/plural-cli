@@ -133,7 +133,6 @@ func TestConfigureEnvVariables(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			for k, v := range test.envVars {
 				os.Setenv(k, v)
 			}
@@ -169,7 +168,6 @@ func TestConfigureEnvVariables(t *testing.T) {
 
 			val := test.ctx[test.item.Name]
 			assert.Equal(t, test.expectedValue, fmt.Sprint(val))
-
 		})
 	}
 }
@@ -536,7 +534,6 @@ func TestEvaluateCondition(t *testing.T) {
 
 			val := test.ctx[test.item.Name]
 			assert.Equal(t, test.expectedValue, fmt.Sprint(val))
-
 		})
 	}
 }

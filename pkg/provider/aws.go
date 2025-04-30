@@ -159,7 +159,6 @@ func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
 
 func getAvailabilityZones(ctx context.Context, region string) ([]string, error) {
 	return fetchAZ(ctx, region, true)
-
 }
 
 func fetchAZ(context context.Context, region string, sorted bool) ([]string, error) {
@@ -227,7 +226,6 @@ func (p *AWSProvider) mkBucket(name string) error {
 	_, err := client.HeadBucket(*p.goContext, &s3.HeadBucketInput{Bucket: &name})
 
 	if err != nil {
-
 		bucket := &s3.CreateBucketInput{
 			Bucket: &name,
 		}
@@ -300,7 +298,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	svc := ec2.NewFromConfig(cfg)
 	instances, err := svc.DescribeInstances(*prov.goContext, &ec2.DescribeInstancesInput{
 		Filters: []ec2Types.Filter{
-			{Name: &name, Values: []string{node.ObjectMeta.Name}},
+			{Name: &name, Values: []string{node.Name}},
 		},
 	})
 

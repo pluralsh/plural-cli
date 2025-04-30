@@ -12,7 +12,7 @@ import (
 )
 
 func (p *Plural) backfillEncryption() error {
-	instances, err := p.Plural.Client.GetConsoleInstances()
+	instances, err := p.GetConsoleInstances()
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (p *Plural) backfillEncryption() error {
 
 	encoded := base64.StdEncoding.EncodeToString(raw)
 
-	return p.Plural.Client.UpdateConsoleInstance(id, gqlclient.ConsoleInstanceUpdateAttributes{
+	return p.UpdateConsoleInstance(id, gqlclient.ConsoleInstanceUpdateAttributes{
 		Configuration: &gqlclient.ConsoleConfigurationUpdateAttributes{
 			EncryptionKey: lo.ToPtr(encoded),
 		},

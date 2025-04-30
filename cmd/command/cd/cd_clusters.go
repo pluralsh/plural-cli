@@ -181,9 +181,10 @@ func (p *Plural) handleDescribeCluster(c *cli.Context) error {
 		return fmt.Errorf("existing cluster is empty")
 	}
 	output := c.String("o")
-	if output == "json" {
+	switch output {
+	case "json":
 		utils.NewJsonPrinter(existing).PrettyPrint()
-	} else if output == "yaml" {
+	case "yaml":
 		utils.NewYAMLPrinter(existing).PrettyPrint()
 	}
 	desc, err := console.DescribeCluster(existing)
@@ -330,7 +331,6 @@ func (p *Plural) handleCreateCluster(c *cli.Context) error {
 		id := providerMap[provider]
 		attr.ProviderID = &id
 	} else {
-
 		clusterProv, err := p.handleCreateProvider(toCreate.List())
 		if err != nil {
 			return err

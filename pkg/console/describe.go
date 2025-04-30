@@ -113,7 +113,6 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 		if service.Revision != nil {
 			w.Write(Level1, "Revision:\t\n")
 			w.Write(Level2, "Id:\t%s\n", service.Revision.ID)
-
 		}
 		if service.Kustomize != nil {
 			w.Write(Level0, "Kustomize:\t\n")
@@ -164,13 +163,11 @@ func DescribeService(service *consoleclient.ServiceDeploymentExtended) (string, 
 				w.Write(Level0, "Errors:\n  Source\tMessage\n")
 				w.Write(Level1, "----\t------\n")
 				for _, c := range service.Errors {
-
 					w.Write(Level1, "%v \t%v\n", c.Source, c.Message)
 				}
 			} else {
 				w.Write(Level0, "Errors: %s\n", "<none>")
 			}
-
 		}
 		return nil
 	})

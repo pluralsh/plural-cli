@@ -24,11 +24,10 @@ func KubeInit(_ *cli.Context) error {
 }
 
 func PrintListNodes(nodes *v1.NodeList) error {
-
 	headers := []string{"Name", "CPU", "Memory", "Region", "Zone"}
 	return utils.PrintTable(nodes.Items, headers, func(node v1.Node) ([]string, error) {
 		status := node.Status
-		labels := node.ObjectMeta.Labels
+		labels := node.Labels
 		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
 		return []string{
 			node.Name,

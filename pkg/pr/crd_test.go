@@ -40,7 +40,6 @@ func TestBuildCRD(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedCtx, prTemplate.Context)
 			assert.Equal(t, test.expectedCreateTemplateContext, prTemplate.Spec.Creates.Templates[0].Context)
-
 		})
 	}
 }

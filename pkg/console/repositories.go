@@ -30,7 +30,6 @@ func (c *consoleClient) ListRepositories() (*gqlclient.ListGitRepositories, erro
 }
 
 func (c *consoleClient) UpdateRepository(id string, attrs gqlclient.GitAttributes) (*gqlclient.UpdateGitRepository, error) {
-
 	res, err := c.client.UpdateGitRepository(c.ctx, id, attrs)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "UpdateGitRepository")
@@ -39,7 +38,6 @@ func (c *consoleClient) UpdateRepository(id string, attrs gqlclient.GitAttribute
 }
 
 func (c *consoleClient) GetRepository(id string) (*gqlclient.GetGitRepository, error) {
-
 	res, err := c.client.GetGitRepository(c.ctx, &id, nil)
 	if err != nil {
 		return nil, api.GetErrorResponse(err, "GetGitRepository")

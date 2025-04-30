@@ -67,9 +67,9 @@ func InstallAgent(url, token, namespace, version, helmChartLoc string, values ma
 	}
 
 	newInstallAction := action.NewInstall(helmConfig)
-	newInstallAction.ChartPathOptions.Version = version
+	newInstallAction.Version = version
 
-	cp, err := action.NewInstall(helmConfig).ChartPathOptions.LocateChart(chartLoc, settings)
+	cp, err := action.NewInstall(helmConfig).LocateChart(chartLoc, settings)
 	if err != nil {
 		return err
 	}

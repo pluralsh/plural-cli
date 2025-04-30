@@ -85,7 +85,7 @@ func (p *Plural) trustCommands() []cli.Command {
 
 func (p *Plural) handleListTrusts(c *cli.Context) error {
 	p.InitPluralClient()
-	me, err := p.Client.Me()
+	me, err := p.Me()
 	if err != nil {
 		return err
 	}
@@ -107,13 +107,13 @@ func (p *Plural) handleCreateTrust(c *cli.Context) error {
 		issuer = val
 	}
 
-	return p.Client.CreateTrust(issuer, trust)
+	return p.CreateTrust(issuer, trust)
 }
 
 func (p *Plural) handleDeleteTrust(c *cli.Context) error {
 	p.InitPluralClient()
 	id := c.Args().Get(0)
-	return p.Client.DeleteTrust(id)
+	return p.DeleteTrust(id)
 }
 
 func (p *Plural) handleOidcToken(c *cli.Context) error {
@@ -125,7 +125,7 @@ func (p *Plural) handleOidcToken(c *cli.Context) error {
 		return fmt.Errorf("Invalid oidc provider %s", prov)
 	}
 
-	token, err := p.Client.OidcToken(provider, token, email)
+	token, err := p.OidcToken(provider, token, email)
 	if err != nil {
 		return err
 	}

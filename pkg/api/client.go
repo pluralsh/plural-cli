@@ -84,7 +84,6 @@ func FromConfig(conf *config.Config) Client {
 		ctx:          context.Background(),
 		httpClient:   &httpClient,
 	}
-
 }
 
 func GetErrorResponse(err error, methodName string) error {

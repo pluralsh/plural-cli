@@ -445,7 +445,7 @@ func GetAzureAccount() (string, string, error) {
 	cmd := exec.Command("az", "account", "show")
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Println(out)
+		fmt.Println(string(out))
 		return "", "", err
 	}
 

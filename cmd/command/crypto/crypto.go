@@ -401,7 +401,7 @@ func (p *Plural) handleRecover(c *cli.Context) error {
 func (p *Plural) listBackups(c *cli.Context) error {
 	p.InitPluralClient()
 
-	backups, err := p.Client.ListKeyBackups()
+	backups, err := p.ListKeyBackups()
 	if err != nil {
 		return api.GetErrorResponse(err, "ListKeyBackups")
 	}

@@ -61,7 +61,7 @@ func ping(url string) error {
 	ping := fmt.Sprintf("Pinging %s...\n", url)
 	return retrier(ping, "Found status code 200, console up!\n", func() error {
 		resp, err := http.Get(url)
-		if err == nil && resp.StatusCode == 200 {
+		if err == nil && resp.StatusCode == http.StatusOK {
 			return nil
 		}
 

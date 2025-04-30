@@ -124,7 +124,6 @@ func (ctx *Context) DestroyNamespace(name string) error {
 	}
 
 	return nil
-
 }
 
 func runAll(cmds []terraformCmd) error {
