@@ -80,7 +80,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 	})
 
 	if len(workspaces) == 0 {
-		return Context{}, fmt.Errorf("You don't have a BitBucket project created, please create one and try again \n")
+		return Context{}, fmt.Errorf("you don't have a BitBucket project created, please create one and try again\n")
 	}
 
 	workspace := workspaces[0]
@@ -107,7 +107,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 
 	project := ""
 	if len(projects) == 0 {
-		return Context{}, fmt.Errorf("You don't have any Bitbucket project created. Please create one first \n")
+		return Context{}, fmt.Errorf("you don't have any Bitbucket project created, please create one first\n")
 	}
 
 	prompt := &survey.Select{

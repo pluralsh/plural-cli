@@ -65,7 +65,7 @@ func ping(url string) error {
 			return nil
 		}
 
-		return fmt.Errorf("Console failed to become ready after 5 minutes, you might want to inspect the resources in the plrl-console namespace")
+		return fmt.Errorf("console failed to become ready after 5 minutes, you might want to inspect the resources in the plrl-console namespace")
 	})
 }
 

@@ -145,7 +145,7 @@ func buildKubeFromConfig(config *rest.Config) (Kube, error) {
 	config.APIPath = "/api"
 	config.GroupVersion = &schema.GroupVersion{Group: "", Version: "v1"}
 	config.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{CodecFactory: scheme.Codecs}
-	restClient, err := restclient.RESTClientFor(config)
+	restClient, err := rest.RESTClientFor(config)
 	if err != nil {
 		return nil, err
 	}

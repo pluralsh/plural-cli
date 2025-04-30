@@ -178,17 +178,17 @@ e2e: --ensure-venom
 	TF_VAR_deletion_protection=false \
  		venom run -vv --html-report --format=json --output-dir testout test/plural
 
-.PHONY: format
-format: ## formats all go code to prep for linting
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v2.1.5 golangci-lint run --fix
-
 .PHONY: genmock
 genmock: ## generates mocks before running tests
 	hack/gen-client-mocks.sh
 
 .PHONY: lint
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v2.1.5 golangci-lint run
+	golangci-lint run ./...
+
+.PHONY: format
+format: ## formats all go code to prep for linting
+	golangci-lint run --fix ./...
 
 .PHONY: delete-tag
 delete-tag:

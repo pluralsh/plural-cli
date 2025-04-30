@@ -36,7 +36,7 @@ type Context struct {
 	Configuration map[string]map[string]interface{}
 }
 
-func (this *Context) MarshalJSON() ([]byte, error) {
+func (c *Context) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
@@ -47,12 +47,12 @@ func (this *Context) MarshalJSON() ([]byte, error) {
 		Globals       *Globals                          `yaml:"globals,omitempty" json:"globals,omitempty"`
 		Configuration map[string]map[string]interface{} `json:"configuration"`
 	}{
-		Buckets:       this.Buckets,
-		Domains:       this.Domains,
-		Protect:       this.Protect,
-		SMTP:          this.SMTP,
-		Globals:       this.Globals,
-		Configuration: this.Configuration,
+		Buckets:       c.Buckets,
+		Domains:       c.Domains,
+		Protect:       c.Protect,
+		SMTP:          c.SMTP,
+		Globals:       c.Globals,
+		Configuration: c.Configuration,
 	})
 }
 

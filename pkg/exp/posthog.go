@@ -12,35 +12,35 @@ type PostHogProvider struct {
 	email  string
 }
 
-func (this *PostHogProvider) IsFeatureEnabled(feature FeatureFlag) bool {
-	if enabled, exists := this.fromCache(feature); exists {
+func (php *PostHogProvider) IsFeatureEnabled(feature FeatureFlag) bool {
+	if enabled, exists := php.fromCache(feature); exists {
 		return enabled
 	}
 
-	isEnabled, err := this.client.IsFeatureEnabled(posthog.FeatureFlagPayload{
+	isEnabled, err := php.client.IsFeatureEnabled(posthog.FeatureFlagPayload{
 		Key:        string(feature),
-		DistinctId: this.email,
+		DistinctId: php.email,
 	})
 
 	if err != nil {
 		// We can cache it for the CLI to avoid retries
-		this.cache[feature] = false
+		php.cache[feature] = false
 		return false
 	}
 
-	this.cache[feature] = isEnabled
+	php.cache[feature] = isEnabled
 	return isEnabled
 }
 
-func (this *PostHogProvider) fromCache(feature FeatureFlag) (enabled, exists bool) {
-	enabled, exists = this.cache[feature]
+func (php *PostHogProvider) fromCache(feature FeatureFlag) (enabled, exists bool) {
+	enabled, exists = php.cache[feature]
 	return
 }
 
-func (this *PostHogProvider) init() Provider {
-	this.client = posthog.New()
-	this.email = config.Read().Email
-	this.cache = make(map[FeatureFlag]bool, 0)
+func (php *PostHogProvider) init() Provider {
+	php.client = posthog.New()
+	php.email = config.Read().Email
+	php.cache = make(map[FeatureFlag]bool, 0)
 
-	return this
+	return php
 }
