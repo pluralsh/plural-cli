@@ -14,8 +14,7 @@ import (
 
 func testDns(domain string) error {
 	ping := fmt.Sprintf("Querying %s...\n", domain)
-	success := "DNS fully resolved, testing if console is functional...\n"
-	return retrier(ping, success, func() error {
+	return retrier(ping, "DNS fully resolved, testing if console is functional...\n", func() error {
 		return doTestDns(domain)
 	})
 }
@@ -81,7 +80,7 @@ func retrier(retryMsg, successMsg string, f func() error) error {
 			fmt.Print(retryMsg)
 			err := f()
 			if err == nil {
-				utils.Success(successMsg) //nolint:govet
+				utils.Success("%s", successMsg)
 				done <- true
 				return
 			}
