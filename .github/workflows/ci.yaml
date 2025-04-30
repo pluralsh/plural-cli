@@ -31,9 +31,9 @@ jobs:
         with:
           go-version-file: go.mod
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: v1.62.2
+          version: v2.1.5
           skip-cache: true
 
   contract-validation:
