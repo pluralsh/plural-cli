@@ -35,19 +35,19 @@ func ReadPwd(prompt string) (string, error) {
 	return strings.TrimSpace(string(pwd)), err
 }
 
-func Warn(line string, args ...interface{}) {
+func Warn(line string, args ...any) {
 	_, _ = color.New(color.FgYellow, color.Bold).Fprintf(color.Error, line, args...)
 }
 
-func Success(line string, args ...interface{}) {
+func Success(line string, args ...any) {
 	_, _ = color.New(color.FgGreen, color.Bold).Printf(line, args...)
 }
 
-func Error(line string, args ...interface{}) {
+func Error(line string, args ...any) {
 	_, _ = color.New(color.FgRed, color.Bold).Fprintf(color.Error, line, args...)
 }
 
-func Highlight(line string, args ...interface{}) {
+func Highlight(line string, args ...any) {
 	_, _ = color.New(color.Bold).Printf(line, args...)
 }
 
@@ -82,7 +82,7 @@ type Printer interface {
 }
 
 type jsonPrinter struct {
-	i interface{}
+	i any
 }
 
 func (this *jsonPrinter) PrettyPrint() {
@@ -91,7 +91,7 @@ func (this *jsonPrinter) PrettyPrint() {
 }
 
 type yamlPrinter struct {
-	i interface{}
+	i any
 }
 
 func (this *yamlPrinter) PrettyPrint() {
@@ -99,10 +99,10 @@ func (this *yamlPrinter) PrettyPrint() {
 	fmt.Println(string(s))
 }
 
-func NewJsonPrinter(i interface{}) Printer {
+func NewJsonPrinter(i any) Printer {
 	return &jsonPrinter{i: i}
 }
 
-func NewYAMLPrinter(i interface{}) Printer {
+func NewYAMLPrinter(i any) Printer {
 	return &yamlPrinter{i: i}
 }
