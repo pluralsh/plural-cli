@@ -17,7 +17,7 @@ func AskCloudProviderSettings(provider string) (*gqlclient.CloudProviderSettings
 		if acs, err := askAWSCloudProviderSettings(); err != nil {
 			return nil, err
 		} else {
-			return &gqlclient.CloudProviderSettingsAttributes{Aws: acs}, nil
+			return &gqlclient.CloudProviderSettingsAttributes{AWS: acs}, nil
 		}
 	case api.ProviderAzure:
 		if acs, err := askAzureCloudProviderSettings(); err != nil {
@@ -29,14 +29,14 @@ func AskCloudProviderSettings(provider string) (*gqlclient.CloudProviderSettings
 		if gcs, err := askGCPCloudProviderSettings(); err != nil {
 			return nil, err
 		} else {
-			return &gqlclient.CloudProviderSettingsAttributes{Gcp: gcs}, nil
+			return &gqlclient.CloudProviderSettingsAttributes{GCP: gcs}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("unknown provider")
 }
 
-func askAWSCloudProviderSettings() (*gqlclient.AwsSettingsAttributes, error) {
+func askAWSCloudProviderSettings() (*gqlclient.AWSSettingsAttributes, error) {
 	awsSurvey := []*survey.Question{
 		{
 			Name:   "key",
@@ -54,7 +54,7 @@ func askAWSCloudProviderSettings() (*gqlclient.AwsSettingsAttributes, error) {
 	if err := survey.Ask(awsSurvey, &resp); err != nil {
 		return nil, err
 	}
-	return &gqlclient.AwsSettingsAttributes{
+	return &gqlclient.AWSSettingsAttributes{
 		AccessKeyID:     resp.Key,
 		SecretAccessKey: resp.Secret,
 	}, nil
@@ -96,7 +96,7 @@ func askAzureCloudProviderSettings() (*gqlclient.AzureSettingsAttributes, error)
 	}, nil
 }
 
-func askGCPCloudProviderSettings() (*gqlclient.GcpSettingsAttributes, error) {
+func askGCPCloudProviderSettings() (*gqlclient.GCPSettingsAttributes, error) {
 	applicationCredentialsFilePath := ""
 
 	prompt := &survey.Input{
@@ -106,7 +106,7 @@ func askGCPCloudProviderSettings() (*gqlclient.GcpSettingsAttributes, error) {
 		return nil, err
 	}
 
-	return &gqlclient.GcpSettingsAttributes{
+	return &gqlclient.GCPSettingsAttributes{
 		ApplicationCredentials: toCredentialsJSON(applicationCredentialsFilePath),
 	}, nil
 }
