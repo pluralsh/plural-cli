@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,7 +15,7 @@ import (
 
 func ReadLine(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
+	_, _ = color.New(color.Bold).Print(prompt)
 	res, err := reader.ReadString('\n')
 	return strings.TrimSpace(res), err
 }
@@ -29,7 +30,7 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 }
 
 func ReadPwd(prompt string) (string, error) {
-	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
+	_, _ = color.New(color.Bold).Print(prompt)
 	pwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 	return strings.TrimSpace(string(pwd)), err
 }
@@ -52,7 +53,7 @@ func Highlight(line string, args ...interface{}) {
 
 func HighlightError(err error) error {
 	if err != nil {
-		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error())) //nolint:all
+		err = errors.New(color.New(color.FgRed, color.Bold).Sprint(err.Error()))
 	}
 	return err
 }
