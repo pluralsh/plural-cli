@@ -9,7 +9,7 @@ on:
 env:
   GOPATH: /home/runner/go/
   GOPROXY: "https://proxy.golang.org"
-  REGISTRY_IMAGE: pluralsh/plural-cli
+  REGISTRY_IMAGE: ghcr.io/pluralsh/plural-cli
 jobs:
 
   test:
