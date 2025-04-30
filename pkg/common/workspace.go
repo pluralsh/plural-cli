@@ -12,7 +12,7 @@ import (
 func KubeInit(_ *cli.Context) error {
 	_, found := utils.ProjectRoot()
 	if !found {
-		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
+		return fmt.Errorf("project is not initialized, run `plural init` to set up a workspace")
 	}
 
 	prov, err := provider.GetProvider()

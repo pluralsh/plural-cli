@@ -101,7 +101,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	}
 
 	if len(account) == 0 {
-		err = plrlErrors.ErrorWrap(fmt.Errorf("Unable to find aws account id, is your aws cli configured?"), "AWS cli error:")
+		err = plrlErrors.ErrorWrap(fmt.Errorf("unable to find AWS account ID, make sure that your AWS CLI is configured"), "AWS cli error:")
 		return
 	}
 
@@ -348,5 +348,5 @@ func (aws *AWSProvider) testIamPermissions() error {
 		provUtils.FailedPermission(missed)
 	}
 
-	return fmt.Errorf("You do not meet all required iam permissions to deploy an eks cluster: %s\nThis is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
+	return fmt.Errorf("you do not meet all required iam permissions to deploy an eks cluster: %s, this is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
 }

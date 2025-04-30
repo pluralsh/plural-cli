@@ -62,7 +62,7 @@ type ProjectManifest struct {
 	Context           map[string]interface{}
 }
 
-func (this *ProjectManifest) MarshalJSON() ([]byte, error) {
+func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
@@ -77,16 +77,16 @@ func (this *ProjectManifest) MarshalJSON() ([]byte, error) {
 		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
 		Context           map[string]interface{} `json:"context"`
 	}{
-		Cluster:           this.Cluster,
-		Bucket:            this.Bucket,
-		Project:           this.Project,
-		Provider:          this.Provider,
-		Region:            this.Region,
-		Owner:             this.Owner,
-		Network:           this.Network,
-		AvailabilityZones: this.AvailabilityZones,
-		BucketPrefix:      this.BucketPrefix,
-		Context:           this.Context,
+		Cluster:           pm.Cluster,
+		Bucket:            pm.Bucket,
+		Project:           pm.Project,
+		Provider:          pm.Provider,
+		Region:            pm.Region,
+		Owner:             pm.Owner,
+		Network:           pm.Network,
+		AvailabilityZones: pm.AvailabilityZones,
+		BucketPrefix:      pm.BucketPrefix,
+		Context:           pm.Context,
 	})
 }
 

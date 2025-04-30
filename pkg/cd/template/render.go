@@ -23,7 +23,7 @@ func RenderYaml(path string, bindings map[string]interface{}) ([]byte, error) {
 		return template.RenderLiquid(content, bindings)
 	}
 
-	return content, fmt.Errorf("Not a .liquid or .tpl file")
+	return content, fmt.Errorf("not a .liquid or .tpl file")
 }
 
 func RenderService(path string, svc *console.ServiceDeploymentExtended) ([]byte, error) {

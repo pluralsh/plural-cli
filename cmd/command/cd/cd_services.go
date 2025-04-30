@@ -255,7 +255,7 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 			return err
 		}
 		if existing == nil {
-			return fmt.Errorf("Service %s does not exist", identifier)
+			return fmt.Errorf("service %s does not exist", identifier)
 		}
 
 		res, err := template.RenderService(c.String("file"), existing)
@@ -499,7 +499,7 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 		return err
 	}
 	if svc == nil {
-		return fmt.Errorf("Could not find service for %s", c.Args().Get(0))
+		return fmt.Errorf("could not find service for %s", c.Args().Get(0))
 	}
 
 	deleted, err := p.ConsoleClient.DeleteClusterService(svc.ID)
@@ -524,7 +524,7 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 		return err
 	}
 	if svc == nil {
-		return fmt.Errorf("Could not find service for %s", c.Args().Get(0))
+		return fmt.Errorf("could not find service for %s", c.Args().Get(0))
 	}
 	kick, err := p.ConsoleClient.KickClusterService(serviceId, serviceName, clusterName)
 	if err != nil {

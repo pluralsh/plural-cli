@@ -113,7 +113,7 @@ func probe(obj interface{}, path string) (interface{}, error) {
 		typed := val.(map[string]interface{})
 		value, ok := typed[key]
 		if !ok {
-			return nil, fmt.Errorf("Could not find %s", key)
+			return nil, fmt.Errorf("could not find %s", key)
 		}
 		val = value
 	}

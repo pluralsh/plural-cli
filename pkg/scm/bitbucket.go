@@ -63,7 +63,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 	}
 	emailValues, ok := emails.(map[string]interface{})
 	if !ok {
-		return Context{}, fmt.Errorf("Can't find the user email address")
+		return Context{}, fmt.Errorf("can't find the user email address")
 	}
 	emailAddress, err := getEmailAddress(emailValues)
 	if err != nil {
@@ -80,7 +80,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 	})
 
 	if len(workspaces) == 0 {
-		return Context{}, fmt.Errorf("you don't have a BitBucket project created, please create one and try again\n")
+		return Context{}, fmt.Errorf("you don't have a BitBucket project created, please create one and try again")
 	}
 
 	workspace := workspaces[0]
@@ -107,7 +107,7 @@ func (b *Bitbucket) Setup() (Context, error) {
 
 	project := ""
 	if len(projects) == 0 {
-		return Context{}, fmt.Errorf("you don't have any Bitbucket project created, please create one first\n")
+		return Context{}, fmt.Errorf("you don't have any Bitbucket project created, please create one first")
 	}
 
 	prompt := &survey.Select{
@@ -215,7 +215,7 @@ func getSSHAddress(links map[string]interface{}) (string, error) {
 		}
 	}
 	if sshAddress == "" {
-		return "", fmt.Errorf("Can't find the repository SSH address")
+		return "", fmt.Errorf("can't find the repository SSH address")
 	}
 	return sshAddress, nil
 }
@@ -240,7 +240,7 @@ func getEmailAddress(values map[string]interface{}) (string, error) {
 		}
 	}
 	if emailAddress == "" {
-		return "", fmt.Errorf("Can't find the user email address")
+		return "", fmt.Errorf("can't find the user email address")
 	}
 	return emailAddress, nil
 }

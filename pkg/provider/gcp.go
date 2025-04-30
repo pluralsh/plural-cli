@@ -350,7 +350,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	proj, err := gcp.getProject()
 	if err != nil {
 		utils.LogError().Println(err)
-		return fmt.Errorf("Could not find gcp project %s.  Was your authentication misconfigured?", gcp.Proj)
+		return fmt.Errorf("could not find gcp project %s, check your authentication configuration", gcp.Proj)
 	}
 
 	services := algorithms.Map([]string{
@@ -366,7 +366,7 @@ func (gcp *GCPProvider) validateEnabled() error {
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
 		utils.LogError().Println(err)
-		return fmt.Errorf("Could not fetch services information for project %s, does your service account have appropriate permissions?", gcp.Proj)
+		return fmt.Errorf("could not fetch services information for project %s, make sure your service account does have appropriate permissions", gcp.Proj)
 	}
 
 	missing := algorithms.Filter(resp.Services, func(svc *serviceusagepb.Service) bool {
@@ -431,7 +431,7 @@ func (gcp *GCPProvider) validatePermissions() error {
 		provUtils.FailedPermission(perm)
 	}
 
-	return fmt.Errorf("Your GCP user is missing permissions for project %s: %s\nIf you aren't comfortable granting these permissions, consider creating a separate GCP project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
+	return fmt.Errorf("your GCP user is missing permissions for project %s: %s, if you aren't comfortable granting these permissions, consider creating a separate GCP project for plural resources and adding required roles to your identity", proj.Name, strings.Join(missing, ", "))
 }
 
 func (gcp *GCPProvider) getProject() (*resourcemanagerpb.Project, error) {

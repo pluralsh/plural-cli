@@ -348,7 +348,7 @@ func handleKeygen(c *cli.Context) error {
 		err = survey.AskOne(input, &filename, survey.WithValidator(func(val interface{}) error {
 			name, _ := val.(string)
 			if utils.Exists(filepath.Join(path, name)) {
-				return fmt.Errorf("File ~/.ssh/%s already exists", name)
+				return fmt.Errorf("file ~/.ssh/%s already exists", name)
 			}
 
 			return nil

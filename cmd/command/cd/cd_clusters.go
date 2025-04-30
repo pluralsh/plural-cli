@@ -433,7 +433,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 			return err
 		}
 		if project == nil {
-			return fmt.Errorf("Could not find project %s", c.String("project"))
+			return fmt.Errorf("could not find project %s", c.String("project"))
 		}
 
 		attrs.ProjectID = lo.ToPtr(project.ID)

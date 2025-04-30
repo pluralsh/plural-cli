@@ -122,7 +122,7 @@ func (p *Plural) handleOidcToken(c *cli.Context) error {
 	token, email := c.String("token"), c.String("email")
 	provider := gqlclient.ExternalOidcProvider(strings.ToUpper(prov))
 	if !provider.IsValid() {
-		return fmt.Errorf("Invalid oidc provider %s", prov)
+		return fmt.Errorf("invalid OIDC provider %s", prov)
 	}
 
 	token, err := p.OidcToken(provider, token, email)

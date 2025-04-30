@@ -20,7 +20,7 @@ func (p *Plural) backfillEncryption() error {
 	conf := console.ReadConfig()
 
 	if conf.Url == "" {
-		return fmt.Errorf("You haven't configured your Plural Console client yet")
+		return fmt.Errorf("you haven't configured your Plural Console client yet")
 	}
 
 	var id string
@@ -30,7 +30,7 @@ func (p *Plural) backfillEncryption() error {
 		}
 	}
 	if id == "" {
-		return fmt.Errorf("Your configuration doesn't match to any existing Plural Console")
+		return fmt.Errorf("your configuration doesn't match to any existing Plural Console")
 	}
 
 	prov, err := crypto.Build()
