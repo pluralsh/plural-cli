@@ -146,7 +146,7 @@ func TestShare(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Some of the users [test@email.com] have no keys setup",
+			expectedError: "some of the users [test@email.com] have no keys setup",
 		},
 	}
 	for _, test := range tests {
