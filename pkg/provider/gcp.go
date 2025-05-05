@@ -466,7 +466,7 @@ func getInstanceAndGroupManager(ctx context.Context, c *compute.InstanceGroupMan
 			return "", "", err
 		}
 		for _, instance := range instances {
-			err, InstanceID := getPathElement(*instance.Instance, "instances")
+			InstanceID, err := getPathElement(*instance.Instance, "instances")
 			if err != nil {
 				return "", "", err
 			}
