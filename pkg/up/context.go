@@ -75,7 +75,7 @@ func (ctx *Context) Backfill() error {
 	}
 
 	if ctx.RepoUrl == "" {
-		return fmt.Errorf("You never configured a repoUrl for your workspace, check `context.yaml`")
+		return fmt.Errorf("you never configured a repoUrl for your workspace, check `context.yaml`")
 	}
 
 	return nil

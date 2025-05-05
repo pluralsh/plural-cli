@@ -69,7 +69,7 @@ func (c *AwsChecker) MissingPermissions() (result []string, err error) {
 	}
 
 	if rootRegex.MatchString(arn) {
-		err = fmt.Errorf("It looks like your aws identity %s is the root user of your account. Using the root user is highly insecure, we recommend creating an iam user and using that instead", arn)
+		err = fmt.Errorf("it looks like your aws identity %s is the root user of your account, using the root user is highly insecure, we recommend creating an iam user and using that instead", arn)
 		return
 	}
 

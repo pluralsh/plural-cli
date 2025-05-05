@@ -14,7 +14,7 @@ func AskCloudSettings(provider string) (*gqlclient.CloudSettingsAttributes, erro
 		if acs, err := askAWSCloudSettings(); err != nil {
 			return nil, err
 		} else {
-			return &gqlclient.CloudSettingsAttributes{Aws: acs}, nil
+			return &gqlclient.CloudSettingsAttributes{AWS: acs}, nil
 		}
 	case api.ProviderAzure:
 		if acs, err := askAzureCloudSettings(); err != nil {
@@ -26,14 +26,14 @@ func AskCloudSettings(provider string) (*gqlclient.CloudSettingsAttributes, erro
 		if gcs, err := askGCPCloudSettings(); err != nil {
 			return nil, err
 		} else {
-			return &gqlclient.CloudSettingsAttributes{Gcp: gcs}, nil
+			return &gqlclient.CloudSettingsAttributes{GCP: gcs}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("unknown provider")
 }
 
-func askAWSCloudSettings() (*gqlclient.AwsCloudAttributes, error) {
+func askAWSCloudSettings() (*gqlclient.AWSCloudAttributes, error) {
 	region := ""
 	prompt := &survey.Input{
 		Message: "Enter AWS region:",
@@ -41,7 +41,7 @@ func askAWSCloudSettings() (*gqlclient.AwsCloudAttributes, error) {
 	if err := survey.AskOne(prompt, &region, survey.WithValidator(survey.Required)); err != nil {
 		return nil, err
 	}
-	return &gqlclient.AwsCloudAttributes{
+	return &gqlclient.AWSCloudAttributes{
 		Region: &region,
 	}, nil
 }
@@ -82,7 +82,7 @@ func askAzureCloudSettings() (*gqlclient.AzureCloudAttributes, error) {
 	}, nil
 }
 
-func askGCPCloudSettings() (*gqlclient.GcpCloudAttributes, error) {
+func askGCPCloudSettings() (*gqlclient.GCPCloudAttributes, error) {
 	awsSurvey := []*survey.Question{
 		{
 			Name:   "project",
@@ -105,7 +105,7 @@ func askGCPCloudSettings() (*gqlclient.GcpCloudAttributes, error) {
 	if err := survey.Ask(awsSurvey, &resp); err != nil {
 		return nil, err
 	}
-	return &gqlclient.GcpCloudAttributes{
+	return &gqlclient.GCPCloudAttributes{
 		Project: &resp.Project,
 		Network: &resp.Network,
 		Region:  &resp.Region,

@@ -25,7 +25,7 @@ func git(root string, args ...string) (string, error) {
 func execute(cmd *exec.Cmd) (string, error) {
 	res, err := cmd.CombinedOutput()
 	if err != nil {
-		return string(res), fmt.Errorf("Command %s failed with output:\n\n%s", cmd.String(), res)
+		return string(res), fmt.Errorf("command %s failed with output:\n\n%s", cmd.String(), res)
 	}
 
 	return string(res), nil

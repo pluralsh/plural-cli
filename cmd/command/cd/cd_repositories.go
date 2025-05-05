@@ -82,7 +82,6 @@ func (p *Plural) handleListCDRepositories(_ *cli.Context) error {
 		}
 		return []string{r.Node.ID, r.Node.URL, health, lo.FromPtr(r.Node.Error)}, nil
 	})
-
 }
 
 func (p *Plural) handleGetCDRepository(c *cli.Context) error {

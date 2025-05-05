@@ -14,7 +14,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
-	utiltest "github.com/pluralsh/plural-cli/pkg/test"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -147,7 +146,7 @@ func TestShare(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Some of the users [test@email.com] have no keys setup",
+			expectedError: "some of the users [test@email.com] have no keys setup",
 		},
 	}
 	for _, test := range tests {
@@ -381,7 +380,7 @@ func TestCheckKeyFingerprint(t *testing.T) {
 			_, err = common.CaptureStdout(app, os.Args)
 			assert.NoError(t, err)
 
-			utiltest.CheckFingerprint(t, keyFingerprint)
+			pluraltest.CheckFingerprint(t, keyFingerprint)
 		})
 	}
 }

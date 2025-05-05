@@ -15,7 +15,6 @@ func Untar(dst string, r io.Reader) error {
 	for {
 		header, err := tr.Next()
 		switch {
-
 		// if no more files are found return
 		case err == io.EOF:
 			return nil
@@ -37,7 +36,6 @@ func Untar(dst string, r io.Reader) error {
 
 		// check the file type
 		switch header.Typeflag {
-
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
 			if err := makeDir(target, madeDir); err != nil {
@@ -95,7 +93,6 @@ func copyBuffered(dst io.Writer, src io.Reader) (written int64, err error) {
 	defer bufPool.Put(buf)
 
 	for {
-
 		nr, er := src.Read(*buf)
 		if nr > 0 {
 			nw, ew := dst.Write((*buf)[0:nr])
@@ -119,5 +116,4 @@ func copyBuffered(dst io.Writer, src io.Reader) (written int64, err error) {
 		}
 	}
 	return written, err
-
 }

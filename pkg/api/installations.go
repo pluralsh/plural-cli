@@ -23,7 +23,6 @@ func (client *client) GetInstallation(name string) (*Installation, error) {
 	}
 
 	return convertInstallation(resp.Installation), nil
-
 }
 
 func (client *client) CreateInstallation(id string) (string, error) {

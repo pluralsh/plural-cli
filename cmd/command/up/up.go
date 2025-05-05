@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural-cli/cmd/command/cd"
 	cdpkg "github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -162,7 +161,7 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	return
 }
 
-func getCluster(cd *cd.Plural) (id string, err error) {
+func getCluster(cd *cdpkg.Plural) (id string, err error) {
 	if cd == nil {
 		err = fmt.Errorf("your CLI is not logged into Plural, try running `plural login` to generate local credentials")
 		return

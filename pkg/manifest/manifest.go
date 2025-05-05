@@ -28,12 +28,12 @@ func ProjectManifestPath() string {
 	return pathing.SanitizeFilepath(filepath.Join(root, "workspace.yaml"))
 }
 
-func (pMan *ProjectManifest) Write(path string) error {
+func (pm *ProjectManifest) Write(path string) error {
 	versioned := &VersionedProjectManifest{
 		ApiVersion: "plural.sh/v1alpha1",
 		Kind:       "ProjectManifest",
-		Metadata:   &Metadata{Name: pMan.Cluster},
-		Spec:       pMan,
+		Metadata:   &Metadata{Name: pm.Cluster},
+		Spec:       pm,
 	}
 
 	io, err := yaml.Marshal(&versioned)
@@ -71,8 +71,8 @@ func ReadProject(path string) (man *ProjectManifest, err error) {
 	return
 }
 
-func (man *ProjectManifest) Flush() error {
-	return man.Write(ProjectManifestPath())
+func (pm *ProjectManifest) Flush() error {
+	return pm.Write(ProjectManifestPath())
 }
 
 func (man *Manifest) Write(path string) error {
@@ -91,9 +91,9 @@ func (man *Manifest) Write(path string) error {
 	return os.WriteFile(path, io, 0644)
 }
 
-func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {
-	pMan.BucketPrefix = cluster
-	pMan.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
+func (pm *ProjectManifest) Configure(cloud bool, cluster string) Writer {
+	pm.BucketPrefix = cluster
+	pm.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
 
 	if !cloud {
 		answer := ""
@@ -105,17 +105,17 @@ func (pMan *ProjectManifest) Configure(cloud bool, cluster string) Writer {
 			return nil
 		}
 
-		pMan.BucketPrefix = answer
-		pMan.Bucket = fmt.Sprintf("%s-tf-state", answer)
-		if err := pMan.ConfigureNetwork(); err != nil {
+		pm.BucketPrefix = answer
+		pm.Bucket = fmt.Sprintf("%s-tf-state", answer)
+		if err := pm.ConfigureNetwork(); err != nil {
 			return nil
 		}
 	}
-	return func() error { return pMan.Write(ProjectManifestPath()) }
+	return func() error { return pm.Write(ProjectManifestPath()) }
 }
 
-func (pMan *ProjectManifest) ConfigureNetwork() error {
-	if pMan.Network != nil {
+func (pm *ProjectManifest) ConfigureNetwork() error {
+	if pm.Network != nil {
 		return nil
 	}
 
@@ -129,7 +129,7 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 
 		client := api.NewClient()
 		if err := client.CreateDomain(d); err != nil {
-			return fmt.Errorf("Domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
+			return fmt.Errorf("domain %s is taken or your user doesn't have sufficient permissions to create domains", val)
 		}
 
 		return nil
@@ -137,7 +137,7 @@ func (pMan *ProjectManifest) ConfigureNetwork() error {
 		return err
 	}
 
-	pMan.Network = &NetworkConfig{Subdomain: domain(subdomain), PluralDns: true}
+	pm.Network = &NetworkConfig{Subdomain: domain(subdomain), PluralDns: true}
 
 	return nil
 }

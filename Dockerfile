@@ -3,7 +3,7 @@ FROM ubuntu:22.10 AS user
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
 
-FROM golang:1.23-alpine3.19 AS builder
+FROM golang:1.24-alpine3.21 AS builder
 
 WORKDIR /workspace
 
@@ -31,7 +31,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     -X "github.com/pluralsh/plural-cli/pkg/common.Date=${APP_DATE}"' \
     -o plural ./cmd/plural
 
-FROM golang:1.23.4-alpine3.20 AS final
+FROM golang:1.24.2-alpine3.21 AS final
 
 WORKDIR /
 

@@ -104,11 +104,11 @@ func configuration(pr *v1alpha1.PrAutomation, contextFile string) (map[string]in
 		}
 		if t.Condition != nil {
 			condition := &api.Condition{
-				Field:     t.Condition.Field,
-				Operation: t.Condition.Operation.String(),
+				Field:     t.Field,
+				Operation: t.String(),
 			}
-			if t.Condition.Value != nil {
-				condition.Value = *t.Condition.Value
+			if t.Value != nil {
+				condition.Value = *t.Value
 			}
 			ci.Condition = condition
 		}
@@ -224,7 +224,6 @@ func creates(pr *v1alpha1.PrAutomation) *CreateSpec {
 			} else {
 				utils.Error("Failed to unmarshal PrAutomationTemplate context: %v \n", err)
 			}
-
 		}
 		prCreates.Templates = append(prCreates.Templates, createTemplate)
 	}

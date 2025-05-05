@@ -311,15 +311,15 @@ func (az *AzureProvider) Decommision(node *v1.Node) error {
 	}
 
 	// azure:///subscriptions/xxx/resourceGroups/yyy/providers/Microsoft.Compute/virtualMachineScaleSets/zzz/virtualMachines/0
-	err, resourceGroup := getPathElement(node.Spec.ProviderID, "resourceGroups")
+	resourceGroup, err := getPathElement(node.Spec.ProviderID, "resourceGroups")
 	if err != nil {
 		return err
 	}
-	err, virtualMachineScaleSet := getPathElement(node.Spec.ProviderID, "virtualMachineScaleSets")
+	virtualMachineScaleSet, err := getPathElement(node.Spec.ProviderID, "virtualMachineScaleSets")
 	if err != nil {
 		return err
 	}
-	err, InstanceID := getPathElement(node.Spec.ProviderID, "virtualMachines")
+	InstanceID, err := getPathElement(node.Spec.ProviderID, "virtualMachines")
 	if err != nil {
 		return err
 	}
@@ -361,7 +361,7 @@ func (az *AzureProvider) getStorageAccount(account string) (*armstorage.Account,
 
 		for _, sa := range nextResult.Value {
 			if *sa.Name == account {
-				err, resourceGroup := getPathElement(*sa.ID, "resourceGroups")
+				resourceGroup, err := getPathElement(*sa.ID, "resourceGroups")
 				if err != nil {
 					return nil, fmt.Errorf("failed to read Storage Account's Resource Group: %w", err)
 				}
@@ -445,7 +445,7 @@ func GetAzureAccount() (string, string, error) {
 	cmd := exec.Command("az", "account", "show")
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Println(out)
+		fmt.Println(string(out))
 		return "", "", err
 	}
 
@@ -478,16 +478,16 @@ func inNotFoundStorageAccount(err error) bool {
 	return false
 }
 
-func getPathElement(path, indexName string) (error, string) {
+func getPathElement(path, indexName string) (string, error) {
 	pattern := fmt.Sprintf(`.*\/%s\/(?P<element>([\w'-]+))`, indexName)
 	captureGroupRegex := regexp.MustCompile(pattern)
 	match := captureGroupRegex.FindStringSubmatch(path)
 	if match != nil {
 		index := captureGroupRegex.SubexpIndex("element")
 		if index >= 0 {
-			return nil, match[index]
+			return match[index], nil
 		}
 	}
 
-	return fmt.Errorf("%s not found", indexName), ""
+	return "", fmt.Errorf("%s not found", indexName)
 }

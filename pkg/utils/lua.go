@@ -20,7 +20,6 @@ func MapLua(tbl *lua.LTable, st interface{}) error {
 
 // NewMapper returns a new mapper.
 func NewMapper() *Mapper {
-
 	return &Mapper{}
 }
 

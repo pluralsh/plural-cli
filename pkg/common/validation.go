@@ -19,11 +19,11 @@ func RequireArgs(fn func(*cli.Context) error, args []string) func(*cli.Context) 
 	return func(c *cli.Context) error {
 		nargs := c.NArg()
 		if nargs > len(args) {
-			return fmt.Errorf("Too many args passed to %s.  Try running --help to see usage.", c.Command.FullName())
+			return fmt.Errorf("too many args passed to %s, try running --help to see usage", c.Command.FullName())
 		}
 
 		if nargs < len(args) {
-			return fmt.Errorf("Not enough arguments provided: needs %s. Try running --help to see usage.", args[nargs])
+			return fmt.Errorf("not enough arguments provided, needs %s, try running --help to see usage", args[nargs])
 		}
 
 		return fn(c)

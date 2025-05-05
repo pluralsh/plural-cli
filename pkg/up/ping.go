@@ -14,8 +14,7 @@ import (
 
 func testDns(domain string) error {
 	ping := fmt.Sprintf("Querying %s...\n", domain)
-	success := "DNS fully resolved, testing if console is functional...\n"
-	return retrier(ping, success, func() error {
+	return retrier(ping, "DNS fully resolved, testing if console is functional...\n", func() error {
 		return doTestDns(domain)
 	})
 }
@@ -62,11 +61,11 @@ func ping(url string) error {
 	ping := fmt.Sprintf("Pinging %s...\n", url)
 	return retrier(ping, "Found status code 200, console up!\n", func() error {
 		resp, err := http.Get(url)
-		if err == nil && resp.StatusCode == 200 {
+		if err == nil && resp.StatusCode == http.StatusOK {
 			return nil
 		}
 
-		return fmt.Errorf("Console failed to become ready after 5 minutes, you might want to inspect the resources in the plrl-console namespace")
+		return fmt.Errorf("console failed to become ready after 5 minutes, you might want to inspect the resources in the plrl-console namespace")
 	})
 }
 
@@ -81,7 +80,7 @@ func retrier(retryMsg, successMsg string, f func() error) error {
 			fmt.Print(retryMsg)
 			err := f()
 			if err == nil {
-				utils.Success(successMsg) //nolint:govet
+				utils.Success("%s", successMsg)
 				done <- true
 				return
 			}

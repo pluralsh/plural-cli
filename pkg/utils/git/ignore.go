@@ -35,7 +35,7 @@ func AppendGitIgnore(dir string, entries []string) (err error) {
 			continue
 		}
 
-		if _, err = f.WriteString(fmt.Sprintf("%s\n", entry)); err != nil {
+		if _, err = fmt.Fprintf(f, "%s\n", entry); err != nil {
 			return err
 		}
 	}

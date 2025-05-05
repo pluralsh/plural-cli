@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,7 +15,7 @@ import (
 
 func ReadLine(prompt string) (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
+	_, _ = color.New(color.Bold).Print(prompt)
 	res, err := reader.ReadString('\n')
 	return strings.TrimSpace(res), err
 }
@@ -29,30 +30,30 @@ func ReadLineDefault(prompt string, def string) (string, error) {
 }
 
 func ReadPwd(prompt string) (string, error) {
-	_, _ = color.New(color.Bold).Printf(prompt) //nolint:govet
+	_, _ = color.New(color.Bold).Print(prompt)
 	pwd, err := term.ReadPassword(int(os.Stdin.Fd()))
 	return strings.TrimSpace(string(pwd)), err
 }
 
-func Warn(line string, args ...interface{}) {
+func Warn(line string, args ...any) {
 	_, _ = color.New(color.FgYellow, color.Bold).Fprintf(color.Error, line, args...)
 }
 
-func Success(line string, args ...interface{}) {
+func Success(line string, args ...any) {
 	_, _ = color.New(color.FgGreen, color.Bold).Printf(line, args...)
 }
 
-func Error(line string, args ...interface{}) {
+func Error(line string, args ...any) {
 	_, _ = color.New(color.FgRed, color.Bold).Fprintf(color.Error, line, args...)
 }
 
-func Highlight(line string, args ...interface{}) {
+func Highlight(line string, args ...any) {
 	_, _ = color.New(color.Bold).Printf(line, args...)
 }
 
 func HighlightError(err error) error {
 	if err != nil {
-		err = fmt.Errorf(color.New(color.FgRed, color.Bold).Sprint(err.Error())) //nolint:all
+		err = errors.New(color.New(color.FgRed, color.Bold).Sprint(err.Error()))
 	}
 	return err
 }
@@ -81,27 +82,27 @@ type Printer interface {
 }
 
 type jsonPrinter struct {
-	i interface{}
+	i any
 }
 
-func (this *jsonPrinter) PrettyPrint() {
-	s, _ := json.MarshalIndent(this.i, "", "  ")
+func (jp *jsonPrinter) PrettyPrint() {
+	s, _ := json.MarshalIndent(jp.i, "", "  ")
 	fmt.Println(string(s))
 }
 
 type yamlPrinter struct {
-	i interface{}
+	i any
 }
 
-func (this *yamlPrinter) PrettyPrint() {
-	s, _ := yaml.Marshal(this.i)
+func (yp *yamlPrinter) PrettyPrint() {
+	s, _ := yaml.Marshal(yp.i)
 	fmt.Println(string(s))
 }
 
-func NewJsonPrinter(i interface{}) Printer {
+func NewJsonPrinter(i any) Printer {
 	return &jsonPrinter{i: i}
 }
 
-func NewYAMLPrinter(i interface{}) Printer {
+func NewYAMLPrinter(i any) Printer {
 	return &yamlPrinter{i: i}
 }

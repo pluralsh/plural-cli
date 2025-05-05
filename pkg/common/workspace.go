@@ -12,7 +12,7 @@ import (
 func KubeInit(_ *cli.Context) error {
 	_, found := utils.ProjectRoot()
 	if !found {
-		return fmt.Errorf("Project not initialized, run `plural init` to set up a workspace")
+		return fmt.Errorf("project is not initialized, run `plural init` to set up a workspace")
 	}
 
 	prov, err := provider.GetProvider()
@@ -24,11 +24,10 @@ func KubeInit(_ *cli.Context) error {
 }
 
 func PrintListNodes(nodes *v1.NodeList) error {
-
 	headers := []string{"Name", "CPU", "Memory", "Region", "Zone"}
 	return utils.PrintTable(nodes.Items, headers, func(node v1.Node) ([]string, error) {
 		status := node.Status
-		labels := node.ObjectMeta.Labels
+		labels := node.Labels
 		cpu, mem := status.Capacity["cpu"], status.Capacity["memory"]
 		return []string{
 			node.Name,

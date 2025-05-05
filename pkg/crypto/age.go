@@ -139,7 +139,7 @@ func SetupAge(client api.Client, emails []string) error {
 
 		missingEmails := findMissingKeyForEmail(emails, keys)
 		if len(missingEmails) > 0 {
-			return fmt.Errorf("Some of the users %v have no keys setup", missingEmails)
+			return fmt.Errorf("some of the users %v have no keys setup", missingEmails)
 		}
 
 		idents := algorithms.Map(keys, func(key *api.PublicKey) *AgeIdentity { return &AgeIdentity{Key: key.Content, Email: key.User.Email} })
@@ -290,7 +290,7 @@ func identityFromString(contents string) (*age.X25519Identity, error) {
 		return age.ParseX25519Identity(line)
 	}
 
-	return nil, fmt.Errorf("No identity found")
+	return nil, fmt.Errorf("no identity found")
 }
 
 func generateIdentity(path string) (*age.X25519Identity, error) {

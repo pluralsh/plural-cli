@@ -12,7 +12,7 @@ import (
 )
 
 func (p *Plural) backfillEncryption() error {
-	instances, err := p.Plural.Client.GetConsoleInstances()
+	instances, err := p.GetConsoleInstances()
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func (p *Plural) backfillEncryption() error {
 	conf := console.ReadConfig()
 
 	if conf.Url == "" {
-		return fmt.Errorf("You haven't configured your Plural Console client yet")
+		return fmt.Errorf("you haven't configured your Plural Console client yet")
 	}
 
 	var id string
@@ -30,7 +30,7 @@ func (p *Plural) backfillEncryption() error {
 		}
 	}
 	if id == "" {
-		return fmt.Errorf("Your configuration doesn't match to any existing Plural Console")
+		return fmt.Errorf("your configuration doesn't match to any existing Plural Console")
 	}
 
 	prov, err := crypto.Build()
@@ -45,7 +45,7 @@ func (p *Plural) backfillEncryption() error {
 
 	encoded := base64.StdEncoding.EncodeToString(raw)
 
-	return p.Plural.Client.UpdateConsoleInstance(id, gqlclient.ConsoleInstanceUpdateAttributes{
+	return p.UpdateConsoleInstance(id, gqlclient.ConsoleInstanceUpdateAttributes{
 		Configuration: &gqlclient.ConsoleConfigurationUpdateAttributes{
 			EncryptionKey: lo.ToPtr(encoded),
 		},

@@ -112,7 +112,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 			return err
 		}
 		if proj.Network != nil && proj.Network.PluralDns {
-			if err := p.Client.CreateDomain(proj.Network.Subdomain); err != nil {
+			if err := p.CreateDomain(proj.Network.Subdomain); err != nil {
 				return err
 			}
 		}
@@ -146,7 +146,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return api.GetErrorResponse(err, "Me")
 	}
 	if me.Demoing {
-		return fmt.Errorf("You're currently running a gcp demo cluster. Spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation")
+		return fmt.Errorf("you're currently running a gcp demo cluster, spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation")
 	}
 
 	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !common.Affirm("This repository's workspace.yaml already exists. Would you like to use it?", "PLURAL_INIT_AFFIRM_CURRENT_REPO") {
@@ -201,7 +201,7 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 	if err != nil {
 		return err
 	}
-	alreadyExists, err := console.IsAlreadyAgentInstalled(p.Kube.GetClient())
+	alreadyExists, err := console.IsAlreadyAgentInstalled(p.GetClient())
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 		return nil
 	}
 
-	err = p.Kube.CreateNamespace(console.OperatorNamespace, false)
+	err = p.CreateNamespace(console.OperatorNamespace, false)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}

@@ -21,9 +21,9 @@ type posthogClient struct {
 	client      http.Client
 }
 
-func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, error) {
+func (pc *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, error) {
 	values := posthog.DecideRequestData{
-		ApiKey:     this.config.APIKey,
+		ApiKey:     pc.config.APIKey,
 		DistinctId: payload.DistinctId,
 		PersonProperties: posthog.Properties{
 			"email": payload.DistinctId,
@@ -34,7 +34,7 @@ func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, e
 		return false, err
 	}
 
-	resp, err := this.client.Post(this.decideEndpoint(), this.contentType, bytes.NewBuffer(data))
+	resp, err := pc.client.Post(pc.decideEndpoint(), pc.contentType, bytes.NewBuffer(data))
 	if err != nil {
 		return false, err
 	}
@@ -61,8 +61,8 @@ func (this *posthogClient) IsFeatureEnabled(payload FeatureFlagPayload) (bool, e
 	}
 }
 
-func (this *posthogClient) decideEndpoint() string {
-	return fmt.Sprintf("https://%s/decide/?v=3", this.config.Endpoint)
+func (pc *posthogClient) decideEndpoint() string {
+	return fmt.Sprintf("https://%s/decide/?v=3", pc.config.Endpoint)
 }
 
 func New() Client {

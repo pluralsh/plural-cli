@@ -38,13 +38,13 @@ func TestSetupAge(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Some of the users [test-1@plural.sh] have no keys setup",
+			expectedError: "some of the users [test-1@plural.sh] have no keys setup",
 		},
 		{
 			name:          `when all users have no keys setup`,
 			emails:        []string{"test@plural.sh", "test-1@plural.sh"},
 			keys:          []*api.PublicKey{},
-			expectedError: "Some of the users [test@plural.sh test-1@plural.sh] have no keys setup",
+			expectedError: "some of the users [test@plural.sh test-1@plural.sh] have no keys setup",
 		},
 		{
 			name:   `append user to identities.yaml`,

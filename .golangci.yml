@@ -1,27 +1,45 @@
+version: "2"
 run:
-  timeout: 10m
-  issues-exit-code: 1
-  tests: true
+  modules-download-mode: readonly
+  allow-parallel-runners: true
 linters:
-  disable-all: true
+  default: none
   enable:
-  # default linters
-  - errcheck
-  - gosimple
-  - govet
-  - ineffassign
-  - staticcheck
-  - typecheck
-  - unused
-
-  # additional linters
-  - errorlint
-  - errname
-  - gocyclo
-  - goimports
-  - misspell
-  - gofmt
-  - importas
-  - goconst
-  - gocritic
-  - misspell
+    - copyloopvar
+    - errcheck
+    - errname
+    - errorlint
+    - goconst
+    - gocritic
+    - gocyclo
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - prealloc
+    - staticcheck
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
