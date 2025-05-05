@@ -31,7 +31,7 @@ func CheckLatestVersion(currentVersion string) {
 	if err != nil {
 		return
 	}
-	var versions Versions
+	versions := make(Versions, 0, len(releases))
 	for _, r := range releases {
 		v, err := semverlib.NewVersion(*r.TagName)
 		if err != nil {
