@@ -49,6 +49,29 @@ func fetchVendoredAgentChart(consoleURL string) (string, string, error) {
 	return directory, agentChartPath, nil
 }
 
+func getRepositoryAgentChart(install *action.Install) (*chart.Chart, error) {
+	if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
+		return nil, err
+	}
+
+	chartName := fmt.Sprintf("%s/%s", ReleaseName, ChartName)
+	path, err := install.LocateChart(chartName, cli.New())
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.Load(path)
+}
+
+func getCustomAgentChart(install *action.Install, url string) (*chart.Chart, error) {
+	cp, err := install.LocateChart(url, cli.New())
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.Load(cp)
+}
+
 func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	dl, err := k8sClient.AppsV1().Deployments("").List(context.Background(), metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=deployment-operator",
@@ -68,40 +91,48 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 }
 
 func InstallAgent(consoleURL, token, namespace, version, helmChartLoc string, values map[string]interface{}) error {
-	settings := cli.New()
-	vals := map[string]interface{}{
+	vals := algorithms.Merge(map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
 		"consoleUrl": consoleURL,
-	}
-	vals = algorithms.Merge(vals, values)
+	}, values)
 
 	config, err := helm.GetActionConfig(namespace)
 	if err != nil {
 		return err
 	}
 
-	chartLoc := fmt.Sprintf("%s/%s", ReleaseName, ChartName)
-	if helmChartLoc == "" {
-		fmt.Println("Adding default Repo for deployment operator chart:", RepoUrl)
-		if err := helm.AddRepo(ReleaseName, RepoUrl); err != nil {
+	install := action.NewInstall(config)
+	install.Version = version
+
+	var chart *chart.Chart
+	if helmChartLoc != "" {
+		fmt.Println("using custom Helm chart: ", helmChartLoc)
+		chart, err = getCustomAgentChart(install, helmChartLoc)
+		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println("Using custom helm chart url:", chartLoc)
-		chartLoc = helmChartLoc
-	}
-
-	newInstallAction := action.NewInstall(config)
-	newInstallAction.Version = version
-
-	cp, err := action.NewInstall(config).LocateChart(chartLoc, settings)
-	if err != nil {
-		return err
-	}
-
-	chart, err := loader.Load(cp)
-	if err != nil {
-		return err
+		workingDir, chartPath, err := fetchVendoredAgentChart(consoleURL)
+		if workingDir != "" {
+			defer func(path string) {
+				if err := os.RemoveAll(path); err != nil {
+					panic(fmt.Sprintf("could not remove temporary working directory, got error: %s", err))
+				}
+			}(workingDir)
+		}
+		if err != nil {
+			fmt.Printf("using default repo as vendored agent chart could not be fetched, got error: %s\n", err)
+			chart, err = getRepositoryAgentChart(install)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("using vendored agent chart")
+			chart, err = loader.Load(chartPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	histClient := action.NewHistory(config)
