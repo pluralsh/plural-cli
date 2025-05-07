@@ -3,11 +3,15 @@ package console
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/pluralsh/plural-cli/pkg/helm"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/algorithms"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -24,6 +28,26 @@ const (
 	RepoUrl           = "https://pluralsh.github.io/deployment-operator"
 	OperatorNamespace = "plrl-deploy-operator"
 )
+
+func fetchVendoredAgentChart(consoleURL string) (string, string, error) {
+	parsedConsoleURL, err := url.Parse(consoleURL)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot parse console URL: %s", err.Error())
+	}
+
+	directory, err := os.MkdirTemp("", "agent-chart-")
+	if err != nil {
+		return directory, "", fmt.Errorf("cannot create directory: %s", err.Error())
+	}
+
+	agentChartURL := fmt.Sprintf("https://%s/ext/v1/agent/chart", parsedConsoleURL.Host)
+	agentChartPath := filepath.Join(directory, "agent-chart.tgz")
+	if err = utils.DownloadFile(agentChartPath, agentChartURL); err != nil {
+		return directory, "", fmt.Errorf("cannot download agent chart: %s", err.Error())
+	}
+
+	return directory, agentChartPath, nil
+}
 
 func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	dl, err := k8sClient.AppsV1().Deployments("").List(context.Background(), metav1.ListOptions{
