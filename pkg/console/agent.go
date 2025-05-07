@@ -10,6 +10,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/helm"
 	"github.com/pluralsh/polly/algorithms"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -42,15 +43,15 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	return false, nil
 }
 
-func InstallAgent(url, token, namespace, version, helmChartLoc string, values map[string]interface{}) error {
+func InstallAgent(consoleURL, token, namespace, version, helmChartLoc string, values map[string]interface{}) error {
 	settings := cli.New()
 	vals := map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
-		"consoleUrl": url,
+		"consoleUrl": consoleURL,
 	}
 	vals = algorithms.Merge(vals, values)
 
-	helmConfig, err := helm.GetActionConfig(namespace)
+	config, err := helm.GetActionConfig(namespace)
 	if err != nil {
 		return err
 	}
@@ -66,10 +67,10 @@ func InstallAgent(url, token, namespace, version, helmChartLoc string, values ma
 		chartLoc = helmChartLoc
 	}
 
-	newInstallAction := action.NewInstall(helmConfig)
+	newInstallAction := action.NewInstall(config)
 	newInstallAction.Version = version
 
-	cp, err := action.NewInstall(helmConfig).LocateChart(chartLoc, settings)
+	cp, err := action.NewInstall(config).LocateChart(chartLoc, settings)
 	if err != nil {
 		return err
 	}
@@ -79,26 +80,32 @@ func InstallAgent(url, token, namespace, version, helmChartLoc string, values ma
 		return err
 	}
 
-	histClient := action.NewHistory(helmConfig)
+	histClient := action.NewHistory(config)
 	histClient.Max = 5
+	_, err = histClient.Run(ReleaseName)
 
-	if _, err = histClient.Run(ReleaseName); errors.Is(err, driver.ErrReleaseNotFound) {
-		fmt.Println("installing deployment operator...")
-		instClient := action.NewInstall(helmConfig)
-		instClient.Namespace = namespace
-		instClient.ReleaseName = ReleaseName
-		instClient.Timeout = time.Minute * 5
-		_, err = instClient.Run(chart, vals)
-		if err != nil {
-			return err
-		}
-		return nil
+	if errors.Is(err, driver.ErrReleaseNotFound) {
+		return installAgent(config, chart, namespace, vals)
 	}
+	return upgradeAgent(config, chart, namespace, vals)
+}
+
+func installAgent(config *action.Configuration, chart *chart.Chart, namespace string, values map[string]interface{}) error {
+	fmt.Println("installing deployment operator...")
+	instClient := action.NewInstall(config)
+	instClient.Namespace = namespace
+	instClient.ReleaseName = ReleaseName
+	instClient.Timeout = time.Minute * 5
+	_, err := instClient.Run(chart, values)
+	return err
+}
+
+func upgradeAgent(config *action.Configuration, chart *chart.Chart, namespace string, values map[string]interface{}) error {
 	fmt.Println("upgrading deployment operator...")
-	client := action.NewUpgrade(helmConfig)
+	client := action.NewUpgrade(config)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 5
-	_, err = client.Run(ReleaseName, chart, vals)
+	_, err := client.Run(ReleaseName, chart, values)
 	return err
 }
 
