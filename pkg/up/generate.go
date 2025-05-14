@@ -17,14 +17,14 @@ type templatePair struct {
 	cloudless bool
 }
 
-func (ctx *Context) Generate() (dir string, err error) {
+func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	dir, err = os.MkdirTemp("", "sampledir")
 	ctx.dir = dir
 	if err != nil {
 		return
 	}
 
-	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", "main", dir); err != nil {
+	if err = git.PathClone("https://github.com/pluralsh/bootstrap.git", gitRef, dir); err != nil {
 		return
 	}
 
