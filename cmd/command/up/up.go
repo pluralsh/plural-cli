@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/samber/lo"
+	"github.com/urfave/cli"
+
 	cdpkg "github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -12,8 +15,10 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
-	"github.com/samber/lo"
-	"github.com/urfave/cli"
+)
+
+const (
+	defaultBootstrapBranch = "main"
 )
 
 type Plural struct {
@@ -47,6 +52,11 @@ func Command(clients client.Plural) cli.Command {
 			cli.StringFlag{
 				Name:  "commit",
 				Usage: "commits your changes with this message",
+			},
+			cli.StringFlag{
+				Name:  "git-ref",
+				Usage: "branch or tag name to use for cloning the bootstrap repository",
+				Value: defaultBootstrapBranch,
 			},
 		},
 		Action: common.LatestVersion(p.handleUp),
@@ -110,7 +120,8 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	dir, err := ctx.Generate()
+	gitRef := lo.Ternary(len(c.String("git-ref")) > 0, c.String("git-ref"), defaultBootstrapBranch)
+	dir, err := ctx.Generate(gitRef)
 	defer func() { os.RemoveAll(dir) }()
 	if err != nil {
 		return err
