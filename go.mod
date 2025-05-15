@@ -30,7 +30,7 @@ require (
 	github.com/google/go-containerregistry v0.20.3
 	github.com/google/go-github/v45 v45.2.0
 	github.com/hashicorp/go-bexpr v0.1.14
-	github.com/ktrysmt/go-bitbucket v0.9.83
+	github.com/ktrysmt/go-bitbucket v0.9.85
 	github.com/likexian/doh v0.7.1
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 	github.com/mitchellh/go-homedir v1.1.0
