@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/samber/lo"
@@ -144,7 +145,7 @@ func mergeYaml(base, overlay []byte, merge ListMerge) ([]byte, error) {
 	}
 
 	options := []func(*mergo.Config){mergo.WithOverride, mergo.WithSliceDeepCopy}
-	if merge == ListMergeAppend {
+	if strings.ToUpper(string(merge)) == ListMergeAppend {
 		options = append(options, mergo.WithAppendSlice)
 	}
 
