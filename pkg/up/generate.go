@@ -68,6 +68,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		{from: ctx.path("setup"), to: "bootstrap"},
 		{from: ctx.path("templates"), to: "templates"},
 		{from: ctx.path("resources"), to: "resources"},
+		{from: ctx.path("services"), to: "services"},
 	}
 
 	for _, copy := range copies {

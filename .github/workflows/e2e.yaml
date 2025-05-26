@@ -1,7 +1,7 @@
 name: E2E
 on:
   schedule:
-    - cron: 0 0 * * 1-5 # At 00:00 on every day-of-week from Monday through Friday
+    - cron: 0 0 * * 1,3,5 # At 00:00 on Monday, Wednesday, and Friday
   workflow_dispatch:
 permissions:
   id-token: write
@@ -109,19 +109,15 @@ jobs:
           payload: |
             blocks:
             - type: section
-              text:
-                type: mrkdwn
-                text: "${{ github.workflow }} workflow finished."
-            - type: section
               fields:
               - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
               - type: mrkdwn
+                text: "*Workflow*\n`${{ github.workflow }}`"
+              - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
               - type: mrkdwn
-                text: "*Status*\n`${{ job.status }}`"
-              - type: mrkdwn
-                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                text: "*Status*\n`${{ job.status }}` ${{ job.status == 'success' && '✅' || '🚨' }}"
       - name: Upload artifacts to Slack on failure
         if: failure()
         uses: slackapi/slack-github-action@v2.0.0
@@ -214,19 +210,15 @@ jobs:
           payload: |
             blocks:
             - type: section
-              text:
-                type: mrkdwn
-                text: "${{ github.workflow }} workflow finished."
-            - type: section
               fields:
               - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
               - type: mrkdwn
+                text: "*Workflow*\n`${{ github.workflow }}`"
+              - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
               - type: mrkdwn
-                text: "*Status*\n`${{ job.status }}`"
-              - type: mrkdwn
-                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                text: "*Status*\n`${{ job.status }}` ${{ job.status == 'success' && '✅' || '🚨' }}"
       - name: Upload artifacts to Slack on failure
         if: failure()
         uses: slackapi/slack-github-action@v2.0.0
@@ -324,19 +316,15 @@ jobs:
           payload: |
             blocks:
             - type: section
-              text:
-                type: mrkdwn
-                text: "${{ github.workflow }} workflow finished."
-            - type: section
               fields:
               - type: mrkdwn
                 text: "*Repository*\n<https://github.com/${{ github.repository }}|${{ github.repository }}>"
               - type: mrkdwn
+                text: "*Workflow*\n`${{ github.workflow }}`"
+              - type: mrkdwn
                 text: "*Job*\n`${{ github.job }}`"
               - type: mrkdwn
-                text: "*Status*\n`${{ job.status }}`"
-              - type: mrkdwn
-                text: "*Pull request*\n<${{ github.event.pull_request.html_url }}|${{ github.event.pull_request.title }}>"
+                text: "*Status*\n`${{ job.status }}` ${{ job.status == 'success' && '✅' || '🚨' }}"
       - name: Upload artifacts to Slack on failure
         id: slack_message
         if: failure()
