@@ -58,6 +58,7 @@ type ProjectManifest struct {
 	Network      *NetworkConfig
 	BucketPrefix string `yaml:"bucketPrefix"`
 	Context      map[string]interface{}
+	AppDomain    string `yaml:"appDomain,omitempty"`
 }
 
 type VersionedManifest struct {
