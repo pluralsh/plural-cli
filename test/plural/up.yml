@@ -108,6 +108,9 @@ testcases:
     steps:
       - script: |
           cd {{ .directory }} ;\
+          echo "nameserver 1.1.1.1" | tee /etc/resolv.conf.DNSoverride ;\
+          ln -sf /etc/resolv.conf.DNSoverride /etc/resolv.conf ;\
+          cat /etc/resolv.conf ;\
           plural up --commit "Plural up e2e cluster"
         retry: 3
         delay: 5
