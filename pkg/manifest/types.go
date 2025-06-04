@@ -60,6 +60,7 @@ type ProjectManifest struct {
 	AvailabilityZones []string
 	BucketPrefix      string `yaml:"bucketPrefix"`
 	Context           map[string]interface{}
+	AppDomain         string `yaml:"appDomain,omitempty"`
 }
 
 func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
@@ -76,6 +77,7 @@ func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
 		AvailabilityZones []string               `json:"availabilityZones"`
 		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
 		Context           map[string]interface{} `json:"context"`
+		AppDomain         string                 `json:"appDomain,omitempty"`
 	}{
 		Cluster:           pm.Cluster,
 		Bucket:            pm.Bucket,
@@ -87,6 +89,7 @@ func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
 		AvailabilityZones: pm.AvailabilityZones,
 		BucketPrefix:      pm.BucketPrefix,
 		Context:           pm.Context,
+		AppDomain:         pm.AppDomain,
 	})
 }
 

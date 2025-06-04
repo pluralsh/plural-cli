@@ -69,10 +69,15 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		"RequireDB":      !ctx.Cloud,
 		"CloudCluster":   ctx.CloudCluster,
 		"Cloud":          ctx.Cloud,
+		"ClusterName":    cluster,
+		"ProjectID":      ctx.Provider.Project(),
 	}
 	if ctx.Manifest.Network != nil {
 		values["Subdomain"] = ctx.Manifest.Network.Subdomain
 		values["Network"] = ctx.Manifest.Network
+	}
+	if ctx.Manifest.AppDomain != "" {
+		values["AppDomain"] = ctx.Manifest.AppDomain
 	}
 
 	tpl := template.New("tpl")
