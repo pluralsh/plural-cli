@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/google/go-github/v45/github"
@@ -98,11 +99,20 @@ func (gh *Github) Setup() (con Context, err error) {
 	}
 
 	utils.Highlight("Setting up a read-write deploy key for this repo...\n")
-	_, _, err = gh.Client.Repositories.CreateKey(ctx, org, *repo.Name, &github.Key{
-		Key:      github.String(pub),
-		Title:    github.String("plural key"),
-		ReadOnly: github.Bool(false),
-	})
+	for i := 0; i < 3; i++ {
+		_, _, err = gh.Client.Repositories.CreateKey(ctx, org, *repo.Name, &github.Key{
+			Key:      github.String(pub),
+			Title:    github.String("plural key"),
+			ReadOnly: github.Bool(false),
+		})
+		if err == nil {
+			break
+		}
+
+		utils.Highlight("encountered an error generating, retrying...")
+		time.Sleep(time.Duration(time.Second))
+	}
+
 	if err != nil {
 		return
 	}
