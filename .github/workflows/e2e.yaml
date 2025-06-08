@@ -58,7 +58,7 @@ jobs:
           chmod +x ${{ env.AWS_NUKE_PATH }}
           aws-nuke version
       - name: Setup Go
-        uses: actions/setup-go@v4.1.0
+        uses: actions/setup-go@v4.2.1
         with:
           go-version-file: go.mod
       - name: Add GOBIN to PATH
@@ -162,7 +162,7 @@ jobs:
         with:
           version: '>= 363.0.0'
       - name: Setup Go
-        uses: actions/setup-go@v4.1.0
+        uses: actions/setup-go@v4.2.1
         with:
           go-version-file: go.mod
       - name: Add GOBIN to PATH
@@ -251,7 +251,7 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ${{ env.VENOM_VAR_gitRepoPrivateKeyPath }}
       - name: Setup Go
-        uses: actions/setup-go@v4.1.0
+        uses: actions/setup-go@v4.2.1
         with:
           go-version-file: go.mod
       - name: Add GOBIN to PATH
