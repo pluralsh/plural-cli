@@ -72,6 +72,10 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		{from: ctx.path("helm"), to: "helm"},
 	}
 
+	if ctx.Cloud {
+		copies = append(copies, templatePair{from: ctx.path("o11y"), to: "bootstrap/o11y"})
+	}
+
 	for _, copy := range copies {
 		if utils.Exists(copy.to) && !copy.overwrite {
 			continue
