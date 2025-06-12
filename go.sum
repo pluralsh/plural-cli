@@ -724,6 +724,14 @@ github.com/pluralsh/plural-operator v0.5.5 h1:57GxniNjUa3hpHgvFr9oDonFgvDUC8XDD5
 github.com/pluralsh/plural-operator v0.5.5/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
 github.com/pluralsh/polly v0.2.0 h1:i0Yu13Lwef9u7hyiqHLyDZhkT1G1uXcaK6Ph7EeXjxo=
 github.com/pluralsh/polly v0.2.0/go.mod h1:o+oi+FXNThipKNyZsqCemqwY0JdkvhEjQqi8aTw8l4M=
+github.com/pluralsh/polly v0.2.4 h1:OyxUq324sTE/ZM5AVUZAgeZCLxM77gfqlB6uIOGihFo=
+github.com/pluralsh/polly v0.2.4/go.mod h1:GpeJrbPW0XedsoTXYRPhS5mc6GqIYLocOaRRSsZGisQ=
+github.com/pluralsh/polly v0.2.5 h1:JO6rqZChuV+SQ4xry07XctZDW3DqYaWqEWsrio8k88A=
+github.com/pluralsh/polly v0.2.5/go.mod h1:GpeJrbPW0XedsoTXYRPhS5mc6GqIYLocOaRRSsZGisQ=
+github.com/pluralsh/polly v0.2.6 h1:BS2ubNJoXM2HwVEJxcgpew/j9ErYEzk91ArkqUavr5w=
+github.com/pluralsh/polly v0.2.6/go.mod h1:GpeJrbPW0XedsoTXYRPhS5mc6GqIYLocOaRRSsZGisQ=
+github.com/pluralsh/polly v0.2.7 h1:Sk0rW9jGH82jdCFGpz2B8X4qz+LcBxadl2ToUFoS9Q0=
+github.com/pluralsh/polly v0.2.7/go.mod h1:GpeJrbPW0XedsoTXYRPhS5mc6GqIYLocOaRRSsZGisQ=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

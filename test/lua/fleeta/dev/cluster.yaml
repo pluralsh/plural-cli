@@ -1,0 +1,6 @@
+spec:
+  region: us-east-2
+  nodes:
+  - name: node1
+    type: t3.small
+    count: 1

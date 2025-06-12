@@ -2,15 +2,18 @@ package cd
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
+	lua "github.com/yuin/gopher-lua"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/plural-cli/pkg/cd/template"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/containers"
+	"github.com/pluralsh/polly/luautils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -112,6 +115,25 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "file",
 					Usage: "The .liquid or .tpl file you want to attempt to template.",
+				},
+			},
+		},
+		{
+			Name:   "lua",
+			Action: p.handleLuaTemplate,
+			Usage:  "Templates a .lua file using the Plural defined lua engine and returns the result",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "lua-file",
+					Usage: "The .lua file you want to attempt to template.",
+				},
+				cli.StringFlag{
+					Name:  "context",
+					Usage: "A yaml context file to imitate the internal service template context",
+				},
+				cli.StringFlag{
+					Name:  "dir",
+					Usage: "The directory to run the lua script from, defaults to the current working directory",
 				},
 			},
 		},
@@ -275,6 +297,77 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 		return err
 	}
 	return printResult(res)
+}
+
+func (p *Plural) handleLuaTemplate(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	luaFile := c.String("lua-file")
+	context := c.String("context")
+	dir := c.String("dir")
+	if dir == "" {
+		dir = "."
+	}
+
+	if luaFile == "" {
+		return fmt.Errorf("expected --lua-file flag")
+	}
+
+	luaStr, err := utils.ReadFile(luaFile)
+	if err != nil {
+		return err
+	}
+
+	ctx := map[string]interface{}{}
+	if context != "" {
+		if err := utils.YamlFile(context, &ctx); err != nil {
+			return err
+		}
+	}
+
+	values := map[interface{}]interface{}{}
+	valuesFiles := []string{}
+
+	dir, err = filepath.Abs(dir)
+	if err != nil {
+		return err
+	}
+	proc := luautils.NewProcessor(dir)
+	defer proc.L.Close()
+
+	// Register global values and valuesFiles in Lua
+	valuesTable := proc.L.NewTable()
+	proc.L.SetGlobal("values", valuesTable)
+
+	valuesFilesTable := proc.L.NewTable()
+	proc.L.SetGlobal("valuesFiles", valuesFilesTable)
+	proc.L.SetGlobal("cluster", luautils.GoValueToLuaValue(proc.L, ctx["cluster"]))
+	proc.L.SetGlobal("configuration", luautils.GoValueToLuaValue(proc.L, ctx["configuration"]))
+	proc.L.SetGlobal("contexts", luautils.GoValueToLuaValue(proc.L, ctx["contexts"]))
+	proc.L.SetGlobal("imports", luautils.GoValueToLuaValue(proc.L, ctx["imports"]))
+
+	if err := proc.L.DoString(luaStr); err != nil {
+		return err
+	}
+
+	if err := luautils.MapLua(proc.L.GetGlobal("values").(*lua.LTable), &values); err != nil {
+		return err
+	}
+
+	if err := luautils.MapLua(proc.L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
+		return err
+	}
+
+	result := map[string]interface{}{
+		"values":      luautils.SanitizeValue(values),
+		"valuesFiles": valuesFiles,
+	}
+
+	utils.Highlight("Final lua output:\n\n")
+	utils.NewYAMLPrinter(result).PrettyPrint()
+	return nil
 }
 
 func (p *Plural) handleCloneClusterService(c *cli.Context) error {
