@@ -139,11 +139,18 @@ func (p *Plural) handlePipelineContextFromBlob(c *cli.Context) error {
 		return fmt.Errorf("no context provided")
 	}
 
-	raw := json.RawMessage(context)
+	var jsonObj interface{}
+	if err := json.Unmarshal([]byte(context), &jsonObj); err != nil {
+		return fmt.Errorf("invalid JSON context: %w", err)
+	}
+	raw, err := json.Marshal(jsonObj)
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON context: %w", err)
+	}
 
 	id := c.Args().Get(0)
 	attrs := client.PipelineContextAttributes{Context: string(raw)}
-	_, err := p.ConsoleClient.CreatePipelineContext(id, attrs)
+	_, err = p.ConsoleClient.CreatePipelineContext(id, attrs)
 	if err != nil {
 		return err
 	}
