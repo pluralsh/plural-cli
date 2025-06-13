@@ -180,6 +180,59 @@ func TestListCDServices(t *testing.T) {
 	}
 }
 
+func TestPipelineTrigger(t *testing.T) {
+	tests := []struct {
+		name          string
+		args          []string
+		expectedError string
+		result        *consoleclient.PipelineContextFragment
+	}{
+		{
+			name: "test trigger pipeline with context",
+			args: []string{plural.ApplicationName, "cd", "pipelines", "trigger", "pipeline-123", "--context", `{"key":"value"}`},
+			result: &consoleclient.PipelineContextFragment{
+				ID: "context-123",
+			},
+		},
+		{
+			name:          "test trigger pipeline without context",
+			args:          []string{plural.ApplicationName, "cd", "pipelines", "trigger", "pipeline-123"},
+			expectedError: "Required flag \"context\" not set",
+		},
+		{
+			name:          "test trigger pipeline with empty context",
+			args:          []string{plural.ApplicationName, "cd", "pipelines", "trigger", "pipeline-123", "--context", ""},
+			expectedError: "no context provided",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			client := mocks.NewConsoleClient(t)
+			if test.result != nil {
+				client.On("CreatePipelineContext", mock.AnythingOfType("string"), mock.AnythingOfType("client.PipelineContextAttributes")).Return(test.result, nil)
+			}
+
+			app := plural.CreateNewApp(&plural.Plural{
+				Plural: pluralclient.Plural{
+					ConsoleClient: client,
+				},
+				HelmConfiguration: nil,
+			})
+			app.HelpName = plural.ApplicationName
+			os.Args = test.args
+			err := app.Run(os.Args)
+
+			if test.expectedError != "" {
+				assert.Error(t, err)
+				assert.Equal(t, test.expectedError, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func captureStdout(app *cli.App, arg []string) (string, error) {
 	old := os.Stdout
 	r, w, _ := os.Pipe()
