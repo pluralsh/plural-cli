@@ -29,7 +29,7 @@ for _, file in ipairs(files) do
         end
         i = i - 1
     end
-    workset[file] = utils.merge(parent, asYaml)
+    workset[file] = utils.merge(parent, asYaml, "append")
     if workset[file].cluster then
         values[workset[file].cluster] = workset[file]
     end
