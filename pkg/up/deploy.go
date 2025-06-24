@@ -91,9 +91,15 @@ func (ctx *Context) Deploy(commit func() error) error {
 }
 
 func (ctx *Context) Destroy() error {
-	if err := ctx.DestroyNamespace("plural-runtime"); err != nil {
-		return err
+	utils.Highlight("Destroying management cluster terraform stack in terraform/mgmt...\n\n")
+	if ctx.Cloud {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/mgmt", cmd: "state", args: []string{"rm", "plural_cluster.mgmt"}},
+			{dir: "./terraform/mgmt", cmd: "destroy", args: []string{"-auto-approve"}, retries: 2},
+		})
 	}
+
 	return runAll([]terraformCmd{
 		{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 		{dir: "./terraform/mgmt", cmd: "destroy", args: []string{"-auto-approve"}, retries: 2},

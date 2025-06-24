@@ -17,9 +17,11 @@ type templatePair struct {
 	cloudless bool
 }
 
+//nolint:gocyclo
 func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	dir, err = os.MkdirTemp("", "sampledir")
 	ctx.dir = dir
+	hasDomain := ctx.Manifest.AppDomain != ""
 	if err != nil {
 		return
 	}
@@ -64,8 +66,8 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	copies := []templatePair{
 		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
 		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
-		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
 		{from: ctx.path("setup"), to: "bootstrap"},
+		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
 		{from: ctx.path("templates"), to: "templates"},
 		{from: ctx.path("resources"), to: "resources"},
 		{from: ctx.path("services"), to: "services"},
@@ -74,6 +76,10 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 	if ctx.Cloud {
 		copies = append(copies, templatePair{from: ctx.path("o11y"), to: "bootstrap/o11y"})
+	}
+
+	if hasDomain {
+		copies = append(copies, templatePair{from: ctx.path("network"), to: "bootstrap/network"})
 	}
 
 	for _, copy := range copies {
@@ -86,11 +92,35 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		}
 	}
 
-	if ctx.Cloud {
-		toRemove := []string{"bootstrap/console.yaml", "bootstrap/flux.yaml"}
-		for _, f := range toRemove {
-			os.Remove(f)
+	postTemplates := []templatePair{
+		{from: "terraform/core-infra/network.tf", to: "terraform/core-infra/network.tf"},
+	}
+
+	if hasDomain {
+		postTemplates = append(postTemplates, templatePair{from: "terraform/core-infra/dns.tf", to: "terraform/core-infra/dns.tf"})
+	}
+
+	for _, tpl := range postTemplates {
+		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			return
 		}
+	}
+
+	toRemove := make([]string, 0)
+	if ctx.Cloud {
+		toRemove = append(toRemove, "bootstrap/console.yaml")
+	}
+
+	if !hasDomain {
+		toRemove = append(toRemove, "terraform/core-infra/dns.tf")
+	}
+
+	if prov != "aws" {
+		toRemove = append(toRemove, "bootstrap/network/aws-load-balancer.yaml")
+	}
+
+	for _, f := range toRemove {
+		os.Remove(f)
 	}
 
 	ctx.changeDelims()

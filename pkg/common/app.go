@@ -8,12 +8,12 @@ import (
 	"github.com/urfave/cli"
 )
 
-func HandleDown(_ *cli.Context) error {
+func HandleDown(c *cli.Context) error {
 	if !Affirm(AffirmDown, "PLURAL_DOWN_AFFIRM_DESTROY") {
 		return fmt.Errorf("cancelled destroy")
 	}
 
-	ctx, err := up.Build(false)
+	ctx, err := up.Build(c.Bool("cloud"))
 	if err != nil {
 		return err
 	}
