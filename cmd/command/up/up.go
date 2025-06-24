@@ -11,6 +11,7 @@ import (
 	cdpkg "github.com/pluralsh/plural-cli/cmd/command/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -96,6 +97,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
+	if err := askAppDomain(); err != nil {
+		return err
+	}
+
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
@@ -169,6 +174,26 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 		return
 	}
 	url = clusterMap[name]
+	return
+}
+
+func askAppDomain() (err error) {
+	var domain string
+	prompt := &survey.Input{
+		Message: "Enter the domain for your application.  It's expected that the root domain alreadys exist in your clouds DNS provider.  Leave empty to ignore",
+	}
+	if err = survey.AskOne(prompt, &domain); err != nil {
+		return
+	}
+
+	if domain != "" {
+		project, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
+		project.AppDomain = domain
+		return project.Flush()
+	}
 	return
 }
 
