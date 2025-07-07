@@ -32,7 +32,6 @@ steps:
         project: {{ .input.project }}
         provider: {{ .input.provider }}
         region: {{ .input.region }}
-        appDomain: {{ .input.name }}.onplural.sh
         owner:
           email: {{ .input.email }}
         network:

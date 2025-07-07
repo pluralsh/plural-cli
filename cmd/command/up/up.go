@@ -178,12 +178,8 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 }
 
 func askAppDomain() error {
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
-	if len(project.AppDomain) > 0 {
+	skip, ok := utils.GetEnvBoolValue("PLURAL_UP_SKIP_APP_DOMAIN")
+	if ok && skip {
 		return nil
 	}
 
@@ -196,6 +192,10 @@ func askAppDomain() error {
 	}
 
 	if len(domain) > 0 {
+		project, err := manifest.FetchProject()
+		if err != nil {
+			return err
+		}
 		project.AppDomain = domain
 		return project.Flush()
 	}

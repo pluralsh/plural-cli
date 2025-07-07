@@ -12,6 +12,7 @@ env:
   PLURAL_LOGIN_AFFIRM_CURRENT_USER: true
   PLURAL_UP_AFFIRM_DEPLOY: true
   PLURAL_DOWN_AFFIRM_DESTROY: true
+  PLURAL_UP_SKIP_APP_DOMAIN: true
   TESTOUT_PATH: /home/runner/testout
   SSH_PATH: /home/runner/.ssh
   VENOM_PATH: /usr/local/bin/venom
