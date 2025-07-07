@@ -45,9 +45,7 @@ func (g *GcpChecker) requiredPermissions() []string {
 		"container.pods.get",
 		// IAM service permissions
 		"iam.serviceAccounts.actAs",
-		"iam.serviceAccounts.getAccessToken",
 		"iam.serviceAccounts.create",
-		"iam.serviceAccounts.setIamPolicy",
 		// Storage service permissions
 		"storage.buckets.create",
 		"storage.buckets.setIamPolicy",
