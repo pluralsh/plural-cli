@@ -46,7 +46,6 @@ func (g *GcpChecker) requiredPermissions() []string {
 		// IAM service permissions
 		"iam.serviceAccounts.actAs",
 		"iam.serviceAccounts.create",
-		"iam.serviceAccounts.setIamPolicy",
 		// Storage service permissions
 		"storage.buckets.create",
 		"storage.buckets.setIamPolicy",
