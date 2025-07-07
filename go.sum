@@ -575,6 +575,8 @@ github.com/pluralsh/plural-operator v0.5.5 h1:57GxniNjUa3hpHgvFr9oDonFgvDUC8XDD5
 github.com/pluralsh/plural-operator v0.5.5/go.mod h1:WIXiz26/WDcUn0FA7Q1jPxmfsm98U1/JL8YpIdKVLX0=
 github.com/pluralsh/polly v0.3.0 h1:bAy+QCqHGNseCWaxwBRWM6sj7tNJNUpREoQ7vzxszOY=
 github.com/pluralsh/polly v0.3.0/go.mod h1:uPZ7V76dzahVot6m+MOA3Y9iY0oBBoHuzUYFkJ4DnsQ=
+github.com/pluralsh/polly v0.3.1 h1:uE4+xI3opn4a/doCyY3V8Wa1h1zN+7nOb3gnsKG0CvQ=
+github.com/pluralsh/polly v0.3.1/go.mod h1:uPZ7V76dzahVot6m+MOA3Y9iY0oBBoHuzUYFkJ4DnsQ=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

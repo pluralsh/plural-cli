@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
+	plrltpl "github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/polly/retry"
 )
@@ -80,7 +81,7 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		values["AppDomain"] = ctx.Manifest.AppDomain
 	}
 
-	tpl := template.New("tpl")
+	tpl := template.New("tpl").Funcs(plrltpl.GetFuncMap())
 	if ctx.Delims != nil {
 		tpl.Delims(ctx.Delims.left, ctx.Delims.right)
 	}

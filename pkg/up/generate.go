@@ -59,6 +59,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		}
 
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
 			return
 		}
 	}
@@ -102,6 +103,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 	for _, tpl := range postTemplates {
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
 			return
 		}
 	}
@@ -145,6 +147,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 				destFile = filepath.Join(tpl.to, destFile)
 				if err = ctx.templateFrom(file, destFile); err != nil {
+					err = fmt.Errorf("failed to template %s: %w", file, err)
 					return dir, err
 				}
 			}
@@ -171,6 +174,7 @@ func (ctx *Context) afterSetup() error {
 	ctx.Delims = nil
 	for _, tpl := range overwrites {
 		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
+			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
 			return err
 		}
 	}
