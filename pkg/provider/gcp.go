@@ -133,22 +133,28 @@ func getGcpProjects() ([]string, error) {
 	return algorithms.Map(resp.Projects, func(p *cloudresourcemanager.Project) string { return p.ProjectId }), nil
 }
 
-func GetGcpManagedZones(project string) ([]string, error) {
+func GetGcpManagedZones(project, dnsName string) ([]string, error) {
 	client, err := google.DefaultClient(context.Background(),
 		gcompute.ComputeScope)
 	if err != nil {
 		return nil, err
 	}
+
 	svc, err := dns.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := svc.ManagedZones.List(project).Do()
+	response, err := svc.ManagedZones.List(project).Do()
 	if err != nil {
 		return nil, err
 	}
-	return algorithms.Map(resp.ManagedZones, func(z *dns.ManagedZone) string { return z.Name }), nil
+
+	filteredZones := algorithms.Filter(response.ManagedZones, func(z *dns.ManagedZone) bool {
+		return strings.HasSuffix(z.DnsName, dnsName)
+	})
+
+	return algorithms.Map(filteredZones, func(z *dns.ManagedZone) string { return z.Name }), nil
 }
 
 func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
