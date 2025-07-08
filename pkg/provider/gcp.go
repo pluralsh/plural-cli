@@ -19,7 +19,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	gcompute "google.golang.org/api/compute/v1"
-	"google.golang.org/api/dns/v2"
+	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
@@ -133,7 +133,7 @@ func getGcpProjects() ([]string, error) {
 	return algorithms.Map(resp.Projects, func(p *cloudresourcemanager.Project) string { return p.ProjectId }), nil
 }
 
-func getGcpManagedZones(project, location string) ([]string, error) {
+func GetGcpManagedZones(project string) ([]string, error) {
 	client, err := google.DefaultClient(context.Background(),
 		gcompute.ComputeScope)
 	if err != nil {
@@ -144,7 +144,7 @@ func getGcpManagedZones(project, location string) ([]string, error) {
 		return nil, err
 	}
 
-	resp, err := svc.ManagedZones.List(project, location).Do()
+	resp, err := svc.ManagedZones.List(project).Do()
 	if err != nil {
 		return nil, err
 	}
