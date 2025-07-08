@@ -177,16 +177,21 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	return
 }
 
-func askAppDomain() (err error) {
-	var domain string
-	prompt := &survey.Input{
-		Message: "Enter the domain for your application.  It's expected that the root domain alreadys exist in your clouds DNS provider.  Leave empty to ignore",
-	}
-	if err = survey.AskOne(prompt, &domain); err != nil {
-		return
+func askAppDomain() error {
+	skip, ok := utils.GetEnvBoolValue("PLURAL_UP_SKIP_APP_DOMAIN")
+	if ok && skip {
+		return nil
 	}
 
-	if domain != "" {
+	var domain string
+	prompt := &survey.Input{
+		Message: "Enter the domain for your application.  It's expected that the root domain already exist in your clouds DNS provider.  Leave empty to ignore",
+	}
+	if err := survey.AskOne(prompt, &domain); err != nil {
+		return err
+	}
+
+	if len(domain) > 0 {
 		project, err := manifest.FetchProject()
 		if err != nil {
 			return err
@@ -194,7 +199,8 @@ func askAppDomain() (err error) {
 		project.AppDomain = domain
 		return project.Flush()
 	}
-	return
+
+	return nil
 }
 
 func getCluster(cd *cdpkg.Plural) (id string, err error) {
