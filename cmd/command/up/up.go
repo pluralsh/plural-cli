@@ -185,7 +185,7 @@ func askAppDomain() error {
 
 	var domain string
 	prompt := &survey.Input{
-		Message: "Enter the domain for your application.  It's expected that the root domain already exist in your clouds DNS provider.  Leave empty to ignore",
+		Message: "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:",
 	}
 	if err := survey.AskOne(prompt, &domain); err != nil {
 		return err
