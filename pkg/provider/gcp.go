@@ -19,6 +19,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	gcompute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/dns/v2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	v1 "k8s.io/api/core/v1"
@@ -130,6 +131,24 @@ func getGcpProjects() ([]string, error) {
 		return nil, err
 	}
 	return algorithms.Map(resp.Projects, func(p *cloudresourcemanager.Project) string { return p.ProjectId }), nil
+}
+
+func getGcpManagedZones(project, location string) ([]string, error) {
+	client, err := google.DefaultClient(context.Background(),
+		gcompute.ComputeScope)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := dns.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := svc.ManagedZones.List(project, location).Do()
+	if err != nil {
+		return nil, err
+	}
+	return algorithms.Map(resp.ManagedZones, func(z *dns.ManagedZone) string { return z.Name }), nil
 }
 
 func mkGCP(conf config.Config) (provider *GCPProvider, err error) {
