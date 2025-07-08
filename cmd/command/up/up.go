@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 
@@ -196,6 +197,29 @@ func askAppDomain() error {
 		if err != nil {
 			return err
 		}
+
+		if project.Provider == api.ProviderGCP {
+			managedZones, err := provider.GetGcpManagedZones(project.Project, domain)
+			if err != nil {
+				return err
+			}
+			if len(managedZones) == 0 {
+				return fmt.Errorf("no managed DNS zones found for domain %s in project %s", domain, project.Project)
+			}
+
+			var managedZone string
+			if len(managedZones) == 1 {
+				managedZone = managedZones[0]
+			} else {
+				if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: managedZones},
+					&managedZone, survey.WithValidator(survey.Required)); err != nil {
+					return err
+				}
+			}
+
+			project.Context["ManagedZone"] = managedZone
+		}
+
 		project.AppDomain = domain
 		return project.Flush()
 	}
