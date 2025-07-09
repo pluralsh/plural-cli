@@ -151,7 +151,7 @@ func GetGcpManagedZones(project, dnsName string) ([]string, error) {
 	}
 
 	filteredZones := algorithms.Filter(response.ManagedZones, func(z *dns.ManagedZone) bool {
-		return strings.Contains(z.DnsName, dnsName)
+		return z.DnsName == dnsName
 	})
 
 	return algorithms.Map(filteredZones, func(z *dns.ManagedZone) string { return z.Name }), nil
