@@ -137,7 +137,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	if err := ctx.Deploy(func() error {
-		utils.Highlight("\n==> Commit and push your configuration\n\n")
+		utils.Highlight("\n==> Enter a commit message to push your configuration\n\n")
 		if commit := common.CommitMsg(c); commit != "" {
 			utils.Highlight("Pushing upstream...\n")
 			return git.Sync(repoRoot, commit, c.Bool("force"))
