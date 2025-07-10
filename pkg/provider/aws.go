@@ -331,14 +331,16 @@ func GetAwsAccount(ctx context.Context) (string, error) {
 }
 
 func ValidateDomainRegistration(ctx context.Context, domain string) error {
-	domain = strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
-
 	cfg, err := getAwsConfig(ctx)
 	if err != nil {
 		return err
 	}
 
+	domain = strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
+
+	cfg.Region = "us-east-1" // Route53 is a global service, but AWS SDK requires a region to be set.
 	svc := route53.NewFromConfig(cfg)
+
 	var marker *string
 	for {
 		input := &route53.ListHostedZonesInput{}
@@ -353,7 +355,7 @@ func ValidateDomainRegistration(ctx context.Context, domain string) error {
 
 		for _, hz := range output.HostedZones {
 			if *hz.Name == domain {
-				return nil // Domain is registered.
+				return nil // Domain is registered, return without error.
 			}
 		}
 
