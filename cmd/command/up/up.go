@@ -210,7 +210,7 @@ func processAppDomain(domain string) error {
 	switch project.Provider {
 	case api.ProviderAWS:
 		// For AWS, we need to validate that the domain is set up in Route 53.
-		if err = provider.ValidateDomainRegistration(context.Background(), domain); err != nil {
+		if err = provider.ValidateDomainRegistration(context.Background(), domain, project.Region); err != nil {
 			return err
 		}
 	case api.ProviderAzure:

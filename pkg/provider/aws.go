@@ -330,7 +330,7 @@ func GetAwsAccount(ctx context.Context) (string, error) {
 	return *result.Account, nil
 }
 
-func ValidateDomainRegistration(ctx context.Context, domain string) error {
+func ValidateDomainRegistration(ctx context.Context, domain, region string) error {
 	cfg, err := getAwsConfig(ctx)
 	if err != nil {
 		return err
@@ -338,7 +338,7 @@ func ValidateDomainRegistration(ctx context.Context, domain string) error {
 
 	domain = strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
 
-	cfg.Region = "us-east-1" // Route53 is a global service, but AWS SDK requires a region to be set.
+	cfg.Region = region // Route53 is a global service, but AWS SDK requires a region to be set.
 	svc := route53.NewFromConfig(cfg)
 
 	var marker *string
