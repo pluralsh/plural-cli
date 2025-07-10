@@ -517,7 +517,8 @@ func ValidateAzureDomainRegistration(ctx context.Context, domain, resourceGroup 
 		return err
 	}
 
-	domain = strings.TrimSuffix(domain, ".")
+	d := strings.TrimSuffix(domain, ".")
+
 	pager := clients.Zones.NewListByResourceGroupPager(resourceGroup, nil)
 	for pager.More() {
 		resp, err := pager.NextPage(ctx)
@@ -525,7 +526,7 @@ func ValidateAzureDomainRegistration(ctx context.Context, domain, resourceGroup 
 			return err
 		}
 		for _, zone := range resp.Value {
-			if lo.FromPtr(zone.Name) == domain {
+			if lo.FromPtr(zone.Name) == d {
 				return nil // Domain is registered, return without error.
 			}
 		}

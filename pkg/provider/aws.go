@@ -337,7 +337,7 @@ func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) e
 		return err
 	}
 
-	domain = strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
+	d := strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
 
 	cfg.Region = region // Route53 is a global service, but AWS SDK requires a region to be set.
 	svc := route53.NewFromConfig(cfg)
@@ -355,7 +355,7 @@ func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) e
 		}
 
 		for _, hz := range output.HostedZones {
-			if lo.FromPtr(hz.Name) == domain {
+			if lo.FromPtr(hz.Name) == d {
 				return nil // Domain is registered, return without error.
 			}
 		}
