@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -17,10 +18,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
 	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -55,11 +58,16 @@ type SubscriptionClient interface {
 	NewListLocationsPager(subscriptionID string, options *armsubscription.SubscriptionsClientListLocationsOptions) *runtime.Pager[armsubscription.SubscriptionsClientListLocationsResponse]
 }
 
+type ZonesClient interface {
+	NewListByResourceGroupPager(resourceGroupName string, options *armdns.ZonesClientListByResourceGroupOptions) *runtime.Pager[armdns.ZonesClientListByResourceGroupResponse]
+}
+
 type ClientSet struct {
 	Subscriptions SubscriptionClient
 	Groups        ResourceGroupClient
 	Accounts      AccountsClient
 	Containers    ContainerClient
+	Zones         ZonesClient
 }
 
 func GetClientSet(subscriptionId string) (*ClientSet, error) {
@@ -83,10 +91,16 @@ func GetClientSet(subscriptionId string) (*ClientSet, error) {
 		return nil, err
 	}
 
+	zonesClient, err := armdns.NewZonesClient(subscriptionId, cred, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	return &ClientSet{
 		Subscriptions: subscriptionsClient,
 		Groups:        resourceGroupClient,
 		Accounts:      storageAccountsClient,
+		Zones:         zonesClient,
 	}, nil
 }
 
@@ -490,4 +504,32 @@ func getPathElement(path, indexName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("%s not found", indexName)
+}
+
+func ValidateAzureDomainRegistration(ctx context.Context, domain, resourceGroup string) error {
+	subId, _, err := GetAzureAccount()
+	if err != nil {
+		return err
+	}
+
+	clients, err := GetClientSet(subId)
+	if err != nil {
+		return err
+	}
+
+	domain = strings.TrimSuffix(domain, ".")
+	pager := clients.Zones.NewListByResourceGroupPager(resourceGroup, nil)
+	for pager.More() {
+		resp, err := pager.NextPage(ctx)
+		if err != nil {
+			return err
+		}
+		for _, zone := range resp.Value {
+			if lo.FromPtr(zone.Name) == domain {
+				return nil // Domain is registered, return without error.
+			}
+		}
+	}
+
+	return fmt.Errorf("domain %s not found", domain)
 }

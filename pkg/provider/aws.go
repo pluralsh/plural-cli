@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -330,7 +331,7 @@ func GetAwsAccount(ctx context.Context) (string, error) {
 	return *result.Account, nil
 }
 
-func ValidateDomainRegistration(ctx context.Context, domain, region string) error {
+func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) error {
 	cfg, err := getAwsConfig(ctx)
 	if err != nil {
 		return err
@@ -354,7 +355,7 @@ func ValidateDomainRegistration(ctx context.Context, domain, region string) erro
 		}
 
 		for _, hz := range output.HostedZones {
-			if *hz.Name == domain {
+			if lo.FromPtr(hz.Name) == domain {
 				return nil // Domain is registered, return without error.
 			}
 		}
