@@ -215,7 +215,7 @@ func processAppDomain(domain string) error {
 		}
 	case api.ProviderAzure:
 		// For Azure, we need to validate that the domain is set up in Azure DNS.
-		if err = provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Region); err != nil {
+		if err = provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
 			return err
 		}
 	case api.ProviderGCP:
