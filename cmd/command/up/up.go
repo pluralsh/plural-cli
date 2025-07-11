@@ -1,6 +1,7 @@
 package up
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -138,7 +139,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	if err := ctx.Deploy(func() error {
-		utils.Highlight("\n==> Commit and push your configuration\n\n")
+		utils.Highlight("\n==> Enter a commit message to push your configuration\n\n")
 		if commit := common.CommitMsg(c); commit != "" {
 			utils.Highlight("Pushing upstream...\n")
 			return git.Sync(repoRoot, commit, c.Bool("force"))
@@ -192,39 +193,60 @@ func askAppDomain() error {
 		return err
 	}
 
-	if len(domain) > 0 {
-		project, err := manifest.FetchProject()
+	return processAppDomain(domain)
+}
+
+func processAppDomain(domain string) error {
+	if lo.IsEmpty(domain) {
+		// No domain was provided, domain checks and setup can be skipped.
+		return nil
+	}
+
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	switch project.Provider {
+	case api.ProviderAWS:
+		// For AWS, we need to validate that the domain is set up in Route 53.
+		if err = provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
+			return err
+		}
+	case api.ProviderAzure:
+		// For Azure, we need to validate that the domain is set up in Azure DNS.
+		if err = provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
+			return err
+		}
+	case api.ProviderGCP:
+		// For GCP, besides just validating that the domain is set up,
+		// we also need to determine the managed DNS zone to use.
+		// If there is one it will be automatically selected, if there are multiple,
+		// the user will be prompted to select one.
+		managedZones, err := provider.GetGcpManagedZones(project.Project, domain)
 		if err != nil {
 			return err
 		}
-
-		if project.Provider == api.ProviderGCP {
-			managedZones, err := provider.GetGcpManagedZones(project.Project, domain)
-			if err != nil {
-				return err
-			}
-			if len(managedZones) == 0 {
-				return fmt.Errorf("no managed DNS zones found for domain %s in project %s", domain, project.Project)
-			}
-
-			var managedZone string
-			if len(managedZones) == 1 {
-				managedZone = managedZones[0]
-			} else {
-				if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: managedZones},
-					&managedZone, survey.WithValidator(survey.Required)); err != nil {
-					return err
-				}
-			}
-
-			project.Context["ManagedZone"] = managedZone
+		if len(managedZones) == 0 {
+			return fmt.Errorf("no managed DNS zones found for domain %s in project %s", domain, project.Project)
 		}
 
-		project.AppDomain = domain
-		return project.Flush()
+		var managedZone string
+		if len(managedZones) == 1 {
+			managedZone = managedZones[0]
+		} else {
+			if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: managedZones},
+				&managedZone, survey.WithValidator(survey.Required)); err != nil {
+				return err
+			}
+		}
+
+		project.Context["ManagedZone"] = managedZone
 	}
 
-	return nil
+	// Save the domain and other changes to the project manifest.
+	project.AppDomain = domain
+	return project.Flush()
 }
 
 func getCluster(cd *cdpkg.Plural) (id string, err error) {

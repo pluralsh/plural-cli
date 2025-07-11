@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -341,6 +342,45 @@ func GetAwsAccount(ctx context.Context) (string, error) {
 	}
 
 	return *result.Account, nil
+}
+
+func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) error {
+	cfg, err := getAwsConfig(ctx)
+	if err != nil {
+		return err
+	}
+
+	d := strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
+
+	cfg.Region = region // Route53 is a global service, but AWS SDK requires a region to be set.
+	svc := route53.NewFromConfig(cfg)
+
+	var marker *string
+	for {
+		input := &route53.ListHostedZonesInput{}
+		if marker != nil {
+			input.Marker = marker
+		}
+
+		output, err := svc.ListHostedZones(ctx, input)
+		if err != nil {
+			return plrlErrors.ErrorWrap(err, "Failed to list hosted zones: ")
+		}
+
+		for _, hz := range output.HostedZones {
+			if lo.FromPtr(hz.Name) == d {
+				return nil // Domain is registered, return without error.
+			}
+		}
+
+		if output.IsTruncated && output.NextMarker != nil {
+			marker = output.NextMarker
+		} else {
+			break
+		}
+	}
+
+	return fmt.Errorf("domain %s not found", domain)
 }
 
 func (aws *AWSProvider) testIamPermissions() error {
