@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -419,19 +417,8 @@ func GetAWSCallerIdentity(ctx context.Context) (string, error) {
 	}
 
 	callerIdentityArn := lo.FromPtr(callerIdentity.Arn)
-	parsedArn, err := arn.Parse(callerIdentityArn)
-	if err != nil {
-		return "", plrlErrors.ErrorWrap(err, "Error parsing caller identity ARN: ")
-	}
-
-	matcher := regexp.MustCompile(`^assumed-role/.+/.{2,}`)
-	if strings.EqualFold(parsedArn.Service, sts.ServiceID) && matcher.MatchString(parsedArn.Resource) {
-		split := strings.Split(parsedArn.Resource, "/")
-		if len(split) < 3 {
-			return "", fmt.Errorf("invalid assumed role ARN format: %s", parsedArn.Resource)
-		}
-
-		roleName := split[len(split)-2]
+	roleName, _ := RoleNameSessionFromARN(callerIdentityArn)
+	if !lo.IsEmpty(roleName) {
 		role, err := iam.NewFromConfig(cfg).GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
 		if err != nil {
 			return "", plrlErrors.ErrorWrap(err, "Error getting IAM role: ")
