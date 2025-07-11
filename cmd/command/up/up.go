@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -223,12 +224,15 @@ func processAppDomain(domain string) error {
 		// we also need to determine the managed DNS zone to use.
 		// If there is one it will be automatically selected, if there are multiple,
 		// the user will be prompted to select one.
-		managedZones, err := provider.GetGcpManagedZones(project.Project, domain)
+
+		d := strings.TrimSuffix(domain, ".") + "." // GCP stores zone names with a trailing dot.
+
+		managedZones, err := provider.GetGcpManagedZones(project.Project, d)
 		if err != nil {
 			return err
 		}
 		if len(managedZones) == 0 {
-			return fmt.Errorf("no managed DNS zones found for domain %s in project %s", domain, project.Project)
+			return fmt.Errorf("no managed DNS zones found for domain %s in project %s", d, project.Project)
 		}
 
 		var managedZone string
