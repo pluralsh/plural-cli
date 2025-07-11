@@ -71,7 +71,20 @@ var (
 )
 
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
-	provider = &AWSProvider{}
+	ctx := context.Background()
+
+	iamSession, err := GetAWSCallerIdentity(ctx)
+	if err != nil {
+		return nil, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
+	}
+
+	provider = &AWSProvider{
+		goContext: &ctx,
+		ctx: map[string]any{
+			"IAMSession": iamSession,
+		},
+	}
+
 	var awsSurvey = []*survey.Question{
 		{
 			Name:     "cluster",
@@ -88,10 +101,6 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	if err = survey.Ask(awsSurvey, provider); err != nil {
 		return
 	}
-
-	ctx := context.Background()
-
-	provider.goContext = &ctx
 
 	client, err := getClient(provider.Reg, *provider.goContext)
 	if err != nil {
@@ -122,6 +131,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Project:           provider.Project(),
 		Provider:          api.ProviderAWS,
 		Region:            provider.Region(),
+		Context:           provider.Context(),
 		AvailabilityZones: azones,
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
