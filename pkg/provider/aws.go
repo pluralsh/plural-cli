@@ -4,17 +4,21 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
@@ -349,4 +353,42 @@ func (aws *AWSProvider) testIamPermissions() error {
 	}
 
 	return fmt.Errorf("you do not meet all required iam permissions to deploy an eks cluster: %s, this is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
+}
+
+// GetAWSCallerIdentity returns the IAM role ARN of the current caller identity.
+func GetAWSCallerIdentity(ctx context.Context) (string, error) {
+	cfg, err := getAwsConfig(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	svc := sts.NewFromConfig(cfg)
+	callerIdentity, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "", plrlErrors.ErrorWrap(err, "Error getting caller identity: ")
+	}
+
+	callerIdentityArn := lo.FromPtr(callerIdentity.Arn)
+	parsedArn, err := arn.Parse(callerIdentityArn)
+	if err != nil {
+		return "", plrlErrors.ErrorWrap(err, "Error parsing caller identity ARN: ")
+	}
+
+	matcher := regexp.MustCompile(`^assumed-role/.+/.{2,}`)
+	if strings.EqualFold(parsedArn.Service, sts.ServiceID) && matcher.MatchString(parsedArn.Resource) {
+		split := strings.Split(parsedArn.Resource, "/")
+		if len(split) < 3 {
+			return "", fmt.Errorf("invalid assumed role ARN format: %s", parsedArn.Resource)
+		}
+
+		roleName := split[len(split)-2]
+		role, err := iam.NewFromConfig(cfg).GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+		if err != nil {
+			return "", plrlErrors.ErrorWrap(err, "Error getting IAM role: ")
+		}
+
+		return lo.FromPtr(role.Role.Arn), nil
+	}
+
+	return callerIdentityArn, nil
 }
