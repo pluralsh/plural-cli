@@ -134,8 +134,7 @@ func getGcpProjects() ([]string, error) {
 }
 
 func GetGcpManagedZones(project, dnsName string) ([]string, error) {
-	client, err := google.DefaultClient(context.Background(),
-		gcompute.ComputeScope)
+	client, err := google.DefaultClient(context.Background())
 	if err != nil {
 		return nil, err
 	}
