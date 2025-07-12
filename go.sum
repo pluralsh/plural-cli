@@ -124,6 +124,8 @@ github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63n
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
 github.com/ProtonMail/go-crypto v1.2.0 h1:+PhXXn4SPGd+qk76TlEePBfOfivE0zkWFenhGhFLzWs=
 github.com/ProtonMail/go-crypto v1.2.0/go.mod h1:9whxjD8Rbs29b4XWbB8irEcE8KHMqaR2e7GWU1R+/PE=
+github.com/YakDriver/regexache v0.24.0 h1:zUKaixelkswzdqsqPc2sveiV//Mi/msJn0teG8zBDiA=
+github.com/YakDriver/regexache v0.24.0/go.mod h1:awcd8uBj614F3ScW06JqlfSGqq2/7vdJHy+RiKzVC+g=
 github.com/Yamashou/gqlgenc v0.32.1 h1:EHs9//xQxXlyltkSFXM+fhO2rTXcWNw6FPKRJ6t+iQQ=
 github.com/Yamashou/gqlgenc v0.32.1/go.mod h1:o5SxKt9d3+oUZ2i0V3CW8lHFyunfLR+KcKHubS4zf5E=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

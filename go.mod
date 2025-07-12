@@ -19,6 +19,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription v1.2.0
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/Masterminds/sprig/v3 v3.3.0
+	github.com/YakDriver/regexache v0.24.0
 	github.com/Yamashou/gqlgenc v0.32.1
 	github.com/aws/aws-sdk-go-v2 v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.41.1

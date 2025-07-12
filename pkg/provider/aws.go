@@ -12,6 +12,7 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -69,7 +70,20 @@ var (
 )
 
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
-	provider = &AWSProvider{}
+	ctx := context.Background()
+
+	iamSession, err := GetAWSCallerIdentity(ctx)
+	if err != nil {
+		return nil, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
+	}
+
+	provider = &AWSProvider{
+		goContext: &ctx,
+		ctx: map[string]any{
+			"IAMSession": iamSession,
+		},
+	}
+
 	var awsSurvey = []*survey.Question{
 		{
 			Name:     "cluster",
@@ -86,10 +100,6 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	if err = survey.Ask(awsSurvey, provider); err != nil {
 		return
 	}
-
-	ctx := context.Background()
-
-	provider.goContext = &ctx
 
 	client, err := getClient(provider.Reg, *provider.goContext)
 	if err != nil {
@@ -120,6 +130,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Project:           provider.Project(),
 		Provider:          api.ProviderAWS,
 		Region:            provider.Region(),
+		Context:           provider.Context(),
 		AvailabilityZones: azones,
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
@@ -390,4 +401,31 @@ func (aws *AWSProvider) testIamPermissions() error {
 	}
 
 	return fmt.Errorf("you do not meet all required iam permissions to deploy an eks cluster: %s, this is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
+}
+
+// GetAWSCallerIdentity returns the IAM role ARN of the current caller identity.
+func GetAWSCallerIdentity(ctx context.Context) (string, error) {
+	cfg, err := getAwsConfig(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	svc := sts.NewFromConfig(cfg)
+	callerIdentity, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "", plrlErrors.ErrorWrap(err, "Error getting caller identity: ")
+	}
+
+	callerIdentityArn := lo.FromPtr(callerIdentity.Arn)
+	roleName, _ := RoleNameSessionFromARN(callerIdentityArn)
+	if !lo.IsEmpty(roleName) {
+		role, err := iam.NewFromConfig(cfg).GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+		if err != nil {
+			return "", plrlErrors.ErrorWrap(err, "Error getting IAM role: ")
+		}
+
+		return lo.FromPtr(role.Role.Arn), nil
+	}
+
+	return callerIdentityArn, nil
 }
