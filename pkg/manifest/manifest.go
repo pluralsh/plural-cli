@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
+	"github.com/pluralsh/polly/algorithms"
 )
 
 const pluralDomain = "onplural.sh"
@@ -93,7 +94,7 @@ func (man *Manifest) Write(path string) error {
 
 func (pm *ProjectManifest) Configure(cloud bool, cluster string) Writer {
 	pm.BucketPrefix = cluster
-	pm.Bucket = fmt.Sprintf("plrl-cloud-%s", cluster)
+	pm.Bucket = fmt.Sprintf("plrl-cloud-%s-%s", cluster, algorithms.String(4))
 
 	if !cloud {
 		answer := ""
