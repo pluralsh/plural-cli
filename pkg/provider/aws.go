@@ -146,9 +146,8 @@ func awsFromManifest(man *manifest.ProjectManifest) (*AWSProvider, error) {
 	if err != nil {
 		return nil, err
 	}
-	providerCtx := map[string]interface{}{}
 
-	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: providerCtx}, nil
+	return &AWSProvider{Clus: man.Cluster, project: man.Project, bucket: man.Bucket, Reg: man.Region, storageClient: client, goContext: &ctx, ctx: man.Context}, nil
 }
 
 func getClient(region string, context context.Context) (*s3.Client, error) {
