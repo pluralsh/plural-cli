@@ -46,7 +46,6 @@ type consoleValues struct {
 func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
-	randoms := map[string]string{}
 	existing := consoleValues{}
 	if utils.Exists(file) {
 		if d, err := utils.ReadFile(file); err == nil {
@@ -60,7 +59,10 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 			}
 		}
 	}
-	for _, key := range []string{"jwt", "erlang", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
+
+	randoms := map[string]string{}
+	randoms["erlang"] = crypto.RandString(64)
+	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
 		rand, err := crypto.RandStr(32)
 		if err != nil {
 			return "", err
@@ -200,7 +202,8 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	}
 
 	randoms := map[string]string{}
-	for _, key := range []string{"jwt", "erlang", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
+	randoms["erlang"] = crypto.RandString(64)
+	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
 		rand, err := crypto.RandStr(32)
 		if err != nil {
 			return "", err
