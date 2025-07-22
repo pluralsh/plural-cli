@@ -41,7 +41,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pluralsh/console/go/client v1.37.0
-	github.com/pluralsh/console/go/controller v0.0.0-20250430123026-a75a764f035b
+	github.com/pluralsh/console/go/controller v0.0.0-20250722024004-0080952fb8c2
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.3.1
