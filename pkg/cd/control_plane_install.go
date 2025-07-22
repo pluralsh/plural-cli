@@ -61,7 +61,7 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 	}
 
 	randoms := map[string]string{}
-	randoms["erlang"] = crypto.RandString(32)
+	randoms["erlang"] = crypto.RandString(64)
 	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
 		rand, err := crypto.RandStr(32)
 		if err != nil {
@@ -202,7 +202,7 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	}
 
 	randoms := map[string]string{}
-	randoms["erlang"] = crypto.RandString(32)
+	randoms["erlang"] = crypto.RandString(64)
 	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
 		rand, err := crypto.RandStr(32)
 		if err != nil {
