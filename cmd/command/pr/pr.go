@@ -1,9 +1,11 @@
 package pr
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -113,6 +115,22 @@ func (p *Plural) prCommands() []cli.Command {
 				cli.BoolFlag{
 					Name:  "validate",
 					Usage: "check if there are any local git changes and fail if so",
+				},
+			},
+		},
+		{
+			Name:      "trigger",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleTriggerPrAutomation, []string{"{name}"})),
+			Usage:     "trigger PR automation by name with configuration",
+			ArgsUsage: "{name}",
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:  "configuration",
+					Usage: "configuration key-value pairs (format: key=value)",
+				},
+				cli.StringFlag{
+					Name:  "branch",
+					Usage: "branch name for the PR",
 				},
 			},
 		},
@@ -242,4 +260,74 @@ func (p *Plural) handleCreatePrAutomation(c *cli.Context) error {
 
 	utils.Success("PR %s created successfully\n", pr.ID)
 	return nil
+}
+
+func (p *Plural) handleTriggerPrAutomation(c *cli.Context) error {
+	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return err
+	}
+
+	// Get PR automation by name
+	prAutomation, err := p.ConsoleClient.GetPrAutomationByName(c.Args().Get(0))
+	if err != nil {
+		return err
+	}
+
+	// Build context from CLI flags and env vars
+	context, err := buildTriggerContext(c)
+	if err != nil {
+		return err
+	}
+
+	contextJSON, err := json.Marshal(context)
+	if err != nil {
+		return err
+	}
+
+	// Optional branch
+	var branch *string
+	if b := c.String("branch"); b != "" {
+		branch = &b
+	}
+
+	// Create PR
+	pr, err := p.ConsoleClient.CreatePullRequest(prAutomation.ID, branch, lo.ToPtr(string(contextJSON)))
+	if err != nil {
+		return err
+	}
+
+	utils.Success("PR %s triggered successfully\n", pr.ID)
+	return nil
+}
+
+func buildTriggerContext(c *cli.Context) (map[string]interface{}, error) {
+	context := make(map[string]interface{})
+
+	// Parse --configuration flags (strict validation)
+	for _, config := range c.StringSlice("configuration") {
+		parts := strings.SplitN(config, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid configuration format: '%s'. Expected format: key=value", config)
+		}
+		if strings.TrimSpace(parts[0]) == "" {
+			return nil, fmt.Errorf("invalid configuration format: '%s'. Key cannot be empty", config)
+		}
+		context[parts[0]] = parts[1]
+	}
+
+	// Parse PLRL_PR_* environment variables (silently skip malformed ones)
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, "PLRL_PR_") {
+			parts := strings.SplitN(env, "=", 2)
+			if len(parts) == 2 {
+				key := strings.ToLower(strings.TrimPrefix(parts[0], "PLRL_PR_"))
+				// Only add if not already set by CLI flags (CLI flags take precedence)
+				if _, exists := context[key]; !exists {
+					context[key] = parts[1]
+				}
+			}
+		}
+	}
+
+	return context, nil
 }
