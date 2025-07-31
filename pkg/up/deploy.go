@@ -23,14 +23,52 @@ type terraformCmd struct {
 	retries int
 }
 
+var (
+	checkpoints = []string{
+		"init",
+		"import",
+		"apply:import",
+		"commit",
+		"apps",
+		"prune:cloud",
+		"prune:mgmt",
+	}
+
+	priorities = map[string]int{}
+)
+
+func init() {
+	for i, c := range checkpoints {
+		priorities[c] = i
+	}
+}
+
+func (ctx *Context) runCheckpoint(current, checkpoint string, fn func() error) error {
+	if current == "" || priorities[checkpoint] > priorities[current] {
+		err := fn()
+		if err == nil {
+			ctx.Manifest.Checkpoint = checkpoint
+		}
+		return err
+	}
+
+	utils.Highlight("Skipping checkpoint %s, ran up to %s previously\n", checkpoint, current)
+
+	return nil
+}
+
 func (ctx *Context) Deploy(commit func() error) error {
 	if err := ctx.Provider.CreateBucket(); err != nil {
 		return err
 	}
 
-	if err := runAll([]terraformCmd{
-		{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
-		{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+	defer ctx.Manifest.Flush()
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "init", func() error {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		})
 	}); err != nil {
 		return err
 	}
@@ -41,10 +79,19 @@ func (ctx *Context) Deploy(commit func() error) error {
 			return err
 		}
 
-		if err := runAll([]terraformCmd{
-			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
-			{dir: "./terraform/mgmt", cmd: "import", args: []string{"plural_cluster.mgmt", *ctx.ImportCluster}},
-			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "import", func() error {
+			return runAll([]terraformCmd{
+				{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+				{dir: "./terraform/mgmt", cmd: "import", args: []string{"plural_cluster.mgmt", *ctx.ImportCluster}},
+			})
+		}); err != nil {
+			return err
+		}
+
+		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apply:import", func() error {
+			return runAll([]terraformCmd{
+				{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+			})
 		}); err != nil {
 			return err
 		}
@@ -73,16 +120,19 @@ func (ctx *Context) Deploy(commit func() error) error {
 		}
 	}
 
-	if err := commit(); err != nil {
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "commit", func() error {
+		utils.Highlight("\nSetting up gitops management, first lets commit the changes made up to this point...\n\n")
+		return commit()
+	}); err != nil {
 		return err
 	}
 
-	utils.Highlight("\nSetting up gitops management...\n")
-
-	if err := runAll([]terraformCmd{
-		{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
-		{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
-		{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
+			{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		})
 	}); err != nil {
 		return err
 	}
