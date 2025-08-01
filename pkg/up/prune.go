@@ -10,33 +10,40 @@ import (
 
 func (ctx *Context) Prune() error {
 	if ctx.Cloud {
-		return ctx.pruneCloud()
+		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:cloud", func() error {
+			return ctx.pruneCloud()
+		}); err != nil {
+			return err
+		}
 	}
 
-	utils.Highlight("\nCleaning up unneeded resources...\n\n")
 	repoRoot, err := git.Root()
 	if err != nil {
 		return err
 	}
 
-	toRemove := []string{
-		"null_resource.console",
-		"helm_release.certmanager",
-		"helm_release.flux",
-		"helm_release.runtime",
-		"helm_release.console",
-	}
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:mgmt", func() error {
+		utils.Highlight("\nCleaning up unneeded resources...\n\n")
 
-	for _, field := range toRemove {
-		if err := stateRm("./terraform/mgmt", field); err != nil {
-			return err
+		toRemove := []string{
+			"null_resource.console",
+			"helm_release.certmanager",
+			"helm_release.flux",
+			"helm_release.runtime",
+			"helm_release.console",
 		}
-	}
 
-	if err := os.Remove("./terraform/mgmt/console.tf"); err != nil {
+		for _, field := range toRemove {
+			if err := stateRm("./terraform/mgmt", field); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
 		return err
 	}
 
+	_ = os.Remove("./terraform/mgmt/console.tf")
 	_ = os.RemoveAll("./terraform/apps")
 
 	return git.Sync(repoRoot, "Post-setup resource cleanup", true)

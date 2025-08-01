@@ -57,6 +57,7 @@ type ProjectManifest struct {
 	Region            string
 	Owner             *Owner
 	Network           *NetworkConfig
+	Checkpoint        string `yaml:"checkpoint,omitempty"`
 	AvailabilityZones []string
 	BucketPrefix      string `yaml:"bucketPrefix"`
 	Context           map[string]interface{}
