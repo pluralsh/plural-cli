@@ -10,11 +10,9 @@ import (
 
 func (ctx *Context) Prune() error {
 	if ctx.Cloud {
-		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:cloud", func() error {
+		return ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:cloud", func() error {
 			return ctx.pruneCloud()
-		}); err != nil {
-			return err
-		}
+		})
 	}
 
 	repoRoot, err := git.Root()
