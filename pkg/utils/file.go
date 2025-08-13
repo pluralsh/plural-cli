@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"sigs.k8s.io/yaml"
@@ -104,6 +105,58 @@ func ReadRemoteFile(url string) (string, error) {
 		return "", err
 	}
 	return buffer.String(), nil
+}
+
+func ReadRemoteFileWithRetries(url, token string, retries int) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Authorization", "Token "+token)
+
+	for i := 0; i < retries; i++ {
+		resp, retriable, err := doRequest(req)
+		if err != nil {
+			if !retriable {
+				return "", err
+			}
+
+			time.Sleep(time.Duration(50*(i+1)) * time.Millisecond)
+			continue
+		}
+
+		defer resp.Close()
+		body, err := io.ReadAll(resp)
+		if err != nil {
+			return "", err
+		}
+
+		return string(body), nil
+	}
+
+	return "", fmt.Errorf("could read file, retries exhaused: %w", err)
+}
+
+func doRequest(req *http.Request) (io.ReadCloser, bool, error) {
+	client := &http.Client{Timeout: time.Minute, Transport: &http.Transport{ResponseHeaderTimeout: time.Minute}}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		errMsg, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, false, fmt.Errorf("could not read response body: %w", err)
+		}
+
+		return nil, resp.StatusCode == http.StatusTooManyRequests,
+			fmt.Errorf("could not fetch url: %s, error: %s, code: %d", req.URL.String(), string(errMsg), resp.StatusCode)
+	}
+
+	return resp.Body, false, nil
 }
 
 func YamlFile(name string, out interface{}) error {
