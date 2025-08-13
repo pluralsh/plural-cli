@@ -149,6 +149,19 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "force sync cluster service",
 		},
+		{
+			Name:      "tarball",
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleTarballClusterService, []string{"@{cluster-handle}/{serviceName}"})),
+			Usage:     "download service tarball locally",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "dir",
+					Usage: "directory to download to",
+					Value: ".",
+				},
+			},
+		},
 	}
 }
 
@@ -624,6 +637,10 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 		return err
 	}
 	utils.Success("Service %s has been sync successfully\n", kick.Name)
+	return nil
+}
+
+func (p *Plural) handleTarballClusterService(c *cli.Context) error {
 	return nil
 }
 
