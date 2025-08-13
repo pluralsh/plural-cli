@@ -641,6 +641,28 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 }
 
 func (p *Plural) handleTarballClusterService(c *cli.Context) error {
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return fmt.Errorf("could not parse args: %w", err)
+	}
+
+	if err = p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return fmt.Errorf("could not initialize console client: %w", err)
+	}
+
+	service, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return fmt.Errorf("could not get service: %w", err)
+	}
+	if service == nil {
+		return fmt.Errorf("could not get service for: %s", c.Args().Get(0))
+	}
+
+	deployToken, err := p.ConsoleClient.GetDeployToken(&service.Cluster.ID, nil)
+	if err != nil {
+		return fmt.Errorf("could not get deploy token: %w", err)
+	}
+
 	return nil
 }
 
