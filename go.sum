@@ -571,6 +571,8 @@ github.com/pluralsh/console/go/client v1.37.0 h1:lO+WCfmw/p9aYn9zUDirkbRpmWLdT72
 github.com/pluralsh/console/go/client v1.37.0/go.mod h1:rPx6hufc/s17Wzy+7C4ZnA1nmn1JR0m4JeoxAQYj8+4=
 github.com/pluralsh/console/go/controller v0.0.0-20250430123026-a75a764f035b h1:XtEoflAGAT+tPAEw5MNoyu+8ziaZuXVwjpTZbP1o050=
 github.com/pluralsh/console/go/controller v0.0.0-20250430123026-a75a764f035b/go.mod h1:TQ/AdKBjZqB9f9s0SHpOVRON7bktahs8Ieh00Rylxp8=
+github.com/pluralsh/console/go/controller v0.0.0-20250722024004-0080952fb8c2 h1:xUTgE4kog3ysrqOt1DITCEE203Pr4Kn8G6K4hAjEz2I=
+github.com/pluralsh/console/go/controller v0.0.0-20250722024004-0080952fb8c2/go.mod h1:lDyrDGXOkR8sEQCcx2io2TQnAUDpQ54q5aYD8K4f1PM=
 github.com/pluralsh/controller-reconcile-helper v0.1.0 h1:BV3dYZFH5rn8ZvZjtpkACSv/GmLEtRftNQj/Y4ddHEo=
 github.com/pluralsh/controller-reconcile-helper v0.1.0/go.mod h1:RxAbvSB4/jkvx616krCdNQXPbpGJXW3J1L3rASxeFOA=
 github.com/pluralsh/gqlclient v1.12.2 h1:BrEFAASktf4quFw57CIaLAd+NZUTLhG08fe6tnhBQN4=
