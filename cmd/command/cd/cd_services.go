@@ -160,8 +160,7 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "dir",
-					Usage: "directory to download to",
-					Value: ".",
+					Usage: "directory to download to, defaults to ./service-tarball",
 				},
 			},
 		},
@@ -649,11 +648,6 @@ func (p *Plural) handleTarballClusterService(c *cli.Context) error {
 		return fmt.Errorf("could not parse args: %w", err)
 	}
 
-	dir := c.String("dir")
-	if err = utils.EnsureEmptyDir(dir); err != nil {
-		return fmt.Errorf("could not ensure dir: %w", err)
-	}
-
 	if err = p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return fmt.Errorf("could not initialize console client: %w", err)
 	}
@@ -667,6 +661,14 @@ func (p *Plural) handleTarballClusterService(c *cli.Context) error {
 	}
 	if service.Tarball == nil {
 		return fmt.Errorf("service %s does not have a tarball", service.Name)
+	}
+
+	dir := c.String("dir")
+	if dir == "" {
+		dir = filepath.Join(".", service.Name+"-tarball")
+	}
+	if err = utils.EnsureEmptyDir(dir); err != nil {
+		return fmt.Errorf("could not ensure dir: %w", err)
 	}
 
 	deployToken, err := p.ConsoleClient.GetDeployToken(&service.Cluster.ID, nil)
