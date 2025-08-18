@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/polly/fs"
 	lua "github.com/yuin/gopher-lua"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -148,6 +149,18 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 			ArgsUsage: "@{cluster-handle}/{serviceName}",
 			Action:    common.LatestVersion(common.RequireArgs(p.handleKickClusterService, []string{"@{cluster-handle}/{serviceName}"})),
 			Usage:     "force sync cluster service",
+		},
+		{
+			Name:      "tarball",
+			ArgsUsage: "@{cluster-handle}/{serviceName}",
+			Action:    common.LatestVersion(common.RequireArgs(p.handleTarballClusterService, []string{"@{cluster-handle}/{serviceName}"})),
+			Usage:     "download service tarball locally",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "dir",
+					Usage: "directory to download to, defaults to ./service-tarball",
+				},
+			},
 		},
 	}
 }
@@ -625,6 +638,50 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 	}
 	utils.Success("Service %s has been sync successfully\n", kick.Name)
 	return nil
+}
+
+func (p *Plural) handleTarballClusterService(c *cli.Context) error {
+	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	if err != nil {
+		return fmt.Errorf("could not parse args: %w", err)
+	}
+
+	if err = p.InitConsoleClient(consoleToken, consoleURL); err != nil {
+		return fmt.Errorf("could not initialize console client: %w", err)
+	}
+
+	service, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return fmt.Errorf("could not get service: %w", err)
+	}
+	if service == nil {
+		return fmt.Errorf("could not get service for: %s", c.Args().Get(0))
+	}
+	if service.Tarball == nil {
+		return fmt.Errorf("service %s does not have a tarball", service.Name)
+	}
+
+	dir := c.String("dir")
+	if dir == "" {
+		dir = filepath.Join(".", service.Name+"-tarball")
+	}
+	if err = utils.EnsureEmptyDir(dir); err != nil {
+		return fmt.Errorf("could not ensure dir: %w", err)
+	}
+
+	deployToken, err := p.ConsoleClient.GetDeployToken(&service.Cluster.ID, nil)
+	if err != nil {
+		return fmt.Errorf("could not get deploy token: %w", err)
+	}
+
+	utils.Highlight("fetching tarball from %s\n", *service.Tarball)
+	resp, err := utils.ReadRemoteFileWithRetries(*service.Tarball, deployToken, 3)
+	if err != nil {
+		return err
+	}
+	defer resp.Close()
+
+	return fs.Untar(dir, resp)
 }
 
 type ServiceDeploymentAttributesConfiguration struct {

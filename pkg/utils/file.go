@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
 	"sigs.k8s.io/yaml"
@@ -66,20 +67,6 @@ func EmptyDirectory(dir string) error {
 	return nil
 }
 
-func IsEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if errors.Is(err, io.EOF) {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
-}
-
 func WriteFile(name string, content []byte) error {
 	if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 		return err
@@ -104,6 +91,52 @@ func ReadRemoteFile(url string) (string, error) {
 		return "", err
 	}
 	return buffer.String(), nil
+}
+
+func ReadRemoteFileWithRetries(url, token string, retries int) (io.ReadCloser, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", "Token "+token)
+
+	for i := 0; i < retries; i++ {
+		resp, retriable, err := doRequest(req)
+		if err != nil {
+			if !retriable {
+				return nil, err
+			}
+
+			time.Sleep(time.Duration(50*(i+1)) * time.Millisecond)
+			continue
+		}
+
+		return resp, nil
+	}
+
+	return nil, fmt.Errorf("could read file, retries exhaused: %w", err)
+}
+
+func doRequest(req *http.Request) (io.ReadCloser, bool, error) {
+	client := &http.Client{Timeout: time.Minute, Transport: &http.Transport{ResponseHeaderTimeout: time.Minute}}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		errMsg, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, false, fmt.Errorf("could not read response body: %w", err)
+		}
+
+		return nil, resp.StatusCode == http.StatusTooManyRequests,
+			fmt.Errorf("could not fetch url: %s, error: %s, code: %d", req.URL.String(), string(errMsg), resp.StatusCode)
+	}
+
+	return resp.Body, false, nil
 }
 
 func YamlFile(name string, out interface{}) error {
@@ -194,4 +227,51 @@ func CopyDir(src string, dst string) error {
 		}
 	}
 	return nil
+}
+
+func EnsureDir(dir string) error {
+	if dir == "" {
+		return fmt.Errorf("directory name cannot be empty")
+	}
+
+	if !Exists(dir) {
+		return os.MkdirAll(dir, 0755)
+	}
+
+	if !IsDir(dir) {
+		return fmt.Errorf("%s is not a directory", dir)
+	}
+
+	return nil
+}
+
+func EnsureEmptyDir(dir string) error {
+	if err := EnsureDir(dir); err != nil {
+		return err
+	}
+
+	empty, err := IsEmptyDir(dir)
+	if err != nil {
+		return fmt.Errorf("could not check if directory %s is empty: %w", dir, err)
+	}
+
+	if !empty {
+		return fmt.Errorf("directory %s is not empty", dir)
+	}
+
+	return nil
+}
+
+func IsEmptyDir(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if errors.Is(err, io.EOF) {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }
