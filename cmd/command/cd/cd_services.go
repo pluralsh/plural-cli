@@ -20,8 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-const pluralDigestHeader = "x-plrl-digest"
-
 func (p *Plural) cdServices() cli.Command {
 	return cli.Command{
 		Name:        "services",
