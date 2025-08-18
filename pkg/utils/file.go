@@ -107,10 +107,10 @@ func ReadRemoteFile(url string) (string, error) {
 	return buffer.String(), nil
 }
 
-func ReadRemoteFileWithRetries(url, token string, retries int) (string, error) {
+func ReadRemoteFileWithRetries(url, token string, retries int) (io.ReadCloser, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Add("Authorization", "Token "+token)
 
@@ -118,23 +118,17 @@ func ReadRemoteFileWithRetries(url, token string, retries int) (string, error) {
 		resp, retriable, err := doRequest(req)
 		if err != nil {
 			if !retriable {
-				return "", err
+				return nil, err
 			}
 
 			time.Sleep(time.Duration(50*(i+1)) * time.Millisecond)
 			continue
 		}
 
-		defer resp.Close()
-		body, err := io.ReadAll(resp)
-		if err != nil {
-			return "", err
-		}
-
-		return string(body), nil
+		return resp, nil
 	}
 
-	return "", fmt.Errorf("could read file, retries exhaused: %w", err)
+	return nil, fmt.Errorf("could read file, retries exhaused: %w", err)
 }
 
 func doRequest(req *http.Request) (io.ReadCloser, bool, error) {
@@ -246,5 +240,21 @@ func CopyDir(src string, dst string) error {
 			}
 		}
 	}
+	return nil
+}
+
+func EnsureDir(dir string) error {
+	if dir == "" {
+		return fmt.Errorf("directory name cannot be empty")
+	}
+
+	if !Exists(dir) {
+		return os.MkdirAll(filepath.Dir(dir), 0755)
+	}
+
+	if !IsDir(dir) {
+		return fmt.Errorf("%s is not a directory", dir)
+	}
+
 	return nil
 }

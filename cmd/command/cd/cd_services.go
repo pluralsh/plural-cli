@@ -2,11 +2,11 @@ package cd
 
 import (
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/polly/fs"
 	lua "github.com/yuin/gopher-lua"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -19,6 +19,8 @@ import (
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
+
+const pluralDigestHeader = "x-plrl-digest"
 
 func (p *Plural) cdServices() cli.Command {
 	return cli.Command{
@@ -642,18 +644,20 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 }
 
 func (p *Plural) handleTarballClusterService(c *cli.Context) error {
-	// Load args.
 	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
 	if err != nil {
 		return fmt.Errorf("could not parse args: %w", err)
 	}
 
-	// Init console client.
+	dir := c.String("dir")
+	if err = utils.EnsureDir(dir); err != nil {
+		return fmt.Errorf("could not ensure dir: %w", err)
+	}
+
 	if err = p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return fmt.Errorf("could not initialize console client: %w", err)
 	}
 
-	// Fetch service.
 	service, err := p.ConsoleClient.GetClusterService(serviceId, serviceName, clusterName)
 	if err != nil {
 		return fmt.Errorf("could not get service: %w", err)
@@ -661,42 +665,23 @@ func (p *Plural) handleTarballClusterService(c *cli.Context) error {
 	if service == nil {
 		return fmt.Errorf("could not get service for: %s", c.Args().Get(0))
 	}
+	if service.Tarball == nil {
+		return fmt.Errorf("service %s does not have a tarball", service.Name)
+	}
 
-	// Fetch deploy token.
 	deployToken, err := p.ConsoleClient.GetDeployToken(&service.Cluster.ID, nil)
 	if err != nil {
 		return fmt.Errorf("could not get deploy token: %w", err)
 	}
 
-	// Fetch service digest.
-	parsedConsoleURL, err := url.Parse(p.ConsoleClient.Url())
+	utils.Highlight("fetching tarball from %s\n", *service.Tarball)
+	resp, err := utils.ReadRemoteFileWithRetries(*service.Tarball, deployToken, 3)
 	if err != nil {
-		return fmt.Errorf("could not parse console url: %w", err)
+		return err
 	}
-	digestURL := fmt.Sprintf("%s://%s/ext/v1/digests?id=%s", parsedConsoleURL.Scheme, parsedConsoleURL.Host, service.ID)
-	digest, err := utils.ReadRemoteFileWithRetries(digestURL, deployToken, 3)
-	if err != nil {
-		return fmt.Errorf("could not get service digest: %w", err)
-	}
+	defer resp.Close()
 
-	// Build tarball URL.
-	if service.Tarball == nil {
-		return fmt.Errorf("service %s does not have a tarball", service.Name)
-	}
-	tarballURL, err := url.Parse(*service.Tarball)
-	if err != nil {
-		return fmt.Errorf("could not parse tarball url: %w", err)
-	}
-	if digest != "" {
-		q := tarballURL.Query()
-		q.Set("digest", digest)
-		tarballURL.RawQuery = q.Encode()
-	}
-
-	// TODO: Fetch tarball.
-	utils.Highlight("fetching tarball from %s\n", tarballURL.String())
-
-	return nil
+	return fs.Untar(dir, resp)
 }
 
 type ServiceDeploymentAttributesConfiguration struct {
