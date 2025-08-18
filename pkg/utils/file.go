@@ -67,20 +67,6 @@ func EmptyDirectory(dir string) error {
 	return nil
 }
 
-func IsEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if errors.Is(err, io.EOF) {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
-}
-
 func WriteFile(name string, content []byte) error {
 	if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 		return err
@@ -249,7 +235,7 @@ func EnsureDir(dir string) error {
 	}
 
 	if !Exists(dir) {
-		return os.MkdirAll(filepath.Dir(dir), 0755)
+		return os.MkdirAll(dir, 0755)
 	}
 
 	if !IsDir(dir) {
@@ -257,4 +243,35 @@ func EnsureDir(dir string) error {
 	}
 
 	return nil
+}
+
+func EnsureEmptyDir(dir string) error {
+	if err := EnsureDir(dir); err != nil {
+		return err
+	}
+
+	empty, err := IsEmptyDir(dir)
+	if err != nil {
+		return fmt.Errorf("could not check if directory %s is empty: %w", dir, err)
+	}
+
+	if !empty {
+		return fmt.Errorf("directory %s is not empty", dir)
+	}
+
+	return nil
+}
+
+func IsEmptyDir(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if errors.Is(err, io.EOF) {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }

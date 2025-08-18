@@ -650,7 +650,7 @@ func (p *Plural) handleTarballClusterService(c *cli.Context) error {
 	}
 
 	dir := c.String("dir")
-	if err = utils.EnsureDir(dir); err != nil {
+	if err = utils.EnsureEmptyDir(dir); err != nil {
 		return fmt.Errorf("could not ensure dir: %w", err)
 	}
 
