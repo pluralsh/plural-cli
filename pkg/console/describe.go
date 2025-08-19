@@ -42,11 +42,8 @@ func DescribeCluster(cluster *consoleclient.ClusterFragment) (string, error) {
 		if cluster.Handle != nil {
 			w.Write(Level0, "Handle:\t@%s\n", *cluster.Handle)
 		}
-		if cluster.Version != nil {
-			w.Write(Level0, "Version:\t%s\n", *cluster.Version)
-		}
 		if cluster.CurrentVersion != nil {
-			w.Write(Level0, "Current Version:\t%s\n", *cluster.CurrentVersion)
+			w.Write(Level0, "Version:\t%s\n", *cluster.CurrentVersion)
 		}
 		if cluster.PingedAt != nil {
 			w.Write(Level0, "Pinged At:\t%s\n", *cluster.PingedAt)
@@ -54,28 +51,8 @@ func DescribeCluster(cluster *consoleclient.ClusterFragment) (string, error) {
 		if cluster.Self != nil {
 			w.Write(Level0, "Self:\t%v\n", *cluster.Self)
 		}
-
-		if cluster.Provider != nil {
-			w.Write(Level0, "Provider:\n")
-			w.Write(Level1, "Id:\t%s\n", cluster.Provider.ID)
-			w.Write(Level1, "Name:\t%s\n", cluster.Provider.Name)
-			w.Write(Level1, "Namespace:\t%s\n", cluster.Provider.Namespace)
-			w.Write(Level1, "Editable:\t%v\n", *cluster.Provider.Editable)
-			w.Write(Level1, "Cloud:\t%v\n", cluster.Provider.Cloud)
-			if cluster.Provider.Repository != nil {
-				w.Write(Level1, "Git:\n")
-				w.Write(Level2, "Id:\t%s\n", cluster.Provider.Repository.ID)
-				w.Write(Level2, "Url:\t%s\n", cluster.Provider.Repository.URL)
-				if cluster.Provider.Repository.AuthMethod != nil {
-					w.Write(Level2, "Auth Method:\t%v\n", *cluster.Provider.Repository.AuthMethod)
-				}
-				if cluster.Provider.Repository.Health != nil {
-					w.Write(Level2, "Health:\t%v\n", *cluster.Provider.Repository.Health)
-				}
-				if cluster.Provider.Repository.Error != nil {
-					w.Write(Level2, "Error:\t%s\n", *cluster.Provider.Repository.Error)
-				}
-			}
+		if cluster.Distro != nil {
+			w.Write(Level0, "Distro:\t%s\n", *cluster.Distro)
 		}
 
 		return nil

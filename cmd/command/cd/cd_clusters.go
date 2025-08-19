@@ -6,15 +6,16 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/polly/containers"
+	"github.com/samber/lo"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/containers"
-	"github.com/samber/lo"
-	"github.com/urfave/cli"
 )
 
 var providerSurvey = []*survey.Question{
@@ -126,9 +127,9 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 	}
 	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
 	return utils.PrintTable(clusters, headers, func(cl *gqlclient.ClusterEdgeFragment) ([]string, error) {
-		provider := ""
-		if cl.Node.Provider != nil {
-			provider = cl.Node.Provider.Name
+		var distro gqlclient.ClusterDistro
+		if cl.Node.Distro != nil {
+			distro = *cl.Node.Distro
 		}
 		handle := ""
 		if cl.Node.Handle != nil {
@@ -136,9 +137,9 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 		}
 		version := ""
 		if cl.Node.Version != nil {
-			version = *cl.Node.Version
+			version = *cl.Node.CurrentVersion
 		}
-		return []string{cl.Node.ID, cl.Node.Name, handle, version, provider}, nil
+		return []string{cl.Node.ID, cl.Node.Name, handle, version, string(distro)}, nil
 	})
 }
 
@@ -233,8 +234,8 @@ func (p *Plural) handleUpdateCluster(c *cli.Context) error {
 	headers := []string{"Id", "Name", "Handle", "Version", "Provider"}
 	return utils.PrintTable([]gqlclient.ClusterFragment{*result.UpdateCluster}, headers, func(cl gqlclient.ClusterFragment) ([]string, error) {
 		provider := ""
-		if cl.Provider != nil {
-			provider = cl.Provider.Name
+		if cl.Distro != nil {
+			provider = string(*cl.Distro)
 		}
 		handle := ""
 		if cl.Handle != nil {

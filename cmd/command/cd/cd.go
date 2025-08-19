@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/urfave/cli"
+	"helm.sh/helm/v3/pkg/action"
+
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/urfave/cli"
-	"helm.sh/helm/v3/pkg/action"
 )
 
 func init() {
@@ -171,8 +172,8 @@ func confirmCluster(url, token string) (bool, error) {
 	if clusterFragment.Handle != nil {
 		handle = *clusterFragment.Handle
 	}
-	if clusterFragment.Provider != nil {
-		provider = clusterFragment.Provider.Name
+	if clusterFragment.Distro != nil {
+		provider = string(*clusterFragment.Distro)
 	}
 	return common.Confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
 }
