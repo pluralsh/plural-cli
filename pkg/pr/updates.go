@@ -144,7 +144,7 @@ func mergeYaml(base, overlay []byte, merge ListMerge) ([]byte, error) {
 		return nil, err
 	}
 
-	options := []func(*mergo.Config){mergo.WithOverride, mergo.WithSliceDeepCopy}
+	options := []func(*mergo.Config){mergo.WithOverride}
 	if strings.ToUpper(string(merge)) == ListMergeAppend {
 		options = append(options, mergo.WithAppendSlice)
 	}
