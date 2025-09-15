@@ -50,6 +50,10 @@ func Command(clients client.Plural) cli.Command {
 				Usage: "whether to ignore preflight check failures prior to init",
 			},
 			cli.BoolFlag{
+				Name:  "dry-run",
+				Usage: "whether to simply generate the up repo, but not deploy anything",
+			},
+			cli.BoolFlag{
 				Name:  "cloud",
 				Usage: "Whether you're provisioning against a cloud-hosted Plural Console",
 			},
@@ -135,6 +139,11 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
+	if c.Bool("dry-run") {
+		utils.Success("Finished generating the repo, no deployment will occur due to the --dry-run flag\n")
+		return nil
+	}
+
 	if !common.Affirm(common.AffirmUp, "PLURAL_UP_AFFIRM_DEPLOY") {
 		return fmt.Errorf("cancelled deploy")
 	}
@@ -151,7 +160,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	utils.Success("Finished setting up your management cluster!\n")
-	utils.Highlight("Feel free to use terraform as you normally would, and leverage the gitops setup we've generated in the apps/ subfolder\n")
+	utils.Highlight("Feel free to use terraform as you normally would, and leverage the gitops setup we've generated in the bootstrap/ subfolder\n")
 	return nil
 }
 
@@ -232,7 +241,7 @@ func processAppDomain(domain string) error {
 			return err
 		}
 		if len(managedZones) == 0 {
-			return fmt.Errorf("no managed DNS zones found for domain %s in project %s", d, project.Project)
+			return fmt.Errorf("no DNS managed zones found for domain %s in project %s", d, project.Project)
 		}
 
 		var managedZone string
