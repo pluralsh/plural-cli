@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/pluralsh/polly/containers"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
@@ -77,7 +78,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 		{
 			Name:      "get-credentials",
 			Aliases:   []string{"kubeconfig"},
-			Action:    common.LatestVersion(common.RequireArgs(p.handleGetClusterCredentials, []string{"@{cluster-handle}"})),
+			Action:    common.LatestVersion(p.handleGetClusterCredentials),
 			Usage:     "updates kubeconfig file with appropriate credentials to point to specified cluster",
 			ArgsUsage: "@{cluster-handle}",
 		},
@@ -270,8 +271,28 @@ func (p *Plural) handleGetClusterCredentials(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
+	handle := c.Args().Get(0)
+	if handle == "" {
+		clusters, err := p.ListClusters()
+		if err != nil {
+			return err
+		}
+		if len(clusters) == 0 {
+			return fmt.Errorf("no clusters found")
+		}
 
-	cluster, err := p.ConsoleClient.GetCluster(common.GetIdAndName(c.Args().Get(0)))
+		prompt := &survey.Select{
+			Message: "Select the cluster you want to get credentials for:",
+			Options: algorithms.Map(clusters, func(cl *gqlclient.ClusterEdgeFragment) string {
+				return cl.Node.Name
+			}),
+		}
+		if err := survey.AskOne(prompt, &handle, survey.WithValidator(survey.Required)); err != nil {
+			return err
+		}
+	}
+
+	cluster, err := p.ConsoleClient.GetCluster(common.GetIdAndName(fmt.Sprintf("@%s", handle)))
 	if err != nil {
 		return err
 	}
