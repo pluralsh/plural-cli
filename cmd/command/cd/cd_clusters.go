@@ -2,6 +2,8 @@ package cd
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -10,6 +12,7 @@ import (
 	"github.com/pluralsh/polly/containers"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
+	"sigs.k8s.io/yaml"
 
 	"github.com/pluralsh/plural-cli/pkg/cd"
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -106,6 +109,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 					Name:  "tag",
 					Usage: "a cluster tag to add, useful for targeting with global services",
 				},
+				cli.StringFlag{
+					Name:  "metadata",
+					Usage: "Path to metadata file, or omit value to read from stdin",
+				},
 			},
 		},
 		{
@@ -114,6 +121,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
+				cli.StringFlag{
+					Name:  "metadata",
+					Usage: "Path to metadata file, or omit value to read from stdin",
+				},
 			},
 			Usage:     "reinstalls the deployment operator into a cluster",
 			ArgsUsage: "@{cluster-handle}",
@@ -474,7 +485,16 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 		})
 		attrs.Tags = lo.Filter(attrs.Tags, func(t *gqlclient.TagAttributes, ind int) bool { return t != nil })
 	}
-
+	if c.IsSet("metadata") {
+		jsonData, err := getMetadataJson(c.String("metadata"))
+		if err != nil {
+			return err
+		}
+		if jsonData == nil {
+			return fmt.Errorf("metadata file is empty")
+		}
+		attrs.Metadata = jsonData
+	}
 	existing, err := p.ConsoleClient.CreateCluster(attrs)
 	if err != nil {
 		if errors.Like(err, "handle") && common.Affirm("Do you want to reinstall the deployment operator?", "PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS") {
@@ -500,4 +520,33 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	deployToken := *existing.CreateCluster.DeployToken
 	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
 	return p.DoInstallOperator(url, deployToken, c.String("values"), c.String("chart-loc"))
+}
+
+func getMetadataJson(val string) (*string, error) {
+	var reader io.Reader
+	if val == "" {
+		reader = os.Stdin
+	} else {
+		f, err := os.Open(val)
+		if err != nil {
+			return nil, err
+		}
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+				return
+			}
+		}(f)
+		reader = f
+	}
+
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	jsonData, err := yaml.YAMLToJSON(data)
+	if err != nil {
+		return nil, err
+	}
+	return lo.ToPtr(string(jsonData)), nil
 }
