@@ -86,7 +86,7 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 		url:    NormalizeUrl(url),
 		extUrl: NormalizeExtUrl(url),
 		token:  token,
-		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil),
+		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil, consoleclient.PersistedQueryInterceptor),
 		ctx:    context.Background(),
 	}, nil
 }

@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.24.2
+go 1.25.1
 
 require (
 	cloud.google.com/go/compute v1.37.0
@@ -20,7 +20,7 @@ require (
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/Yamashou/gqlgenc v0.32.1
+	github.com/Yamashou/gqlgenc v0.33.0
 	github.com/aws/aws-sdk-go-v2 v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.53.0
@@ -40,8 +40,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pluralsh/console/go/client v1.49.0
-	github.com/pluralsh/console/go/controller v0.0.0-20250430123026-a75a764f035b
+	github.com/pluralsh/console/go/client v1.51.0
+	github.com/pluralsh/console/go/controller v0.0.0-20251003110458-1e8b13ad7500
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.3.1
@@ -56,10 +56,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.1
 	helm.sh/helm/v3 v3.17.3
-	k8s.io/api v0.33.0
-	k8s.io/apimachinery v0.33.0
-	k8s.io/client-go v0.33.0
-	sigs.k8s.io/controller-runtime v0.20.4
+	k8s.io/api v0.33.3
+	k8s.io/apimachinery v0.33.3
+	k8s.io/client-go v0.33.3
+	sigs.k8s.io/controller-runtime v0.21.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -70,7 +70,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	cloud.google.com/go/monitoring v1.24.2 // indirect
-	github.com/99designs/gqlgen v0.17.72 // indirect
+	github.com/99designs/gqlgen v0.17.73 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0 // indirect
