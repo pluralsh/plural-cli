@@ -111,7 +111,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				},
 				cli.StringFlag{
 					Name:  "metadata",
-					Usage: "Path to metadata file, or omit value to read from stdin",
+					Usage: "Path to metadata file, or '-' to read from stdin",
 				},
 			},
 		},
@@ -123,7 +123,7 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 				cli.StringFlag{
 					Name:  "metadata",
-					Usage: "Path to metadata file, or omit value to read from stdin",
+					Usage: "Path to metadata file, or '-' to read from stdin",
 				},
 			},
 			Usage:     "reinstalls the deployment operator into a cluster",
@@ -447,6 +447,23 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 	}
 
 	id, name := common.GetIdAndName(handle)
+	if c.IsSet("metadata") {
+		jsonData, err := getMetadataJson(c.String("metadata"))
+		if err != nil {
+			return err
+		}
+		if jsonData == nil {
+			return fmt.Errorf("metadata file is empty")
+		}
+		if cluster, err := p.ConsoleClient.GetCluster(id, name); err == nil {
+			if _, err := p.ConsoleClient.UpdateCluster(cluster.ID, gqlclient.ClusterUpdateAttributes{
+				Metadata: jsonData,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+
 	return p.ReinstallOperator(c, id, name, c.String("chart-loc"))
 }
 
@@ -524,7 +541,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 func getMetadataJson(val string) (*string, error) {
 	var reader io.Reader
-	if val == "" {
+	if val == "-" {
 		reader = os.Stdin
 	} else {
 		f, err := os.Open(val)
