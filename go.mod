@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/resourcemanager v1.10.6
 	cloud.google.com/go/serviceusage v1.9.6
 	cloud.google.com/go/storage v1.52.0
-	dario.cat/mergo v1.0.1
+	dario.cat/mergo v1.0.2
 	filippo.io/age v1.2.1
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0
@@ -44,7 +44,7 @@ require (
 	github.com/pluralsh/console/go/controller v0.0.0-20251003110458-1e8b13ad7500
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
-	github.com/pluralsh/polly v0.3.1
+	github.com/pluralsh/polly v0.3.3
 	github.com/posthog/posthog-go v1.4.10
 	github.com/samber/lo v1.50.0
 	github.com/urfave/cli v1.22.16
