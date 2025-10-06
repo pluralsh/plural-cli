@@ -347,29 +347,29 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	proc := luautils.NewProcessor(dir)
-	defer proc.L.Close()
+	L := luautils.NewLuaState(dir)
+	defer L.Close()
 
 	// Register global values and valuesFiles in Lua
-	valuesTable := proc.L.NewTable()
-	proc.L.SetGlobal("values", valuesTable)
+	valuesTable := L.NewTable()
+	L.SetGlobal("values", valuesTable)
 
-	valuesFilesTable := proc.L.NewTable()
-	proc.L.SetGlobal("valuesFiles", valuesFilesTable)
-	proc.L.SetGlobal("cluster", luautils.GoValueToLuaValue(proc.L, ctx["cluster"]))
-	proc.L.SetGlobal("configuration", luautils.GoValueToLuaValue(proc.L, ctx["configuration"]))
-	proc.L.SetGlobal("contexts", luautils.GoValueToLuaValue(proc.L, ctx["contexts"]))
-	proc.L.SetGlobal("imports", luautils.GoValueToLuaValue(proc.L, ctx["imports"]))
+	valuesFilesTable := L.NewTable()
+	L.SetGlobal("valuesFiles", valuesFilesTable)
+	L.SetGlobal("cluster", luautils.GoValueToLuaValue(L, ctx["cluster"]))
+	L.SetGlobal("configuration", luautils.GoValueToLuaValue(L, ctx["configuration"]))
+	L.SetGlobal("contexts", luautils.GoValueToLuaValue(L, ctx["contexts"]))
+	L.SetGlobal("imports", luautils.GoValueToLuaValue(L, ctx["imports"]))
 
-	if err := proc.L.DoString(luaStr); err != nil {
+	if err := L.DoString(luaStr); err != nil {
 		return err
 	}
 
-	if err := luautils.MapLua(proc.L.GetGlobal("values").(*lua.LTable), &values); err != nil {
+	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
 		return err
 	}
 
-	if err := luautils.MapLua(proc.L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
+	if err := luautils.MapLua(L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
 		return err
 	}
 
