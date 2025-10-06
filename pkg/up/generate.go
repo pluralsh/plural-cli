@@ -65,14 +65,13 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	}
 
 	copies := []templatePair{
-		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters"},
-		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster"},
-		{from: ctx.path("setup"), to: "bootstrap"},
+		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters", overwrite: true},
+		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster", overwrite: true},
+		{from: ctx.path("setup"), to: "bootstrap", overwrite: true},
 		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
-		{from: ctx.path("templates"), to: "templates"},
-		{from: ctx.path("resources"), to: "resources"},
-		{from: ctx.path("services"), to: "services"},
-		{from: ctx.path("helm"), to: "helm"},
+		{from: ctx.path("templates"), to: "templates", overwrite: true},
+		{from: ctx.path("services"), to: "services", overwrite: true},
+		{from: ctx.path("helm"), to: "helm", overwrite: true},
 	}
 
 	if ctx.Cloud {
@@ -103,7 +102,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 	for _, tpl := range postTemplates {
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
-			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
+			err = fmt.Errorf("failed to template %s: %w (you might need to regenerate your repo from scratch if partially applied)", tpl.from, err)
 			return
 		}
 	}
@@ -127,8 +126,6 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 	ctx.changeDelims()
 	overwrites := []templatePair{
-		{from: "resources/monitoring/services", to: "resources/monitoring/services"},
-		{from: "resources/policy/services", to: "resources/policy/services"},
 		{from: "bootstrap", to: "bootstrap"},
 	}
 
