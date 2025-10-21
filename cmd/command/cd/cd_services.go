@@ -3,6 +3,7 @@ package cd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -362,33 +363,25 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	L.SetGlobal("contexts", luautils.GoValueToLuaValue(L, ctx["contexts"]))
 	L.SetGlobal("imports", luautils.GoValueToLuaValue(L, ctx["imports"]))
 
-	// Register a print function to print to stdout when debugging
-	output := &bytes.Buffer{}
-	L.SetGlobal("print", L.NewFunction(func(L *lua.LState) int {
-		top := L.GetTop()
-		for i := 1; i <= top; i++ {
-			val := L.ToStringMeta(L.Get(i)).String()
-			if _, err := fmt.Fprint(output, val); err != nil {
-				return 1
-			}
-			if i != top {
-				if _, err := fmt.Fprint(output, "\t"); err != nil {
-					return 1
-				}
-			}
-		}
-		if _, err := fmt.Fprintln(output); err != nil {
-			return 1
-		}
-		return 0
-	}))
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 
 	if err := L.DoString(luaStr); err != nil {
 		return err
 	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	os.Stdout = old
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(r); err != nil {
+		return err
+	}
 
+	output := buf.String()
 	if c.Bool("debug") {
-		fmt.Println(output.String())
+		fmt.Println(output)
 	}
 
 	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
