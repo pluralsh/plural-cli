@@ -90,10 +90,11 @@ func IsAlreadyAgentInstalled(k8sClient *kubernetes.Clientset) (bool, error) {
 	return false, nil
 }
 
-func InstallAgent(consoleURL, token, namespace, version, helmChartLoc string, values map[string]interface{}) error {
+func InstallAgent(consoleURL, token, namespace, version, helmChartLoc, clusterID string, values map[string]interface{}) error {
 	vals := algorithms.Merge(map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
 		"consoleUrl": consoleURL,
+		"clusterId":  clusterID,
 	}, values)
 
 	config, err := helm.GetActionConfig(namespace)

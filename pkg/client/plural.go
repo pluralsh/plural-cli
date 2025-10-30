@@ -7,6 +7,7 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/polly/algorithms"
+	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/urfave/cli"
@@ -196,7 +197,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
+func (p *Plural) DoInstallOperator(url, token, values, chart_loc, clusterId string) error {
 	err := p.InitKube()
 	if err != nil {
 		return err
@@ -249,7 +250,7 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc string) error {
 		}
 	}
 	vals = algorithms.Merge(vals, globalVals)
-	err = console.InstallAgent(url, token, console.OperatorNamespace, version, chart_loc, vals)
+	err = console.InstallAgent(url, token, console.OperatorNamespace, version, chart_loc, clusterId, vals)
 	if err == nil {
 		utils.Success("Deployment operator installed successfully\n")
 	}
@@ -263,11 +264,13 @@ func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string, chart_loc
 	}
 
 	url := p.ConsoleClient.ExtUrl()
+	clusterId := lo.FromPtr(id)
 	if cluster, err := p.ConsoleClient.GetCluster(id, handle); err == nil {
+		clusterId = cluster.ID
 		if agentUrl, err := p.ConsoleClient.AgentUrl(cluster.ID); err == nil {
 			url = agentUrl
 		}
 	}
 
-	return p.DoInstallOperator(url, deployToken, c.String("values"), chart_loc)
+	return p.DoInstallOperator(url, deployToken, c.String("values"), chart_loc, clusterId)
 }
