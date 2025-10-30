@@ -148,7 +148,7 @@ func (p *Plural) handleListClusters(_ *cli.Context) error {
 			handle = *cl.Node.Handle
 		}
 		version := ""
-		if cl.Node.Version != nil {
+		if cl.Node.CurrentVersion != nil {
 			version = *cl.Node.CurrentVersion
 		}
 		return []string{cl.Node.ID, cl.Node.Name, handle, version, string(distro)}, nil
