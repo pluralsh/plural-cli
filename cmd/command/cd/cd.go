@@ -78,7 +78,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
-				cli.StringFlag{Name: "cluster-id", Usage: "cluster id to install the operator for"},
+				cli.StringFlag{Name: "cluster-id", Usage: "cluster id to install the operator for", Required: false},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
