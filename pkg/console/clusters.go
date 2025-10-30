@@ -93,7 +93,7 @@ func (c *consoleClient) DetachCluster(id string) error {
 func (c *consoleClient) CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error) {
 	newCluster, err := c.client.CreateCluster(c.ctx, attributes)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "CreateCluster")
+		return nil, err
 	}
 	return newCluster, nil
 }

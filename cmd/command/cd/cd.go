@@ -78,6 +78,7 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "url", Usage: "console url", Required: true},
 				cli.StringFlag{Name: "token", Usage: "deployment token", Required: true},
+				cli.StringFlag{Name: "cluster-id", Usage: "cluster id to install the operator for"},
 				cli.StringFlag{Name: "values", Usage: "values file to use for the deployment agent helm chart", Required: false},
 				cli.StringFlag{Name: "chart-loc", Usage: "URL or filepath of helm chart tar file. Use if not wanting to install helm chart from default plural repository.", Required: false},
 				cli.BoolFlag{Name: "force", Usage: "ignore checking if the current cluster is correct"},
@@ -125,14 +126,20 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 }
 
 func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
+	cliClusterId := c.String("cluster-id")
 	if !c.Bool("force") {
-		confirm, err := confirmCluster(c.String("url"), c.String("token"))
+		confirm, clusterId, err := confirmCluster(c.String("url"), c.String("token"))
 		if err != nil {
 			return err
 		}
 		if !confirm {
 			return nil
 		}
+		cliClusterId = clusterId
+	}
+
+	if cliClusterId == "" {
+		return fmt.Errorf("cluster id must be provided")
 	}
 
 	// we don't care if this fails to init as this command can be auth-less
@@ -140,7 +147,7 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 		utils.Warn("Console client was not initialized, reason: %s", err.Error())
 	}
 
-	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"), c.String("chart-loc"))
+	return p.DoInstallOperator(c.String("url"), c.String("token"), c.String("values"), c.String("chart-loc"), cliClusterId)
 }
 
 func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
@@ -151,20 +158,20 @@ func (p *Plural) handleUninstallOperator(_ *cli.Context) error {
 	return console.UninstallAgent(console.OperatorNamespace)
 }
 
-func confirmCluster(url, token string) (bool, error) {
+func confirmCluster(url, token string) (bool, string, error) {
 	consoleClient, err := console.NewConsoleClient(token, url)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	myCluster, err := consoleClient.MyCluster()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	clusterFragment, err := consoleClient.GetCluster(&myCluster.MyCluster.ID, nil)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	handle := "-"
@@ -175,7 +182,7 @@ func confirmCluster(url, token string) (bool, error) {
 	if clusterFragment.Distro != nil {
 		provider = string(*clusterFragment.Distro)
 	}
-	return common.Confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), nil
+	return common.Confirm(fmt.Sprintf("Are you sure you want to install deploy operator for the cluster:\nName: %s\nHandle: %s\nProvider: %s\n", myCluster.MyCluster.Name, handle, provider), "PLURAL_INSTALL_AGENT_CONFIRM"), myCluster.MyCluster.ID, nil
 }
 
 func (p *Plural) HandleCdLogin(c *cli.Context) (err error) {

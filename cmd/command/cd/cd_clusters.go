@@ -536,7 +536,7 @@ func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 
 	deployToken := *existing.CreateCluster.DeployToken
 	utils.Highlight("installing agent on %s with url %s\n", c.String("name"), p.ConsoleClient.Url())
-	return p.DoInstallOperator(url, deployToken, c.String("values"), c.String("chart-loc"))
+	return p.DoInstallOperator(url, deployToken, c.String("values"), c.String("chart-loc"), existing.CreateCluster.ID)
 }
 
 func getMetadataJson(val string) (*string, error) {
