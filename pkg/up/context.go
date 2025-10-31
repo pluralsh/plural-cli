@@ -153,7 +153,7 @@ func backfillConsoleContext(man *manifest.ProjectManifest) error {
 	}
 
 	if err := verifySSHKey(contents, url); err != nil {
-		return err
+		return fmt.Errorf("ssh key not valid for url %s, error: %w", url, err)
 	}
 
 	console["repo_url"] = url
