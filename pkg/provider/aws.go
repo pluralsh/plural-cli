@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"sort"
 	"strings"
@@ -77,9 +78,10 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		return nil, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
 	}
 
-	fmt.Printf("\nCaller identity ARN: %+v\n", lo.FromPtr(callerIdentity.Arn))
-	fmt.Printf("Caller identity account: %+v\n", lo.FromPtr(callerIdentity.Account))
-	fmt.Printf("Caller identity user ID: %+v\n\n", lo.FromPtr(callerIdentity.UserId))
+	fmt.Printf("\nUsing %s AWS profile\n", getAWSProfileName())
+	fmt.Printf("Caller identity ARN: %s\n", lo.FromPtr(callerIdentity.Arn))
+	fmt.Printf("Caller identity account: %s\n", lo.FromPtr(callerIdentity.Account))
+	fmt.Printf("Caller identity user ID: %s\n\n", lo.FromPtr(callerIdentity.UserId))
 
 	provider = &AWSProvider{
 		goContext: &ctx,
@@ -404,6 +406,18 @@ func (aws *AWSProvider) testIamPermissions() error {
 	}
 
 	return fmt.Errorf("you do not meet all required iam permissions to deploy an eks cluster: %s, this is not necessarily a full list, we recommend using as close to AdministratorAccess as possible to run plural", strings.Join(missing, ","))
+}
+
+func getAWSProfileName() string {
+	if profile := os.Getenv("AWS_PROFILE"); profile != "" {
+		return profile
+	}
+
+	if profile := os.Getenv("AWS_DEFAULT_PROFILE"); profile != "" {
+		return profile
+	}
+
+	return "default"
 }
 
 // GetAWSCallerIdentity returns the IAM role ARN of the current caller identity.
