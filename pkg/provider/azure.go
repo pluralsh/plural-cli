@@ -120,14 +120,19 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	clients, err := GetClientSet(subId)
+	user, err := GetAzureUser()
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("\nUsing %s Azure subscription\n", subName)
+	fmt.Printf("\nLogged in as %s to %s Azure subscription\n", user, subName)
 	fmt.Printf("Subscription ID: %s\n", subId)
 	fmt.Printf("Tenant ID: %s\n\n", tenID)
+
+	clients, err := GetClientSet(subId)
+	if err != nil {
+		return
+	}
 
 	ctx := context.Background()
 	locations := []string{}
@@ -477,6 +482,22 @@ func GetAzureAccount() (string, string, string, error) {
 		return "", "", "", err
 	}
 	return res.Id, res.TenantId, res.Name, nil
+}
+
+func GetAzureUser() (string, error) {
+	cmd := exec.Command("az", "ad", "signed-in-user", "show")
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(string(out))
+		return "", err
+	}
+
+	var res struct{ UserPrincipalName string }
+	if err := json.Unmarshal(out, &res); err != nil {
+		return "", err
+	}
+
+	return res.UserPrincipalName, nil
 }
 
 func isNotFoundResourceGroup(err error) bool {
