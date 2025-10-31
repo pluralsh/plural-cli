@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -191,4 +192,18 @@ func GetIdAndName(input string) (id, name *string) {
 		id = &input
 	}
 	return
+}
+
+func GetHostnameFromURL(u string) string {
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return ""
+	}
+	if parsed.Scheme == "" && parsed.Host == "" {
+		if parsed, err = url.Parse("//" + u); err != nil {
+			return ""
+		}
+	}
+	hostname := parsed.Hostname()
+	return hostname
 }
