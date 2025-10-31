@@ -115,7 +115,7 @@ type AzureProvider struct {
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
-	subId, tenID, err := GetAzureAccount()
+	subId, tenID, subName, err := GetAzureAccount()
 	if err != nil {
 		return
 	}
@@ -124,6 +124,10 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	if err != nil {
 		return
 	}
+
+	fmt.Printf("\nUsing %s Azure subscription\n", subName)
+	fmt.Printf("Subscription ID: %s\n", subId)
+	fmt.Printf("Tenant ID: %s\n\n", tenID)
 
 	ctx := context.Background()
 	locations := []string{}
@@ -455,23 +459,24 @@ func (az *AzureProvider) upsertStorageContainer(acc armstorage.Account, name str
 	return err
 }
 
-func GetAzureAccount() (string, string, error) {
+func GetAzureAccount() (string, string, string, error) {
 	cmd := exec.Command("az", "account", "show")
 	out, err := cmd.Output()
 	if err != nil {
 		fmt.Println(string(out))
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var res struct {
 		TenantId string
 		Id       string
+		Name     string
 	}
 
 	if err := json.Unmarshal(out, &res); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return res.Id, res.TenantId, nil
+	return res.Id, res.TenantId, res.Name, nil
 }
 
 func isNotFoundResourceGroup(err error) bool {
@@ -507,7 +512,7 @@ func getPathElement(path, indexName string) (string, error) {
 }
 
 func ValidateAzureDomainRegistration(ctx context.Context, domain, resourceGroup string) error {
-	subId, _, err := GetAzureAccount()
+	subId, _, _, err := GetAzureAccount()
 	if err != nil {
 		return err
 	}
