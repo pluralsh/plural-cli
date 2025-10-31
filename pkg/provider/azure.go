@@ -98,42 +98,29 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	locations, err := AzureLocations(context.Background(), clients.Subscriptions, subId)
+	ctx := context.Background()
+
+	location, err := askAzureLocation(ctx, clients.Subscriptions, subId)
 	if err != nil {
 		return
 	}
 
-	groups, err := AzureResourceGroups(context.Background(), clients.Groups)
+	resourceGroup, err := askAzureResourceGroup(ctx, clients.Groups)
 	if err != nil {
 		return
 	}
 
-	accounts, err := AzureStorageAccounts(context.Background(), clients.Accounts)
+	storageAccount, err := askAzureStorageAccount(ctx, clients.Accounts)
 	if err != nil {
 		return
 	}
 
-	var resp struct{ Cluster, Region, Resource, Storage string }
+	var resp struct{ Cluster string }
 	var azureSurvey = []*survey.Question{
 		{
 			Name:     "cluster",
 			Prompt:   &survey.Input{Message: "Enter the name of your cluster:", Default: clusterFlag},
 			Validate: validCluster,
-		},
-		{
-			Name:     "region",
-			Prompt:   &survey.Select{Message: "Select the region you want to deploy to:", Default: "eastus", Options: locations},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "resource",
-			Prompt:   &survey.Select{Message: "Select the resource group to use:", Options: groups},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "storage",
-			Prompt:   &survey.Select{Message: "Select the storage account to use:", Options: accounts},
-			Validate: survey.Required,
 		},
 	}
 
@@ -144,13 +131,13 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 
 	prov = &AzureProvider{
 		resp.Cluster,
-		resp.Resource,
+		resourceGroup,
 		"",
-		resp.Region,
+		location,
 		map[string]interface{}{
 			"SubscriptionId": subId,
 			"TenantId":       tenID,
-			"StorageAccount": resp.Storage,
+			"StorageAccount": storageAccount,
 		},
 		nil,
 		clients,
