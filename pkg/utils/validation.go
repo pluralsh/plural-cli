@@ -3,7 +3,6 @@ package utils
 import (
 	e "errors"
 	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -53,18 +52,6 @@ func RegexValidator(regex, message string) survey.Validator {
 	}
 }
 
-// ValidateStorageAccountName validates Azure storage account names.
-var ValidateStorageAccountName = survey.ComposeValidators(
-	survey.Required,
-	RegexValidator("[a-z][a-z0-9]{2,23}", "Must be between 3 and 24 characters in length, start with lowercase letter and may contain numbers and lowercase letters only"),
-)
-
-// ValidateResourceGroupName validates Azure resource group names.
-var ValidateResourceGroupName = survey.ComposeValidators(
-	survey.Required,
-	RegexValidator("[a-z][a-z0-9]{2,62}", "Must be between 3 and 63 characters in length, start with lowercase letter and may contain numbers and lowercase letters only"),
-)
-
 var ValidateAlphaNumeric = survey.ComposeValidators(
 	survey.Required,
 	RegexValidator("[a-z][0-9\\-a-z]+", "Must be an alphanumeric string"),
@@ -81,22 +68,4 @@ func Confirm(msg string) bool {
 		return false
 	}
 	return res
-}
-
-func FileExists(val interface{}) error {
-	path, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("value is not a string: %v", val)
-	}
-
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return err
-	}
-
-	if info.IsDir() {
-		return fmt.Errorf("provided path points to a directory, not a file: %s", path)
-	}
-
-	return nil
 }
