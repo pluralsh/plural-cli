@@ -7,9 +7,22 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/subscription/armsubscription"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
 const createNewOption = "Create new..."
+
+func askCluster() (string, error) {
+	cluster := ""
+	if err := survey.AskOne(
+		&survey.Input{Message: "Enter the name of your cluster:"},
+		&cluster, survey.WithValidator(validCluster),
+	); err != nil {
+		return "", err
+	}
+
+	return cluster, nil
+}
 
 func azureLocations(ctx context.Context, client *armsubscription.SubscriptionsClient, subscriptionID string) ([]string, error) {
 	locations := make([]string, 0)
@@ -82,7 +95,7 @@ func askAzureResourceGroup(ctx context.Context, client *armresources.ResourceGro
 	}
 
 	if group == createNewOption {
-		if err = survey.AskOne(&survey.Input{Message: "Enter resource group name:"}, &group); err != nil {
+		if err = survey.AskOne(&survey.Input{Message: "Enter resource group name:"}, &group, survey.WithValidator(utils.ValidateResourceGroupName)); err != nil {
 			return "", err
 		}
 	}
@@ -125,7 +138,7 @@ func askAzureStorageAccount(ctx context.Context, client *armstorage.AccountsClie
 	}
 
 	if account == createNewOption {
-		if err = survey.AskOne(&survey.Input{Message: "Enter globally unique storage account name:"}, &account); err != nil {
+		if err = survey.AskOne(&survey.Input{Message: "Enter globally unique storage account name:"}, &account, survey.WithValidator(utils.ValidateStorageAccountName)); err != nil {
 			return "", err
 		}
 	}

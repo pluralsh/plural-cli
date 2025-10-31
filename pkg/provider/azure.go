@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -100,6 +99,11 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 
 	ctx := context.Background()
 
+	cluster, err := askCluster()
+	if err != nil {
+		return
+	}
+
 	location, err := askAzureLocation(ctx, clients.Subscriptions, subId)
 	if err != nil {
 		return
@@ -115,30 +119,11 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	var resp struct{ Cluster string }
-	var azureSurvey = []*survey.Question{
-		{
-			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster:", Default: clusterFlag},
-			Validate: validCluster,
-		},
-	}
-
-	err = survey.Ask(azureSurvey, &resp)
-	if err != nil {
-		return
-	}
-
-	prov = &AzureProvider{
-		resp.Cluster,
+	prov = &AzureProvider{cluster,
 		resourceGroup,
 		"",
 		location,
-		map[string]interface{}{
-			"SubscriptionId": subId,
-			"TenantId":       tenID,
-			"StorageAccount": storageAccount,
-		},
+		map[string]any{"SubscriptionId": subId, "TenantId": tenID, "StorageAccount": storageAccount},
 		nil,
 		clients,
 	}

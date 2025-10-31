@@ -52,6 +52,18 @@ func RegexValidator(regex, message string) survey.Validator {
 	}
 }
 
+// ValidateStorageAccountName validates Azure storage account names.
+var ValidateStorageAccountName = survey.ComposeValidators(
+	survey.Required,
+	RegexValidator("[a-z][a-z0-9]{2,23}", "Must be between 3 and 24 characters in length, start with lowercase letter and may contain numbers and lowercase letters only"),
+)
+
+// ValidateResourceGroupName validates Azure resource group names.
+var ValidateResourceGroupName = survey.ComposeValidators(
+	survey.Required,
+	RegexValidator("[a-z][a-z0-9]{2,62}", "Must be between 3 and 63 characters in length, start with lowercase letter and may contain numbers and lowercase letters only"),
+)
+
 var ValidateAlphaNumeric = survey.ComposeValidators(
 	survey.Required,
 	RegexValidator("[a-z][0-9\\-a-z]+", "Must be an alphanumeric string"),
