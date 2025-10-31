@@ -2,13 +2,13 @@ package up
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/samber/lo"
 
-	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
@@ -117,18 +117,15 @@ func backfillConsoleContext(man *manifest.ProjectManifest) error {
 	utils.Highlight("It looks like you cloned this repo before running plural up, we just need you to generate and give us a deploy key to continue\n")
 	utils.Highlight("If you want, you can use `plural crypto ssh-keygen` to generate a keypair to use as a deploy key as well\n\n")
 
+	files, err := filepath.Glob(filepath.Join(os.Getenv("HOME"), ".ssh", "*"))
+	if err != nil {
+		return err
+	}
+
 	var deployKey string
-	prompt := &survey.Input{
+	prompt := &survey.Select{
 		Message: "Select a file containing a read-only deploy key for this repo (use tab to list files in the directory):",
-		Default: "~/.ssh",
-		Suggest: func(toComplete string) []string {
-			path, err := homedir.Expand(toComplete)
-			if err != nil {
-				path = toComplete
-			}
-			files, _ := filepath.Glob(bundle.CleanPath(path) + "*")
-			return files
-		},
+		Options: files,
 	}
 
 	opts := []survey.AskOpt{survey.WithValidator(survey.Required)}
