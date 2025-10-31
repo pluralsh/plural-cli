@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 
@@ -165,6 +166,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 }
 
 func (p *Plural) choseCluster() (name, url string, err error) {
+	prior := console.ReadConfig()
 	instances, err := p.GetConsoleInstances()
 	if err != nil {
 		return
@@ -174,6 +176,11 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	clusterMap := map[string]string{}
 
 	for _, cluster := range instances {
+		if prior.Url != "" && strings.EqualFold(common.GetHostnameFromURL(prior.Url), common.GetHostnameFromURL(cluster.URL)) {
+			name = cluster.Name
+			url = cluster.URL
+			return
+		}
 		clusterNames = append(clusterNames, cluster.Name)
 		clusterMap[cluster.Name] = cluster.URL
 	}
