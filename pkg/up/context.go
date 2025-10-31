@@ -152,8 +152,30 @@ func backfillConsoleContext(man *manifest.ProjectManifest) error {
 		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry", url)
 	}
 
+	if err := verifySSHKey(contents, url); err != nil {
+		return err
+	}
+
 	console["repo_url"] = url
 	console["private_key"] = contents
 	ctx.Configuration["console"] = console
 	return ctx.Write(path)
+}
+
+func verifySSHKey(key, url string) error {
+	dir, err := os.MkdirTemp("", "repo")
+	if err != nil {
+		return err
+	}
+	defer func(path string) {
+		err := os.RemoveAll(path)
+		if err != nil {
+			return
+		}
+	}(dir)
+	auth, _ := git.SSHAuth("git", key, "")
+	if _, err := git.Clone(auth, url, dir); err != nil {
+		return err
+	}
+	return nil
 }
