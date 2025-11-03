@@ -158,7 +158,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	prov, err := common.RunPreflights(c)
 	if err != nil {
 		if !c.Bool("ignore-preflights") {
-			return fmt.Errorf("preflight checks failed: %v\nYou can rerun the command with --ignore-preflights to skip these checks.", err)
+			return fmt.Errorf("preflight checks failed: %w\nYou can rerun the command with --ignore-preflights to skip these checks.", err)
 		}
 		fmt.Println("Preflight checks failed, but continuing because --ignore-preflights was specified.")
 	}

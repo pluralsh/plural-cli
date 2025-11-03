@@ -83,7 +83,7 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 	}
 
 	stackNames := make(map[string]string)
-	infrastructureStacks, err := p.Plural.ConsoleClient.ListaStacks()
+	infrastructureStacks, err := p.ConsoleClient.ListaStacks()
 	if err != nil {
 		return api.GetErrorResponse(err, "ListaStacks")
 	}
