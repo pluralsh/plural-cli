@@ -62,6 +62,7 @@ type ConsoleClient interface {
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
 	GetUser(email string) (*consoleclient.UserFragment, error)
+	ListaStacks() (*consoleclient.ListInfrastructureStacks, error)
 }
 
 type authedTransport struct {
