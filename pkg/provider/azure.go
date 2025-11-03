@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -35,39 +34,12 @@ import (
 	pluralerr "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
 
-// ResourceGroupClient is the subset of functions we need from armresources.VirtualResourceGroupsClient;
-// this interface is purely here for allowing unit tests.
-type ResourceGroupClient interface {
-	CreateOrUpdate(ctx context.Context, resourceGroupName string, parameters armresources.ResourceGroup, options *armresources.ResourceGroupsClientCreateOrUpdateOptions) (armresources.ResourceGroupsClientCreateOrUpdateResponse, error)
-	Get(ctx context.Context, resourceGroupName string, options *armresources.ResourceGroupsClientGetOptions) (armresources.ResourceGroupsClientGetResponse, error)
-}
-
-type AccountsClient interface {
-	GetProperties(ctx context.Context, resourceGroupName string, accountName string, options *armstorage.AccountsClientGetPropertiesOptions) (armstorage.AccountsClientGetPropertiesResponse, error)
-	BeginCreate(ctx context.Context, resourceGroupName string, accountName string, parameters armstorage.AccountCreateParameters, options *armstorage.AccountsClientBeginCreateOptions) (*runtime.Poller[armstorage.AccountsClientCreateResponse], error)
-	NewListPager(options *armstorage.AccountsClientListOptions) *runtime.Pager[armstorage.AccountsClientListResponse]
-	ListKeys(ctx context.Context, resourceGroupName string, accountName string, options *armstorage.AccountsClientListKeysOptions) (armstorage.AccountsClientListKeysResponse, error)
-}
-
-type ContainerClient interface {
-	GetProperties(ctx context.Context, ac azblob.LeaseAccessConditions) (*azblob.ContainerGetPropertiesResponse, error)
-	Create(ctx context.Context, metadata azblob.Metadata, publicAccessType azblob.PublicAccessType) (*azblob.ContainerCreateResponse, error)
-}
-
-type SubscriptionClient interface {
-	NewListLocationsPager(subscriptionID string, options *armsubscription.SubscriptionsClientListLocationsOptions) *runtime.Pager[armsubscription.SubscriptionsClientListLocationsResponse]
-}
-
-type ZonesClient interface {
-	NewListByResourceGroupPager(resourceGroupName string, options *armdns.ZonesClientListByResourceGroupOptions) *runtime.Pager[armdns.ZonesClientListByResourceGroupResponse]
-}
-
 type ClientSet struct {
-	Subscriptions SubscriptionClient
-	Groups        ResourceGroupClient
-	Accounts      AccountsClient
-	Containers    ContainerClient
-	Zones         ZonesClient
+	Subscriptions *armsubscription.SubscriptionsClient
+	Groups        *armresources.ResourceGroupsClient
+	Accounts      *armstorage.AccountsClient
+	Zones         *armdns.ZonesClient
+	Containers    *azblob.ContainerURL
 }
 
 func GetClientSet(subscriptionId string) (*ClientSet, error) {
@@ -135,65 +107,32 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 	}
 
 	ctx := context.Background()
-	locations := []string{}
-	locationsPager := clients.Subscriptions.NewListLocationsPager(subId, nil)
-	for locationsPager.More() {
-		page, err := locationsPager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
 
-		for _, v := range page.Value {
-			if v != nil {
-				locations = append(locations, *v.Name)
-			}
-		}
-	}
-
-	var resp struct {
-		Cluster  string
-		Storage  string
-		Region   string
-		Resource string
-	}
-	var azureSurvey = []*survey.Question{
-		{
-			Name:     "cluster",
-			Prompt:   &survey.Input{Message: "Enter the name of your cluster:", Default: clusterFlag},
-			Validate: validCluster,
-		},
-		{
-			Name:     "storage",
-			Prompt:   &survey.Input{Message: "Enter the name of the storage account to use for your stage, must be globally unique or already owned by your subscription:"},
-			Validate: utils.ValidateStorageAccountName,
-		},
-		{
-			Name:     "region",
-			Prompt:   &survey.Select{Message: "Enter the region you want to deploy to:", Default: "eastus", Options: locations},
-			Validate: survey.Required,
-		},
-		{
-			Name:     "resource",
-			Prompt:   &survey.Input{Message: "Enter the name of the resource group to use:"},
-			Validate: utils.ValidateResourceGroupName,
-		},
-	}
-
-	err = survey.Ask(azureSurvey, &resp)
+	cluster, err := askCluster()
 	if err != nil {
 		return
 	}
 
-	prov = &AzureProvider{
-		resp.Cluster,
-		resp.Resource,
+	location, err := askAzureLocation(ctx, clients.Subscriptions, subId)
+	if err != nil {
+		return
+	}
+
+	resourceGroup, err := askAzureResourceGroup(ctx, clients.Groups)
+	if err != nil {
+		return
+	}
+
+	storageAccount, err := askAzureStorageAccount(ctx, clients.Accounts)
+	if err != nil {
+		return
+	}
+
+	prov = &AzureProvider{cluster,
+		resourceGroup,
 		"",
-		resp.Region,
-		map[string]interface{}{
-			"SubscriptionId": subId,
-			"TenantId":       tenID,
-			"StorageAccount": resp.Storage,
-		},
+		location,
+		map[string]any{"SubscriptionId": subId, "TenantId": tenID, "StorageAccount": storageAccount},
 		nil,
 		clients,
 	}
@@ -452,7 +391,7 @@ func (az *AzureProvider) upsertStorageContainer(acc armstorage.Account, name str
 		u, _ := url.Parse(fmt.Sprintf(`https://%s.blob.core.windows.net`, accountName))
 		service := azblob.NewServiceURL(*u, p)
 		containerClient := service.NewContainerURL(name)
-		az.clients.Containers = containerClient
+		az.clients.Containers = &containerClient
 	}
 
 	_, err = az.clients.Containers.GetProperties(ctx, azblob.LeaseAccessConditions{})
