@@ -20,13 +20,13 @@ func Preflight() (bool, error) {
 		}
 	}
 
-	fmt.Print("\nTesting if git ssh is properly configured...\n")
+	fmt.Print("\nTesting if git ssh is properly configured...")
 	if err := checkGitSSH(); err != nil {
 		fmt.Printf("%s\n\n", err.Error())
 		utils.Warn("Please ensure that you have ssh keys set up for git and that you've added them to your ssh agent. You can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider.\n")
 		return true, fmt.Errorf("git ssh is not properly configured")
 	}
-	fmt.Println(" \033[32m (\u2713) \033[0m") // (✔)
+	fmt.Printf(" \033[32m (\u2713) \033[0m\n\n")
 
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	if _, err := cmd.CombinedOutput(); err != nil {
