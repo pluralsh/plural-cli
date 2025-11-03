@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pluralsh/plural-cli/pkg/utils/git"
+	gitutils "github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -105,6 +105,11 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	repo := ""
 	p.InitPluralClient()
 
+	git, err := wkspace.Preflight()
+	if err != nil && git {
+		return err
+	}
+
 	if utils.Exists("./workspace.yaml") {
 		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
 		utils.Highlight("Checking domain...\n")
@@ -118,7 +123,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 			}
 		}
 		utils.Highlight("Domain OK \n")
-		branch, err := git.CurrentBranch()
+		branch, err := gitutils.CurrentBranch()
 		if err != nil {
 			return err
 		}
@@ -131,11 +136,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		}
 		_ = wkspace.DownloadReadme()
 		return nil
-	}
-
-	git, err := wkspace.Preflight()
-	if err != nil && git {
-		return err
 	}
 
 	if err := common.HandleLogin(c); err != nil {
