@@ -17,7 +17,6 @@ const (
 
 const Gitattributes = `context.yaml filter=plural-crypt diff=plural-crypt
 workspace.yaml filter=plural-crypt diff=plural-crypt
-context.yaml* filter=plural-crypt diff=plural-crypt
 workspace.yaml* filter=plural-crypt diff=plural-crypt
 helm-values/*.yaml filter=plural-crypt diff=plural-crypt
 .env filter=plural-crypt diff=plural-crypt
@@ -34,6 +33,7 @@ const Gitignore = `/**/.terraform
 *.swo
 .DS_STORE
 .vscode
+context.yaml*
 `
 
 func CryptoInit(c *cli.Context) error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
@@ -81,13 +82,28 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 		return err
 	}
 
-	id := ""
-	err := p.askStackID(&id)
+	stackNames := make(map[string]string)
+	infrastructureStacks, err := p.ConsoleClient.ListaStacks()
 	if err != nil {
+		return api.GetErrorResponse(err, "ListaStacks")
+	}
+	if infrastructureStacks == nil || infrastructureStacks.InfrastructureStacks == nil || len(infrastructureStacks.InfrastructureStacks.Edges) == 0 {
+		return fmt.Errorf("returned objects list [ListStacks] is nil")
+	}
+	for _, node := range infrastructureStacks.InfrastructureStacks.Edges {
+		stackNames[node.Node.Name] = lo.FromPtr(node.Node.ID)
+	}
+	var name string
+	prompt := &survey.Select{
+		Message: "Select a stack to generate a backend for:",
+		Options: lo.Keys(stackNames),
+	}
+	opts := []survey.AskOpt{survey.WithValidator(survey.Required)}
+	if err := survey.AskOne(prompt, &name, opts...); err != nil {
 		return err
 	}
 
-	stateUrls, err := stacks.GetTerraformStateUrls(p.ConsoleClient, id)
+	stateUrls, err := stacks.GetTerraformStateUrls(p.ConsoleClient, stackNames[name])
 	if err != nil {
 		return err
 	}
@@ -112,12 +128,4 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 	}
 
 	return git.AppendGitIgnore(dir, []string{fileName})
-}
-
-func (p *Plural) askStackID(id *string) (err error) {
-	return survey.AskOne(
-		&survey.Input{Message: "Enter the stack id:"},
-		id,
-		survey.WithValidator(survey.Required),
-	)
 }

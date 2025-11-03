@@ -156,8 +156,12 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	}
 
 	prov, err := common.RunPreflights(c)
-	if err != nil && !c.Bool("ignore-preflights") {
-		return err
+	if err != nil {
+		if !c.Bool("ignore-preflights") {
+			fmt.Println("Preflight checks failed. You can rerun with --ignore-preflights to skip these checks.")
+			return fmt.Errorf("preflight checks failed: %w", err)
+		}
+		fmt.Println("Preflight checks failed, but continuing because --ignore-preflights was specified.")
 	}
 
 	if !git && common.Affirm("You're attempting to setup plural outside a git repository. Would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
