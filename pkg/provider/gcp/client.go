@@ -14,8 +14,10 @@ import (
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/storage"
 	"github.com/pluralsh/polly/algorithms"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/iterator"
+	oauth3 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -134,6 +136,25 @@ func (in *internalClient) managedZones(projectID string) ([]string, error) {
 	}
 
 	return algorithms.Map(response.ManagedZones, func(z *dns.ManagedZone) string { return z.Name }), nil
+}
+
+func (in *internalClient) loggedInUserInfo(ctx context.Context) (email, name string, err error) {
+	defaultTokenSource, err := google.DefaultTokenSource(ctx)
+	if err != nil {
+		return
+	}
+
+	svc, err := oauth3.NewService(ctx, option.WithTokenSource(defaultTokenSource))
+	if err != nil {
+		return
+	}
+
+	userInfo, err := oauth3.NewUserinfoV2MeService(svc).Get().Do()
+	if err != nil {
+		return
+	}
+
+	return userInfo.Email, userInfo.Name, nil
 }
 
 func (in *internalClient) initGoogleSDK() error {
