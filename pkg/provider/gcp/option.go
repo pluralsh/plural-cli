@@ -13,6 +13,11 @@ type Option func(*Provider) error
 
 func WithConfig(c config.Config, defaultCluster string, cloudEnabled bool) Option {
 	return func(gcp *Provider) error {
+		err := printUserInfo()
+		if err != nil {
+			return err
+		}
+
 		inputProvider, err := NewSurvey(defaultCluster)
 		if err != nil {
 			return err
