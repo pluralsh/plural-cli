@@ -3,6 +3,7 @@ package cd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli"
 	"helm.sh/helm/v3/pkg/action"
@@ -188,11 +189,13 @@ func confirmCluster(url, token string) (bool, string, error) {
 func (p *Plural) HandleCdLogin(c *cli.Context) (err error) {
 	prior := console.ReadConfig()
 	if prior.Url != "" {
-		if common.Affirm(
-			fmt.Sprintf("You've already configured your console at %s, continue using those credentials?", prior.Url),
-			"PLURAL_CD_USE_EXISTING_CREDENTIALS",
-		) {
-			return
+		if !strings.EqualFold(common.GetHostnameFromURL(prior.Url), common.GetHostnameFromURL(consoleURL)) {
+			if common.Affirm(
+				fmt.Sprintf("You've already configured your console at %s, continue using those credentials?", prior.Url),
+				"PLURAL_CD_USE_EXISTING_CREDENTIALS",
+			) {
+				return
+			}
 		}
 	}
 
