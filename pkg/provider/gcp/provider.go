@@ -229,6 +229,11 @@ func (in *Provider) ensure() (*Provider, error) {
 func NewProvider(options ...Option) (*Provider, error) {
 	result := new(Provider)
 
+	err := printUserInfo()
+	if err != nil {
+		return nil, err
+	}
+
 	for _, opt := range options {
 		if err := opt(result); err != nil {
 			return nil, err

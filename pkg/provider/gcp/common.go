@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
@@ -40,4 +41,21 @@ func tryToEnableServices(ctx context.Context, client *serviceusage.Client, req *
 
 	_, err = op.Wait(ctx)
 	return
+}
+
+func printUserInfo() error {
+	email, name, err := LoggedInUserInfo()
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\nUsing GCP Credentials\n")
+	fmt.Printf("User email: %s\n", email)
+
+	if len(name) > 0 {
+		fmt.Printf("User name: %s\n", name)
+	}
+
+	fmt.Println()
+	return nil
 }

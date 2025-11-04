@@ -138,13 +138,13 @@ func (in *internalClient) managedZones(projectID string) ([]string, error) {
 	return algorithms.Map(response.ManagedZones, func(z *dns.ManagedZone) string { return z.Name }), nil
 }
 
-func (in *internalClient) loggedInUserInfo(ctx context.Context) (email, name string, err error) {
-	defaultTokenSource, err := google.DefaultTokenSource(ctx)
+func (in *internalClient) loggedInUserInfo() (email, name string, err error) {
+	defaultTokenSource, err := google.DefaultTokenSource(in.ctx)
 	if err != nil {
 		return
 	}
 
-	svc, err := oauth3.NewService(ctx, option.WithTokenSource(defaultTokenSource))
+	svc, err := oauth3.NewService(in.ctx, option.WithTokenSource(defaultTokenSource))
 	if err != nil {
 		return
 	}
@@ -285,4 +285,12 @@ func ClusterManagerClient() (*container.ClusterManagerClient, error) {
 	}
 
 	return client.clusterManagerClient, nil
+}
+
+func LoggedInUserInfo() (string, string, error) {
+	if err := initClient(); err != nil {
+		return "", "", err
+	}
+
+	return client.loggedInUserInfo()
 }
