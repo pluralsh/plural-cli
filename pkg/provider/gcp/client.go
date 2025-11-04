@@ -158,7 +158,6 @@ func (in *internalClient) loggedInUserInfo() (email, name string, err error) {
 }
 
 func (in *internalClient) initGoogleSDK() error {
-
 	storageClient, err := storage.NewClient(in.ctx, option.WithScopes(storage.ScopeReadWrite))
 	if err != nil {
 		return err

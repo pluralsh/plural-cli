@@ -19,18 +19,23 @@ const (
 
 func getBucketLocation(region string) BucketLocation {
 	reg := strings.ToLower(region)
+
 	if strings.Contains(reg, "us") ||
 		strings.Contains(reg, "northamerica") ||
 		strings.Contains(reg, "southamerica") {
 		return BucketLocationUS
-	} else if strings.Contains(reg, "europe") {
+	}
+
+	if strings.Contains(reg, "europe") {
 		return BucketLocationEU
-	} else if strings.Contains(reg, "asia") ||
+	}
+
+	if strings.Contains(reg, "asia") ||
 		strings.Contains(reg, "australia") {
 		return BucketLocationASIA
-	} else {
-		return BucketLocationUS
 	}
+
+	return BucketLocationUS
 }
 
 func tryToEnableServices(ctx context.Context, client *serviceusage.Client, req *serviceusagepb.BatchEnableServicesRequest) (err error) {

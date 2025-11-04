@@ -35,7 +35,7 @@ func (in *Provider) Name() string {
 }
 
 func (in *Provider) project() (string, error) {
-	projectID := in.InputProvider.Project()
+	projectID := in.Project()
 
 	exists, err := IsProjectExists(projectID)
 	if err != nil {
@@ -73,9 +73,6 @@ func (in *Provider) setupKubeconfig() error {
 	if err != nil {
 		return err
 	}
-
-	// Determine cluster location (zone or region)
-	//_, location := in.clusterLocation()
 
 	// Get cluster details
 	req := &containerpb.GetClusterRequest{
@@ -208,14 +205,6 @@ func (in *Provider) createBucket(name string) error {
 	}
 
 	return nil
-}
-
-func (in *Provider) clusterLocation() (string, string) {
-	if z, ok := in.ctx["clusterZone"]; ok {
-		return "zone", z.(string)
-	}
-
-	return "region", in.Region()
 }
 
 func (in *Provider) ensure() (*Provider, error) {
