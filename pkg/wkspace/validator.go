@@ -17,7 +17,7 @@ func Preflight() (bool, error) {
 			return true, utils.HighlightError(fmt.Errorf("%s not installed", req))
 		}
 	}
-	fmt.Print("\nTesting if git ssh is properly configured...\n")
+	fmt.Print("\nTesting if git ssh is properly configured...")
 	if err := checkGitSSH(); err != nil {
 		fmt.Printf("%s\n\n", err.Error())
 		utils.Warn("Please ensure that you have ssh keys set up for git and that you've added them to your ssh agent. You can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider.\n")

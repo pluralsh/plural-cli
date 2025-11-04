@@ -12,6 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	providerapi "github.com/pluralsh/plural-cli/pkg/provider/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 
@@ -19,7 +20,7 @@ import (
 )
 
 type Context struct {
-	Provider       provider.Provider
+	Provider       providerapi.Provider
 	Manifest       *manifest.ProjectManifest
 	Config         *config.Config
 	Cloud          bool
@@ -102,7 +103,7 @@ func Build(cloud bool) (*Context, error) {
 	}, nil
 }
 
-func backfillConsoleContext(man *manifest.ProjectManifest) error {
+func backfillConsoleContext(_ *manifest.ProjectManifest) error {
 	path := manifest.ContextPath()
 	ctx, err := manifest.FetchContext()
 	if err != nil {

@@ -9,13 +9,15 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	providerapi "github.com/pluralsh/plural-cli/pkg/provider/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
@@ -112,7 +114,7 @@ func Preflights(c *cli.Context) error {
 	return err
 }
 
-func RunPreflights(c *cli.Context) (provider.Provider, error) {
+func RunPreflights(c *cli.Context) (providerapi.Provider, error) {
 	provider.SetCloudFlag(c.Bool("cloud"))
 	prov, err := provider.GetProvider()
 	if err != nil {
