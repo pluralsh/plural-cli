@@ -1,7 +1,9 @@
 package cd
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -135,6 +137,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "dir",
 					Usage: "The directory to run the lua script from, defaults to the current working directory",
+				},
+				cli.BoolFlag{
+					Name:  "debug",
+					Usage: "Prints the lua script to stdout during execution for debugging purposes",
 				},
 			},
 		},
@@ -313,10 +319,6 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 }
 
 func (p *Plural) handleLuaTemplate(c *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-
 	luaFile := c.String("lua-file")
 	context := c.String("context")
 	dir := c.String("dir")
@@ -361,8 +363,25 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	L.SetGlobal("contexts", luautils.GoValueToLuaValue(L, ctx["contexts"]))
 	L.SetGlobal("imports", luautils.GoValueToLuaValue(L, ctx["imports"]))
 
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
 	if err := L.DoString(luaStr); err != nil {
 		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	os.Stdout = old
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(r); err != nil {
+		return err
+	}
+
+	output := buf.String()
+	if c.Bool("debug") {
+		fmt.Println(output)
 	}
 
 	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
