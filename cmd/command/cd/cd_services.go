@@ -2,7 +2,10 @@ package cd
 
 import (
 	"fmt"
+	iofs "io/fs"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
@@ -127,6 +130,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "lua-file",
 					Usage: "The .lua file you want to attempt to template.",
+				},
+				cli.StringFlag{
+					Name:  "lua-dir",
+					Usage: "A directory of lua library files to include in the final script used",
 				},
 				cli.StringFlag{
 					Name:  "context",
@@ -318,6 +325,7 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	}
 
 	luaFile := c.String("lua-file")
+	luaDir := c.String("lua-dir")
 	context := c.String("context")
 	dir := c.String("dir")
 	if dir == "" {
@@ -331,6 +339,15 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	luaStr, err := utils.ReadFile(luaFile)
 	if err != nil {
 		return err
+	}
+
+	if luaDir != "" {
+		luaFiles, err := luaFolder(luaDir)
+		if err != nil {
+			return err
+		}
+
+		luaStr = luaFiles + "\n\n" + luaStr
 	}
 
 	ctx := map[string]interface{}{}
@@ -381,6 +398,45 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	utils.Highlight("Final lua output:\n\n")
 	utils.NewYAMLPrinter(result).PrettyPrint()
 	return nil
+}
+
+func luaFolder(folder string) (string, error) {
+	luaFiles := make([]string, 0)
+	if err := filepath.WalkDir(folder, func(path string, info iofs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		if strings.HasSuffix(info.Name(), ".lua") {
+			luaPath, err := filepath.Rel(folder, path)
+			if err != nil {
+				return err
+			}
+			luaFiles = append(luaFiles, luaPath)
+		}
+
+		return nil
+	}); err != nil {
+		return "", fmt.Errorf("failed to walk lua folder %s: %w", folder, err)
+	}
+
+	sort.Slice(luaFiles, func(i, j int) bool {
+		return luaFiles[i] < luaFiles[j]
+	})
+
+	luaFileContents := make([]string, 0)
+	for _, file := range luaFiles {
+		luaContents, err := os.ReadFile(file)
+		if err != nil {
+			return "", fmt.Errorf("failed to read lua file %s: %w", file, err)
+		}
+		luaFileContents = append(luaFileContents, string(luaContents))
+	}
+
+	return strings.Join(luaFileContents, "\n\n"), nil
 }
 
 func (p *Plural) handleCloneClusterService(c *cli.Context) error {
