@@ -25,6 +25,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/provider/preflights"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	plrlErrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 
@@ -285,8 +286,8 @@ func (aws *AWSProvider) Context() map[string]interface{} {
 	return aws.ctx
 }
 
-func (aws *AWSProvider) Preflights() []*Preflight {
-	return []*Preflight{
+func (aws *AWSProvider) Preflights() []*preflights.Preflight {
+	return []*preflights.Preflight{
 		{Name: "Test IAM Permissions", Callback: aws.testIamPermissions},
 	}
 }

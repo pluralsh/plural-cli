@@ -30,6 +30,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
+	"github.com/pluralsh/plural-cli/pkg/provider/preflights"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	pluralerr "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
@@ -246,7 +247,7 @@ func (az *AzureProvider) Context() map[string]interface{} {
 	return az.ctx
 }
 
-func (az *AzureProvider) Preflights() []*Preflight {
+func (az *AzureProvider) Preflights() []*preflights.Preflight {
 	return nil
 }
 

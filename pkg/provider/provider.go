@@ -5,48 +5,18 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/polly/containers"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
-	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
-	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
+	providerapi "github.com/pluralsh/plural-cli/pkg/provider/api"
+	"github.com/pluralsh/plural-cli/pkg/provider/gcp"
 )
 
 var cloudFlag bool
 var clusterFlag string
-
-type Provider interface {
-	Name() string
-	Cluster() string
-	Project() string
-	Region() string
-	Bucket() string
-	KubeConfig() error
-	KubeContext() string
-	CreateBucket() error
-	Context() map[string]interface{}
-	Preflights() []*Preflight
-	Permissions() (permissions.Checker, error)
-	Flush() error
-}
-
-type Preflight struct {
-	Name     string
-	Callback func() error
-}
-
-func (pf *Preflight) Validate() error {
-	utils.Highlight("Executing preflight check :: %s ", pf.Name)
-	if err := pf.Callback(); err != nil {
-		fmt.Println("\nFound error:")
-		return err
-	}
-
-	utils.Success("\u2713\n")
-	return nil
-}
 
 type Providers struct {
 	AvailableProviders []string
@@ -58,7 +28,7 @@ var (
 	filterProviders = containers.ToSet([]string{"GENERIC", "KIND", "LINODE", "EQUINIX"})
 )
 
-func GetProvider() (Provider, error) {
+func GetProvider() (providerapi.Provider, error) {
 	path := manifest.ProjectManifestPath()
 	if project, err := manifest.ReadProject(path); err == nil {
 		return FromManifest(project)
@@ -86,10 +56,10 @@ func SetClusterFlag(cluster string) {
 	clusterFlag = cluster
 }
 
-func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
+func FromManifest(man *manifest.ProjectManifest) (providerapi.Provider, error) {
 	switch man.Provider {
 	case api.ProviderGCP:
-		return gcpFromManifest(man)
+		return gcp.NewProvider(gcp.WithManifest(man))
 	case api.ProviderAWS:
 		return awsFromManifest(man)
 	case api.ProviderAzure:
@@ -101,11 +71,11 @@ func FromManifest(man *manifest.ProjectManifest) (Provider, error) {
 	}
 }
 
-func New(provider string) (Provider, error) {
+func New(provider string) (providerapi.Provider, error) {
 	conf := config.Read()
 	switch provider {
 	case api.ProviderGCP:
-		return mkGCP(conf)
+		return gcp.NewProvider(gcp.WithConfig(conf, clusterFlag, cloudFlag))
 	case api.ProviderAWS:
 		return mkAWS(conf)
 	case api.ProviderAzure:

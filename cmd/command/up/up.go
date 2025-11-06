@@ -7,16 +7,18 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/console"
+	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 
 	cdpkg "github.com/pluralsh/plural-cli/cmd/command/cd"
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
+	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/provider/gcp"
 	"github.com/pluralsh/plural-cli/pkg/up"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -243,10 +245,15 @@ func processAppDomain(domain string) error {
 
 		d := strings.TrimSuffix(domain, ".") + "." // GCP stores zone names with a trailing dot.
 
-		managedZones, err := provider.GetGcpManagedZones(project.Project, d)
+		managedZones, err := gcp.ManagedZones(project.Project)
 		if err != nil {
 			return err
 		}
+
+		managedZones = algorithms.Filter(managedZones, func(dnsName string) bool {
+			return dnsName == d
+		})
+
 		if len(managedZones) == 0 {
 			return fmt.Errorf("no DNS managed zones found for domain %s in project %s", d, project.Project)
 		}

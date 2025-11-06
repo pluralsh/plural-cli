@@ -6,6 +6,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
+	"github.com/pluralsh/plural-cli/pkg/provider/preflights"
 )
 
 type TestProvider struct {
@@ -54,7 +55,7 @@ func (t TestProvider) Decommision(_ *corev1.Node) error {
 	return nil
 }
 
-func (t TestProvider) Preflights() []*Preflight {
+func (t TestProvider) Preflights() []*preflights.Preflight {
 	return nil
 }
 
