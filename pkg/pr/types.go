@@ -20,6 +20,14 @@ type PrTemplateSpec struct {
 	Updates *UpdateSpec `json:"updates"`
 	Creates *CreateSpec `json:"creates"`
 	Deletes *DeleteSpec `json:"deletes"`
+	Lua     *LuaSpec    `json:"lua"`
+}
+
+type LuaSpec struct {
+	ExternalDir string `json:"external_dir"`
+	External    bool   `json:"external"`
+	Script      string `json:"script"`
+	Folder      string `json:"folder"`
 }
 
 type UpdateSpec struct {

@@ -147,6 +147,10 @@ func handlePrTemplate(c *cli.Context) error {
 		template.Spec.Creates.ExternalDir = c.String("templates")
 	}
 
+	if template.Spec.Lua != nil {
+		template.Spec.Lua.ExternalDir = c.String("templates")
+	}
+
 	return pr.Apply(template)
 }
 
