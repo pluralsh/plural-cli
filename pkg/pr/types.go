@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	console "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/polly/algorithms"
 	"sigs.k8s.io/yaml"
 )
 
@@ -146,4 +147,77 @@ func BuildContracts(path string) (*PrContracts, error) {
 	}
 
 	return pr, err
+}
+
+type PrTemplateSpecMirror struct {
+	Updates *UpdateSpecMirror `json:"updates"`
+	Creates *CreateSpec       `json:"creates"`
+	Deletes *DeleteSpec       `json:"deletes"`
+	Lua     *LuaSpecMirror    `json:"lua"`
+}
+
+func (p *PrTemplateSpecMirror) Convert() *PrTemplateSpec {
+	if p == nil {
+		return nil
+	}
+	return &PrTemplateSpec{
+		Updates: p.Updates.Convert(),
+		Creates: p.Creates,
+		Deletes: p.Deletes,
+		Lua:     p.Lua.Convert(),
+	}
+}
+
+type LuaSpecMirror struct {
+	ExternalDir string `json:"externalDir"`
+	External    bool   `json:"external"`
+	Script      string `json:"script"`
+	Folder      string `json:"folder"`
+}
+
+func (p *LuaSpecMirror) Convert() *LuaSpec {
+	if p == nil {
+		return nil
+	}
+	return &LuaSpec{
+		ExternalDir: p.ExternalDir,
+		External:    p.External,
+		Script:      p.Script,
+		Folder:      p.Folder,
+	}
+}
+
+func (p *UpdateSpecMirror) Convert() *UpdateSpec {
+	if p == nil {
+		return nil
+	}
+
+	return &UpdateSpec{
+		Regexes:           p.Regexes,
+		Files:             p.Files,
+		ReplaceTemplate:   p.ReplaceTemplate,
+		Yq:                p.Yq,
+		MatchStrategy:     p.MatchStrategy,
+		RegexReplacements: p.RegexReplacements,
+		YamlOverlays: algorithms.Map(p.YamlOverlays, func(y YamlOverlayMirror) YamlOverlay {
+			return YamlOverlay(y)
+		}),
+	}
+}
+
+type UpdateSpecMirror struct {
+	Regexes           []string            `json:"regexes"`
+	Files             []string            `json:"files"`
+	ReplaceTemplate   string              `json:"replaceTemplate"`
+	Yq                string              `json:"yq"`
+	MatchStrategy     string              `json:"matchStrategy"`
+	RegexReplacements []RegexReplacement  `json:"regexReplacements"`
+	YamlOverlays      []YamlOverlayMirror `json:"yamlOverlays"`
+}
+
+type YamlOverlayMirror struct {
+	File      string    `json:"file"`
+	Yaml      string    `json:"yaml"`
+	ListMerge ListMerge `json:"listMerge"`
+	Templated bool      `json:"templated"`
 }
