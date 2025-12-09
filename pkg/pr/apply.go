@@ -1,6 +1,10 @@
 package pr
 
 func Apply(template *PrTemplate) error {
+	if template.Context == nil {
+		template.Context = make(map[string]interface{})
+	}
+
 	if err := executeLua(&template.Spec, template.Context); err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package pr
 
 import (
-	"encoding/json"
 	"fmt"
 	iofs "io/fs"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"dario.cat/mergo"
 	"github.com/pluralsh/polly/luautils"
 	lua "github.com/yuin/gopher-lua"
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func executeLua(spec *PrTemplateSpec, ctx map[string]interface{}) error {
@@ -47,7 +47,7 @@ func executeLua(spec *PrTemplateSpec, ctx map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		luaString = luaFolder + luaString
+		luaString = luaFolder + "\n\n" + luaString
 	}
 
 	if luaString == "" {
@@ -59,9 +59,10 @@ func executeLua(spec *PrTemplateSpec, ctx map[string]interface{}) error {
 		return err
 	}
 
-	prSpec := map[string]interface{}{}
-	if err := luautils.MapLua(L.GetGlobal("prAutomation").(*lua.LTable), &prSpec); err != nil {
-		return err
+	prSpec := luautils.ToGoValue(L.GetGlobal("prAutomation").(*lua.LTable))
+	mapPrSpec, ok := luautils.SanitizeValue(prSpec).(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("failed to parse prAutomation table")
 	}
 
 	additionalCtx := map[string]interface{}{}
@@ -73,7 +74,7 @@ func executeLua(spec *PrTemplateSpec, ctx map[string]interface{}) error {
 		return err
 	}
 
-	return merge(spec, prSpec)
+	return merge(spec, mapPrSpec)
 }
 
 func merge(spec *PrTemplateSpec, new map[string]interface{}) error {
