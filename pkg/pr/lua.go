@@ -1,6 +1,7 @@
 package pr
 
 import (
+	"encoding/json"
 	"fmt"
 	iofs "io/fs"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"dario.cat/mergo"
 	"github.com/pluralsh/polly/luautils"
 	lua "github.com/yuin/gopher-lua"
-	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func executeLua(spec *PrTemplateSpec, ctx map[string]interface{}) error {
@@ -83,12 +83,12 @@ func merge(spec *PrTemplateSpec, new map[string]interface{}) error {
 		return err
 	}
 
-	newSpec := PrTemplateSpec{}
-	if err := json.Unmarshal(jsonStr, &newSpec); err != nil {
+	newSpec := &PrTemplateSpecMirror{}
+	if err := json.Unmarshal(jsonStr, newSpec); err != nil {
 		return err
 	}
 
-	return mergo.Merge(spec, newSpec, mergo.WithAppendSlice, mergo.WithOverride)
+	return mergo.Merge(spec, newSpec.Convert(), mergo.WithAppendSlice, mergo.WithOverride)
 }
 
 func luaFolder(parent, folder string) (string, error) {
