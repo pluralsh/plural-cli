@@ -83,12 +83,12 @@ func merge(spec *PrTemplateSpec, new map[string]interface{}) error {
 		return err
 	}
 
-	newSpec := &PrTemplateSpecMirror{}
+	newSpec := &PrTemplateSpec{}
 	if err := json.Unmarshal(jsonStr, newSpec); err != nil {
 		return err
 	}
 
-	return mergo.Merge(spec, newSpec.Convert(), mergo.WithAppendSlice, mergo.WithOverride)
+	return mergo.Merge(spec, newSpec, mergo.WithAppendSlice, mergo.WithOverride)
 }
 
 func luaFolder(parent, folder string) (string, error) {
