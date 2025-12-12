@@ -99,9 +99,7 @@ func removeTarball(dir, prefix string) error {
 			continue
 		}
 		name := entry.Name()
-		if strings.HasPrefix(name, prefix) &&
-			(strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, ".tgz")) {
-
+		if strings.HasPrefix(name, prefix) && (strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, ".tgz")) {
 			return os.Remove(filepath.Join(dir, name))
 		}
 	}
