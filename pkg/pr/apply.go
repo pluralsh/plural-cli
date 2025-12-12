@@ -5,11 +5,11 @@ func Apply(template *PrTemplate) error {
 		template.Context = make(map[string]interface{})
 	}
 
-	if err := downloadChart(template); err != nil {
+	if err := executeLua(&template.Spec, template.Context); err != nil {
 		return err
 	}
 
-	if err := executeLua(&template.Spec, template.Context); err != nil {
+	if err := applyVendoring(template, template.Context); err != nil {
 		return err
 	}
 
