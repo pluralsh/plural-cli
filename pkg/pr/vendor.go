@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -85,23 +84,6 @@ func downloadChart(template *PrTemplate) error {
 	// currently output is always empty, so we ignore it. We have to remove the tarball manually.
 	if _, err := client.Run(chart); err != nil {
 		return fmt.Errorf("failed to pull chart: %w", err)
-	}
-	return removeTarball(client.DestDir, chart)
-}
-
-func removeTarball(dir, prefix string) error {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		if strings.HasPrefix(name, prefix) && (strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, ".tgz")) {
-			return os.Remove(filepath.Join(dir, name))
-		}
 	}
 	return nil
 }
