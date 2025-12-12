@@ -21,6 +21,26 @@ type PrTemplateSpec struct {
 	Creates *CreateSpec `json:"creates"`
 	Deletes *DeleteSpec `json:"deletes"`
 	Lua     *LuaSpec    `json:"lua"`
+	Vendor  *VendorSpec `json:"vendor"`
+}
+
+type VendorSpec struct {
+	// Specification for vendoring a helm chart
+	Helm *Helm `json:"helm"`
+}
+
+type Helm struct {
+	// The url of the helm repository to use
+	URL string `json:"url"`
+
+	// The name of the chart to use
+	Chart string `json:"chart"`
+
+	// The version of the chart to use
+	Version string `json:"version"`
+
+	// The directory destination to place the chart in
+	Destination string `json:"destination"`
 }
 
 type LuaSpec struct {
