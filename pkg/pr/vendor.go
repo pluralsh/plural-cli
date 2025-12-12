@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
@@ -25,18 +26,31 @@ func newEnvSettings() (*cli.EnvSettings, string, error) {
 	return settings, dir, nil
 }
 
-// downloadChart downloads a Helm chart tarball to the specified destination
-func downloadChart(template *PrTemplate) error {
-	if template == nil {
-		return nil
-	}
-	if template.Spec.Vendor == nil {
-		return nil
-	}
-	if template.Spec.Vendor.Helm == nil {
+func applyVendoring(template *PrTemplate, ctx map[string]interface{}) error {
+	if template == nil || template.Spec.Vendor == nil {
 		return nil
 	}
 
+	if template.Spec.Vendor.Helm != nil {
+		helmSpec := template.Spec.Vendor.Helm
+		if dest, err := templateReplacement([]byte(helmSpec.Destination), ctx); err == nil {
+			helmSpec.Destination = string(dest)
+		}
+		if chart, err := templateReplacement([]byte(helmSpec.Chart), ctx); err == nil {
+			helmSpec.Chart = string(chart)
+		}
+		if version, err := templateReplacement([]byte(helmSpec.Version), ctx); err == nil {
+			helmSpec.Version = string(version)
+		}
+
+		return downloadChart(helmSpec)
+	}
+
+	return nil
+}
+
+// downloadChart downloads a Helm chart tarball to the specified destination
+func downloadChart(helmSpec *Helm) error {
 	// Create Helm environment settings
 	settings, dir, err := newEnvSettings()
 	if err != nil {
@@ -58,16 +72,15 @@ func downloadChart(template *PrTemplate) error {
 
 	// Create pull action
 	client := action.NewPullWithOpts(action.WithConfig(actionConfig))
-	chart := template.Spec.Vendor.Helm.Chart
-	dirPath := joinPreserve(template.Spec.Vendor.Helm.Destination, chart)
+	chart := helmSpec.Chart
+
 	// Configure pull options
-	client.RepoURL = template.Spec.Vendor.Helm.URL
-	if isOCIRegistry(template.Spec.Vendor.Helm.URL) {
+	client.RepoURL = helmSpec.URL
+	if isOCIRegistry(helmSpec.URL) {
 		client.RepoURL = ""
-		chart = joinPreserve(template.Spec.Vendor.Helm.URL, chart)
+		chart = joinPreserve(helmSpec.URL, chart)
 	}
-	client.Version = template.Spec.Vendor.Helm.Version
-	client.DestDir = template.Spec.Vendor.Helm.Destination
+	client.Version = helmSpec.Version
 	client.Settings = settings
 	client.Untar = true
 
@@ -78,12 +91,29 @@ func downloadChart(template *PrTemplate) error {
 	}
 	actionConfig.RegistryClient = registryClient
 
+	// handle nested directories robustly
+	if err := os.MkdirAll(helmSpec.Destination, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	tempDir, err := os.MkdirTemp("", "helm-chart-download-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	client.DestDir = tempDir
+
 	// remove the destination directory if it exists, to avoid conflicts and helm client error if exists
-	_ = os.RemoveAll(dirPath)
+	_ = os.RemoveAll(client.DestDir)
 	// pull the chart
-	// currently output is always empty, so we ignore it. We have to remove the tarball manually.
 	if _, err := client.Run(chart); err != nil {
 		return fmt.Errorf("failed to pull chart: %w", err)
+	}
+
+	// copy from temp dir, this allows us to preserve additional files a repo has added to the chart
+	if err := utils.CopyDir(tempDir, helmSpec.Destination); err != nil {
+		return fmt.Errorf("failed to copy chart to destination directory: %w", err)
 	}
 	return nil
 }
