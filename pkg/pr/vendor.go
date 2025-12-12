@@ -12,10 +12,10 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-func newEnvSettings() (*cli.EnvSettings, error) {
+func newEnvSettings() (*cli.EnvSettings, string, error) {
 	dir, err := os.MkdirTemp("", "repositories")
 	if err != nil {
-		return nil, err
+		return nil, dir, err
 	}
 
 	settings := cli.New()
@@ -23,7 +23,7 @@ func newEnvSettings() (*cli.EnvSettings, error) {
 	settings.RepositoryConfig = path.Join(dir, "repositories.yaml")
 	settings.KubeInsecureSkipTLSVerify = true
 
-	return settings, nil
+	return settings, dir, nil
 }
 
 // downloadChart downloads a Helm chart tarball to the specified destination
@@ -39,10 +39,13 @@ func downloadChart(template *PrTemplate) error {
 	}
 
 	// Create Helm environment settings
-	settings, err := newEnvSettings()
+	settings, dir, err := newEnvSettings()
 	if err != nil {
 		return fmt.Errorf("failed to create helm environment settings: %w", err)
 	}
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(dir)
 
 	// Create action configuration
 	actionConfig := new(action.Configuration)
