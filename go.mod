@@ -45,7 +45,7 @@ require (
 	github.com/pluralsh/console/go/controller v0.0.0-20251003110458-1e8b13ad7500
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.5.5
-	github.com/pluralsh/polly v0.3.5
+	github.com/pluralsh/polly v0.3.7
 	github.com/posthog/posthog-go v1.4.10
 	github.com/samber/lo v1.50.0
 	github.com/urfave/cli v1.22.16
