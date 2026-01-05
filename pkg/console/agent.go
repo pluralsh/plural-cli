@@ -94,8 +94,11 @@ func InstallAgent(consoleURL, token, namespace, version, helmChartLoc, clusterID
 	vals := algorithms.Merge(map[string]interface{}{
 		"secrets":    map[string]string{"deployToken": token},
 		"consoleUrl": consoleURL,
-		"clusterId":  clusterID,
 	}, values)
+
+	if clusterID != "" {
+		vals["clusterId"] = clusterID
+	}
 
 	config, err := helm.GetActionConfig(namespace)
 	if err != nil {

@@ -139,10 +139,6 @@ func (p *Plural) handleInstallDeploymentsOperator(c *cli.Context) error {
 		cliClusterId = clusterId
 	}
 
-	if cliClusterId == "" {
-		return fmt.Errorf("cluster id must be provided")
-	}
-
 	// we don't care if this fails to init as this command can be auth-less
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		utils.Warn("Console client was not initialized, reason: %s", err.Error())
