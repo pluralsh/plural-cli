@@ -105,54 +105,20 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	repo := ""
 	p.InitPluralClient()
 
-	git, err := wkspace.Preflight()
-	if err != nil && git {
+	git, err := wkspace.Preflight(c.Bool("dry-run"))
+	if err != nil && (git || c.Bool("dry-run")) {
 		return err
 	}
 
 	if utils.Exists("./workspace.yaml") {
-		utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
-		utils.Highlight("Checking domain...\n")
-		proj, err := manifest.FetchProject()
-		if err != nil {
+		if err := p.ensureWorkspace(c); err != nil {
 			return err
 		}
-		if proj.Network != nil && proj.Network.PluralDns {
-			if err := p.CreateDomain(proj.Network.Subdomain); err != nil {
-				return err
-			}
-		}
-		utils.Highlight("Domain OK \n")
-		branch, err := gitutils.CurrentBranch()
-		if err != nil {
-			return err
-		}
-		proj.Context["Branch"] = branch
-		if err := proj.Flush(); err != nil {
-			return err
-		}
-		if err := common.CryptoInit(c); err != nil {
-			return err
-		}
-		_ = wkspace.DownloadReadme()
 		return nil
 	}
 
 	if err := common.HandleLogin(c); err != nil {
 		return err
-	}
-
-	me, err := p.Me()
-	if err != nil {
-		return api.GetErrorResponse(err, "Me")
-	}
-	if me.Demoing {
-		return fmt.Errorf("you're currently running a gcp demo cluster, spin that down by deleting you shell at https://app.plural.sh/shell before beginning a local installation")
-	}
-
-	if _, err := os.Stat(manifest.ProjectManifestPath()); err == nil && git && !common.Affirm("This repository's workspace.yaml already exists. Would you like to use it?", "PLURAL_INIT_AFFIRM_CURRENT_REPO") {
-		fmt.Println("Run `plural init` from empty repository or outside any in order to start from scratch.")
-		return nil
 	}
 
 	prov, err := common.RunPreflights(c)
@@ -171,8 +137,9 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		}
 		gitCreated = true
 	}
+
 	if !git && !gitCreated {
-		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you by rerunning `plural init`")
+		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you")
 	}
 
 	// create workspace.yaml when git repository is ready
@@ -182,7 +149,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	if err := common.CryptoInit(c); err != nil {
 		return err
 	}
-	_ = wkspace.DownloadReadme()
 
 	if common.Affirm(common.BackupMsg, "PLURAL_INIT_AFFIRM_BACKUP_KEY") {
 		if err := crypto.BackupKey(p.Client); err != nil {
@@ -197,6 +163,37 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	utils.Success("Workspace is properly configured!\n")
 	if gitCreated {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
+	}
+	return nil
+}
+
+func (p *Plural) ensureWorkspace(c *cli.Context) error {
+	utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
+	utils.Highlight("Checking domain...\n")
+	proj, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+
+	if proj.Network != nil && proj.Network.PluralDns {
+		if err := p.CreateDomain(proj.Network.Subdomain); err != nil {
+			return err
+		}
+	}
+
+	utils.Highlight("Domain OK \n")
+	branch, err := gitutils.CurrentBranch()
+	if err != nil {
+		return err
+	}
+
+	proj.Context["Branch"] = branch
+	if err := proj.Flush(); err != nil {
+		return err
+	}
+
+	if err := common.CryptoInit(c); err != nil {
+		return err
 	}
 	return nil
 }

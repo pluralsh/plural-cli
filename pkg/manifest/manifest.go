@@ -101,7 +101,7 @@ func (pm *ProjectManifest) Configure(cloud bool, cluster string) Writer {
 		input := &survey.Input{Message: "Enter a unique, memorable string to use for bucket naming, e.g. an abbreviation for your company:"}
 		if err := survey.AskOne(input, &answer, survey.WithValidator(func(val interface{}) error {
 			res, _ := val.(string)
-			return utils.ValidateRegex(res, "[a-z][0-9\\-a-z]+", "String can only contain alphanumeric characters or hyphens")
+			return utils.ValidateRegex(res, "[a-z][0-9\\-a-z]+", "bucket name can only contain alphanumeric characters or hyphens")
 		})); err != nil {
 			return nil
 		}
