@@ -122,6 +122,10 @@ func RunPreflights(c *cli.Context) (providerapi.Provider, error) {
 		return prov, err
 	}
 
+	if c.Bool("dry-run") {
+		return prov, nil
+	}
+
 	for _, pre := range prov.Preflights() {
 		if err := pre.Validate(); err != nil {
 			return prov, err

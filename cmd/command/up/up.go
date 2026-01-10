@@ -80,6 +80,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 	p.InitPluralClient()
+	dryRun := c.Bool("dry-run")
 
 	cd := &cdpkg.Plural{Plural: p.Plural}
 
@@ -142,7 +143,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	if c.Bool("dry-run") {
+	if dryRun {
 		utils.Success("Finished generating the repo, no deployment will occur due to the --dry-run flag\n")
 		return nil
 	}
