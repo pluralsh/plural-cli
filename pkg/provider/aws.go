@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -113,24 +112,13 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		return
 	}
 
-	account, err := GetAwsAccount(ctx)
-	if err != nil {
-		err = plrlErrors.ErrorWrap(err, "Failed to get aws account (is your aws cli configured?)")
-		return
-	}
-
-	if len(account) == 0 {
+	provider.project = lo.FromPtr(callerIdentity.Account)
+	if len(provider.project) == 0 {
 		err = plrlErrors.ErrorWrap(fmt.Errorf("unable to find AWS account ID, make sure that your AWS CLI is configured"), "AWS cli error:")
 		return
 	}
 
-	provider.project = account
 	provider.storageClient = client
-
-	azones, err := getAvailabilityZones(ctx, provider.Region())
-	if err != nil {
-		return
-	}
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:           provider.Cluster(),
@@ -138,7 +126,7 @@ func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 		Provider:          api.ProviderAWS,
 		Region:            provider.Region(),
 		Context:           provider.Context(),
-		AvailabilityZones: azones,
+		AvailabilityZones: []string{},
 		Owner:             &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 	}
 
@@ -165,56 +153,6 @@ func getClient(region string, context context.Context) (*s3.Client, error) {
 
 	cfg.Region = region
 	return s3.NewFromConfig(cfg), nil
-}
-
-func getEC2Client(ctx context.Context, region string) (*ec2.Client, error) {
-	cfg, err := awsConfig.LoadDefaultConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-	cfg.Region = region
-	return ec2.NewFromConfig(cfg), nil
-}
-
-func getAvailabilityZones(ctx context.Context, region string) ([]string, error) {
-	return fetchAZ(ctx, region, true)
-}
-
-func fetchAZ(context context.Context, region string, sorted bool) ([]string, error) {
-	ec2Client, err := getEC2Client(context, region)
-	if err != nil {
-		return nil, err
-	}
-	allAvailabilityZones := true
-	dryRun := false
-	regionName := "region-name"
-	azones, err := ec2Client.DescribeAvailabilityZones(context, &ec2.DescribeAvailabilityZonesInput{
-		AllAvailabilityZones: &allAvailabilityZones,
-		DryRun:               &dryRun,
-		Filters: []ec2Types.Filter{
-			{
-				Name:   &regionName,
-				Values: []string{region},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	result := []string{}
-	for _, az := range azones.AvailabilityZones {
-		if az.ParentZoneId == nil {
-			result = append(result, *az.ZoneName)
-		}
-	}
-	// append when there are fewer zones than 3
-	for i := 0; (3 - len(result)) > 0; i++ {
-		result = append(result, result[i])
-	}
-	if sorted {
-		sort.Strings(result)
-	}
-	return result, nil
 }
 
 func getAwsConfig(ctx context.Context) (aws.Config, error) {
@@ -332,20 +270,6 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 	})
 
 	return plrlErrors.ErrorWrap(err, "failed to terminate instance")
-}
-
-func GetAwsAccount(ctx context.Context) (string, error) {
-	cfg, err := getAwsConfig(ctx)
-	if err != nil {
-		return "", err
-	}
-	svc := sts.NewFromConfig(cfg)
-	result, err := svc.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-	if err != nil {
-		return "", plrlErrors.ErrorWrap(err, "Error finding iam identity: ")
-	}
-
-	return *result.Account, nil
 }
 
 func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) error {
