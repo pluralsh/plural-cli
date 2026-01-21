@@ -1,8 +1,10 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	gitutils "github.com/pluralsh/plural-cli/pkg/utils/git"
@@ -128,6 +130,8 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 			return fmt.Errorf("preflight checks failed: %w", err)
 		}
 		fmt.Println("Preflight checks failed, but continuing because --ignore-preflights was specified.")
+		fmt.Println("Please note that you may encounter issues later on during provisioning.")
+		displayWarning(err)
 	}
 
 	if !git && common.Affirm("You're attempting to setup plural outside a git repository. Would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
@@ -274,4 +278,22 @@ func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string, chart_loc
 	}
 
 	return p.DoInstallOperator(url, deployToken, c.String("values"), chart_loc, clusterId)
+}
+
+func displayWarning(err error) {
+	var outMsg string
+	var ee *exec.ExitError
+	// check if the error is of type *exec.ExitError to extract stderr
+	// it happens for Azure CLI errors for example
+	if errors.As(err, &ee) {
+		stderr := strings.TrimSpace(string(ee.Stderr))
+		if stderr != "" {
+			outMsg = fmt.Sprintf("%s: %s", err.Error(), stderr)
+		} else {
+			outMsg = err.Error()
+		}
+	} else {
+		outMsg = err.Error()
+	}
+	fmt.Printf("\033[33mWarning:\033[0m %s\n\n", outMsg)
 }

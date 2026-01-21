@@ -185,7 +185,7 @@ func (in *Provider) Permissions() (permissions.Checker, error) {
 }
 
 func (in *Provider) Flush() error {
-	if in.writer == nil {
+	if in == nil || in.writer == nil {
 		return nil
 	}
 	return in.writer()
@@ -220,7 +220,7 @@ func NewProvider(options ...Option) (*Provider, error) {
 
 	for _, opt := range options {
 		if err := opt(result); err != nil {
-			return nil, err
+			return result, err
 		}
 	}
 

@@ -72,23 +72,19 @@ var (
 
 func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
 	ctx := context.Background()
-
+	provider = &AWSProvider{}
 	iamSession, callerIdentity, err := GetAWSCallerIdentity(ctx)
 	if err != nil {
-		return nil, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
+		return provider, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
 	}
-
+	provider.goContext = &ctx
+	provider.ctx = map[string]any{
+		"IAMSession": iamSession,
+	}
 	fmt.Printf("\nUsing %s AWS profile\n", getAWSProfileName())
 	fmt.Printf("Caller identity ARN: %s\n", lo.FromPtr(callerIdentity.Arn))
 	fmt.Printf("Caller identity account: %s\n", lo.FromPtr(callerIdentity.Account))
 	fmt.Printf("Caller identity user ID: %s\n\n", lo.FromPtr(callerIdentity.UserId))
-
-	provider = &AWSProvider{
-		goContext: &ctx,
-		ctx: map[string]any{
-			"IAMSession": iamSession,
-		},
-	}
 
 	var awsSurvey = []*survey.Question{
 		{
@@ -178,22 +174,22 @@ func (aws *AWSProvider) KubeContext() string {
 	return fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", aws.Region(), aws.project, aws.Cluster())
 }
 
-func (p *AWSProvider) mkBucket(name string) error {
-	client := p.storageClient
-	_, err := client.HeadBucket(*p.goContext, &s3.HeadBucketInput{Bucket: &name})
+func (aws *AWSProvider) mkBucket(name string) error {
+	client := aws.storageClient
+	_, err := client.HeadBucket(*aws.goContext, &s3.HeadBucketInput{Bucket: &name})
 
 	if err != nil {
 		bucket := &s3.CreateBucketInput{
 			Bucket: &name,
 		}
 
-		if p.Region() != "us-east-1" {
+		if aws.Region() != "us-east-1" {
 			bucket.CreateBucketConfiguration = &s3Types.CreateBucketConfiguration{
-				LocationConstraint: s3Types.BucketLocationConstraint(p.Region()),
+				LocationConstraint: s3Types.BucketLocationConstraint(aws.Region()),
 			}
 		}
 
-		_, err = client.CreateBucket(*p.goContext, bucket)
+		_, err = client.CreateBucket(*aws.goContext, bucket)
 		return err
 	}
 
@@ -231,29 +227,29 @@ func (aws *AWSProvider) Preflights() []*preflights.Preflight {
 }
 
 func (aws *AWSProvider) Flush() error {
-	if aws.writer == nil {
+	if aws == nil || aws.writer == nil {
 		return nil
 	}
 	return aws.writer()
 }
 
-func (prov *AWSProvider) Permissions() (permissions.Checker, error) {
-	return permissions.NewAwsChecker(*prov.goContext)
+func (aws *AWSProvider) Permissions() (permissions.Checker, error) {
+	return permissions.NewAwsChecker(*aws.goContext)
 }
 
-func (prov *AWSProvider) Decommision(node *v1.Node) error {
-	cfg, err := awsConfig.LoadDefaultConfig(*prov.goContext)
+func (aws *AWSProvider) Decommision(node *v1.Node) error {
+	cfg, err := awsConfig.LoadDefaultConfig(*aws.goContext)
 
 	if err != nil {
 		return plrlErrors.ErrorWrap(err, "Failed to establish aws session")
 	}
 
-	cfg.Region = prov.Region()
+	cfg.Region = aws.Region()
 
 	name := "private-dns-name"
 
 	svc := ec2.NewFromConfig(cfg)
-	instances, err := svc.DescribeInstances(*prov.goContext, &ec2.DescribeInstancesInput{
+	instances, err := svc.DescribeInstances(*aws.goContext, &ec2.DescribeInstancesInput{
 		Filters: []ec2Types.Filter{
 			{Name: &name, Values: []string{node.Name}},
 		},
@@ -265,7 +261,7 @@ func (prov *AWSProvider) Decommision(node *v1.Node) error {
 
 	instance := instances.Reservations[0].Instances[0]
 
-	_, err = svc.TerminateInstances(*prov.goContext, &ec2.TerminateInstancesInput{
+	_, err = svc.TerminateInstances(*aws.goContext, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{*instance.InstanceId},
 	})
 

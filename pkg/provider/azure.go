@@ -88,6 +88,7 @@ type AzureProvider struct {
 }
 
 func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
+	prov = &AzureProvider{}
 	subId, tenID, subName, err := GetAzureAccount()
 	if err != nil {
 		return
@@ -129,14 +130,12 @@ func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
 		return
 	}
 
-	prov = &AzureProvider{cluster,
-		resourceGroup,
-		"",
-		location,
-		map[string]any{"SubscriptionId": subId, "TenantId": tenID, "StorageAccount": storageAccount},
-		nil,
-		clients,
-	}
+	prov.cluster = cluster
+	prov.resourceGroup = resourceGroup
+	prov.bucket = ""
+	prov.region = location
+	prov.ctx = map[string]any{"SubscriptionId": subId, "TenantId": tenID, "StorageAccount": storageAccount}
+	prov.clients = clients
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  prov.Cluster(),
@@ -256,7 +255,7 @@ func (*AzureProvider) Permissions() (permissions.Checker, error) {
 }
 
 func (az *AzureProvider) Flush() error {
-	if az.writer == nil {
+	if az == nil || az.writer == nil {
 		return nil
 	}
 	return az.writer()
