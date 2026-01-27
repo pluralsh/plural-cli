@@ -207,7 +207,7 @@ func askAppDomain() error {
 
 	var domain string
 	prompt := &survey.Input{
-		Message: "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:",
+		Message: "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:",
 	}
 	if err := survey.AskOne(prompt, &domain); err != nil {
 		return err
@@ -251,19 +251,24 @@ func processAppDomain(domain string) error {
 			return err
 		}
 
-		managedZones = algorithms.Filter(managedZones, func(dnsName string) bool {
-			return dnsName == d
-		})
-
 		if len(managedZones) == 0 {
 			return fmt.Errorf("no DNS managed zones found for domain %s in project %s", d, project.Project)
 		}
 
+		filteredZones := algorithms.Filter(managedZones, func(dnsName string) bool {
+			return dnsName == d
+		})
+
+		candidateZones := managedZones
+		if len(filteredZones) > 0 {
+			candidateZones = filteredZones
+		}
+
 		var managedZone string
-		if len(managedZones) == 1 {
-			managedZone = managedZones[0]
+		if len(candidateZones) == 1 {
+			managedZone = candidateZones[0]
 		} else {
-			if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: managedZones},
+			if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: candidateZones},
 				&managedZone, survey.WithValidator(survey.Required)); err != nil {
 				return err
 			}
