@@ -179,7 +179,6 @@ func (b *ByokProvider) KubeContext() string {
 }
 
 func (b *ByokProvider) CreateBucket() error {
-	
 	return nil
 }
 
