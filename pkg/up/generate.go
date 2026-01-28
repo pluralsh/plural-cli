@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
@@ -19,6 +20,9 @@ type templatePair struct {
 
 //nolint:gocyclo
 func (ctx *Context) Generate(gitRef string) (dir string, err error) {
+	if ctx.Provider.Name() == api.BYOK {
+		return "", nil
+	}
 	dir, err = os.MkdirTemp("", "sampledir")
 	ctx.dir = dir
 	hasDomain := ctx.Manifest.AppDomain != ""

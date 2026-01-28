@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -58,10 +59,13 @@ func (ctx *Context) runCheckpoint(current, checkpoint string, fn func() error) e
 }
 
 func (ctx *Context) Deploy(commit func() error) error {
+	if ctx.Provider.Name() == api.BYOK {
+		return nil
+	}
+
 	if err := ctx.Provider.CreateBucket(); err != nil {
 		return err
 	}
-
 	defer ctx.Manifest.Flush()
 
 	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "init", func() error {

@@ -64,6 +64,8 @@ func FromManifest(man *manifest.ProjectManifest) (providerapi.Provider, error) {
 		return awsFromManifest(man)
 	case api.ProviderAzure:
 		return AzureFromManifest(man, nil)
+	case api.BYOK:
+		return ByokFromManifest(man)
 	case api.TEST:
 		return testFromManifest(man)
 	default:
@@ -80,6 +82,8 @@ func New(provider string) (providerapi.Provider, error) {
 		return mkAWS(conf)
 	case api.ProviderAzure:
 		return mkAzure(conf)
+	case api.BYOK:
+		return mkBYOK(conf, clusterFlag)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}
@@ -95,6 +99,9 @@ func getAvailableProviders() error {
 
 		available = containers.ToSet(available).Difference(filterProviders).List()
 		providers.AvailableProviders = algorithms.Map(available, strings.ToLower)
+	}
+	if cloudFlag {
+		providers.AvailableProviders = append(providers.AvailableProviders, api.BYOK)
 	}
 	return nil
 }
