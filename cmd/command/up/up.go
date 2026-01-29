@@ -122,6 +122,8 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
+	byok := ctx.Provider.Name() == api.BYOK
+
 	if c.Bool("cloud") {
 		id, err := getCluster(cd)
 		if err != nil {
@@ -130,6 +132,14 @@ func (p *Plural) handleUp(c *cli.Context) error {
 
 		ctx.ImportCluster = lo.ToPtr(id)
 		ctx.CloudCluster = name
+		if byok {
+			if err := p.InitConsoleClient("", ""); err != nil {
+				return err
+			}
+			if err := p.ReinstallOperator(c, lo.ToPtr(id), nil, ""); err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := ctx.Backfill(); err != nil {
@@ -148,8 +158,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return nil
 	}
 
-	if !common.Affirm(common.AffirmUp, "PLURAL_UP_AFFIRM_DEPLOY") {
-		return fmt.Errorf("cancelled deploy")
+	if !byok {
+		if !common.Affirm(common.AffirmUp, "PLURAL_UP_AFFIRM_DEPLOY") {
+			return fmt.Errorf("cancelled deploy")
+		}
 	}
 
 	if err := ctx.Deploy(func() error {
@@ -164,6 +176,12 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	utils.Success("Finished setting up your management cluster!\n")
+	if byok {
+		utils.Highlight("Since you're using BYOK, be sure to complete setup of your management cluster\n")
+		utils.Highlight("IMPORTANT: You'll need to configure IAM permissions for the plrl-deploy-operator/stacks service account.\n")
+		utils.Highlight("This is no longer handled automatically. See the terraform example in the docs for the required IAM policy.\n")
+		return nil
+	}
 	utils.Highlight("Feel free to use terraform as you normally would, and leverage the gitops setup we've generated in the bootstrap/ subfolder\n")
 	return nil
 }
