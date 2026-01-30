@@ -336,8 +336,8 @@ require (
 )
 
 replace (
-	// CVE-2024-40635
-	github.com/containerd/containerd => github.com/containerd/containerd v1.7.27
+	// CVE-2024-40635, CVE-2025-22868 (local privilege escalation)
+	github.com/containerd/containerd => github.com/containerd/containerd v1.7.29
 	// CVE-2025-30204
 	github.com/golang-jwt/jwt/v5 => github.com/golang-jwt/jwt/v5 v5.2.2
 )
