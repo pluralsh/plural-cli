@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.25.5
+go 1.25.6
 
 require (
 	cloud.google.com/go/compute v1.49.1
