@@ -191,6 +191,9 @@ func (p *Plural) ensureWorkspace(c *cli.Context) error {
 		return err
 	}
 
+	if proj.Context == nil {
+		proj.Context = map[string]interface{}{}
+	}
 	proj.Context["Branch"] = branch
 	if err := proj.Flush(); err != nil {
 		return err

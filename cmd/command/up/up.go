@@ -296,6 +296,9 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 			}
 		}
 
+		if project.Context == nil {
+			project.Context = map[string]interface{}{}
+		}
 		project.Context["ManagedZone"] = managedZone
 	}
 
