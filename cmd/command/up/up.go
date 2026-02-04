@@ -223,37 +223,41 @@ func askAppDomain() error {
 		return nil
 	}
 
-	var domain string
-	prompt := &survey.Input{
-		Message: "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:",
-	}
-	if err := survey.AskOne(prompt, &domain); err != nil {
-		return err
-	}
-
-	return processAppDomain(domain)
-}
-
-func processAppDomain(domain string) error {
-	if lo.IsEmpty(domain) {
-		// No domain was provided, domain checks and setup can be skipped.
-		return nil
-	}
-
 	project, err := manifest.FetchProject()
 	if err != nil {
 		return err
 	}
 
+	var domain string
+	message := "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:"
+	if project.Provider == api.ProviderGCP {
+		message = "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:"
+	}
+	prompt := &survey.Input{
+		Message: message,
+	}
+	if err := survey.AskOne(prompt, &domain); err != nil {
+		return err
+	}
+
+	return processAppDomain(domain, project)
+}
+
+func processAppDomain(domain string, project *manifest.ProjectManifest) error {
+	if lo.IsEmpty(domain) {
+		// No domain was provided, domain checks and setup can be skipped.
+		return nil
+	}
+
 	switch project.Provider {
 	case api.ProviderAWS:
 		// For AWS, we need to validate that the domain is set up in Route 53.
-		if err = provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
+		if err := provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
 			return err
 		}
 	case api.ProviderAzure:
 		// For Azure, we need to validate that the domain is set up in Azure DNS.
-		if err = provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
+		if err := provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
 			return err
 		}
 	case api.ProviderGCP:
