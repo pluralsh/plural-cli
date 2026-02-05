@@ -104,11 +104,12 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		}
 	}
 
-	if err := p.HandleInit(c); err != nil {
+	project, err := p.HandleInitWithProject(c)
+	if err != nil {
 		return err
 	}
 
-	if err := askAppDomain(); err != nil {
+	if err := askAppDomain(project); err != nil {
 		return err
 	}
 
@@ -217,15 +218,14 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	return
 }
 
-func askAppDomain() error {
+func askAppDomain(project *manifest.ProjectManifest) error {
 	skip, ok := utils.GetEnvBoolValue("PLURAL_UP_SKIP_APP_DOMAIN")
 	if ok && skip {
 		return nil
 	}
 
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
+	if project == nil {
+		return fmt.Errorf("project manifest is required to set app domain")
 	}
 
 	var domain string
