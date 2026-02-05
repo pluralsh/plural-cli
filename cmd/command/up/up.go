@@ -104,11 +104,12 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		}
 	}
 
-	if err := p.HandleInit(c); err != nil {
+	project, err := p.HandleInitWithProject(c)
+	if err != nil {
 		return err
 	}
 
-	if err := askAppDomain(); err != nil {
+	if err := askAppDomain(project); err != nil {
 		return err
 	}
 
@@ -217,43 +218,46 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	return
 }
 
-func askAppDomain() error {
+func askAppDomain(project *manifest.ProjectManifest) error {
 	skip, ok := utils.GetEnvBoolValue("PLURAL_UP_SKIP_APP_DOMAIN")
 	if ok && skip {
 		return nil
 	}
 
+	if project == nil {
+		return fmt.Errorf("project manifest is required to set app domain")
+	}
+
 	var domain string
+	message := "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:"
+	if project.Provider == api.ProviderGCP {
+		message = "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:"
+	}
 	prompt := &survey.Input{
-		Message: "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:",
+		Message: message,
 	}
 	if err := survey.AskOne(prompt, &domain); err != nil {
 		return err
 	}
 
-	return processAppDomain(domain)
+	return processAppDomain(domain, project)
 }
 
-func processAppDomain(domain string) error {
+func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 	if lo.IsEmpty(domain) {
 		// No domain was provided, domain checks and setup can be skipped.
 		return nil
 	}
 
-	project, err := manifest.FetchProject()
-	if err != nil {
-		return err
-	}
-
 	switch project.Provider {
 	case api.ProviderAWS:
 		// For AWS, we need to validate that the domain is set up in Route 53.
-		if err = provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
+		if err := provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
 			return err
 		}
 	case api.ProviderAzure:
 		// For Azure, we need to validate that the domain is set up in Azure DNS.
-		if err = provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
+		if err := provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
 			return err
 		}
 	case api.ProviderGCP:
@@ -269,24 +273,32 @@ func processAppDomain(domain string) error {
 			return err
 		}
 
-		managedZones = algorithms.Filter(managedZones, func(dnsName string) bool {
-			return dnsName == d
-		})
-
 		if len(managedZones) == 0 {
 			return fmt.Errorf("no DNS managed zones found for domain %s in project %s", d, project.Project)
 		}
 
+		filteredZones := algorithms.Filter(managedZones, func(dnsName string) bool {
+			return dnsName == d
+		})
+
+		candidateZones := managedZones
+		if len(filteredZones) > 0 {
+			candidateZones = filteredZones
+		}
+
 		var managedZone string
-		if len(managedZones) == 1 {
-			managedZone = managedZones[0]
+		if len(candidateZones) == 1 {
+			managedZone = candidateZones[0]
 		} else {
-			if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: managedZones},
+			if err := survey.AskOne(&survey.Select{Message: "Select managed DNS zone:", Options: candidateZones},
 				&managedZone, survey.WithValidator(survey.Required)); err != nil {
 				return err
 			}
 		}
 
+		if project.Context == nil {
+			project.Context = map[string]interface{}{}
+		}
 		project.Context["ManagedZone"] = managedZone
 	}
 

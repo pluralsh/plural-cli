@@ -103,31 +103,37 @@ func (p *Plural) AssumeServiceAccount(conf config.Config, man *manifest.ProjectM
 }
 
 func (p *Plural) HandleInit(c *cli.Context) error {
+	_, err := p.HandleInitWithProject(c)
+	return err
+}
+
+func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifest, error) {
 	gitCreated := false
 	repo := ""
 	p.InitPluralClient()
 
 	git, err := wkspace.Preflight(c.Bool("dry-run"))
 	if err != nil && (git || c.Bool("dry-run")) {
-		return err
+		return nil, err
 	}
 
 	if utils.Exists("./workspace.yaml") {
-		if err := p.ensureWorkspace(c); err != nil {
-			return err
+		project, err := p.ensureWorkspace(c)
+		if err != nil {
+			return nil, err
 		}
-		return nil
+		return project, nil
 	}
 
 	if err := common.HandleLogin(c); err != nil {
-		return err
+		return nil, err
 	}
 
 	prov, err := common.RunPreflights(c)
 	if err != nil {
 		if !c.Bool("ignore-preflights") {
 			fmt.Println("Preflight checks failed. You can rerun with --ignore-preflights to skip these checks.")
-			return fmt.Errorf("preflight checks failed: %w", err)
+			return nil, fmt.Errorf("preflight checks failed: %w", err)
 		}
 		fmt.Println("Preflight checks failed, but continuing because --ignore-preflights was specified.")
 		fmt.Println("Please note that you may encounter issues later on during provisioning.")
@@ -137,69 +143,77 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	if !git && common.Affirm("You're attempting to setup plural outside a git repository. Would you like us to set one up for you here?", "PLURAL_INIT_AFFIRM_SETUP_REPO") {
 		repo, err = scm.Setup()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		gitCreated = true
 	}
 
 	if !git && !gitCreated {
-		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you")
+		return nil, fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you")
 	}
 
 	// create workspace.yaml when git repository is ready
 	if err := prov.Flush(); err != nil {
-		return err
+		return nil, err
 	}
 	if err := common.CryptoInit(c); err != nil {
-		return err
+		return nil, err
 	}
 
 	if common.Affirm(common.BackupMsg, "PLURAL_INIT_AFFIRM_BACKUP_KEY") {
 		if err := crypto.BackupKey(p.Client); err != nil {
-			return api.GetErrorResponse(err, "BackupKey")
+			return nil, api.GetErrorResponse(err, "BackupKey")
 		}
 	}
 
 	if err := crypto.CreateKeyFingerprintFile(); err != nil {
-		return err
+		return nil, err
+	}
+
+	project, err := manifest.FetchProject()
+	if err != nil {
+		return nil, err
 	}
 
 	utils.Success("Workspace is properly configured!\n")
 	if gitCreated {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
 	}
-	return nil
+	return project, nil
 }
 
-func (p *Plural) ensureWorkspace(c *cli.Context) error {
+func (p *Plural) ensureWorkspace(c *cli.Context) (*manifest.ProjectManifest, error) {
 	utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
 	utils.Highlight("Checking domain...\n")
 	proj, err := manifest.FetchProject()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if proj.Network != nil && proj.Network.PluralDns {
 		if err := p.CreateDomain(proj.Network.Subdomain); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	utils.Highlight("Domain OK \n")
 	branch, err := gitutils.CurrentBranch()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	if proj.Context == nil {
+		proj.Context = map[string]interface{}{}
+	}
 	proj.Context["Branch"] = branch
 	if err := proj.Flush(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := common.CryptoInit(c); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return proj, nil
 }
 
 func (p *Plural) DoInstallOperator(url, token, values, chart_loc, clusterId string) error {
