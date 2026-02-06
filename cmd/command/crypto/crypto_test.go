@@ -6,7 +6,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/pluralsh/plural-cli/cmd/command/crypto"
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -15,11 +14,9 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/config"
 	pluraltest "github.com/pluralsh/plural-cli/pkg/test"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
-	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/urfave/cli"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -257,76 +254,6 @@ func TestRecover(t *testing.T) {
 			b, err := os.ReadFile(path.Join(dir, ".plural", "key"))
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedKey, string(b))
-		})
-	}
-}
-
-func TestCheckGitCrypt(t *testing.T) {
-	tests := []struct {
-		name        string
-		createFiles bool
-	}{
-		{
-			name: "test when .gitattributes and .gitignore don't exist",
-		},
-		{
-			name:        "test when .gitattributes and .gitignore exist with the wrong content",
-			createFiles: true,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			// create temp environment
-			currentDir, err := os.Getwd()
-			assert.NoError(t, err)
-			dir, err := os.MkdirTemp("", "config")
-			assert.NoError(t, err)
-			defer func(path, currentDir string) {
-				_ = os.RemoveAll(path)
-				_ = os.Chdir(currentDir)
-			}(dir, currentDir)
-			os.Setenv("HOME", dir)
-			defer os.Unsetenv("HOME")
-			defaultConfig := pluraltest.GenDefaultConfig()
-			err = defaultConfig.Save(config.ConfigName)
-			assert.NoError(t, err)
-			err = os.WriteFile(path.Join(dir, ".plural", "key"), []byte("key: abc"), 0644)
-			assert.NoError(t, err)
-
-			err = os.Chdir(dir)
-			assert.NoError(t, err)
-			_, err = git.Init()
-			assert.NoError(t, err)
-
-			gitAttributes := path.Join(dir, common.GitAttributesFile)
-			gitIgnore := path.Join(dir, common.GitIgnoreFile)
-
-			if test.createFiles {
-				err = utils.WriteFile(gitIgnore, []byte(common.Gitignore+"some extra"))
-				assert.NoError(t, err)
-				err = utils.WriteFile(gitAttributes, []byte(common.Gitattributes+"abc"))
-				assert.NoError(t, err)
-			}
-
-			// test CheckGitCrypt
-			err = crypto.CheckGitCrypt(&cli.Context{})
-			assert.NoError(t, err)
-
-			// the files should exist
-			assert.True(t, utils.Exists(gitAttributes), ".gitattributes should exist")
-			assert.True(t, utils.Exists(gitIgnore), ".gitignore should exist")
-
-			attributes, err := utils.ReadFile(gitAttributes)
-			assert.NoError(t, err)
-			if !test.createFiles {
-				assert.Equal(t, attributes, common.Gitattributes)
-			}
-
-			ignore, err := utils.ReadFile(gitIgnore)
-			assert.NoError(t, err)
-			if !test.createFiles {
-				assert.Equal(t, ignore, common.Gitignore)
-			}
 		})
 	}
 }

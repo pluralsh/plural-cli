@@ -29,7 +29,7 @@ func configPath() string {
 	return pathing.SanitizeFilepath(filepath.Join(root, "crypto.yml"))
 }
 
-func ReadConfig() (conf *Config, err error) {
+func readConfig() (conf *Config, err error) {
 	conf = &Config{}
 	contents, err := os.ReadFile(configPath())
 	if err != nil {
@@ -56,7 +56,7 @@ func Build() (prov Provider, err error) {
 	}
 	if utils.Exists(configPath()) {
 		var conf *Config
-		conf, err = ReadConfig()
+		conf, err = readConfig()
 		if err != nil {
 			return fallbackProvider(key)
 		}

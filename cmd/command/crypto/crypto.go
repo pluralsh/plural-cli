@@ -148,7 +148,7 @@ func (p *Plural) backupCommands() []cli.Command {
 		{
 			Name:   "create",
 			Usage:  "creates a backup for your current key",
-			Action: common.Affirmed(p.createBackup, common.BackupMsg, "PLURAL_BACKUPS_CREATE"),
+			Action: common.Affirmed(p.createBackup, "Would you like to back up your repo encryption key to plural?  If you chose to manage it yourself, you can find it at ~/.plural/key", "PLURAL_BACKUPS_CREATE"),
 		},
 		{
 			Name:      "restore",
@@ -159,7 +159,7 @@ func (p *Plural) backupCommands() []cli.Command {
 	}
 }
 
-func handleEncrypt(c *cli.Context) error {
+func handleEncrypt(_ *cli.Context) error {
 	data, err := io.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
 		_, err := os.Stdout.Write(data)
@@ -237,27 +237,6 @@ func handleDecrypt(c *cli.Context) error {
 	return nil
 }
 
-// CheckGitCrypt method checks if the .gitattributes and .gitignore files exist and have desired content.
-// Some old repos can have fewer files to encrypt and must be updated.
-func CheckGitCrypt(c *cli.Context) error {
-	if !utils.Exists(common.GitAttributesFile) || !utils.Exists(common.GitIgnoreFile) {
-		return common.CryptoInit(c)
-	}
-	toCompare := map[string]string{common.GitAttributesFile: common.Gitattributes, common.GitIgnoreFile: common.Gitignore}
-
-	for file, content := range toCompare {
-		equal, err := utils.CompareFileContent(file, content)
-		if err != nil {
-			return err
-		}
-		if !equal {
-			return common.CryptoInit(c)
-		}
-	}
-
-	return nil
-}
-
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
 	p.InitPluralClient()
 	emails := c.StringSlice("email")
@@ -284,7 +263,7 @@ func (p *Plural) handleSetupKeys(c *cli.Context) error {
 	return nil
 }
 
-func exportKey(c *cli.Context) error {
+func exportKey(_ *cli.Context) error {
 	key, err := crypto.Materialize()
 	if err != nil {
 		return err
@@ -300,7 +279,7 @@ func exportKey(c *cli.Context) error {
 	return nil
 }
 
-func importKey(c *cli.Context) error {
+func importKey(_ *cli.Context) error {
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -331,7 +310,7 @@ func randString(c *cli.Context) error {
 	return nil
 }
 
-func handleKeygen(c *cli.Context) error {
+func handleKeygen(_ *cli.Context) error {
 	path, err := homedir.Expand("~/.ssh")
 	if err != nil {
 		return err
@@ -369,7 +348,7 @@ func handleKeygen(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) handleRecover(c *cli.Context) error {
+func (p *Plural) handleRecover(_ *cli.Context) error {
 	if err := p.InitKube(); err != nil {
 		return err
 	}
@@ -398,7 +377,7 @@ func (p *Plural) handleRecover(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) listBackups(c *cli.Context) error {
+func (p *Plural) listBackups(_ *cli.Context) error {
 	p.InitPluralClient()
 
 	backups, err := p.ListKeyBackups()
@@ -412,7 +391,7 @@ func (p *Plural) listBackups(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) createBackup(c *cli.Context) error {
+func (p *Plural) createBackup(_ *cli.Context) error {
 	p.InitPluralClient()
 	return crypto.BackupKey(p.Client)
 }

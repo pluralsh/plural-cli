@@ -15,7 +15,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
-	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 
@@ -118,11 +117,7 @@ func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifes
 	}
 
 	if utils.Exists("./workspace.yaml") {
-		project, err := p.ensureWorkspace(c)
-		if err != nil {
-			return nil, err
-		}
-		return project, nil
+		return p.ensureWorkspace()
 	}
 
 	if err := common.HandleLogin(c); err != nil {
@@ -152,21 +147,12 @@ func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifes
 		return nil, fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you")
 	}
 
-	// create workspace.yaml when git repository is ready
+	// Create workspace.yaml when the Git repository is ready.
 	if err := prov.Flush(); err != nil {
 		return nil, err
 	}
-	if err := common.CryptoInit(c); err != nil {
-		return nil, err
-	}
 
-	if common.Affirm(common.BackupMsg, "PLURAL_INIT_AFFIRM_BACKUP_KEY") {
-		if err := crypto.BackupKey(p.Client); err != nil {
-			return nil, api.GetErrorResponse(err, "BackupKey")
-		}
-	}
-
-	if err := crypto.CreateKeyFingerprintFile(); err != nil {
+	if err = common.EnsureGitIgnore(); err != nil {
 		return nil, err
 	}
 
@@ -179,10 +165,11 @@ func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifes
 	if gitCreated {
 		utils.Highlight("Be sure to `cd %s` to use your configured git repo\n", repo)
 	}
+
 	return project, nil
 }
 
-func (p *Plural) ensureWorkspace(c *cli.Context) (*manifest.ProjectManifest, error) {
+func (p *Plural) ensureWorkspace() (*manifest.ProjectManifest, error) {
 	utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
 	utils.Highlight("Checking domain...\n")
 	proj, err := manifest.FetchProject()
@@ -210,9 +197,10 @@ func (p *Plural) ensureWorkspace(c *cli.Context) (*manifest.ProjectManifest, err
 		return nil, err
 	}
 
-	if err := common.CryptoInit(c); err != nil {
+	if err = common.EnsureGitIgnore(); err != nil {
 		return nil, err
 	}
+
 	return proj, nil
 }
 
