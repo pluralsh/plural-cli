@@ -113,10 +113,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	}
 
 	if utils.Exists("./workspace.yaml") {
-		if err := p.ensureWorkspace(c); err != nil {
-			return err
-		}
-		return nil
+		return p.ensureWorkspace()
 	}
 
 	if err := common.HandleLogin(c); err != nil {
@@ -146,11 +143,12 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return fmt.Errorf("you're not in a git repository, either clone one directly or let us set it up for you")
 	}
 
-	// create workspace.yaml when git repository is ready
+	// Create workspace.yaml when the Git repository is ready.
 	if err := prov.Flush(); err != nil {
 		return err
 	}
-	if err := common.CryptoInit(c); err != nil {
+
+	if err = common.EnsureGitIgnore(); err != nil {
 		return err
 	}
 
@@ -171,7 +169,7 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) ensureWorkspace(c *cli.Context) error {
+func (p *Plural) ensureWorkspace() error {
 	utils.Highlight("Found workspace.yaml, skipping init as this repo has already been initialized\n")
 	utils.Highlight("Checking domain...\n")
 	proj, err := manifest.FetchProject()
@@ -196,9 +194,10 @@ func (p *Plural) ensureWorkspace(c *cli.Context) error {
 		return err
 	}
 
-	if err := common.CryptoInit(c); err != nil {
+	if err = common.EnsureGitIgnore(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
