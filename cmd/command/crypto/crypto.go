@@ -237,27 +237,6 @@ func handleDecrypt(c *cli.Context) error {
 	return nil
 }
 
-// CheckGitCrypt method checks if the .gitattributes and .gitignore files exist and have desired content.
-// Some old repos can have fewer files to encrypt and must be updated.
-func CheckGitCrypt(c *cli.Context) error {
-	if !utils.Exists(common.GitAttributesFile) || !utils.Exists(common.GitIgnoreFile) {
-		return common.CryptoInit(c)
-	}
-	toCompare := map[string]string{common.GitAttributesFile: common.Gitattributes, common.GitIgnoreFile: common.Gitignore}
-
-	for file, content := range toCompare {
-		equal, err := utils.CompareFileContent(file, content)
-		if err != nil {
-			return err
-		}
-		if !equal {
-			return common.CryptoInit(c)
-		}
-	}
-
-	return nil
-}
-
 func (p *Plural) handleCryptoShare(c *cli.Context) error {
 	p.InitPluralClient()
 	emails := c.StringSlice("email")
