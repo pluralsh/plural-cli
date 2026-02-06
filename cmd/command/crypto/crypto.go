@@ -148,7 +148,7 @@ func (p *Plural) backupCommands() []cli.Command {
 		{
 			Name:   "create",
 			Usage:  "creates a backup for your current key",
-			Action: common.Affirmed(p.createBackup, common.BackupMsg, "PLURAL_BACKUPS_CREATE"),
+			Action: common.Affirmed(p.createBackup, "Would you like to back up your repo encryption key to plural?  If you chose to manage it yourself, you can find it at ~/.plural/key", "PLURAL_BACKUPS_CREATE"),
 		},
 		{
 			Name:      "restore",

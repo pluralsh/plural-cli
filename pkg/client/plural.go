@@ -152,12 +152,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 		return err
 	}
 
-	if common.Affirm(common.BackupMsg, "PLURAL_INIT_AFFIRM_BACKUP_KEY") {
-		if err := crypto.BackupKey(p.Client); err != nil {
-			return api.GetErrorResponse(err, "BackupKey")
-		}
-	}
-
 	if err := crypto.CreateKeyFingerprintFile(); err != nil {
 		return err
 	}
