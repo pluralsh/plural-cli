@@ -15,7 +15,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/common"
-	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 
@@ -149,10 +148,6 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	}
 
 	if err = common.EnsureGitIgnore(); err != nil {
-		return err
-	}
-
-	if err := crypto.CreateKeyFingerprintFile(); err != nil {
 		return err
 	}
 
