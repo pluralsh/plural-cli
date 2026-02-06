@@ -36,7 +36,7 @@ const Gitignore = `/**/.terraform
 context.yaml*
 `
 
-func CryptoInit(c *cli.Context) error {
+func CryptoInit(_ *cli.Context) error {
 	encryptConfig := [][]string{
 		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
 		{"filter.plural-crypt.clean", "plural crypto encrypt"},
