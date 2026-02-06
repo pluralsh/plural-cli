@@ -159,7 +159,7 @@ func (p *Plural) backupCommands() []cli.Command {
 	}
 }
 
-func handleEncrypt(c *cli.Context) error {
+func handleEncrypt(_ *cli.Context) error {
 	data, err := io.ReadAll(os.Stdin)
 	if bytes.HasPrefix(data, prefix) {
 		_, err := os.Stdout.Write(data)
@@ -263,7 +263,7 @@ func (p *Plural) handleSetupKeys(c *cli.Context) error {
 	return nil
 }
 
-func exportKey(c *cli.Context) error {
+func exportKey(_ *cli.Context) error {
 	key, err := crypto.Materialize()
 	if err != nil {
 		return err
@@ -279,7 +279,7 @@ func exportKey(c *cli.Context) error {
 	return nil
 }
 
-func importKey(c *cli.Context) error {
+func importKey(_ *cli.Context) error {
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -310,7 +310,7 @@ func randString(c *cli.Context) error {
 	return nil
 }
 
-func handleKeygen(c *cli.Context) error {
+func handleKeygen(_ *cli.Context) error {
 	path, err := homedir.Expand("~/.ssh")
 	if err != nil {
 		return err
@@ -348,7 +348,7 @@ func handleKeygen(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) handleRecover(c *cli.Context) error {
+func (p *Plural) handleRecover(_ *cli.Context) error {
 	if err := p.InitKube(); err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func (p *Plural) handleRecover(c *cli.Context) error {
 	return nil
 }
 
-func (p *Plural) listBackups(c *cli.Context) error {
+func (p *Plural) listBackups(_ *cli.Context) error {
 	p.InitPluralClient()
 
 	backups, err := p.ListKeyBackups()
@@ -391,7 +391,7 @@ func (p *Plural) listBackups(c *cli.Context) error {
 	})
 }
 
-func (p *Plural) createBackup(c *cli.Context) error {
+func (p *Plural) createBackup(_ *cli.Context) error {
 	p.InitPluralClient()
 	return crypto.BackupKey(p.Client)
 }
