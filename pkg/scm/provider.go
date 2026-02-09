@@ -50,7 +50,7 @@ func Setup() (string, error) {
 	}
 
 	time.Sleep(3 * time.Second)
-	utils.Highlight("Cloning the repo locally (be sure you have git ssh auth set up, you can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider)\n")
+	utils.Highlight("Cloning the repo locally...\n")
 	auth, _ := git.SSHAuth("git", ctx.priv, "")
 	if _, err := git.Clone(auth, ctx.url, ctx.repoName); err != nil {
 		return "", err
