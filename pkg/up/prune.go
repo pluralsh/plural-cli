@@ -42,6 +42,7 @@ func (ctx *Context) Prune() error {
 	}
 
 	_ = os.Remove("./terraform/mgmt/console.tf")
+	_ = os.Remove("./terraform/mgmt/config-secrets.tf")
 	_ = os.RemoveAll("./terraform/apps")
 	_ = os.Remove("./context.yaml")
 
