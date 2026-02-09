@@ -42,7 +42,10 @@ const Gitignore = `/**/.terraform
 .DS_STORE
 .vscode
 context.yaml*
-temp
+
+# Temporary files used during bootstrap
+temp/*
+!temp/templates/
 `
 
 func EnsureGitIgnore() error {
