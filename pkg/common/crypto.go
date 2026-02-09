@@ -42,6 +42,7 @@ const Gitignore = `/**/.terraform
 .DS_STORE
 .vscode
 context.yaml*
+helm-temp/
 `
 
 func EnsureGitIgnore() error {
