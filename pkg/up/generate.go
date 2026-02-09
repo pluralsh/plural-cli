@@ -38,7 +38,6 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	tpls := []templatePair{
 		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
 		{from: ctx.path("charts/runtime/values.yaml.liquid.tpl"), to: "./helm/runtime.yaml.liquid", overwrite: true},
-		{from: ctx.path("temp/templates/runtime.yaml.tpl"), to: "./temp/manifests/runtime.yaml", overwrite: true},
 		{from: ctx.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
 		{from: ctx.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
 		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
