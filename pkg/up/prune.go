@@ -29,6 +29,7 @@ func (ctx *Context) Prune() error {
 			"helm_release.flux",
 			"helm_release.runtime",
 			"helm_release.console",
+			"kubernetes_namespace.infra",
 			"kubernetes_secret.runtime_config",
 			"kubernetes_secret.console_config",
 		}
