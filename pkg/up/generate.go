@@ -10,6 +10,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
+const consoleValuesTemplateURL = "https://raw.githubusercontent.com/pluralsh/console/refs/heads/master/templates/values.yaml.liquid"
+
 type templatePair struct {
 	from      string
 	to        string
@@ -94,6 +96,10 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		if err = utils.CopyDir(copy.from, copy.to); err != nil {
 			return
 		}
+	}
+
+	if err = utils.DownloadFile(filepath.Join("helm", "console.yaml.liquid"), consoleValuesTemplateURL); err != nil {
+		return "", fmt.Errorf("fetch console values template: %w", err)
 	}
 
 	postTemplates := []templatePair{
