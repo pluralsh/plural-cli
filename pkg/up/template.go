@@ -2,6 +2,7 @@ package up
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"text/template"
 	"time"
@@ -46,16 +47,22 @@ func (ctx *Context) templateFrom(file, to string) error {
 
 func (ctx *Context) template(tmplate string) (string, error) {
 	cluster, provider := ctx.Provider.Cluster(), ctx.Provider.Name()
+
 	client := api.NewClient()
+
+	me, err := client.Me()
+	if err != nil {
+		return "", fmt.Errorf("you must run `plural login` before installing")
+	}
+
 	retrier := retry.NewConstant(15*time.Millisecond, 3)
-	eabCredential, err := retry.Retry(retrier, func() (*api.EabCredential, error) {
-		return client.GetEabCredential(cluster, provider)
-	})
+	eabCredential, err := retry.Retry(retrier, func() (*api.EabCredential, error) { return client.GetEabCredential(cluster, provider) })
 	if err != nil {
 		return "", err
 	}
 
 	values := map[string]interface{}{
+		"UserEmail":      me.Email,
 		"Cluster":        cluster,
 		"Provider":       provider,
 		"Bucket":         ctx.Provider.Bucket(),
