@@ -110,7 +110,7 @@ func (gh *Github) Setup() (con Context, err error) {
 		}
 
 		utils.Highlight("encountered an error generating, retrying...")
-		time.Sleep(time.Duration(time.Second))
+		time.Sleep(time.Second)
 	}
 
 	if err != nil {

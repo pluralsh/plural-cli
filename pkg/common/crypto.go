@@ -23,6 +23,14 @@ helm-values/*.yaml filter=plural-crypt diff=plural-crypt
 .gitattributes !filter !diff
 `
 
+func EnsureGitAttributes() error {
+	if utils.Exists(GitAttributesFile) {
+		return nil
+	}
+
+	return utils.WriteFile(GitAttributesFile, []byte(Gitattributes))
+}
+
 const Gitignore = `/**/.terraform
 /**/.terraform*
 /**/terraform.tfstate*
@@ -34,9 +42,18 @@ const Gitignore = `/**/.terraform
 .DS_STORE
 .vscode
 context.yaml*
+temp
 `
 
-func CryptoInit(c *cli.Context) error {
+func EnsureGitIgnore() error {
+	if utils.Exists(GitIgnoreFile) {
+		return nil
+	}
+
+	return utils.WriteFile(GitIgnoreFile, []byte(Gitignore))
+}
+
+func CryptoInit(_ *cli.Context) error {
 	encryptConfig := [][]string{
 		{"filter.plural-crypt.smudge", "plural crypto decrypt"},
 		{"filter.plural-crypt.clean", "plural crypto encrypt"},
@@ -51,16 +68,12 @@ func CryptoInit(c *cli.Context) error {
 		}
 	}
 
-	if !utils.Exists(GitAttributesFile) {
-		if err := utils.WriteFile(GitAttributesFile, []byte(Gitattributes)); err != nil {
-			return err
-		}
+	if err := EnsureGitAttributes(); err != nil {
+		return err
 	}
 
-	if !utils.Exists(GitIgnoreFile) {
-		if err := utils.WriteFile(GitIgnoreFile, []byte(Gitignore)); err != nil {
-			return err
-		}
+	if err := EnsureGitIgnore(); err != nil {
+		return err
 	}
 
 	_, err := crypto.Build()

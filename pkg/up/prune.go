@@ -29,6 +29,9 @@ func (ctx *Context) Prune() error {
 			"helm_release.flux",
 			"helm_release.runtime",
 			"helm_release.console",
+			"kubernetes_namespace.infra",
+			"kubernetes_secret.runtime_config",
+			"kubernetes_secret.console_config",
 		}
 
 		for _, field := range toRemove {
@@ -42,6 +45,8 @@ func (ctx *Context) Prune() error {
 	}
 
 	_ = os.Remove("./terraform/mgmt/console.tf")
+	_ = os.Remove("./terraform/mgmt/config-secrets.tf")
+	_ = os.RemoveAll("./temp")
 	_ = os.RemoveAll("./terraform/apps")
 	_ = os.Remove("./context.yaml")
 

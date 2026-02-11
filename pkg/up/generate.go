@@ -10,6 +10,8 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
+const consoleValuesTemplateURL = "https://raw.githubusercontent.com/pluralsh/console/refs/heads/master/templates/values.yaml.liquid"
+
 type templatePair struct {
 	from      string
 	to        string
@@ -36,12 +38,12 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 
 	prov := ctx.Provider.Name()
 	tpls := []templatePair{
-		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./helm-values/runtime.yaml", overwrite: true},
-		{from: ctx.path("helm/certmanager.yaml"), to: "./helm-values/certmanager.yaml", overwrite: true},
-		{from: ctx.path("helm/flux.yaml"), to: "./helm-values/flux.yaml", overwrite: true},
+		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
+		{from: ctx.path("charts/runtime/values.yaml.liquid.tpl"), to: "./helm/runtime.yaml.liquid", overwrite: true},
 		{from: ctx.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
 		{from: ctx.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
 		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
+		{from: ctx.path("templates/setup/config-secrets.tf"), to: "terraform/mgmt/config-secrets.tf", cloudless: true},
 		{from: ctx.path(fmt.Sprintf("templates/providers/apps/%s.tf", prov)), to: "terraform/apps/provider.tf", cloudless: true},
 		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf", cloud: true},
 		{from: ctx.path("templates/setup/cd.tf"), to: "terraform/apps/cd.tf"},
@@ -94,6 +96,10 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		if err = utils.CopyDir(copy.from, copy.to); err != nil {
 			return
 		}
+	}
+
+	if err = utils.DownloadFile(filepath.Join("helm", "console.yaml.liquid"), consoleValuesTemplateURL); err != nil {
+		return "", fmt.Errorf("fetch console values template: %w", err)
 	}
 
 	postTemplates := []templatePair{

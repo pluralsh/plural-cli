@@ -99,7 +99,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 			return err
 		}
 
-		if err := p.backfillEncryption(); err != nil {
+		if err := p.ValidateConsoleConfig(); err != nil {
 			return err
 		}
 	}
