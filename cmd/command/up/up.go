@@ -196,20 +196,31 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 
 	clusterNames := []string{}
 	clusterMap := map[string]string{}
+	defaultSelection := ""
 
 	for _, cluster := range instances {
 		if prior.Url != "" && strings.EqualFold(common.GetHostnameFromURL(prior.Url), common.GetHostnameFromURL(cluster.URL)) {
-			name = cluster.Name
-			url = cluster.URL
-			return
+			defaultSelection = cluster.Name
 		}
 		clusterNames = append(clusterNames, cluster.Name)
 		clusterMap[cluster.Name] = cluster.URL
 	}
 
+	if len(clusterNames) == 0 {
+		err = fmt.Errorf("no cloud instances are available for this account")
+		return
+	}
+
+	if len(clusterNames) == 1 {
+		name = clusterNames[0]
+		url = clusterMap[name]
+		return
+	}
+
 	prompt := &survey.Select{
 		Message: "Select one of the following clusters:",
 		Options: clusterNames,
+		Default: defaultSelection,
 	}
 	if err = survey.AskOne(prompt, &name, survey.WithValidator(survey.Required)); err != nil {
 		return
