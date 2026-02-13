@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -11,6 +12,16 @@ import (
 )
 
 const createNewOption = "Create new..."
+
+func filterSurveyOptions(filter string, value string, index int) (include bool) {
+	if value == createNewOption {
+		return true
+	}
+
+	filter = strings.ToLower(filter)
+
+	return strings.Contains(strings.ToLower(value), filter)
+}
 
 func askCluster() (string, error) {
 	cluster := ""
@@ -89,7 +100,7 @@ func askAzureResourceGroup(ctx context.Context, client *armresources.ResourceGro
 	group := ""
 	if err = survey.AskOne(
 		&survey.Select{Message: "Select the resource group to use:", Options: options},
-		&group, survey.WithValidator(survey.Required),
+		&group, survey.WithValidator(survey.Required), survey.WithFilter(filterSurveyOptions),
 	); err != nil {
 		return "", err
 	}
@@ -132,7 +143,7 @@ func askAzureStorageAccount(ctx context.Context, client *armstorage.AccountsClie
 	account := ""
 	if err = survey.AskOne(
 		&survey.Select{Message: "Select the storage account to use:", Options: options},
-		&account, survey.WithValidator(survey.Required),
+		&account, survey.WithValidator(survey.Required), survey.WithFilter(filterSurveyOptions),
 	); err != nil {
 		return "", err
 	}
