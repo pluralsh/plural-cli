@@ -27,7 +27,7 @@ func checkRecency() error {
 
 	if Version == versionPlaceholder || strings.Contains(Version, "-") {
 		utils.Warn("\nThis is a development version, which can be significantly different from official releases")
-		utils.Warn("\nYou can download latest release from https://github.com/pluralsh/plural-cli/releases/latest\n")
+		utils.Warn("\nYou can download the latest release from https://github.com/pluralsh/plural-cli/releases/latest\n")
 		return nil
 	}
 
