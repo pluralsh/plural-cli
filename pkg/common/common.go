@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/browser"
 	"github.com/urfave/cli"
 
@@ -190,12 +191,20 @@ func HandleImport(c *cli.Context) error {
 	return nil
 }
 
+func IsUUIDv4(input string) bool {
+	_, err := uuid.Parse(input)
+	return err == nil
+}
+
 func GetIdAndName(input string) (id, name *string) {
-	if strings.HasPrefix(input, "@") {
+	switch {
+	case strings.HasPrefix(input, "@"):
 		h := strings.Trim(input, "@")
 		name = &h
-	} else {
+	case IsUUIDv4(input):
 		id = &input
+	default:
+		name = &input
 	}
 	return
 }

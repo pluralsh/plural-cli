@@ -43,11 +43,16 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		{from: ctx.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
 		{from: ctx.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
 		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
-		{from: ctx.path("templates/setup/config-secrets.tf"), to: "terraform/mgmt/config-secrets.tf", cloudless: true},
 		{from: ctx.path(fmt.Sprintf("templates/providers/apps/%s.tf", prov)), to: "terraform/apps/provider.tf", cloudless: true},
 		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf", cloud: true},
 		{from: ctx.path("templates/setup/cd.tf"), to: "terraform/apps/cd.tf"},
 		{from: ctx.path("README.md"), to: "README.md", overwrite: true},
+	}
+
+	if prov == api.ProviderGCP {
+		tpls = append(tpls, templatePair{from: ctx.path("templates/setup/config_secrets_gcp.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
+	} else {
+		tpls = append(tpls, templatePair{from: ctx.path("templates/setup/config_secrets.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
 	}
 
 	for _, tpl := range tpls {
