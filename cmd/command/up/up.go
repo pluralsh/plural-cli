@@ -220,8 +220,12 @@ func (p *Plural) choseCluster() (name, url string, err error) {
 	prompt := &survey.Select{
 		Message: "Select one of the following clusters:",
 		Options: clusterNames,
-		Default: defaultSelection,
 	}
+
+	if defaultSelection != "" {
+		prompt.Default = defaultSelection
+	}
+
 	if err = survey.AskOne(prompt, &name, survey.WithValidator(survey.Required)); err != nil {
 		return
 	}
