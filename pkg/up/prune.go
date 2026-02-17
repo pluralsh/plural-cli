@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
@@ -29,9 +30,20 @@ func (ctx *Context) Prune() error {
 			"helm_release.flux",
 			"helm_release.runtime",
 			"helm_release.console",
-			"kubernetes_namespace.infra",
-			"kubernetes_secret.runtime_config",
-			"kubernetes_secret.console_config",
+		}
+
+		if ctx.Provider.Name() == api.ProviderGCP {
+			toRemove = append(toRemove,
+				"kubernetes_namespace.infra_gcp",
+				"kubernetes_secret.runtime_config_gcp",
+				"kubernetes_secret.console_config_gcp",
+			)
+		} else {
+			toRemove = append(toRemove,
+				"kubernetes_namespace.infra",
+				"kubernetes_secret.runtime_config",
+				"kubernetes_secret.console_config",
+			)
 		}
 
 		for _, field := range toRemove {
