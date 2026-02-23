@@ -47,7 +47,7 @@ require (
 	github.com/pluralsh/plural-operator v0.5.5
 	github.com/pluralsh/polly v0.3.7
 	github.com/posthog/posthog-go v1.4.10
-	github.com/samber/lo v1.50.0
+	github.com/samber/lo v1.52.0
 	github.com/urfave/cli v1.22.16
 	github.com/yuin/gopher-lua v1.1.1
 	gitlab.com/gitlab-org/api/client-go v0.128.0
