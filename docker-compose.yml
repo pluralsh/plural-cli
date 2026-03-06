@@ -1,9 +1,23 @@
-version: '3.7'
 services:
-  server:
-    image: gcr.io/pluralsh/plural-cli-cloud:0.6.2
-    restart: always
-    pull_policy: always
-    platform: linux/amd64
-    ports:
-    - '8080:8080'
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VSN: dev
+        APP_COMMIT: local
+        APP_DATE: "2026-03-06"
+        TARGETARCH: amd64
+    container_name: plural-cli
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - go-modules-cache:/go/pkg/mod
+    environment:
+      GOCACHE: /tmp/gocache
+    entrypoint: /go/bin/plural
+    command: ["version"]
+
+volumes:
+  go-modules-cache:
+    driver: local

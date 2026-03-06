@@ -1,0 +1,17 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+    container_name: plural-cli-tests
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - go-modules-cache:/go/pkg/mod
+    environment:
+      GOCACHE: /tmp/gocache
+    command: make test
+
+volumes:
+  go-modules-cache:
+    driver: local
