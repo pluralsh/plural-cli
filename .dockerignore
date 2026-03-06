@@ -1,7 +1,5 @@
 plural/
 .gitlab-ci.yml
-Pluralfile
-plural.lock
 .gitignore
 .github/
 .goreleaser.yaml
