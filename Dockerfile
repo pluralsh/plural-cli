@@ -25,10 +25,10 @@ ARG APP_DATE
 ARG TARGETARCH
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
-    go build -ldflags '-s -w \
-    -X "github.com/pluralsh/plural-cli/pkg/common.Version=${APP_VSN}" \
-    -X "github.com/pluralsh/plural-cli/pkg/common.Commit=${APP_COMMIT}" \
-    -X "github.com/pluralsh/plural-cli/pkg/common.Date=${APP_DATE}"' \
+    go build -ldflags "-s -w \
+    -X \"github.com/pluralsh/plural-cli/pkg/common.Version=${APP_VSN}\" \
+    -X \"github.com/pluralsh/plural-cli/pkg/common.Commit=${APP_COMMIT}\" \
+    -X \"github.com/pluralsh/plural-cli/pkg/common.Date=${APP_DATE}\"" \
     -o plural ./cmd/plural
 
 FROM golang:1.25.7-alpine3.22 AS final
