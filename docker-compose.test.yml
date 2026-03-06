@@ -2,7 +2,7 @@ services:
   tests:
     build:
       context: .
-      dockerfile: dockerfiles/test.Dockerfile
+      dockerfile: test.Dockerfile
     container_name: plural-cli-tests
     working_dir: /workspace
     volumes:
