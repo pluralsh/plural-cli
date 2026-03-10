@@ -1,6 +1,5 @@
 ROOT_DIRECTORY := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-include $(ROOT_DIRECTORY)/hack/include/help.mk
 include $(ROOT_DIRECTORY)/hack/include/tools.mk
 include $(ROOT_DIRECTORY)/hack/include/build.mk
 
@@ -31,121 +30,30 @@ GOBIN := $(if $(GOBIN),$(GOBIN),$(HOME)/go/bin)
 # install-tools - Install binaries required to run targets
 PRE := install-tools
 
-.PHONY: git-push
-git-push:
-	git pull --rebase
-	git push
+##@ Help
 
-.PHONY: install
-install: install-cli
+.PHONY: help
+help: ## show help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: install-cli
-install-cli:
-	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
+##@ Static checks
 
-.PHONY: build-cli
-build-cli: ## Build a CLI binary for the host architecture without embedded UI
-	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
+.PHONY: lint
+lint: ## run linters
+	golangci-lint run ./...
 
-.PHONY: release
-release:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
+.PHONY: fix
+fix: ## fix issues found by linters
+	golangci-lint run --fix ./...
 
-.PHONY: goreleaser
-goreleaser:
-	goreleaser build --clean --snapshot
-
-.PHONY: setup
-setup: ## sets up your local env (for mac only)
-	brew install golangci-lint
-
-.PHONY: plural
-plural: ## uploads to plural
-	plural apply -f plural/Pluralfile
-
-.PHONY: build
-build: ## Build the Docker image
-	docker build --build-arg APP_NAME=$(APP_NAME) \
-		--build-arg APP_VSN=$(APP_VSN) \
-		--build-arg APP_DATE=$(APP_DATE) \
-		--build-arg APP_COMMIT=$(BUILD) \
-		-t $(APP_NAME):$(APP_VSN) \
-		-t $(APP_NAME):latest \
-		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
-		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
-
-.PHONY: build-cloud-image
-build-cloud-image: ## build the cloud docker image
-	docker build --build-arg APP_NAME=$(APP_NAME) \
-		--build-arg APP_VSN=$(APP_VSN) \
-		--build-arg APP_DATE=$(APP_DATE) \
-		--build-arg APP_COMMIT=$(BUILD) \
-		-t $(APP_NAME)-cloud:$(APP_VSN) \
-		-t $(APP_NAME)-cloud:latest \
-		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
-		-t $(DKR_HOST)/plural/$(APP_NAME)-cloud:$(APP_VSN) -f dockerfiles/Dockerfile.cloud  .
-
-.PHONY: build-dind-image
-build-dind-image: ## build the dind docker image
-	docker build --build-arg APP_NAME=$(APP_NAME) \
-		--build-arg APP_VSN=$(APP_VSN) \
-		--build-arg APP_DATE=$(APP_DATE) \
-		--build-arg APP_COMMIT=$(BUILD) \
-		-t $(APP_NAME)-cloud:$(APP_VSN) \
-		-t $(APP_NAME)-cloud:latest \
-		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME)-cloud:$(APP_VSN) \
-		-t $(DKR_HOST)/plural/$(APP_NAME)-dind:$(APP_VSN) -f dockerfiles/Dockerfile.dind  .
-
-.PHONY: push
-push: ## push to gcr
-	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
-	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
-
-.PHONY: push-cloud
-push-cloud: ## push to gcr
-	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)-cloud
-	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)-cloud
-
-.PHONY: generate
-generate:
-	go generate ./...
-
-.PHONY: bake-ami
-bake-ami:
-	cd packer && packer build -var "cli_version=$(APP_VSN)" .
-	@echo "baked ami for all regions"
-
-.PHONY: up
-up: ## spin up local server
-	docker-compose up
-
-.PHONY: pull
-pull: ## pulls new server image
-	docker-compose pull
-
-.PHONY: serve
-serve: build-cloud-image ## build cloud version of plural-cli and start plural serve in docker
-	docker kill plural-cli || true
-	docker run --rm --name plural-cli -p 8080:8080 -d plural-cli:latest-cloud
-
-.PHONY: release-vsn
-release-vsn: ## tags and pushes a new release
-	@read -p "Version: " tag; \
-	git checkout main; \
-	git pull --rebase; \
-	git tag -a $$tag -m "new release"; \
-	git push origin $$tag
-
-.PHONY: setup-tests
-setup-tests:
-	go install gotest.tools/gotestsum@latest
+##@ Test
 
 .PHONY: test
-test: setup-tests
+test: setup-tests ## run tests
 	gotestsum --format testname -- -v -race ./pkg/... ./cmd/command/...
 
 .PHONY: e2e
-e2e: --ensure-venom
+e2e: --ensure-venom ## run end-to-end tests
 	@rm -rf testout ;\
 	VENOM_VAR_branch=e2e-${PLRL_CLI_E2E_PROVIDER}-${TIMESTAMP} \
 	VENOM_VAR_directory=../../testout/${PLRL_CLI_E2E_PROVIDER} \
@@ -178,17 +86,72 @@ e2e: --ensure-venom
 	TF_VAR_deletion_protection=false \
  		venom run -vv --html-report --format=json --output-dir testout test/plural
 
+
+##@ Build
+
+.PHONY: install
+install: install-cli
+
+.PHONY: install-cli
+install-cli:
+	go build -ldflags '$(LDFLAGS)' -o $(GOBIN)/plural ./cmd/plural
+
+.PHONY: build-cli
+build-cli: ## build a CLI binary for the host architecture without embedded UI
+	go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
+
+.PHONY: release
+release:
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags='$(LDFLAGS)' -o $(OUTFILE) ./cmd/plural
+
+.PHONY: goreleaser
+goreleaser:
+	goreleaser build --clean --snapshot
+
+.PHONY: setup
+setup: ## sets up your local env (for mac only)
+	brew install golangci-lint
+
+.PHONY: build
+build: ## build the docker image
+	docker build --build-arg APP_NAME=$(APP_NAME) \
+		--build-arg APP_VSN=$(APP_VSN) \
+		--build-arg APP_DATE=$(APP_DATE) \
+		--build-arg APP_COMMIT=$(BUILD) \
+		-t $(APP_NAME):$(APP_VSN) \
+		-t $(APP_NAME):latest \
+		-t gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN) \
+		-t $(DKR_HOST)/plural/$(APP_NAME):$(APP_VSN) .
+
+.PHONY: push
+push: ## push to gcr
+	docker push gcr.io/$(GCP_PROJECT)/$(APP_NAME):$(APP_VSN)
+	docker push $(DKR_HOST)/plural/${APP_NAME}:$(APP_VSN)
+
+.PHONY: generate
+generate:
+	go generate ./...
+
+.PHONY: bake-ami
+bake-ami:
+	cd packer && packer build -var "cli_version=$(APP_VSN)" .
+	@echo "baked ami for all regions"
+
+.PHONY: release-vsn
+release-vsn: ## tags and pushes a new release
+	@read -p "Version: " tag; \
+	git checkout main; \
+	git pull --rebase; \
+	git tag -a $$tag -m "new release"; \
+	git push origin $$tag
+
+.PHONY: setup-tests
+setup-tests:
+	go install gotest.tools/gotestsum@latest
+
 .PHONY: genmock
 genmock: ## generates mocks before running tests
 	hack/gen-client-mocks.sh
-
-.PHONY: lint
-lint:
-	golangci-lint run ./...
-
-.PHONY: format
-format: ## formats all go code to prep for linting
-	golangci-lint run --fix ./...
 
 .PHONY: delete-tag
 delete-tag:
@@ -221,3 +184,17 @@ verify: ## verifies provided tagged release with cosign
     wget -P ${VERIFY_TMP_DIR} "${REPO_URL}/v$${tag}/${RELEASE_ARCHIVE_NAME}_$${tag}_Windows_amd64.tar.gz" >/dev/null 2>&1 ;\
     (cd ${VERIFY_TMP_DIR} && exec sha256sum --ignore-missing -c checksums.txt) ;\
     rm -r "${VERIFY_TMP_DIR}"
+
+##@ Docker Compose
+
+.PHONY: up
+up: ## spin up local docker-compose
+	docker-compose up --build
+
+.PHONY: down
+down: ## stop docker-compose
+	docker-compose down --remove-orphans
+
+.PHONY: test-docker
+test-docker: ## run tests in docker using docker-compose
+	docker-compose -f docker-compose.test.yml up --build
