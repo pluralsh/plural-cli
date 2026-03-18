@@ -302,8 +302,7 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 		return nil
 	}
 
-	switch project.Provider {
-	case api.ProviderGCP:
+	if project.Provider == api.ProviderGCP {
 		// For GCP, besides just validating that the domain is set up,
 		// we also need to determine the managed DNS zone to use.
 		// If there is one it will be automatically selected, if there are multiple,
