@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os/exec"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -471,31 +470,30 @@ func getPathElement(path, indexName string) (string, error) {
 	return "", fmt.Errorf("%s not found", indexName)
 }
 
-func ValidateAzureDomainRegistration(ctx context.Context, domain, resourceGroup string) error {
+func AzureDNSZones(ctx context.Context, resourceGroup string) ([]string, error) {
 	subId, _, _, err := GetAzureAccount()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	clients, err := GetClientSet(subId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	d := strings.TrimSuffix(domain, ".")
-
+	var zones []string
 	pager := clients.Zones.NewListByResourceGroupPager(resourceGroup, nil)
 	for pager.More() {
 		resp, err := pager.NextPage(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, zone := range resp.Value {
-			if lo.FromPtr(zone.Name) == d {
-				return nil // Domain is registered, return without error.
+			if name := lo.FromPtr(zone.Name); name != "" {
+				zones = append(zones, name)
 			}
 		}
 	}
 
-	return fmt.Errorf("domain %s not found", domain)
+	return zones, nil
 }

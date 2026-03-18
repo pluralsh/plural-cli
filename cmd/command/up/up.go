@@ -244,15 +244,37 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 	}
 
 	var domain string
-	message := "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:"
-	if project.Provider == api.ProviderGCP {
-		message = "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:"
-	}
-	prompt := &survey.Input{
-		Message: message,
-	}
-	if err := survey.AskOne(prompt, &domain); err != nil {
-		return err
+
+	switch project.Provider {
+	case api.ProviderAzure:
+		dnsZones, err := provider.AzureDNSZones(context.Background(), project.Project)
+		if err != nil {
+			return err
+		}
+
+		const noneOption = "None"
+		if err := survey.AskOne(
+			&survey.Select{Message: "Select DNS zone (leave as None to skip):", Options: append([]string{noneOption}, dnsZones...)},
+			&domain,
+		); err != nil {
+			return err
+		}
+
+		if domain == noneOption {
+			domain = ""
+		}
+	case api.ProviderGCP:
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:",
+		}, &domain); err != nil {
+			return err
+		}
+	default:
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:",
+		}, &domain); err != nil {
+			return err
+		}
 	}
 
 	return processAppDomain(domain, project)
@@ -271,10 +293,11 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 			return err
 		}
 	case api.ProviderAzure:
-		// For Azure, we need to validate that the domain is set up in Azure DNS.
-		if err := provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
-			return err
+		// The DNS zone was already selected interactively in askAppDomain; store it in context.
+		if project.Context == nil {
+			project.Context = map[string]interface{}{}
 		}
+		project.Context["DNSZone"] = strings.TrimSuffix(domain, ".")
 	case api.ProviderGCP:
 		// For GCP, besides just validating that the domain is set up,
 		// we also need to determine the managed DNS zone to use.
