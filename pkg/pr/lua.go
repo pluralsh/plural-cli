@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"github.com/pluralsh/polly/luautils"
+	"github.com/pluralsh/console/go/polly/luautils"
 	lua "github.com/yuin/gopher-lua"
 )
 

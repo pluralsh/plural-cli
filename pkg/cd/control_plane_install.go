@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/AlecAivazis/survey/v2"
-	pollytemplate "github.com/pluralsh/polly/template"
+	pollytemplate "github.com/pluralsh/console/go/polly/template"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"

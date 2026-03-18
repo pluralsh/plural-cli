@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
+	"github.com/pluralsh/console/go/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/containers"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"

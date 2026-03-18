@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 
@@ -26,6 +26,7 @@ import (
 
 const (
 	defaultBootstrapBranch = "main"
+	noneOption             = "None"
 )
 
 type Plural struct {
@@ -244,15 +245,52 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 	}
 
 	var domain string
-	message := "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:"
-	if project.Provider == api.ProviderGCP {
-		message = "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:"
-	}
-	prompt := &survey.Input{
-		Message: message,
-	}
-	if err := survey.AskOne(prompt, &domain); err != nil {
-		return err
+
+	switch project.Provider {
+	case api.ProviderAWS:
+		hostedZones, err := provider.AWSHostedZones(context.Background(), project.Region)
+		if err != nil {
+			return err
+		}
+
+		if err := survey.AskOne(
+			&survey.Select{Message: "Select hosted zone (leave as None to skip):", Options: append([]string{noneOption}, hostedZones...)},
+			&domain,
+		); err != nil {
+			return err
+		}
+
+		if domain == noneOption {
+			domain = ""
+		}
+	case api.ProviderAzure:
+		dnsZones, err := provider.AzureDNSZones(context.Background(), project.Project)
+		if err != nil {
+			return err
+		}
+
+		if err := survey.AskOne(
+			&survey.Select{Message: "Select DNS zone (leave as None to skip):", Options: append([]string{noneOption}, dnsZones...)},
+			&domain,
+		); err != nil {
+			return err
+		}
+
+		if domain == noneOption {
+			domain = ""
+		}
+	case api.ProviderGCP:
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the DNS zone name for your application. This should be the DNS zone name already configured in your cloud's DNS provider. Leave empty to ignore:",
+		}, &domain); err != nil {
+			return err
+		}
+	default:
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the domain for your application. It's expected that the root domain already exist in your clouds DNS provider. Leave empty to ignore:",
+		}, &domain); err != nil {
+			return err
+		}
 	}
 
 	return processAppDomain(domain, project)
@@ -264,18 +302,7 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 		return nil
 	}
 
-	switch project.Provider {
-	case api.ProviderAWS:
-		// For AWS, we need to validate that the domain is set up in Route 53.
-		if err := provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
-			return err
-		}
-	case api.ProviderAzure:
-		// For Azure, we need to validate that the domain is set up in Azure DNS.
-		if err := provider.ValidateAzureDomainRegistration(context.Background(), domain, project.Project); err != nil {
-			return err
-		}
-	case api.ProviderGCP:
+	if project.Provider == api.ProviderGCP {
 		// For GCP, besides just validating that the domain is set up,
 		// we also need to determine the managed DNS zone to use.
 		// If there is one it will be automatically selected, if there are multiple,

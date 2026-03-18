@@ -9,10 +9,10 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
 
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"github.com/pluralsh/polly/algorithms"
 )
 
 const pluralDomain = "onplural.sh"

@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pluralsh/console/go/polly/algorithms"
 	gitutils "github.com/pluralsh/plural-cli/pkg/utils/git"
-	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 

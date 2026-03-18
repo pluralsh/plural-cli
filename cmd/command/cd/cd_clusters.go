@@ -8,8 +8,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	gqlclient "github.com/pluralsh/console/go/client"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
+	"github.com/pluralsh/console/go/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/containers"
 	"github.com/samber/lo"
 	"github.com/urfave/cli"
 	"sigs.k8s.io/yaml"

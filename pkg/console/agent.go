@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/helm"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"

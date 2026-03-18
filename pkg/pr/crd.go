@@ -14,7 +14,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 
 	"github.com/pluralsh/console/go/controller/api/v1alpha1"
-	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"sigs.k8s.io/yaml"
 )
 

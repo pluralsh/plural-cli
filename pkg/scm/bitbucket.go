@@ -8,9 +8,9 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/ktrysmt/go-bitbucket"
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 )
 
 var (
