@@ -303,14 +303,6 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 	}
 
 	switch project.Provider {
-	case api.ProviderAWS:
-		// The hosted zone was already selected interactively in askAppDomain; nothing more to do.
-	case api.ProviderAzure:
-		// The DNS zone was already selected interactively in askAppDomain; store it in context.
-		if project.Context == nil {
-			project.Context = map[string]interface{}{}
-		}
-		project.Context["DNSZone"] = strings.TrimSuffix(domain, ".")
 	case api.ProviderGCP:
 		// For GCP, besides just validating that the domain is set up,
 		// we also need to determine the managed DNS zone to use.
