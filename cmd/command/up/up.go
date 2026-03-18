@@ -26,6 +26,7 @@ import (
 
 const (
 	defaultBootstrapBranch = "main"
+	noneOption             = "None"
 )
 
 type Plural struct {
@@ -246,13 +247,28 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 	var domain string
 
 	switch project.Provider {
+	case api.ProviderAWS:
+		hostedZones, err := provider.AWSHostedZones(context.Background(), project.Region)
+		if err != nil {
+			return err
+		}
+
+		if err := survey.AskOne(
+			&survey.Select{Message: "Select hosted zone (leave as None to skip):", Options: append([]string{noneOption}, hostedZones...)},
+			&domain,
+		); err != nil {
+			return err
+		}
+
+		if domain == noneOption {
+			domain = ""
+		}
 	case api.ProviderAzure:
 		dnsZones, err := provider.AzureDNSZones(context.Background(), project.Project)
 		if err != nil {
 			return err
 		}
 
-		const noneOption = "None"
 		if err := survey.AskOne(
 			&survey.Select{Message: "Select DNS zone (leave as None to skip):", Options: append([]string{noneOption}, dnsZones...)},
 			&domain,
@@ -288,10 +304,7 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 
 	switch project.Provider {
 	case api.ProviderAWS:
-		// For AWS, we need to validate that the domain is set up in Route 53.
-		if err := provider.ValidateAWSDomainRegistration(context.Background(), domain, project.Region); err != nil {
-			return err
-		}
+		// The hosted zone was already selected interactively in askAppDomain; nothing more to do.
 	case api.ProviderAzure:
 		// The DNS zone was already selected interactively in askAppDomain; store it in context.
 		if project.Context == nil {

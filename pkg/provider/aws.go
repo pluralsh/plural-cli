@@ -270,17 +270,16 @@ func (aws *AWSProvider) Decommision(node *v1.Node) error {
 	return plrlErrors.ErrorWrap(err, "failed to terminate instance")
 }
 
-func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) error {
+func AWSHostedZones(ctx context.Context, region string) ([]string, error) {
 	cfg, err := getAwsConfig(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	d := strings.TrimSuffix(domain, ".") + "." // Route53 stores zone names with trailing dot.
 
 	cfg.Region = region // Route53 is a global service, but AWS SDK requires a region to be set.
 	svc := route53.NewFromConfig(cfg)
 
+	var zones []string
 	var marker *string
 	for {
 		input := &route53.ListHostedZonesInput{}
@@ -290,12 +289,12 @@ func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) e
 
 		output, err := svc.ListHostedZones(ctx, input)
 		if err != nil {
-			return plrlErrors.ErrorWrap(err, "Failed to list hosted zones: ")
+			return nil, plrlErrors.ErrorWrap(err, "Failed to list hosted zones: ")
 		}
 
 		for _, hz := range output.HostedZones {
-			if lo.FromPtr(hz.Name) == d {
-				return nil // Domain is registered, return without error.
+			if name := lo.FromPtr(hz.Name); name != "" {
+				zones = append(zones, strings.TrimSuffix(name, "."))
 			}
 		}
 
@@ -306,7 +305,7 @@ func ValidateAWSDomainRegistration(ctx context.Context, domain, region string) e
 		}
 	}
 
-	return fmt.Errorf("domain %s not found", domain)
+	return zones, nil
 }
 
 func (aws *AWSProvider) testIamPermissions() error {
