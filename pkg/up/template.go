@@ -7,10 +7,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/pluralsh/console/go/polly/retry"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	plrltpl "github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/retry"
 )
 
 func (ctx *Context) redact(file string) error {

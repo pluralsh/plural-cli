@@ -3,8 +3,8 @@ package pr
 import (
 	"path/filepath"
 
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 )
 
 type replacement struct {

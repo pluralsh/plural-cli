@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
-	"github.com/pluralsh/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/algorithms"
 
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 	provUtils "github.com/pluralsh/plural-cli/pkg/provider/utils"

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-bexpr"
-	"github.com/pluralsh/polly/template"
+	"github.com/pluralsh/console/go/polly/template"
 )
 
 func templateReplacement(data []byte, ctx map[string]interface{}) ([]byte, error) {

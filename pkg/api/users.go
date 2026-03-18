@@ -3,8 +3,8 @@ package api
 import (
 	"fmt"
 
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/gqlclient"
-	"github.com/pluralsh/polly/algorithms"
 	"github.com/samber/lo"
 )
 

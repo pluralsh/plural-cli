@@ -3,9 +3,9 @@ package cd
 import (
 	"github.com/AlecAivazis/survey/v2"
 	consoleclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"github.com/pluralsh/polly/algorithms"
 	"github.com/urfave/cli"
 )
 

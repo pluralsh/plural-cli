@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pluralsh/polly/containers"
+	"github.com/pluralsh/console/go/polly/containers"
 
 	"github.com/stretchr/testify/assert"
 )

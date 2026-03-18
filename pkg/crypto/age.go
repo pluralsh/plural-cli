@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"filippo.io/age"
+	"github.com/pluralsh/console/go/polly/algorithms"
+	"github.com/pluralsh/console/go/polly/containers"
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	"github.com/pluralsh/polly/algorithms"
-	"github.com/pluralsh/polly/containers"
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v2"
 )

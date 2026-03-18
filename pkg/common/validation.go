@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/provider"
-	"github.com/pluralsh/polly/algorithms"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pluralsh/plural-cli/pkg/api"
