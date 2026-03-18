@@ -377,7 +377,9 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	}
 
 	if service != nil {
-		fmt.Println(service.Contexts) // TODO
+		for _, c := range service.Contexts {
+			ctx[c.Name] = c.Configuration
+		}
 	}
 
 	values := map[interface{}]interface{}{}
