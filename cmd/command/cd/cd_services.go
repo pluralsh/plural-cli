@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/fs"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	lua "github.com/yuin/gopher-lua"
@@ -138,6 +139,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "context",
 					Usage: "A yaml context file to imitate the internal service template context",
+				},
+				cli.StringFlag{
+					Name:  "service",
+					Usage: "The service which context to use. Use @{cluster-handle}/{service-name} format.",
 				},
 				cli.StringFlag{
 					Name:  "dir",
@@ -287,7 +292,7 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 	}
 
 	if identifier := c.String("service"); identifier != "" {
-		serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(identifier)
+		serviceId, clusterName, serviceName, err := parseServiceIdentifier(identifier)
 		if err != nil {
 			return err
 		}
@@ -324,18 +329,26 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 		return err
 	}
 
+	// Read arguments.
 	luaFile := c.String("lua-file")
+	if luaFile == "" {
+		return fmt.Errorf("expected --lua-file flag")
+	}
+
 	luaDir := c.String("lua-dir")
+
 	context := c.String("context")
+	serviceIdentifier := c.String("service")
+	if !lo.IsEmpty(context) && !lo.IsEmpty(serviceIdentifier) {
+		return fmt.Errorf("cannot specify both --context and --service flags")
+	}
+
 	dir := c.String("dir")
 	if dir == "" {
 		dir = "."
 	}
 
-	if luaFile == "" {
-		return fmt.Errorf("expected --lua-file flag")
-	}
-
+	// Read Lua files.
 	luaStr, err := utils.ReadFile(luaFile)
 	if err != nil {
 		return err
@@ -350,11 +363,21 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 		luaStr = luaFiles + "\n\n" + luaStr
 	}
 
+	// Read context.
 	ctx := map[string]interface{}{}
 	if context != "" {
 		if err := utils.YamlFile(context, &ctx); err != nil {
 			return err
 		}
+	}
+
+	service, err := getService(p.ConsoleClient, serviceIdentifier)
+	if err != nil {
+		return err
+	}
+
+	if service != nil {
+		fmt.Println(service.Contexts) // TODO
 	}
 
 	values := map[interface{}]interface{}{}
@@ -452,7 +475,7 @@ func (p *Plural) handleCloneClusterService(c *cli.Context) error {
 		return fmt.Errorf("could not find cluster %s", c.Args().Get(0))
 	}
 
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(1))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -498,7 +521,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		return err
 	}
 	contextBindings := containers.NewSet[string]()
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -615,7 +638,7 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 		return err
 	}
 
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -651,7 +674,7 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -677,7 +700,7 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -697,7 +720,7 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 }
 
 func (p *Plural) handleTarballClusterService(c *cli.Context) error {
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return fmt.Errorf("could not parse args: %w", err)
 	}
@@ -744,22 +767,6 @@ type ServiceDeploymentAttributesConfiguration struct {
 	Configuration []*gqlclient.ConfigAttributes
 }
 
-func getServiceIdClusterNameServiceName(input string) (serviceId, clusterName, serviceName *string, err error) {
-	if strings.HasPrefix(input, "@") {
-		i := strings.Trim(input, "@")
-		split := strings.Split(i, "/")
-		if len(split) != 2 {
-			err = fmt.Errorf("expected format @{cluster-handle}/{serviceName}")
-			return
-		}
-		clusterName = &split[0]
-		serviceName = &split[1]
-	} else {
-		serviceId = &input
-	}
-	return
-}
-
 func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, error) {
 	res := ctx.String(name)
 	if res == "" {
@@ -770,4 +777,45 @@ func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, err
 	}
 
 	return res, nil
+}
+
+// parseServiceIdentifier parses the given identifier and returns the service id, cluster name, and service name.
+// If the identifier is in the format @{cluster-handle}/{service-name}, the cluster name and service name are returned.
+// Otherwise, the service id is returned.
+func parseServiceIdentifier(id string) (serviceId, clusterName, serviceName *string, err error) {
+	if strings.HasPrefix(id, "@") {
+		i := strings.Trim(id, "@")
+		split := strings.Split(i, "/")
+		if len(split) != 2 {
+			err = fmt.Errorf("expected format @{cluster-handle}/{service-name} or {service-id}, got %s", id)
+			return
+		}
+		clusterName = &split[0]
+		serviceName = &split[1]
+	} else {
+		serviceId = &id
+	}
+
+	return
+}
+
+// getService returns the service deployment for the given identifier.
+// Identifier should be in the format of @{cluster-handle}/{service-name} or {service-id}.
+// If the identifier is empty, it will return nil.
+func getService(c console.ConsoleClient, id string) (*client.ServiceDeploymentExtended, error) {
+	if id == "" {
+		return nil, nil
+	}
+
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(id)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse identifier: %w", err)
+	}
+
+	service, err := c.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get service deployment: %w", err)
+	}
+
+	return service, lo.Ternary(service == nil, fmt.Errorf("could not find service deployment for %s", id), nil)
 }
