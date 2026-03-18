@@ -2,20 +2,15 @@ package cd
 
 import (
 	"fmt"
-	iofs "io/fs"
-	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/fs"
 	"github.com/pluralsh/plural-cli/pkg/common"
-	lua "github.com/yuin/gopher-lua"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/containers"
-	"github.com/pluralsh/console/go/polly/luautils"
 	"github.com/pluralsh/plural-cli/pkg/cd/template"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -322,146 +317,6 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 		return err
 	}
 	return printResult(res)
-}
-
-func (p *Plural) handleLuaTemplate(c *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-
-	// Read arguments.
-	luaFile := c.String("lua-file")
-	if luaFile == "" {
-		return fmt.Errorf("expected --lua-file flag")
-	}
-
-	luaDir := c.String("lua-dir")
-
-	context := c.String("context")
-	serviceIdentifier := c.String("service")
-	if !lo.IsEmpty(context) && !lo.IsEmpty(serviceIdentifier) {
-		return fmt.Errorf("cannot specify both --context and --service flags")
-	}
-
-	dir := c.String("dir")
-	if dir == "" {
-		dir = "."
-	}
-
-	// Read Lua files.
-	luaStr, err := utils.ReadFile(luaFile)
-	if err != nil {
-		return err
-	}
-
-	if luaDir != "" {
-		luaFiles, err := luaFolder(luaDir)
-		if err != nil {
-			return err
-		}
-
-		luaStr = luaFiles + "\n\n" + luaStr
-	}
-
-	// Read context.
-	ctx := map[string]interface{}{}
-	if context != "" {
-		if err := utils.YamlFile(context, &ctx); err != nil {
-			return err
-		}
-	}
-
-	service, err := getService(p.ConsoleClient, serviceIdentifier)
-	if err != nil {
-		return err
-	}
-
-	if service != nil {
-		for _, c := range service.Contexts {
-			ctx[c.Name] = c.Configuration
-		}
-	}
-
-	values := map[interface{}]interface{}{}
-	valuesFiles := []string{}
-
-	dir, err = filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-	L := luautils.NewLuaState(dir)
-	defer L.Close()
-
-	// Register global values and valuesFiles in Lua
-	valuesTable := L.NewTable()
-	L.SetGlobal("values", valuesTable)
-
-	valuesFilesTable := L.NewTable()
-	L.SetGlobal("valuesFiles", valuesFilesTable)
-	L.SetGlobal("cluster", luautils.GoValueToLuaValue(L, ctx["cluster"]))
-	L.SetGlobal("configuration", luautils.GoValueToLuaValue(L, ctx["configuration"]))
-	L.SetGlobal("contexts", luautils.GoValueToLuaValue(L, ctx["contexts"]))
-	L.SetGlobal("imports", luautils.GoValueToLuaValue(L, ctx["imports"]))
-
-	if err := L.DoString(luaStr); err != nil {
-		return err
-	}
-
-	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
-		return err
-	}
-
-	if err := luautils.MapLua(L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
-		return err
-	}
-
-	result := map[string]interface{}{
-		"values":      luautils.SanitizeValue(values),
-		"valuesFiles": valuesFiles,
-	}
-
-	utils.Highlight("Final lua output:\n\n")
-	utils.NewYAMLPrinter(result).PrettyPrint()
-	return nil
-}
-
-func luaFolder(folder string) (string, error) {
-	luaFiles := make([]string, 0)
-	if err := filepath.WalkDir(folder, func(path string, info iofs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		if strings.HasSuffix(info.Name(), ".lua") {
-			luaPath, err := filepath.Rel(folder, path)
-			if err != nil {
-				return err
-			}
-			luaFiles = append(luaFiles, luaPath)
-		}
-
-		return nil
-	}); err != nil {
-		return "", fmt.Errorf("failed to walk lua folder %s: %w", folder, err)
-	}
-
-	sort.Slice(luaFiles, func(i, j int) bool {
-		return luaFiles[i] < luaFiles[j]
-	})
-
-	luaFileContents := make([]string, 0)
-	for _, file := range luaFiles {
-		luaContents, err := os.ReadFile(file)
-		if err != nil {
-			return "", fmt.Errorf("failed to read lua file %s: %w", file, err)
-		}
-		luaFileContents = append(luaFileContents, string(luaContents))
-	}
-
-	return strings.Join(luaFileContents, "\n\n"), nil
 }
 
 func (p *Plural) handleCloneClusterService(c *cli.Context) error {
