@@ -27,8 +27,8 @@ values["image"] = "nginx"
 	result, err := executeLuaTemplate(script, dir, nil)
 
 	require.NoError(t, err)
-	values, ok := result["values"].(map[string]interface{})
-	require.True(t, ok, "values should be map[string]interface{}")
+	values, ok := result["values"].(map[string]any)
+	require.True(t, ok, "values should be map[string]any")
 	assert.Equal(t, float64(3), values["replicas"])
 	assert.Equal(t, "nginx", values["image"])
 	assert.Empty(t, result["valuesFiles"])
@@ -76,9 +76,9 @@ values["db"] = { host = "localhost", port = 5432 }
 	result, err := executeLuaTemplate(script, dir, nil)
 
 	require.NoError(t, err)
-	values, ok := result["values"].(map[string]interface{})
+	values, ok := result["values"].(map[string]any)
 	require.True(t, ok)
-	db, ok := values["db"].(map[string]interface{})
+	db, ok := values["db"].(map[string]any)
 	require.True(t, ok, "db should be a nested map")
 	assert.Equal(t, "localhost", db["host"])
 	assert.Equal(t, float64(5432), db["port"])
@@ -102,7 +102,7 @@ values["greeting"] = greet("world")
 	result, err := executeLuaTemplate(script, dir, nil)
 
 	require.NoError(t, err)
-	values, ok := result["values"].(map[string]interface{})
+	values, ok := result["values"].(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "hello world", values["greeting"])
 }
@@ -117,7 +117,7 @@ func TestExecuteLuaTemplate_ConfigurationBinding(t *testing.T) {
 values["env"]    = configuration["env"]
 values["region"] = configuration["region"]
 `
-	bindings := map[string]interface{}{
+	bindings := map[string]any{
 		"configuration": map[string]string{
 			"env":    "production",
 			"region": "us-east-1",
@@ -127,7 +127,7 @@ values["region"] = configuration["region"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "production", values["env"])
 	assert.Equal(t, "us-east-1", values["region"])
 }
@@ -140,8 +140,8 @@ values["name"]      = service["name"]
 values["namespace"] = service["namespace"]
 values["Name"]      = service["Name"]
 `
-	bindings := map[string]interface{}{
-		"service": map[string]interface{}{
+	bindings := map[string]any{
+		"service": map[string]any{
 			"name":      "my-service",
 			"Name":      "my-service",
 			"namespace": "default",
@@ -152,7 +152,7 @@ values["Name"]      = service["Name"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "my-service", values["name"])
 	assert.Equal(t, "default", values["namespace"])
 	assert.Equal(t, "my-service", values["Name"])
@@ -166,8 +166,8 @@ values["clusterName"]    = cluster["name"]
 values["clusterHandle"]  = cluster["handle"]
 values["tagEnv"]         = cluster["tags"]["env"]
 `
-	bindings := map[string]interface{}{
-		"cluster": map[string]interface{}{
+	bindings := map[string]any{
+		"cluster": map[string]any{
 			"name":   "prod-cluster",
 			"Name":   "prod-cluster",
 			"handle": "prod",
@@ -184,7 +184,7 @@ values["tagEnv"]         = cluster["tags"]["env"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "prod-cluster", values["clusterName"])
 	assert.Equal(t, "prod", values["clusterHandle"])
 	assert.Equal(t, "production", values["tagEnv"])
@@ -192,13 +192,13 @@ values["tagEnv"]         = cluster["tags"]["env"]
 
 func TestExecuteLuaTemplate_ContextsBinding(t *testing.T) {
 	dir := t.TempDir()
-	// Mirrors luaContextsBinding: map[contextName]map[string]interface{}.
+	// Mirrors luaContextsBinding: map[contextName]map[string]any.
 	script := `
 values["dbHost"] = contexts["db-context"]["host"]
 values["dbPort"] = contexts["db-context"]["port"]
 `
-	bindings := map[string]interface{}{
-		"contexts": map[string]map[string]interface{}{
+	bindings := map[string]any{
+		"contexts": map[string]map[string]any{
 			"db-context": {
 				"host": "db.internal",
 				"port": 5432,
@@ -209,7 +209,7 @@ values["dbPort"] = contexts["db-context"]["port"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "db.internal", values["dbHost"])
 	assert.Equal(t, float64(5432), values["dbPort"])
 }
@@ -221,7 +221,7 @@ func TestExecuteLuaTemplate_ImportsBinding(t *testing.T) {
 values["vpcId"]  = imports["network-stack"]["vpc_id"]
 values["subnetId"] = imports["network-stack"]["subnet_id"]
 `
-	bindings := map[string]interface{}{
+	bindings := map[string]any{
 		"imports": map[string]map[string]string{
 			"network-stack": {
 				"vpc_id":    "vpc-abc123",
@@ -233,7 +233,7 @@ values["subnetId"] = imports["network-stack"]["subnet_id"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "vpc-abc123", values["vpcId"])
 	assert.Equal(t, "subnet-def456", values["subnetId"])
 }
@@ -248,11 +248,11 @@ values["cluster"]   = cluster["name"]
 values["ctxHost"]   = contexts["infra"]["endpoint"]
 values["importOut"] = imports["infra-stack"]["bucket"]
 `
-	bindings := map[string]interface{}{
-		"service":       map[string]interface{}{"name": "api", "Name": "api"},
+	bindings := map[string]any{
+		"service":       map[string]any{"name": "api", "Name": "api"},
 		"configuration": map[string]string{"env": "staging"},
-		"cluster":       map[string]interface{}{"name": "staging-cluster", "Name": "staging-cluster"},
-		"contexts": map[string]map[string]interface{}{
+		"cluster":       map[string]any{"name": "staging-cluster", "Name": "staging-cluster"},
+		"contexts": map[string]map[string]any{
 			"infra": {"endpoint": "https://infra.internal"},
 		},
 		"imports": map[string]map[string]string{
@@ -263,7 +263,7 @@ values["importOut"] = imports["infra-stack"]["bucket"]
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "api", values["svcName"])
 	assert.Equal(t, "staging", values["cfgEnv"])
 	assert.Equal(t, "staging-cluster", values["cluster"])
@@ -279,13 +279,13 @@ if configuration["missing"] == nil then
   values["result"] = "nil as expected"
 end
 `
-	bindings := map[string]interface{}{
+	bindings := map[string]any{
 		"configuration": map[string]string{"existing": "value"},
 	}
 
 	result, err := executeLuaTemplate(script, dir, bindings)
 
 	require.NoError(t, err)
-	values := result["values"].(map[string]interface{})
+	values := result["values"].(map[string]any)
 	assert.Equal(t, "nil as expected", values["result"])
 }
