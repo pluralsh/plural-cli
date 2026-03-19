@@ -60,7 +60,7 @@ func (gh *Github) Setup() (con Context, err error) {
 		return
 	}
 
-	orgNames := make([]string, len(orgs))
+	orgNames := make([]string, len(orgs), len(orgs)+1)
 	for i, o := range orgs {
 		orgNames[i] = *o.Login
 	}

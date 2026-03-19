@@ -113,7 +113,7 @@ type SimpleType interface {
 }
 
 func Map[T any, R SimpleType](slice []T, mapper func(elem T) R) []R {
-	res := make([]R, 0)
+	res := make([]R, 0, len(slice))
 
 	for _, elem := range slice {
 		res = append(res, mapper(elem))

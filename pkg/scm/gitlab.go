@@ -64,7 +64,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 		return
 	}
 
-	orgNames := make([]string, len(groups))
+	orgNames := make([]string, len(groups), len(groups)+1)
 	namespaces := make(map[string]int)
 	for i, g := range groups {
 		orgNames[i] = g.Path

@@ -98,7 +98,7 @@ func ConstructPipelineInput(input []byte) (string, *gqlclient.PipelineAttributes
 }
 
 func constructGates(edge PipelineEdge) []*gqlclient.PipelineGateAttributes {
-	res := make([]*gqlclient.PipelineGateAttributes, 0)
+	res := make([]*gqlclient.PipelineGateAttributes, 0, len(edge.Gates))
 	for _, g := range edge.Gates {
 		res = append(res, &gqlclient.PipelineGateAttributes{
 			Name: g.Name,

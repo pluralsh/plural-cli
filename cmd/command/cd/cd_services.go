@@ -2,19 +2,14 @@ package cd
 
 import (
 	"fmt"
-	iofs "io/fs"
-	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/pluralsh/console/go/polly/fs"
 	"github.com/pluralsh/plural-cli/pkg/common"
-	lua "github.com/yuin/gopher-lua"
 
 	gqlclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/containers"
-	"github.com/pluralsh/console/go/polly/luautils"
 	"github.com/pluralsh/plural-cli/pkg/cd/template"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -138,6 +133,10 @@ func (p *Plural) cdServiceCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "context",
 					Usage: "A yaml context file to imitate the internal service template context",
+				},
+				cli.StringFlag{
+					Name:  "service",
+					Usage: "The service which context to use. Use @{cluster-handle}/{service-name} format.",
 				},
 				cli.StringFlag{
 					Name:  "dir",
@@ -287,7 +286,7 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 	}
 
 	if identifier := c.String("service"); identifier != "" {
-		serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(identifier)
+		serviceId, clusterName, serviceName, err := parseServiceIdentifier(identifier)
 		if err != nil {
 			return err
 		}
@@ -319,126 +318,6 @@ func (p *Plural) handleTemplateService(c *cli.Context) error {
 	return printResult(res)
 }
 
-func (p *Plural) handleLuaTemplate(c *cli.Context) error {
-	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
-		return err
-	}
-
-	luaFile := c.String("lua-file")
-	luaDir := c.String("lua-dir")
-	context := c.String("context")
-	dir := c.String("dir")
-	if dir == "" {
-		dir = "."
-	}
-
-	if luaFile == "" {
-		return fmt.Errorf("expected --lua-file flag")
-	}
-
-	luaStr, err := utils.ReadFile(luaFile)
-	if err != nil {
-		return err
-	}
-
-	if luaDir != "" {
-		luaFiles, err := luaFolder(luaDir)
-		if err != nil {
-			return err
-		}
-
-		luaStr = luaFiles + "\n\n" + luaStr
-	}
-
-	ctx := map[string]interface{}{}
-	if context != "" {
-		if err := utils.YamlFile(context, &ctx); err != nil {
-			return err
-		}
-	}
-
-	values := map[interface{}]interface{}{}
-	valuesFiles := []string{}
-
-	dir, err = filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-	L := luautils.NewLuaState(dir)
-	defer L.Close()
-
-	// Register global values and valuesFiles in Lua
-	valuesTable := L.NewTable()
-	L.SetGlobal("values", valuesTable)
-
-	valuesFilesTable := L.NewTable()
-	L.SetGlobal("valuesFiles", valuesFilesTable)
-	L.SetGlobal("cluster", luautils.GoValueToLuaValue(L, ctx["cluster"]))
-	L.SetGlobal("configuration", luautils.GoValueToLuaValue(L, ctx["configuration"]))
-	L.SetGlobal("contexts", luautils.GoValueToLuaValue(L, ctx["contexts"]))
-	L.SetGlobal("imports", luautils.GoValueToLuaValue(L, ctx["imports"]))
-
-	if err := L.DoString(luaStr); err != nil {
-		return err
-	}
-
-	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
-		return err
-	}
-
-	if err := luautils.MapLua(L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
-		return err
-	}
-
-	result := map[string]interface{}{
-		"values":      luautils.SanitizeValue(values),
-		"valuesFiles": valuesFiles,
-	}
-
-	utils.Highlight("Final lua output:\n\n")
-	utils.NewYAMLPrinter(result).PrettyPrint()
-	return nil
-}
-
-func luaFolder(folder string) (string, error) {
-	luaFiles := make([]string, 0)
-	if err := filepath.WalkDir(folder, func(path string, info iofs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		if strings.HasSuffix(info.Name(), ".lua") {
-			luaPath, err := filepath.Rel(folder, path)
-			if err != nil {
-				return err
-			}
-			luaFiles = append(luaFiles, luaPath)
-		}
-
-		return nil
-	}); err != nil {
-		return "", fmt.Errorf("failed to walk lua folder %s: %w", folder, err)
-	}
-
-	sort.Slice(luaFiles, func(i, j int) bool {
-		return luaFiles[i] < luaFiles[j]
-	})
-
-	luaFileContents := make([]string, 0)
-	for _, file := range luaFiles {
-		luaContents, err := os.ReadFile(file)
-		if err != nil {
-			return "", fmt.Errorf("failed to read lua file %s: %w", file, err)
-		}
-		luaFileContents = append(luaFileContents, string(luaContents))
-	}
-
-	return strings.Join(luaFileContents, "\n\n"), nil
-}
-
 func (p *Plural) handleCloneClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
@@ -452,7 +331,7 @@ func (p *Plural) handleCloneClusterService(c *cli.Context) error {
 		return fmt.Errorf("could not find cluster %s", c.Args().Get(0))
 	}
 
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(1))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -498,7 +377,7 @@ func (p *Plural) handleUpdateClusterService(c *cli.Context) error {
 		return err
 	}
 	contextBindings := containers.NewSet[string]()
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -615,7 +494,7 @@ func (p *Plural) handleDescribeClusterService(c *cli.Context) error {
 		return err
 	}
 
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -651,7 +530,7 @@ func (p *Plural) handleDeleteClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -677,7 +556,7 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
 	}
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return err
 	}
@@ -697,7 +576,7 @@ func (p *Plural) handleKickClusterService(c *cli.Context) error {
 }
 
 func (p *Plural) handleTarballClusterService(c *cli.Context) error {
-	serviceId, clusterName, serviceName, err := getServiceIdClusterNameServiceName(c.Args().Get(0))
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(c.Args().Get(0))
 	if err != nil {
 		return fmt.Errorf("could not parse args: %w", err)
 	}
@@ -744,22 +623,6 @@ type ServiceDeploymentAttributesConfiguration struct {
 	Configuration []*gqlclient.ConfigAttributes
 }
 
-func getServiceIdClusterNameServiceName(input string) (serviceId, clusterName, serviceName *string, err error) {
-	if strings.HasPrefix(input, "@") {
-		i := strings.Trim(input, "@")
-		split := strings.Split(i, "/")
-		if len(split) != 2 {
-			err = fmt.Errorf("expected format @{cluster-handle}/{serviceName}")
-			return
-		}
-		clusterName = &split[0]
-		serviceName = &split[1]
-	} else {
-		serviceId = &input
-	}
-	return
-}
-
 func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, error) {
 	res := ctx.String(name)
 	if res == "" {
@@ -770,4 +633,45 @@ func validateFlag(ctx *cli.Context, name string, defaultVal string) (string, err
 	}
 
 	return res, nil
+}
+
+// parseServiceIdentifier parses the given identifier and returns the service id, cluster name, and service name.
+// If the identifier is in the format @{cluster-handle}/{service-name}, the cluster name and service name are returned.
+// Otherwise, the service id is returned.
+func parseServiceIdentifier(id string) (serviceId, clusterName, serviceName *string, err error) {
+	if strings.HasPrefix(id, "@") {
+		i := strings.Trim(id, "@")
+		split := strings.Split(i, "/")
+		if len(split) != 2 {
+			err = fmt.Errorf("expected format @{cluster-handle}/{service-name} or {service-id}, got %s", id)
+			return
+		}
+		clusterName = &split[0]
+		serviceName = &split[1]
+	} else {
+		serviceId = &id
+	}
+
+	return
+}
+
+// getService returns the service deployment for the given identifier.
+// Identifier should be in the format of @{cluster-handle}/{service-name} or {service-id}.
+// If the identifier is empty, it will return nil.
+func getService(c console.ConsoleClient, id string) (*gqlclient.ServiceDeploymentExtended, error) {
+	if id == "" {
+		return nil, nil
+	}
+
+	serviceId, clusterName, serviceName, err := parseServiceIdentifier(id)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse identifier: %w", err)
+	}
+
+	service, err := c.GetClusterService(serviceId, serviceName, clusterName)
+	if err != nil {
+		return nil, fmt.Errorf("could not get service deployment: %w", err)
+	}
+
+	return service, lo.Ternary(service == nil, fmt.Errorf("could not find service deployment for %s", id), nil)
 }

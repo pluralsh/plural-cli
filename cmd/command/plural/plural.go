@@ -102,7 +102,8 @@ func CreateNewApp(plural *Plural) *cli.App {
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
 	app.Flags = globalFlags()
-	commands := []cli.Command{
+	commands := make([]cli.Command, 0, 15+len(plural.getCommands()))
+	commands = append(commands,
 		api.Command(plural.Plural),
 		auth.Command(plural.Plural),
 		cd.Command(plural.Plural, plural.HelmConfiguration),
@@ -118,7 +119,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
 		version.Command(),
-	}
+	)
 	commands = append(commands, plural.getCommands()...)
 	app.Commands = commands
 
