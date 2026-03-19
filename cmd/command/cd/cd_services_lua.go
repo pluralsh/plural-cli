@@ -195,7 +195,7 @@ func luaClusterBinding(cluster *client.BaseClusterFragment) map[string]interface
 		"Tags":           luaClusterTagsBinding(cluster.Tags),
 		"Metadata":       cluster.Metadata,
 		"Distro":         cluster.Distro,
-		//"ConsoleDNS":     args.ConsoleDNS(),
+		// "ConsoleDNS":     args.ConsoleDNS(),
 	}
 	for k, v := range res {
 		res[strings.ToLower(k)] = v
@@ -240,7 +240,7 @@ func luaServiceBinding(svc *client.ServiceDeploymentExtended) map[string]interfa
 	for k, v := range res {
 		res[strings.ToLower(k)] = v
 	}
-	//if svc.Helm != nil {
+	// if svc.Helm != nil {
 	//	helm := map[string]interface{}{
 	//		"Values":              svc.Helm.Values,
 	//		"ValuesFiles":         svc.Helm.ValuesFiles,

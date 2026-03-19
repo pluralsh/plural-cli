@@ -105,7 +105,7 @@ func convertInstallation(installation *gqlclient.InstallationFragment) *Installa
 }
 
 func (client *client) OIDCProvider(id string, attributes *OidcProviderAttributes) error {
-	bindings := make([]*gqlclient.BindingAttributes, 0)
+	bindings := make([]*gqlclient.BindingAttributes, 0, len(attributes.Bindings))
 	for _, bind := range attributes.Bindings {
 		groupId := bind.GroupId
 		userId := bind.UserId

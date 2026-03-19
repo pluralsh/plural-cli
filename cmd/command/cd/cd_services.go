@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/fs"
 	"github.com/pluralsh/plural-cli/pkg/common"
 
@@ -659,7 +658,7 @@ func parseServiceIdentifier(id string) (serviceId, clusterName, serviceName *str
 // getService returns the service deployment for the given identifier.
 // Identifier should be in the format of @{cluster-handle}/{service-name} or {service-id}.
 // If the identifier is empty, it will return nil.
-func getService(c console.ConsoleClient, id string) (*client.ServiceDeploymentExtended, error) {
+func getService(c console.ConsoleClient, id string) (*gqlclient.ServiceDeploymentExtended, error) {
 	if id == "" {
 		return nil, nil
 	}

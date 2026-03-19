@@ -182,7 +182,8 @@ func PluralDir(p ...string) (string, error) {
 		return "", err
 	}
 
-	parts := []string{folder, pluralDir}
+	parts := make([]string, 0, 2+len(p))
+	parts = append(parts, folder, pluralDir)
 	parts = append(parts, p...)
 	return filepath.Join(parts...), nil
 }
