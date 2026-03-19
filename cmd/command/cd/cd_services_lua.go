@@ -54,13 +54,32 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 		luaStr = luaFiles + "\n\n" + luaStr
 	}
 
-	values := map[interface{}]interface{}{}
-	valuesFiles := []string{}
-
 	dir, err = filepath.Abs(dir)
 	if err != nil {
 		return err
 	}
+
+	bindings, err := luaBindings(p.ConsoleClient, context, serviceIdentifier)
+	if err != nil {
+		return err
+	}
+
+	result, err := executeLuaTemplate(luaStr, dir, bindings)
+	if err != nil {
+		return err
+	}
+
+	utils.Highlight("Final lua output:\n\n")
+	utils.NewYAMLPrinter(result).PrettyPrint()
+	return nil
+}
+
+// executeLuaTemplate runs the given Lua script with the provided bindings and working directory,
+// and returns a map with "values" and "valuesFiles" keys.
+func executeLuaTemplate(luaStr, dir string, bindings map[string]interface{}) (map[string]interface{}, error) {
+	values := map[interface{}]interface{}{}
+	valuesFiles := []string{}
+
 	L := luautils.NewLuaState(dir)
 	defer L.Close()
 
@@ -71,35 +90,26 @@ func (p *Plural) handleLuaTemplate(c *cli.Context) error {
 	valuesFilesTable := L.NewTable()
 	L.SetGlobal("valuesFiles", valuesFilesTable)
 
-	// Register bindings in Lua
-	bindings, err := luaBindings(p.ConsoleClient, context, serviceIdentifier)
-	if err != nil {
-		return err
-	}
 	for name, binding := range bindings {
 		L.SetGlobal(name, luautils.GoValueToLuaValue(L, binding))
 	}
 
 	if err := L.DoString(luaStr); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := luautils.MapLua(L.GetGlobal("values").(*lua.LTable), &values); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := luautils.MapLua(L.GetGlobal("valuesFiles").(*lua.LTable), &valuesFiles); err != nil {
-		return err
+		return nil, err
 	}
 
-	result := map[string]interface{}{
+	return map[string]interface{}{
 		"values":      luautils.SanitizeValue(values),
 		"valuesFiles": valuesFiles,
-	}
-
-	utils.Highlight("Final lua output:\n\n")
-	utils.NewYAMLPrinter(result).PrettyPrint()
-	return nil
+	}, nil
 }
 
 func luaFolder(folder string) (string, error) {
