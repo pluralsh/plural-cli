@@ -1,11 +1,15 @@
 package cd
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	client "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/plural-cli/pkg/test/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -288,4 +292,152 @@ end
 	require.NoError(t, err)
 	values := result["values"].(map[string]any)
 	assert.Equal(t, "nil as expected", values["result"])
+}
+
+func TestLuaBindings_WithServiceIdentifier(t *testing.T) {
+	clusterHandle := "prod"
+	clusterSelf := true
+	clusterVersion := "1.30.1"
+	clusterCurrentVersion := "1.30.2"
+	clusterKasURL := "wss://kas.example.com"
+	stackID := "stack-1"
+
+	service := &client.ServiceDeploymentExtended{
+		Name:      "payments",
+		Namespace: "apps",
+		Configuration: []*client.ServiceDeploymentExtended_Configuration{
+			{Name: "env", Value: "production"},
+			{Name: "region", Value: "us-east-1"},
+		},
+		Cluster: &client.BaseClusterFragment{
+			ID:             "cluster-1",
+			Name:           "production",
+			Handle:         &clusterHandle,
+			Self:           &clusterSelf,
+			Version:        &clusterVersion,
+			CurrentVersion: &clusterCurrentVersion,
+			KasURL:         &clusterKasURL,
+			Metadata:       map[string]any{"team": "platform"},
+			Tags: []*client.ClusterTags{
+				{Name: "env", Value: "prod"},
+			},
+		},
+		Contexts: []*client.ServiceContextFragment{
+			{
+				Name:          "db",
+				Configuration: map[string]any{"host": "db.internal", "port": 5432},
+			},
+		},
+		Imports: []*client.ServiceDeploymentExtended_Imports{
+			{
+				Stack: &client.InfrastructureStackTinyFragment{
+					ID:   &stackID,
+					Name: "network",
+				},
+				Outputs: []*client.StackOutputFragment{
+					{Name: "vpc_id", Value: "vpc-123"},
+				},
+			},
+		},
+	}
+
+	consoleClient := mocks.NewConsoleClient(t)
+	consoleClient.
+		On(
+			"GetClusterService",
+			mock.MatchedBy(func(serviceID *string) bool { return serviceID != nil && *serviceID == "svc-123" }),
+			mock.MatchedBy(func(serviceName *string) bool { return serviceName == nil }),
+			mock.MatchedBy(func(clusterName *string) bool { return clusterName == nil }),
+		).
+		Return(service, nil).
+		Once()
+
+	bindings, err := luaBindings(consoleClient, "", "svc-123")
+
+	require.NoError(t, err)
+	require.NotNil(t, bindings)
+	assert.Equal(t, map[string]string{
+		"env":    "production",
+		"region": "us-east-1",
+	}, bindings["configuration"])
+	clusterBindings, ok := bindings["cluster"].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, "cluster-1", clusterBindings["ID"])
+	assert.Equal(t, "cluster-1", clusterBindings["id"])
+	assert.Equal(t, &clusterHandle, clusterBindings["Handle"])
+	assert.Equal(t, &clusterHandle, clusterBindings["handle"])
+	assert.Equal(t, "production", clusterBindings["Name"])
+	assert.Equal(t, "production", clusterBindings["name"])
+	assert.Equal(t, &clusterVersion, clusterBindings["Version"])
+	assert.Equal(t, &clusterVersion, clusterBindings["version"])
+	assert.Equal(t, &clusterCurrentVersion, clusterBindings["CurrentVersion"])
+	assert.Equal(t, &clusterCurrentVersion, clusterBindings["currentVersion"])
+	assert.Equal(t, &clusterCurrentVersion, clusterBindings["currentversion"])
+	assert.Equal(t, &clusterKasURL, clusterBindings["KasUrl"])
+	assert.Equal(t, &clusterKasURL, clusterBindings["kasUrl"])
+	assert.Equal(t, &clusterKasURL, clusterBindings["kasurl"])
+	assert.Equal(t, &clusterSelf, clusterBindings["Self"])
+	assert.Equal(t, &clusterSelf, clusterBindings["self"])
+	assert.Equal(t, map[string]string{"env": "prod"}, clusterBindings["Tags"])
+	assert.Equal(t, map[string]string{"env": "prod"}, clusterBindings["tags"])
+	assert.Equal(t, map[string]any{"team": "platform"}, clusterBindings["Metadata"])
+	assert.Equal(t, map[string]any{"team": "platform"}, clusterBindings["metadata"])
+	assert.Nil(t, clusterBindings["Distro"])
+	assert.Nil(t, clusterBindings["distro"])
+	assert.Equal(t, map[string]map[string]interface{}{
+		"db": {
+			"host": "db.internal",
+			"port": 5432,
+		},
+	}, bindings["contexts"])
+	assert.Equal(t, map[string]map[string]string{
+		"network": {
+			"vpc_id": "vpc-123",
+		},
+	}, bindings["imports"])
+	assert.Equal(t, map[string]interface{}{
+		"Name":      "payments",
+		"name":      "payments",
+		"Namespace": "apps",
+		"namespace": "apps",
+	}, bindings["service"])
+	consoleClient.AssertExpectations(t)
+}
+
+func TestLuaBindings_WithContextPath(t *testing.T) {
+	contextPath := filepath.Join(t.TempDir(), "context.yaml")
+	err := os.WriteFile(contextPath, []byte("foo: bar\nnested:\n  port: 5432\n"), 0o600)
+	require.NoError(t, err)
+
+	bindings, err := luaBindings(nil, contextPath, "")
+
+	require.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{
+		"foo": "bar",
+		"nested": map[string]interface{}{
+			"port": float64(5432),
+		},
+	}, bindings)
+}
+
+func TestLuaBindings_ServiceIdentifierError(t *testing.T) {
+	expectedErr := errors.New("boom")
+	consoleClient := mocks.NewConsoleClient(t)
+	consoleClient.
+		On(
+			"GetClusterService",
+			mock.MatchedBy(func(serviceID *string) bool { return serviceID == nil }),
+			mock.MatchedBy(func(serviceName *string) bool { return serviceName != nil && *serviceName == "payments" }),
+			mock.MatchedBy(func(clusterName *string) bool { return clusterName != nil && *clusterName == "prod" }),
+		).
+		Return((*client.ServiceDeploymentExtended)(nil), expectedErr).
+		Once()
+
+	bindings, err := luaBindings(consoleClient, "", "@prod/payments")
+
+	require.Error(t, err)
+	assert.Nil(t, bindings)
+	assert.ErrorContains(t, err, "could not get service deployment")
+	assert.ErrorIs(t, err, expectedErr)
+	consoleClient.AssertExpectations(t)
 }
