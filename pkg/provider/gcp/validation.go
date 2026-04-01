@@ -54,11 +54,11 @@ func (in *Provider) validateEnabled() error {
 			Parent:     parent,
 			ServiceIds: services,
 		}
-			utils.LogError().Printf("Attempting to enable services %v", services)
-			if err := tryToEnableServices(ctx, c, enableReq); err != nil {
-				utils.Warn("Could not automatically enable required GCP services, please enable them manually.\n")
-				return errEnabled
-			}
+		utils.LogError().Printf("Attempting to enable services %v", services)
+		if err := tryToEnableServices(ctx, c, enableReq); err != nil {
+			utils.Warn("Could not automatically enable required GCP services, please enable them manually.\n")
+			return errEnabled
+		}
 	}
 
 	return nil
