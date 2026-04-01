@@ -205,7 +205,7 @@ func (b *ByokProvider) Flush() error {
 
 func (b *ByokProvider) testClusterConnectivity() error {
 	if err := b.KubeConfig(); err != nil {
-		return err
+		return fmt.Errorf("failed to load kubeconfig: %w", err)
 	}
 	kube, err := kubernetes.Kubernetes()
 	if err != nil {

@@ -12,9 +12,9 @@ type Preflight struct {
 }
 
 func (pf *Preflight) Validate() error {
-	utils.Highlight("Executing preflight check :: %s ", pf.Name)
+	utils.Highlight("Executing preflight check: %s ", pf.Name)
 	if err := pf.Callback(); err != nil {
-		fmt.Println("\nFound error:")
+		fmt.Printf("\nPreflight check %q failed: %s\n", pf.Name, err.Error())
 		return err
 	}
 

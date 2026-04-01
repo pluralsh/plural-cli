@@ -12,7 +12,6 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -316,7 +315,7 @@ func (aws *AWSProvider) testIamPermissions() error {
 
 	missing, err := checker.MissingPermissions()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check IAM permissions: %w", err)
 	}
 
 	if len(missing) == 0 {
@@ -358,12 +357,12 @@ func GetAWSCallerIdentity(ctx context.Context) (string, *sts.GetCallerIdentityOu
 	callerIdentityArn := lo.FromPtr(callerIdentity.Arn)
 	roleName, _ := RoleNameSessionFromARN(callerIdentityArn)
 	if !lo.IsEmpty(roleName) {
-		role, err := iam.NewFromConfig(cfg).GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
-		if err != nil {
-			return "", callerIdentity, plrlErrors.ErrorWrap(err, "Error getting IAM role: ")
-		}
-
-		return lo.FromPtr(role.Role.Arn), callerIdentity, nil
+		// Reconstruct the canonical IAM role ARN directly from the STS response.
+		// The STS ARN is under the "sts" namespace:
+		// (arn:aws:sts::<account>:assumed-role/<role>/<session>)
+		accountID := lo.FromPtr(callerIdentity.Account)
+		iamArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", accountID, roleName)
+		return iamArn, callerIdentity, nil
 	}
 
 	return callerIdentityArn, callerIdentity, nil
