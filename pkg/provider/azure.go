@@ -86,8 +86,11 @@ type AzureProvider struct {
 	clients       *ClientSet
 }
 
-func mkAzure(conf config.Config) (prov *AzureProvider, err error) {
+func mkAzure(conf config.Config, dryRun bool) (prov *AzureProvider, err error) {
 	prov = &AzureProvider{}
+	if dryRun {
+		return prov, nil
+	}
 	subId, tenID, subName, err := GetAzureAccount()
 	if err != nil {
 		return

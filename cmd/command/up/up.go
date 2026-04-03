@@ -110,8 +110,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	if err := askAppDomain(project); err != nil {
-		return err
+	if !dryRun {
+		if err := askAppDomain(project); err != nil {
+			return err
+		}
 	}
 
 	repoRoot, err := git.Root()

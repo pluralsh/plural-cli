@@ -16,6 +16,7 @@ import (
 )
 
 var cloudFlag bool
+var dryRunFlag bool
 var clusterFlag string
 
 type Providers struct {
@@ -52,6 +53,10 @@ func SetCloudFlag(cloud bool) {
 	cloudFlag = cloud
 }
 
+func SetDryrunFlag(dryRun bool) {
+	dryRunFlag = dryRun
+}
+
 func SetClusterFlag(cluster string) {
 	clusterFlag = cluster
 }
@@ -77,11 +82,11 @@ func New(provider string) (providerapi.Provider, error) {
 	conf := config.Read()
 	switch provider {
 	case api.ProviderGCP:
-		return gcp.NewProvider(gcp.WithConfig(conf, clusterFlag, cloudFlag))
+		return gcp.NewProvider(gcp.WithConfig(conf, clusterFlag, cloudFlag, dryRunFlag))
 	case api.ProviderAWS:
-		return mkAWS(conf)
+		return mkAWS(conf, dryRunFlag)
 	case api.ProviderAzure:
-		return mkAzure(conf)
+		return mkAzure(conf, dryRunFlag)
 	case api.BYOK:
 		return mkBYOK(conf, clusterFlag)
 	default:
