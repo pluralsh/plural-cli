@@ -35,11 +35,20 @@ func ByokFromManifest(man *manifest.ProjectManifest) (*ByokProvider, error) {
 	return prov, nil
 }
 
-func mkBYOK(conf config.Config, name string) (prov *ByokProvider, err error) {
+func mkBYOK(conf config.Config, name string, dryRun bool) (prov *ByokProvider, err error) {
 	prov = &ByokProvider{
-		cluster: name,
-		ctx:     map[string]interface{}{},
+		ctx: map[string]interface{}{},
 	}
+	if dryRun {
+		return prov, nil
+	}
+
+	if name == "" {
+		if err := survey.AskOne(&survey.Input{Message: "Enter the name of your cluster"}, &name); err != nil {
+			return nil, err
+		}
+	}
+	prov.cluster = name
 
 	kubeconfigPath, err := askKubeconfig()
 	if err != nil {
@@ -69,6 +78,14 @@ func mkBYOK(conf config.Config, name string) (prov *ByokProvider, err error) {
 	kubeconfigBase64 := base64.StdEncoding.EncodeToString(kubeconfigData)
 
 	prov.ctx["kubeconfig"] = kubeconfigBase64
+
+	var dbURL string
+	if err := survey.AskOne(&survey.Input{
+		Message: "Enter the database URL for the Plural console (leave empty to skip):",
+	}, &dbURL); err != nil {
+		return nil, err
+	}
+	prov.ctx["DbUrl"] = dbURL
 
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  name,
@@ -205,7 +222,7 @@ func (b *ByokProvider) Flush() error {
 
 func (b *ByokProvider) testClusterConnectivity() error {
 	if err := b.KubeConfig(); err != nil {
-		return err
+		return fmt.Errorf("failed to load kubeconfig: %w", err)
 	}
 	kube, err := kubernetes.Kubernetes()
 	if err != nil {

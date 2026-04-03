@@ -54,11 +54,13 @@ func (ctx *Context) template(tmplate string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("you must run `plural login` before installing")
 	}
-
-	retrier := retry.NewConstant(15*time.Millisecond, 3)
-	eabCredential, err := retry.Retry(retrier, func() (*api.EabCredential, error) { return client.GetEabCredential(cluster, provider) })
-	if err != nil {
-		return "", err
+	eabCredential := &api.EabCredential{}
+	if ctx.Provider.Name() != api.BYOK {
+		retrier := retry.NewConstant(15*time.Millisecond, 3)
+		eabCredential, err = retry.Retry(retrier, func() (*api.EabCredential, error) { return client.GetEabCredential(cluster, provider) })
+		if err != nil {
+			return "", err
+		}
 	}
 
 	values := map[string]interface{}{

@@ -118,6 +118,8 @@ func Preflights(c *cli.Context) error {
 
 func RunPreflights(c *cli.Context) (providerapi.Provider, error) {
 	provider.SetCloudFlag(c.Bool("cloud"))
+	provider.SetDryrunFlag(c.Bool("dry-run"))
+
 	prov, err := provider.GetProvider()
 	if err != nil {
 		return prov, err

@@ -72,9 +72,12 @@ var (
 	}
 )
 
-func mkAWS(conf config.Config) (provider *AWSProvider, err error) {
+func mkAWS(conf config.Config, dryRun bool) (provider *AWSProvider, err error) {
 	ctx := context.Background()
 	provider = &AWSProvider{}
+	if dryRun {
+		return provider, nil
+	}
 	iamSession, callerIdentity, err := GetAWSCallerIdentity(ctx)
 	if err != nil {
 		return provider, plrlErrors.ErrorWrap(err, "Failed to get AWS caller identity")
