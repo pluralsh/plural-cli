@@ -72,3 +72,36 @@ func stateRm(dir, field string) error {
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
+
+// pruneBYOK removes the bootstrap helm/null resources from terraform state and
+// cleans up the one-shot files used during installation (no cloud infra to touch).
+func (ctx *Context) pruneBYOK() error {
+	return ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:mgmt", func() error {
+		utils.Highlight("\nCleaning up unneeded resources...\n\n")
+
+		toRemove := []string{
+			"null_resource.console",
+			"helm_release.certmanager",
+			"helm_release.flux",
+			"helm_release.runtime",
+			"helm_release.console",
+		}
+
+		for _, field := range toRemove {
+			if err := stateRm("./terraform/mgmt", field); err != nil {
+				return err
+			}
+		}
+
+		_ = os.Remove("./terraform/mgmt/console.tf")
+		_ = os.RemoveAll("./temp")
+		_ = os.Remove("./context.yaml")
+
+		repoRoot, err := git.Root()
+		if err != nil {
+			return err
+		}
+		return git.Sync(repoRoot, "Post-setup resource cleanup", true)
+	})
+}
+

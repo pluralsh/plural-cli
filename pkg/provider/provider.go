@@ -88,7 +88,7 @@ func New(provider string) (providerapi.Provider, error) {
 	case api.ProviderAzure:
 		return mkAzure(conf, dryRunFlag)
 	case api.BYOK:
-		return mkBYOK(conf, clusterFlag)
+		return mkBYOK(conf, clusterFlag, dryRunFlag)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}
@@ -105,8 +105,7 @@ func getAvailableProviders() error {
 		available = containers.ToSet(available).Difference(filterProviders).List()
 		providers.AvailableProviders = algorithms.Map(available, strings.ToLower)
 	}
-	if cloudFlag {
-		providers.AvailableProviders = append(providers.AvailableProviders, api.BYOK)
-	}
+	providers.AvailableProviders = append(providers.AvailableProviders, api.BYOK)
+
 	return nil
 }

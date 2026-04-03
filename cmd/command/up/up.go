@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	defaultBootstrapBranch = "main"
+	defaultBootstrapBranch = "byok"
 	noneOption             = "None"
 )
 
@@ -82,13 +82,14 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 	p.InitPluralClient()
 	dryRun := c.Bool("dry-run")
+	cloud := c.Bool("cloud")
 
 	cd := &cdpkg.Plural{Plural: p.Plural}
 
 	var name, url string
 	var err error
 
-	if c.Bool("cloud") {
+	if cloud {
 		name, url, err = p.choseCluster()
 		if err != nil {
 			return err
@@ -121,14 +122,14 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	ctx, err := up.Build(c.Bool("cloud"))
+	ctx, err := up.Build(cloud)
 	if err != nil {
 		return err
 	}
 
 	byok := ctx.Provider.Name() == api.BYOK
 
-	if c.Bool("cloud") {
+	if cloud {
 		id, err := getCluster(cd)
 		if err != nil {
 			return err
@@ -162,7 +163,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return nil
 	}
 
-	if !byok {
+	if !cloud {
 		if !common.Affirm(common.AffirmUp, "PLURAL_UP_AFFIRM_DEPLOY") {
 			return fmt.Errorf("cancelled deploy")
 		}
