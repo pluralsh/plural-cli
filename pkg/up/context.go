@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -17,19 +18,21 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 
 	"github.com/mitchellh/go-homedir"
+	giturls "github.com/whilp/git-urls"
 )
 
 type Context struct {
-	Provider       providerapi.Provider
-	Manifest       *manifest.ProjectManifest
-	Config         *config.Config
-	Cloud          bool
-	RepoUrl        string
-	StacksIdentity string
-	Delims         *delims
-	ImportCluster  *string
-	CloudCluster   string
-	dir            string
+	Provider         providerapi.Provider
+	Manifest         *manifest.ProjectManifest
+	Config           *config.Config
+	Cloud            bool
+	RepoUrl          string
+	StacksIdentity   string
+	Delims           *delims
+	ImportCluster    *string
+	CloudCluster     string
+	dir              string
+	ignorePreflights bool
 }
 
 type delims struct {
@@ -50,6 +53,10 @@ func (ctx *Context) changeDelims() {
 	ctx.Delims = &delims{"[[", "]]"}
 }
 
+func (ctx *Context) IgnorePreflights(ignore bool) {
+	ctx.ignorePreflights = ignore
+}
+
 func (ctx *Context) SetImportCluster(id string) {
 	ctx.ImportCluster = lo.ToPtr(id)
 }
@@ -57,16 +64,16 @@ func (ctx *Context) SetImportCluster(id string) {
 func (ctx *Context) Backfill() error {
 	context, err := manifest.FetchContext()
 	if err != nil {
-		return backfillConsoleContext(ctx.Manifest)
+		return ctx.backfillConsoleContext(ctx.Manifest)
 	}
 
 	console, ok := context.Configuration["console"]
 	if !ok {
-		return backfillConsoleContext(ctx.Manifest)
+		return ctx.backfillConsoleContext(ctx.Manifest)
 	}
 
 	if _, ok = console["private_key"]; !ok {
-		return backfillConsoleContext(ctx.Manifest)
+		return ctx.backfillConsoleContext(ctx.Manifest)
 	}
 
 	if v, ok := console["repo_url"]; ok {
@@ -103,7 +110,7 @@ func Build(cloud bool) (*Context, error) {
 	}, nil
 }
 
-func backfillConsoleContext(_ *manifest.ProjectManifest) error {
+func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) error {
 	path := manifest.ContextPath()
 	ctx, err := manifest.FetchContext()
 	if err != nil {
@@ -115,7 +122,17 @@ func backfillConsoleContext(_ *manifest.ProjectManifest) error {
 		console = map[string]interface{}{}
 	}
 
-	utils.Highlight("It looks like you cloned this repo before running plural up, we just need you to generate and give us a deploy key to continue\n")
+	utils.Highlight("It looks like you cloned this repo before running plural up, we just need to ensure authentication is setup correctly to continue\n")
+
+	url, err := git.GetURL()
+	if err != nil {
+		return err
+	}
+
+	if strings.HasPrefix(url, "http") {
+		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry", url)
+	}
+
 	utils.Highlight("If you want, you can use `plural crypto ssh-keygen` to generate a keypair to use as a deploy key as well\n\n")
 
 	files, err := filepath.Glob(filepath.Join(os.Getenv("HOME"), ".ssh", "*"))
@@ -144,17 +161,10 @@ func backfillConsoleContext(_ *manifest.ProjectManifest) error {
 		return err
 	}
 
-	url, err := git.GetURL()
-	if err != nil {
-		return err
-	}
-
-	if strings.HasPrefix(url, "http") {
-		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry", url)
-	}
-
-	if err := verifySSHKey(contents, url); err != nil {
-		return fmt.Errorf("ssh key not valid for url %s, error: %w", url, err)
+	if !context.ignorePreflights {
+		if err := verifySSHKey(contents, url); err != nil {
+			return fmt.Errorf("ssh key not valid for url %s, error: %w.  If you want to bypass this check, you can use the --ignore-preflights flag", url, err)
+		}
 	}
 
 	console["repo_url"] = url
@@ -174,9 +184,30 @@ func verifySSHKey(key, url string) error {
 			return
 		}
 	}(dir)
-	auth, _ := git.SSHAuth("git", key, "")
+
+	auth, _ := git.SSHAuth(getGitUsername(url), key, "")
 	if _, err := git.Clone(auth, url, dir); err != nil {
 		return err
 	}
 	return nil
+}
+
+var (
+	scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9-._~]+@)?([a-zA-Z0-9._-]+):([a-zA-Z0-9./._-]+)(?:\?||$)(.*)$`)
+)
+
+func getGitUsername(url string) string {
+	match := scpSyntax.FindAllStringSubmatch(url, -1)
+	if len(match) > 0 {
+		if match[0][1] != "" {
+			return strings.TrimRight(match[0][1], "@")
+		}
+	}
+
+	uname := "git"
+	parsedUrl, err := giturls.Parse(url)
+	if err == nil {
+		uname = parsedUrl.User.Username()
+	}
+	return uname
 }

@@ -50,6 +50,7 @@ require (
 	github.com/posthog/posthog-go v1.4.10
 	github.com/samber/lo v1.52.0
 	github.com/urfave/cli v1.22.16
+	github.com/whilp/git-urls v1.0.0
 	github.com/yuin/gopher-lua v1.1.1
 	gitlab.com/gitlab-org/api/client-go v0.128.0
 	golang.org/x/crypto v0.48.0

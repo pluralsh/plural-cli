@@ -120,6 +120,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	ctx, err := up.Build(c.Bool("cloud"))
+	ctx.IgnorePreflights(c.Bool("ignore-preflights") || c.Bool("dry-run"))
 	if err != nil {
 		return err
 	}

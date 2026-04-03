@@ -12,7 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
-func Preflight(dryRun bool) (bool, error) {
+func Preflight(dryRun, ignorePreflights bool) (bool, error) {
 	requirements := []string{"terraform", "git"}
 	if dryRun {
 		requirements = []string{"git"}
@@ -24,7 +24,7 @@ func Preflight(dryRun bool) (bool, error) {
 		}
 	}
 
-	if !dryRun {
+	if !dryRun && !ignorePreflights {
 		fmt.Print("\nTesting if git ssh is properly configured...")
 		if err := checkGitSSH(); err != nil {
 			fmt.Printf("%s\n\n", err.Error())

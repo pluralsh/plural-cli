@@ -111,7 +111,7 @@ func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifes
 	repo := ""
 	p.InitPluralClient()
 
-	git, err := wkspace.Preflight(c.Bool("dry-run"))
+	git, err := wkspace.Preflight(c.Bool("dry-run"), c.Bool("ignore-preflights"))
 	if err != nil && (git || c.Bool("dry-run")) {
 		return nil, err
 	}
