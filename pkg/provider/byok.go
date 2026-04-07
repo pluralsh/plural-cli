@@ -35,7 +35,7 @@ func ByokFromManifest(man *manifest.ProjectManifest) (*ByokProvider, error) {
 	return prov, nil
 }
 
-func mkBYOK(conf config.Config, name string, dryRun bool) (prov *ByokProvider, err error) {
+func mkBYOK(conf config.Config, name string, dryRun, cloud bool) (prov *ByokProvider, err error) {
 	prov = &ByokProvider{
 		ctx: map[string]interface{}{},
 	}
@@ -78,22 +78,31 @@ func mkBYOK(conf config.Config, name string, dryRun bool) (prov *ByokProvider, e
 	kubeconfigBase64 := base64.StdEncoding.EncodeToString(kubeconfigData)
 
 	prov.ctx["kubeconfig"] = kubeconfigBase64
-
-	var dbURL string
-	if err := survey.AskOne(&survey.Input{
-		Message: "Enter the database URL for the Plural console (leave empty to skip):",
-	}, &dbURL); err != nil {
-		return nil, err
-	}
-	prov.ctx["DbUrl"] = dbURL
-
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  name,
 		Provider: api.BYOK,
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 		Context:  prov.Context(),
 	}
-	prov.writer = projectManifest.Configure(cloudFlag, prov.Cluster())
+	if !cloud {
+		var dbURL string
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the jdbc connection string (postgres://<user>:<password>@<host>:5432/<db>) for the Plural console:",
+		}, &dbURL); err != nil {
+			return nil, err
+		}
+		prov.ctx["DbUrl"] = dbURL
+
+		var domain string
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the domain you want to use for your Plural console:",
+		}, &domain); err != nil {
+			return nil, err
+		}
+
+		projectManifest.Network = &manifest.NetworkConfig{Subdomain: domain, PluralDns: false}
+	}
+	prov.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 	return prov, nil
 }
 

@@ -183,7 +183,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	utils.Success("Finished setting up your management cluster!\n")
-	if byok {
+	if byok && cloud {
 		utils.Highlight("Since you're using BYOK, be sure to complete setup of your management cluster\n")
 		utils.Highlight("IMPORTANT: You'll need to configure IAM permissions for the plrl-deploy-operator/stacks service account.\n")
 		utils.Highlight("This is no longer handled automatically. See the terraform example in the docs for the required IAM policy.\n")

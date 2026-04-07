@@ -108,6 +108,10 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 		"clusterIssuer": "plural",
 	}
 
+	if ingressClass := utils.ToString(prov.Context()["IngressClass"]); ingressClass != "" {
+		configuration["ingressClass"] = ingressClass
+	}
+
 	if existing.Secrets.AesKey != "" {
 		configuration["aesKey"] = existing.Secrets.AesKey
 	}

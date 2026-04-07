@@ -260,6 +260,29 @@ func (ctx *Context) deployBYOK(commit func() error) error {
 		return err
 	}
 
+	subdomain := ctx.Manifest.Network.Subdomain
+	if err := waitForConsole(); err != nil {
+		return err
+	}
+
+	utils.Success("Console is up! Access it at https://console.%s\n", subdomain)
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "commit", func() error {
+		utils.Highlight("\nSetting up gitops management, first lets commit the changes made up to this point...\n\n")
+		return commit()
+	}); err != nil {
+		return err
+	}
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
+			{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		})
+	}); err != nil {
+		return err
+	}
+
 	return ctx.pruneBYOK()
 }
-

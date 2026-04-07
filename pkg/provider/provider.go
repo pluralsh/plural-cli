@@ -88,7 +88,7 @@ func New(provider string) (providerapi.Provider, error) {
 	case api.ProviderAzure:
 		return mkAzure(conf, dryRunFlag)
 	case api.BYOK:
-		return mkBYOK(conf, clusterFlag, dryRunFlag)
+		return mkBYOK(conf, clusterFlag, dryRunFlag, cloudFlag)
 	default:
 		return nil, fmt.Errorf("invalid provider name: %s", provider)
 	}

@@ -73,21 +73,29 @@ func stateRm(dir, field string) error {
 	return cmd.Run()
 }
 
+// stateRmBestEffort is like stateRm but silently ignores the case where the
+// resource was never in state (e.g. install_prereqs=false skipped certmanager/flux).
+func stateRmBestEffort(dir, field string) {
+	_ = stateRm(dir, field)
+}
+
 // pruneBYOK removes the bootstrap helm/null resources from terraform state and
 // cleans up the one-shot files used during installation (no cloud infra to touch).
 func (ctx *Context) pruneBYOK() error {
 	return ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:mgmt", func() error {
 		utils.Highlight("\nCleaning up unneeded resources...\n\n")
 
-		toRemove := []string{
+		// These may or may not be in state depending on install_prereqs value.
+		stateRmBestEffort("./terraform/mgmt", "helm_release.certmanager")
+		stateRmBestEffort("./terraform/mgmt", "helm_release.flux")
+
+		// These are always created for BYOK.
+		required := []string{
 			"null_resource.console",
-			"helm_release.certmanager",
-			"helm_release.flux",
 			"helm_release.runtime",
 			"helm_release.console",
 		}
-
-		for _, field := range toRemove {
+		for _, field := range required {
 			if err := stateRm("./terraform/mgmt", field); err != nil {
 				return err
 			}
@@ -104,4 +112,3 @@ func (ctx *Context) pruneBYOK() error {
 		return git.Sync(repoRoot, "Post-setup resource cleanup", true)
 	})
 }
-

@@ -8,7 +8,9 @@ import (
 
 	"github.com/likexian/doh"
 	"github.com/likexian/doh/dns"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
@@ -67,6 +69,35 @@ func ping(url string) error {
 
 		return fmt.Errorf("console failed to become ready after 5 minutes, you might want to inspect the resources in the plrl-console namespace")
 	})
+}
+
+// waitForConsole polls until the console deployment in plrl-console has at least
+// one ready replica. This works on local/BYOK clusters where TLS or public DNS
+// is not available.
+func waitForConsole() error {
+	return retrier(
+		"Waiting for console deployment to become ready...\n",
+		"Console deployment is ready!\n",
+		func() error {
+			kube, err := kubernetes.Kubernetes()
+			if err != nil {
+				return err
+			}
+
+			deploy, err := kube.GetClient().AppsV1().Deployments("plrl-console").
+				Get(context.Background(), "console", metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if deploy.Status.ReadyReplicas > 0 {
+				return nil
+			}
+
+			return fmt.Errorf("console deployment not ready yet (%d/%d replicas ready)",
+				deploy.Status.ReadyReplicas, deploy.Status.Replicas)
+		},
+	)
 }
 
 func retrier(retryMsg, successMsg string, f func() error) error {
