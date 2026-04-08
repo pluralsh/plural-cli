@@ -232,6 +232,7 @@ func (ctx *Context) generateBYOK() (dir string, err error) {
 		{from: ctx.path("templates/providers/bootstrap/byok.tf"), to: "terraform/mgmt/provider.tf"},
 		{from: ctx.path("templates/setup/providers/byok.tf"), to: "terraform/mgmt/mgmt.tf"},
 		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf"},
+		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf"},
 	}
 
 	for _, tpl := range tpls {
