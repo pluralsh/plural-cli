@@ -19,6 +19,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
+const defaultValue = "default"
+
 type ByokProvider struct {
 	cluster string
 	ctx     map[string]interface{}
@@ -115,15 +117,15 @@ func (b *ByokProvider) Cluster() string {
 }
 
 func (b *ByokProvider) Project() string {
-	return "default"
+	return defaultValue
 }
 
 func (b *ByokProvider) Region() string {
-	return "default"
+	return defaultValue
 }
 
 func (b *ByokProvider) Bucket() string {
-	return "default"
+	return defaultValue
 }
 
 func (b *ByokProvider) KubeConfig() error {
