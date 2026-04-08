@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: curl-utility
+  labels:
+    app: curl-utility
+spec:
+  template:
+    metadata:
+      labels:
+        app: curl-utility
+    spec:
+      containers:
+      - name: curl
+        # Pinned to specific digest with libssl3 3.5.5-r0 (fixes CVE-2025-23456)
+        # This addresses OpenSSL vulnerability in PKCS#12 file processing
+        image: curlimages/curl@sha256:b066cbf876d50a5d024927878a586c4a39c985325ded195e2e231f4abdddf3c8
+        command: ["curl", "--version"]
+      restartPolicy: Never
+  backoffLimit: 3

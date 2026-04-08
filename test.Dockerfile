@@ -1,4 +1,4 @@
-FROM golang:1.25.7-bookworm
+FROM golang:1.26.1-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
