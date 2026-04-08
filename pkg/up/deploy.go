@@ -267,6 +267,10 @@ func (ctx *Context) deployBYOK(commit func() error) error {
 
 	utils.Success("Console is up! Access it at https://console.%s\n", subdomain)
 
+	if err := ctx.afterSetup(); err != nil {
+		return err
+	}
+
 	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},

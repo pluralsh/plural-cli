@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	defaultBootstrapBranch = "byok"
+	defaultBootstrapBranch = "main"
 	noneOption             = "None"
 )
 

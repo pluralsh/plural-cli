@@ -115,15 +115,15 @@ func (b *ByokProvider) Cluster() string {
 }
 
 func (b *ByokProvider) Project() string {
-	return ""
+	return "default"
 }
 
 func (b *ByokProvider) Region() string {
-	return ""
+	return "default"
 }
 
 func (b *ByokProvider) Bucket() string {
-	return ""
+	return "default"
 }
 
 func (b *ByokProvider) KubeConfig() error {

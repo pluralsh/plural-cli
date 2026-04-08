@@ -170,6 +170,7 @@ func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) erro
 	console["repo_url"] = url
 	console["private_key"] = contents
 	ctx.Configuration["console"] = console
+	context.RepoUrl = url // ensure identifier() has the value for the current Generate() run
 	return ctx.Write(path)
 }
 

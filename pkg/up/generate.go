@@ -36,10 +36,6 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		return
 	}
 
-	if ctx.Provider.Name() == api.BYOK {
-		return ctx.generateBYOK()
-	}
-
 	prov := ctx.Provider.Name()
 	tpls := []templatePair{
 		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
@@ -120,6 +116,9 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	}
 
 	for _, tpl := range postTemplates {
+		if !utils.Exists(tpl.from) {
+			continue
+		}
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			err = fmt.Errorf("failed to template %s: %w (you might need to regenerate your repo from scratch if partially applied)", tpl.from, err)
 			return
@@ -218,58 +217,6 @@ func (ctx *Context) afterSetup() error {
 	}
 
 	return nil
-}
-
-// generateBYOK produces only the terraform/helm files needed to install the
-// Plural console onto an already-existing (BYOK) local Kubernetes cluster.
-// No cloud provider infrastructure is created; a local terraform backend is used.
-func (ctx *Context) generateBYOK() (dir string, err error) {
-	dir = ctx.dir
-
-	tpls := []templatePair{
-		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
-		{from: ctx.path("charts/runtime/values.yaml.liquid.tpl"), to: "./helm/runtime.yaml.liquid", overwrite: true},
-		{from: ctx.path("templates/providers/bootstrap/byok.tf"), to: "terraform/mgmt/provider.tf"},
-		{from: ctx.path("templates/setup/providers/byok.tf"), to: "terraform/mgmt/mgmt.tf"},
-		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf"},
-		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf"},
-	}
-
-	for _, tpl := range tpls {
-		if utils.Exists(tpl.to) && !tpl.overwrite {
-			fmt.Printf("%s already exists, skipping for now...\n", tpl.to)
-			continue
-		}
-
-		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
-			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
-			return
-		}
-	}
-
-	copies := []templatePair{
-		{from: ctx.path("terraform/clouds/byok"), to: "terraform/mgmt/cluster", overwrite: true},
-		{from: ctx.path("setup"), to: "bootstrap", overwrite: true},
-		{from: ctx.path("helm"), to: "helm", overwrite: true},
-		{from: ctx.path("services"), to: "services", overwrite: true},
-		{from: ctx.path("templates"), to: "templates", overwrite: true},
-	}
-
-	for _, cp := range copies {
-		if utils.Exists(cp.to) && !cp.overwrite {
-			continue
-		}
-
-		if err = utils.CopyDir(cp.from, cp.to); err != nil {
-			return
-		}
-	}
-
-	if err = utils.DownloadFile(filepath.Join("helm", "console.yaml.liquid"), consoleValuesTemplateURL); err != nil {
-		return "", fmt.Errorf("fetch console values template: %w", err)
-	}
-
-	return
 }
 
 func (ctx *Context) path(p string) string {
