@@ -102,7 +102,9 @@ func (ctx *Context) pruneBYOK() error {
 		}
 
 		_ = os.Remove("./terraform/mgmt/console.tf")
+		_ = os.Remove("./terraform/mgmt/config_secrets.tf")
 		_ = os.RemoveAll("./temp")
+		_ = os.RemoveAll("./terraform/apps")
 		_ = os.Remove("./context.yaml")
 
 		repoRoot, err := git.Root()
