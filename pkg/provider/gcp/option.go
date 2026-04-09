@@ -11,8 +11,11 @@ import (
 
 type Option func(*Provider) error
 
-func WithConfig(c config.Config, defaultCluster string, cloudEnabled bool) Option {
+func WithConfig(c config.Config, defaultCluster string, cloudEnabled, dryRun bool) Option {
 	return func(gcp *Provider) error {
+		if dryRun {
+			return nil
+		}
 		err := printUserInfo()
 		if err != nil {
 			return err

@@ -18,11 +18,13 @@ func Preflight(dryRun, ignorePreflights bool) (bool, error) {
 		requirements = []string{"git"}
 	}
 
+	fmt.Printf("Checking required CLI dependencies: %s\n", strings.Join(requirements, ", "))
 	for _, req := range requirements {
 		if ok, _ := utils.Which(req); !ok {
-			return true, utils.HighlightError(fmt.Errorf("%s not installed", req))
+			return true, utils.HighlightError(fmt.Errorf("required CLI dependency %q is not installed or not found in $PATH", req))
 		}
 	}
+	fmt.Print("All required CLI dependencies are present.\n\n")
 
 	if !dryRun && !ignorePreflights {
 		fmt.Print("\nTesting if git ssh is properly configured...")
@@ -34,6 +36,7 @@ func Preflight(dryRun, ignorePreflights bool) (bool, error) {
 		fmt.Printf(" \033[32m (\u2713) \033[0m\n\n")
 	}
 
+	fmt.Print("Checking git repository setup...\n")
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	if _, err := cmd.CombinedOutput(); err != nil {
 		return false, utils.HighlightError(fmt.Errorf("you're not in a git repository, you'll need to clone one before running plural"))
@@ -85,7 +88,7 @@ func checkGitSSH() error {
 	cmd.Stdout = &executor.OutputWriter{Delegate: os.Stdout}
 	cmd.Stderr = &b
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to clone: %s", b.String())
+		return fmt.Errorf("SSH connectivity test failed (cloning git@github.com:pluralsh/scaffolds.git): %s", b.String())
 	}
 
 	return nil

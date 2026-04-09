@@ -59,8 +59,12 @@ func (ctx *Context) runCheckpoint(current, checkpoint string, fn func() error) e
 }
 
 func (ctx *Context) Deploy(commit func() error) error {
-	if ctx.Provider.Name() == api.BYOK {
+	if ctx.Provider.Name() == api.BYOK && ctx.Cloud {
 		return nil
+	}
+
+	if ctx.Provider.Name() == api.BYOK {
+		return ctx.deployBYOK(commit)
 	}
 
 	if err := ctx.Provider.CreateBucket(); err != nil {
@@ -232,4 +236,50 @@ func (tf *terraformCmd) run() (err error) {
 	}
 
 	return
+}
+
+// deployBYOK runs only the terraform/mgmt apply which installs the Plural console
+// onto an already-existing (BYOK) local Kubernetes cluster. No cloud infrastructure
+// or apps terraform is executed.
+func (ctx *Context) deployBYOK(commit func() error) error {
+	defer ctx.Manifest.Flush()
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "init", func() error {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		})
+	}); err != nil {
+		return err
+	}
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "commit", func() error {
+		utils.Highlight("\nCommitting generated gitops configuration...\n\n")
+		return commit()
+	}); err != nil {
+		return err
+	}
+
+	subdomain := ctx.Manifest.Network.Subdomain
+	if err := waitForConsole(); err != nil {
+		return err
+	}
+
+	utils.Success("Console is up! Access it at https://console.%s\n", subdomain)
+
+	if err := ctx.afterSetup(); err != nil {
+		return err
+	}
+
+	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
+		return runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
+			{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
+			{dir: "./terraform/apps", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
+		})
+	}); err != nil {
+		return err
+	}
+
+	return ctx.pruneBYOK()
 }

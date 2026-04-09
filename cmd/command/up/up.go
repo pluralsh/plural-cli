@@ -82,13 +82,14 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 	p.InitPluralClient()
 	dryRun := c.Bool("dry-run")
+	cloud := c.Bool("cloud")
 
 	cd := &cdpkg.Plural{Plural: p.Plural}
 
 	var name, url string
 	var err error
 
-	if c.Bool("cloud") {
+	if cloud {
 		name, url, err = p.choseCluster()
 		if err != nil {
 			return err
@@ -110,8 +111,10 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	if err := askAppDomain(project); err != nil {
-		return err
+	if !dryRun {
+		if err := askAppDomain(project); err != nil {
+			return err
+		}
 	}
 
 	repoRoot, err := git.Root()
@@ -121,13 +124,14 @@ func (p *Plural) handleUp(c *cli.Context) error {
 
 	ctx, err := up.Build(c.Bool("cloud"))
 	ctx.IgnorePreflights(c.Bool("ignore-preflights") || c.Bool("dry-run"))
+
 	if err != nil {
 		return err
 	}
 
 	byok := ctx.Provider.Name() == api.BYOK
 
-	if c.Bool("cloud") {
+	if cloud {
 		id, err := getCluster(cd)
 		if err != nil {
 			return err
@@ -161,7 +165,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return nil
 	}
 
-	if !byok {
+	if !cloud {
 		if !common.Affirm(common.AffirmUp, "PLURAL_UP_AFFIRM_DEPLOY") {
 			return fmt.Errorf("cancelled deploy")
 		}
@@ -179,7 +183,7 @@ func (p *Plural) handleUp(c *cli.Context) error {
 	}
 
 	utils.Success("Finished setting up your management cluster!\n")
-	if byok {
+	if byok && cloud {
 		utils.Highlight("Since you're using BYOK, be sure to complete setup of your management cluster\n")
 		utils.Highlight("IMPORTANT: You'll need to configure IAM permissions for the plrl-deploy-operator/stacks service account.\n")
 		utils.Highlight("This is no longer handled automatically. See the terraform example in the docs for the required IAM policy.\n")

@@ -19,6 +19,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
+const defaultValue = "default"
+
 type ByokProvider struct {
 	cluster string
 	ctx     map[string]interface{}
@@ -35,11 +37,20 @@ func ByokFromManifest(man *manifest.ProjectManifest) (*ByokProvider, error) {
 	return prov, nil
 }
 
-func mkBYOK(conf config.Config, name string) (prov *ByokProvider, err error) {
+func mkBYOK(conf config.Config, name string, dryRun, cloud bool) (prov *ByokProvider, err error) {
 	prov = &ByokProvider{
-		cluster: name,
-		ctx:     map[string]interface{}{},
+		ctx: map[string]interface{}{},
 	}
+	if dryRun {
+		return prov, nil
+	}
+
+	if name == "" {
+		if err := survey.AskOne(&survey.Input{Message: "Enter the name of your cluster"}, &name); err != nil {
+			return nil, err
+		}
+	}
+	prov.cluster = name
 
 	kubeconfigPath, err := askKubeconfig()
 	if err != nil {
@@ -69,14 +80,31 @@ func mkBYOK(conf config.Config, name string) (prov *ByokProvider, err error) {
 	kubeconfigBase64 := base64.StdEncoding.EncodeToString(kubeconfigData)
 
 	prov.ctx["kubeconfig"] = kubeconfigBase64
-
 	projectManifest := manifest.ProjectManifest{
 		Cluster:  name,
 		Provider: api.BYOK,
 		Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
 		Context:  prov.Context(),
 	}
-	prov.writer = projectManifest.Configure(cloudFlag, prov.Cluster())
+	if !cloud {
+		var dbURL string
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the jdbc connection string (postgres://<user>:<password>@<host>:5432/<db>) for the Plural console:",
+		}, &dbURL); err != nil {
+			return nil, err
+		}
+		prov.ctx["DbUrl"] = dbURL
+
+		var domain string
+		if err := survey.AskOne(&survey.Input{
+			Message: "Enter the domain you want to use for your Plural console:",
+		}, &domain); err != nil {
+			return nil, err
+		}
+
+		projectManifest.Network = &manifest.NetworkConfig{Subdomain: domain, PluralDns: false}
+	}
+	prov.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 	return prov, nil
 }
 
@@ -89,15 +117,15 @@ func (b *ByokProvider) Cluster() string {
 }
 
 func (b *ByokProvider) Project() string {
-	return ""
+	return defaultValue
 }
 
 func (b *ByokProvider) Region() string {
-	return ""
+	return defaultValue
 }
 
 func (b *ByokProvider) Bucket() string {
-	return ""
+	return defaultValue
 }
 
 func (b *ByokProvider) KubeConfig() error {
@@ -205,7 +233,7 @@ func (b *ByokProvider) Flush() error {
 
 func (b *ByokProvider) testClusterConnectivity() error {
 	if err := b.KubeConfig(); err != nil {
-		return err
+		return fmt.Errorf("failed to load kubeconfig: %w", err)
 	}
 	kube, err := kubernetes.Kubernetes()
 	if err != nil {

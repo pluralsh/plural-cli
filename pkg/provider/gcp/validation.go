@@ -41,7 +41,7 @@ func (in *Provider) validateEnabled() error {
 	resp, err := c.BatchGetServices(ctx, req)
 	if err != nil {
 		utils.LogError().Println(err)
-		return fmt.Errorf("could not fetch services information for project %s, make sure your service account does have appropriate permissions", in.Project())
+		return fmt.Errorf("could not check required GCP services for project %s (serviceusage.googleapis.com, cloudresourcemanager.googleapis.com, container.googleapis.com): make sure your service account has the serviceusage.services.list permission", in.Project())
 	}
 
 	missing := algorithms.Filter(resp.Services, func(svc *serviceusagepb.Service) bool {
@@ -56,6 +56,7 @@ func (in *Provider) validateEnabled() error {
 		}
 		utils.LogError().Printf("Attempting to enable services %v", services)
 		if err := tryToEnableServices(ctx, c, enableReq); err != nil {
+			utils.Warn("Could not automatically enable required GCP services, please enable them manually.\n")
 			return errEnabled
 		}
 	}
@@ -64,7 +65,7 @@ func (in *Provider) validateEnabled() error {
 }
 
 func (in *Provider) validatePermissions() error {
-	utils.LogInfo().Println("Validate GCP roles/permissions")
+	utils.LogInfo().Println("Checking GCP roles/permissions")
 	ctx := context.Background()
 
 	projectID, err := in.project()
@@ -75,7 +76,7 @@ func (in *Provider) validatePermissions() error {
 	checker, _ := permissions.NewGcpChecker(ctx, projectID)
 	missing, err := checker.MissingPermissions()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check GCP permissions for project %s: %w", projectID, err)
 	}
 
 	if len(missing) == 0 {

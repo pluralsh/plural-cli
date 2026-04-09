@@ -22,7 +22,7 @@ type templatePair struct {
 
 //nolint:gocyclo
 func (ctx *Context) Generate(gitRef string) (dir string, err error) {
-	if ctx.Provider.Name() == api.BYOK {
+	if ctx.Provider.Name() == api.BYOK && ctx.Cloud {
 		return "", nil
 	}
 	dir, err = os.MkdirTemp("", "sampledir")
@@ -116,6 +116,9 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	}
 
 	for _, tpl := range postTemplates {
+		if !utils.Exists(tpl.from) {
+			continue
+		}
 		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
 			err = fmt.Errorf("failed to template %s: %w (you might need to regenerate your repo from scratch if partially applied)", tpl.from, err)
 			return
