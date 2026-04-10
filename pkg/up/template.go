@@ -81,6 +81,8 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		"Cloud":          ctx.Cloud,
 		"ClusterName":    cluster,
 		"ProjectID":      ctx.Provider.Project(),
+		"GitUsername":    ctx.GitUsername,
+		"GitPassword":    ctx.GitPassword,
 	}
 	if ctx.Manifest.Network != nil {
 		values["Subdomain"] = ctx.Manifest.Network.Subdomain

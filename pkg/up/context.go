@@ -27,6 +27,8 @@ type Context struct {
 	Config           *config.Config
 	Cloud            bool
 	RepoUrl          string
+	GitUsername      string
+	GitPassword      string
 	StacksIdentity   string
 	Delims           *delims
 	ImportCluster    *string
@@ -43,6 +45,13 @@ type delims struct {
 func (ctx *Context) identifier() string {
 	if ctx.RepoUrl == "" {
 		return ""
+	}
+
+	if strings.HasPrefix(ctx.RepoUrl, "http") {
+		parsed, err := giturls.Parse(ctx.RepoUrl)
+		if err == nil {
+			return strings.TrimSuffix(strings.TrimPrefix(parsed.Path, "/"), ".git")
+		}
 	}
 
 	split := strings.Split(ctx.RepoUrl, ":")
@@ -72,13 +81,27 @@ func (ctx *Context) Backfill() error {
 		return ctx.backfillConsoleContext(ctx.Manifest)
 	}
 
-	if _, ok = console["private_key"]; !ok {
+	_, hasSSH := console["private_key"]
+	_, hasHTTPS := console["git_password"]
+	if !hasSSH && !hasHTTPS {
 		return ctx.backfillConsoleContext(ctx.Manifest)
 	}
 
 	if v, ok := console["repo_url"]; ok {
 		if r, ok := v.(string); ok {
 			ctx.RepoUrl = r
+		}
+	}
+
+	if v, ok := console["git_username"]; ok {
+		if s, ok := v.(string); ok {
+			ctx.GitUsername = s
+		}
+	}
+
+	if v, ok := console["git_password"]; ok {
+		if s, ok := v.(string); ok {
+			ctx.GitPassword = s
 		}
 	}
 
@@ -130,9 +153,13 @@ func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) erro
 	}
 
 	if strings.HasPrefix(url, "http") {
-		return fmt.Errorf("found non-ssh upstream url %s, please reclone the repo with SSH and retry", url)
+		return context.backfillHTTPS(url, console, ctx, path)
 	}
 
+	return context.backfillSSH(url, console, ctx, path)
+}
+
+func (context *Context) backfillSSH(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
 	utils.Highlight("If you want, you can use `plural crypto ssh-keygen` to generate a keypair to use as a deploy key as well\n\n")
 
 	files, err := filepath.Glob(filepath.Join(os.Getenv("HOME"), ".ssh", "*"))
@@ -170,7 +197,41 @@ func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) erro
 	console["repo_url"] = url
 	console["private_key"] = contents
 	ctx.Configuration["console"] = console
-	context.RepoUrl = url // ensure identifier() has the value for the current Generate() run
+	context.RepoUrl = url
+	return ctx.Write(path)
+}
+
+func (context *Context) backfillHTTPS(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
+	utils.Highlight("If you want, you can also reclone with an SSH URL and re-run to use deploy-key authentication instead\n\n")
+
+	var username, token string
+
+	if err := survey.AskOne(&survey.Input{
+		Message: "Enter your git username:",
+		Default: "oauth2",
+	}, &username, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+
+	if err := survey.AskOne(&survey.Password{
+		Message: "Enter your Personal Access Token (PAT) for this repository:",
+	}, &token, survey.WithValidator(survey.Required)); err != nil {
+		return err
+	}
+
+	if !context.ignorePreflights {
+		if err := verifyHTTPS(username, token, url); err != nil {
+			return fmt.Errorf("PAT not valid for url %s, error: %w.  If you want to bypass this check, you can use the --ignore-preflights flag", url, err)
+		}
+	}
+
+	console["repo_url"] = url
+	console["git_username"] = username
+	console["git_password"] = token
+	ctx.Configuration["console"] = console
+	context.RepoUrl = url
+	context.GitUsername = username
+	context.GitPassword = token
 	return ctx.Write(path)
 }
 
@@ -187,6 +248,22 @@ func verifySSHKey(key, url string) error {
 	}(dir)
 
 	auth, _ := git.SSHAuth(getGitUsername(url), key, "")
+	if _, err := git.Clone(auth, url, dir); err != nil {
+		return err
+	}
+	return nil
+}
+
+func verifyHTTPS(username, password, url string) error {
+	dir, err := os.MkdirTemp("", "repo")
+	if err != nil {
+		return err
+	}
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(dir)
+
+	auth, _ := git.BasicAuth(username, password)
 	if _, err := git.Clone(auth, url, dir); err != nil {
 		return err
 	}

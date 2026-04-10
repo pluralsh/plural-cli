@@ -26,16 +26,6 @@ func Preflight(dryRun, ignorePreflights bool) (bool, error) {
 	}
 	fmt.Print("All required CLI dependencies are present.\n\n")
 
-	if !dryRun && !ignorePreflights {
-		fmt.Print("\nTesting if git ssh is properly configured...")
-		if err := checkGitSSH(); err != nil {
-			fmt.Printf("%s\n\n", err.Error())
-			utils.Warn("Please ensure that you have ssh keys set up for git and that you've added them to your ssh agent. You can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider.\n")
-			return true, fmt.Errorf("git ssh is not properly configured")
-		}
-		fmt.Printf(" \033[32m (\u2713) \033[0m\n\n")
-	}
-
 	fmt.Print("Checking git repository setup...\n")
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	if _, err := cmd.CombinedOutput(); err != nil {
@@ -57,11 +47,16 @@ func Preflight(dryRun, ignorePreflights bool) (bool, error) {
 		return true, err
 	}
 
-	if strings.HasPrefix(url, "http") && !dryRun {
-		utils.Error("Found non-ssh upstream url %s, please reclone the repo with SSH and retry.\n", url)
-		utils.Warn("Please ensure that you have SSH keys set up for Git and that you've added them to your SSH agent.\n")
-		utils.Warn("You can use `plural crypto ssh-keygen` to create your first SSH keys then upload the public key to your Git provider.\n")
-		return true, fmt.Errorf("found non-ssh upstream")
+	isHTTPS := strings.HasPrefix(url, "http")
+
+	if !dryRun && !ignorePreflights && !isHTTPS {
+		fmt.Print("\nTesting if git ssh is properly configured...")
+		if err := checkGitSSH(); err != nil {
+			fmt.Printf("%s\n\n", err.Error())
+			utils.Warn("Please ensure that you have ssh keys set up for git and that you've added them to your ssh agent. You can use `plural crypto ssh-keygen` to create your first ssh keys then upload the public key to your git provider.\n")
+			return true, fmt.Errorf("git ssh is not properly configured")
+		}
+		fmt.Printf(" \033[32m (\u2713) \033[0m\n\n") // (✓)
 	}
 
 	return true, nil
