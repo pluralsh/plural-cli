@@ -122,4 +122,3 @@ func TestIdentifier(t *testing.T) {
 		})
 	}
 }
-
