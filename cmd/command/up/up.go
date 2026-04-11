@@ -255,7 +255,9 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 	case api.ProviderAWS:
 		hostedZones, err := provider.AWSHostedZones(context.Background(), project.Region)
 		if err != nil {
-			return err
+			utils.Error("Failed to fetch hosted zones from AWS: %s\n", err)
+			fmt.Println("ignoring domain setup...")
+			break
 		}
 
 		if err := survey.AskOne(
@@ -271,7 +273,9 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 	case api.ProviderAzure:
 		dnsZones, err := provider.AzureDNSZones(context.Background(), project.Project)
 		if err != nil {
-			return err
+			utils.Error("Failed to fetch DNS zones from Azure: %s\n", err)
+			fmt.Println("ignoring domain setup...")
+			break
 		}
 
 		if err := survey.AskOne(
