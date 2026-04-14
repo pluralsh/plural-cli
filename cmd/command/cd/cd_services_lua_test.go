@@ -111,6 +111,17 @@ values["greeting"] = greet("world")
 	assert.Equal(t, "hello world", values["greeting"])
 }
 
+func TestLuaFolder_WithExistingLuaFixtureFolder(t *testing.T) {
+	luaDir := filepath.Join("..", "..", "..", "test", "lua")
+
+	_, err := os.Stat(luaDir)
+	require.NoError(t, err, "expected fixture lua directory to exist")
+
+	content, err := luaFolder(luaDir)
+	require.NoError(t, err)
+	assert.NotEmpty(t, content)
+}
+
 // Binding tests – each test mirrors what the real luaBindings helpers produce,
 // then asserts that Lua can read those values as expected.
 
