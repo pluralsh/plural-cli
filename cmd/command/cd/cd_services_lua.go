@@ -4,6 +4,7 @@ import (
 	"fmt"
 	iofs "io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -141,7 +142,7 @@ func luaFolder(folder string) (string, error) {
 
 	luaFileContents := make([]string, 0)
 	for _, file := range luaFiles {
-		luaContents, err := os.ReadFile(file)
+		luaContents, err := os.ReadFile(path.Join(folder, file))
 		if err != nil {
 			return "", fmt.Errorf("failed to read lua file %s: %w", file, err)
 		}
