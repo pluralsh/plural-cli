@@ -14,6 +14,14 @@ type Option func(*Provider) error
 func WithConfig(c config.Config, defaultCluster string, cloudEnabled, dryRun bool) Option {
 	return func(gcp *Provider) error {
 		if dryRun {
+			projectManifest := manifest.ProjectManifest{
+				Bucket:   "dry-run",
+				Provider: api.ProviderGCP,
+				Owner:    &manifest.Owner{Email: c.Email, Endpoint: c.Endpoint},
+			}
+			gcp.InputProvider = NewReadonlyInputProvider(defaultCluster, "", "")
+			gcp.bucket = projectManifest.Bucket
+			gcp.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 			return nil
 		}
 		err := printUserInfo()

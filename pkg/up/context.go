@@ -42,70 +42,70 @@ type delims struct {
 	right string
 }
 
-func (ctx *Context) identifier() string {
-	if ctx.RepoUrl == "" {
+func (c *Context) identifier() string {
+	if c.RepoUrl == "" {
 		return ""
 	}
 
-	if strings.HasPrefix(ctx.RepoUrl, "http") {
-		parsed, err := giturls.Parse(ctx.RepoUrl)
+	if strings.HasPrefix(c.RepoUrl, "http") {
+		parsed, err := giturls.Parse(c.RepoUrl)
 		if err == nil {
 			return strings.TrimSuffix(strings.TrimPrefix(parsed.Path, "/"), ".git")
 		}
 	}
 
-	split := strings.Split(ctx.RepoUrl, ":")
+	split := strings.Split(c.RepoUrl, ":")
 	return strings.TrimSuffix(split[len(split)-1], ".git")
 }
 
-func (ctx *Context) changeDelims() {
-	ctx.Delims = &delims{"[[", "]]"}
+func (c *Context) changeDelims() {
+	c.Delims = &delims{"[[", "]]"}
 }
 
-func (ctx *Context) IgnorePreflights(ignore bool) {
-	ctx.ignorePreflights = ignore
+func (c *Context) IgnorePreflights(ignore bool) {
+	c.ignorePreflights = ignore
 }
 
-func (ctx *Context) SetImportCluster(id string) {
-	ctx.ImportCluster = lo.ToPtr(id)
+func (c *Context) SetImportCluster(id string) {
+	c.ImportCluster = lo.ToPtr(id)
 }
 
-func (ctx *Context) Backfill() error {
+func (c *Context) Backfill() error {
 	context, err := manifest.FetchContext()
 	if err != nil {
-		return ctx.backfillConsoleContext(ctx.Manifest)
+		return c.backfillConsoleContext(c.Manifest)
 	}
 
 	console, ok := context.Configuration["console"]
 	if !ok {
-		return ctx.backfillConsoleContext(ctx.Manifest)
+		return c.backfillConsoleContext(c.Manifest)
 	}
 
 	_, hasSSH := console["private_key"]
 	_, hasHTTPS := console["git_password"]
 	if !hasSSH && !hasHTTPS {
-		return ctx.backfillConsoleContext(ctx.Manifest)
+		return c.backfillConsoleContext(c.Manifest)
 	}
 
 	if v, ok := console["repo_url"]; ok {
 		if r, ok := v.(string); ok {
-			ctx.RepoUrl = r
+			c.RepoUrl = r
 		}
 	}
 
 	if v, ok := console["git_username"]; ok {
 		if s, ok := v.(string); ok {
-			ctx.GitUsername = s
+			c.GitUsername = s
 		}
 	}
 
 	if v, ok := console["git_password"]; ok {
 		if s, ok := v.(string); ok {
-			ctx.GitPassword = s
+			c.GitPassword = s
 		}
 	}
 
-	if ctx.RepoUrl == "" {
+	if c.RepoUrl == "" {
 		return fmt.Errorf("you never configured a repoUrl for your workspace, check `context.yaml`")
 	}
 
@@ -133,7 +133,7 @@ func Build(cloud bool) (*Context, error) {
 	}, nil
 }
 
-func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) error {
+func (c *Context) backfillConsoleContext(_ *manifest.ProjectManifest) error {
 	path := manifest.ContextPath()
 	ctx, err := manifest.FetchContext()
 	if err != nil {
@@ -153,13 +153,13 @@ func (context *Context) backfillConsoleContext(_ *manifest.ProjectManifest) erro
 	}
 
 	if strings.HasPrefix(url, "http") {
-		return context.backfillHTTPS(url, console, ctx, path)
+		return c.backfillHTTPS(url, console, ctx, path)
 	}
 
-	return context.backfillSSH(url, console, ctx, path)
+	return c.backfillSSH(url, console, ctx, path)
 }
 
-func (context *Context) backfillSSH(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
+func (c *Context) backfillSSH(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
 	utils.Highlight("If you want, you can use `plural crypto ssh-keygen` to generate a keypair to use as a deploy key as well\n\n")
 
 	files, err := filepath.Glob(filepath.Join(os.Getenv("HOME"), ".ssh", "*"))
@@ -188,7 +188,7 @@ func (context *Context) backfillSSH(url string, console map[string]interface{}, 
 		return err
 	}
 
-	if !context.ignorePreflights {
+	if !c.ignorePreflights {
 		if err := verifySSHKey(contents, url); err != nil {
 			return fmt.Errorf("ssh key not valid for url %s, error: %w.  If you want to bypass this check, you can use the --ignore-preflights flag", url, err)
 		}
@@ -197,11 +197,11 @@ func (context *Context) backfillSSH(url string, console map[string]interface{}, 
 	console["repo_url"] = url
 	console["private_key"] = contents
 	ctx.Configuration["console"] = console
-	context.RepoUrl = url
+	c.RepoUrl = url
 	return ctx.Write(path)
 }
 
-func (context *Context) backfillHTTPS(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
+func (c *Context) backfillHTTPS(url string, console map[string]interface{}, ctx *manifest.Context, path string) error {
 	utils.Highlight("If you want, you can also reclone with an SSH URL and re-run to use deploy-key authentication instead\n\n")
 
 	var username, token string
@@ -219,7 +219,7 @@ func (context *Context) backfillHTTPS(url string, console map[string]interface{}
 		return err
 	}
 
-	if !context.ignorePreflights {
+	if !c.ignorePreflights {
 		if err := verifyHTTPS(username, token, url); err != nil {
 			return fmt.Errorf("PAT not valid for url %s, error: %w.  If you want to bypass this check, you can use the --ignore-preflights flag", url, err)
 		}
@@ -229,9 +229,9 @@ func (context *Context) backfillHTTPS(url string, console map[string]interface{}
 	console["git_username"] = username
 	console["git_password"] = token
 	ctx.Configuration["console"] = console
-	context.RepoUrl = url
-	context.GitUsername = username
-	context.GitPassword = token
+	c.RepoUrl = url
+	c.GitUsername = username
+	c.GitPassword = token
 	return ctx.Write(path)
 }
 

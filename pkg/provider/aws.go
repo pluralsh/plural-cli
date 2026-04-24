@@ -76,6 +76,12 @@ func mkAWS(conf config.Config, dryRun bool) (provider *AWSProvider, err error) {
 	ctx := context.Background()
 	provider = &AWSProvider{}
 	if dryRun {
+		projectManifest := manifest.ProjectManifest{
+			Provider: api.ProviderAWS,
+			Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		}
+
+		provider.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 		return provider, nil
 	}
 	iamSession, callerIdentity, err := GetAWSCallerIdentity(ctx)

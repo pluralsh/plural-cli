@@ -8,6 +8,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
@@ -15,8 +18,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/provider/permissions"
 	"github.com/pluralsh/plural-cli/pkg/provider/preflights"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const defaultValue = "default"
@@ -42,6 +43,12 @@ func mkBYOK(conf config.Config, name string, dryRun, cloud bool) (prov *ByokProv
 		ctx: map[string]interface{}{},
 	}
 	if dryRun {
+		projectManifest := manifest.ProjectManifest{
+			Provider: api.BYOK,
+			Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		}
+
+		prov.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 		return prov, nil
 	}
 

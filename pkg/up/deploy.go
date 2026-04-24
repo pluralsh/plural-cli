@@ -8,11 +8,12 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/pluralsh/plural-cli/pkg/api"
-	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
@@ -44,11 +45,11 @@ func init() {
 	}
 }
 
-func (ctx *Context) runCheckpoint(current, checkpoint string, fn func() error) error {
+func (c *Context) runCheckpoint(current, checkpoint string, fn func() error) error {
 	if current == "" || priorities[checkpoint] > priorities[current] {
 		err := fn()
 		if err == nil {
-			ctx.Manifest.Checkpoint = checkpoint
+			c.Manifest.Checkpoint = checkpoint
 		}
 		return err
 	}
@@ -58,21 +59,21 @@ func (ctx *Context) runCheckpoint(current, checkpoint string, fn func() error) e
 	return nil
 }
 
-func (ctx *Context) Deploy(commit func() error) error {
-	if ctx.Provider.Name() == api.BYOK && ctx.Cloud {
+func (c *Context) Deploy(commit func() error) error {
+	if c.Provider.Name() == api.BYOK && c.Cloud {
 		return nil
 	}
 
-	if ctx.Provider.Name() == api.BYOK {
-		return ctx.deployBYOK(commit)
+	if c.Provider.Name() == api.BYOK {
+		return c.deployBYOK(commit)
 	}
 
-	if err := ctx.Provider.CreateBucket(); err != nil {
+	if err := c.Provider.CreateBucket(); err != nil {
 		return err
 	}
-	defer ctx.Manifest.Flush()
+	defer c.Manifest.Flush()
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "init", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "init", func() error {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
@@ -81,22 +82,22 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
-	if ctx.ImportCluster != nil {
-		prov := ctx.Provider.Name()
-		if err := ctx.templateFrom(ctx.path(fmt.Sprintf("templates/setup/mgmt/%s.tf", prov)), "terraform/mgmt/plural.tf"); err != nil {
+	if c.ImportCluster != nil {
+		prov := c.Provider.Name()
+		if err := c.templateFrom(c.path(fmt.Sprintf("templates/setup/mgmt/%s.tf", prov)), "terraform/mgmt/plural.tf"); err != nil {
 			return err
 		}
 
-		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "import", func() error {
+		if err := c.runCheckpoint(c.Manifest.Checkpoint, "import", func() error {
 			return runAll([]terraformCmd{
 				{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
-				{dir: "./terraform/mgmt", cmd: "import", args: []string{"plural_cluster.mgmt", *ctx.ImportCluster}},
+				{dir: "./terraform/mgmt", cmd: "import", args: []string{"plural_cluster.mgmt", *c.ImportCluster}},
 			})
 		}); err != nil {
 			return err
 		}
 
-		if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apply:import", func() error {
+		if err := c.runCheckpoint(c.Manifest.Checkpoint, "apply:import", func() error {
 			return runAll([]terraformCmd{
 				{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
 			})
@@ -111,14 +112,14 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
-	ctx.StacksIdentity = stacksRole(outs)
+	c.StacksIdentity = stacksRole(outs)
 
-	if err := ctx.afterSetup(); err != nil {
+	if err := c.afterSetup(); err != nil {
 		return err
 	}
 
-	if !ctx.Cloud {
-		subdomain := ctx.Manifest.Network.Subdomain
+	if !c.Cloud {
+		subdomain := c.Manifest.Network.Subdomain
 		if err := testDns(fmt.Sprintf("console.%s", subdomain)); err != nil {
 			return err
 		}
@@ -128,14 +129,14 @@ func (ctx *Context) Deploy(commit func() error) error {
 		}
 	}
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "commit", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "commit", func() error {
 		utils.Highlight("\nSetting up gitops management, first lets commit the changes made up to this point...\n\n")
 		return commit()
 	}); err != nil {
 		return err
 	}
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "apps", func() error {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
 			{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
@@ -145,12 +146,12 @@ func (ctx *Context) Deploy(commit func() error) error {
 		return err
 	}
 
-	return ctx.Prune()
+	return c.Prune()
 }
 
-func (ctx *Context) Destroy() error {
+func (c *Context) Destroy() error {
 	utils.Highlight("Destroying management cluster terraform stack in terraform/mgmt...\n\n")
-	if ctx.Cloud {
+	if c.Cloud {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 			{dir: "./terraform/mgmt", cmd: "state", args: []string{"rm", "plural_cluster.mgmt"}},
@@ -164,10 +165,10 @@ func (ctx *Context) Destroy() error {
 	})
 }
 
-func (ctx *Context) DestroyNamespace(name string) error {
+func (c *Context) DestroyNamespace(name string) error {
 	utils.Highlight("\nCleaning up namespace %s...\n", name)
 	// ensure current kubeconfig is correct before destroying stuff
-	if err := ctx.Provider.KubeConfig(); err != nil {
+	if err := c.Provider.KubeConfig(); err != nil {
 		return err
 	}
 	kube, err := kubernetes.Kubernetes()
@@ -175,14 +176,14 @@ func (ctx *Context) DestroyNamespace(name string) error {
 		utils.Error("Could not set up k8s client due to %s\n", err)
 		return err
 	}
-	c := context.Background()
-	namespace, err := kube.GetClient().CoreV1().Namespaces().Get(c, name, metav1.GetOptions{})
+	ctx := context.Background()
+	namespace, err := kube.GetClient().CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	if namespace != nil {
-		return kube.GetClient().CoreV1().Namespaces().Delete(c, name, metav1.DeleteOptions{
+		return kube.GetClient().CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{
 			GracePeriodSeconds: lo.ToPtr(int64(0)),
 		})
 	}
@@ -241,10 +242,10 @@ func (tf *terraformCmd) run() (err error) {
 // deployBYOK runs only the terraform/mgmt apply which installs the Plural console
 // onto an already-existing (BYOK) local Kubernetes cluster. No cloud infrastructure
 // or apps terraform is executed.
-func (ctx *Context) deployBYOK(commit func() error) error {
-	defer ctx.Manifest.Flush()
+func (c *Context) deployBYOK(commit func() error) error {
+	defer c.Manifest.Flush()
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "init", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "init", func() error {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
@@ -253,25 +254,25 @@ func (ctx *Context) deployBYOK(commit func() error) error {
 		return err
 	}
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "commit", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "commit", func() error {
 		utils.Highlight("\nCommitting generated gitops configuration...\n\n")
 		return commit()
 	}); err != nil {
 		return err
 	}
 
-	subdomain := ctx.Manifest.Network.Subdomain
+	subdomain := c.Manifest.Network.Subdomain
 	if err := waitForConsole(); err != nil {
 		return err
 	}
 
 	utils.Success("Console is up! Access it at https://console.%s\n", subdomain)
 
-	if err := ctx.afterSetup(); err != nil {
+	if err := c.afterSetup(); err != nil {
 		return err
 	}
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "apps", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "apps", func() error {
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}},
 			{dir: "./terraform/apps", cmd: "init", args: []string{"-upgrade"}},
@@ -281,5 +282,5 @@ func (ctx *Context) deployBYOK(commit func() error) error {
 		return err
 	}
 
-	return ctx.pruneBYOK()
+	return c.pruneBYOK()
 }

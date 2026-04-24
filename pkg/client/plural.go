@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/pluralsh/console/go/polly/algorithms"
-	gitutils "github.com/pluralsh/plural-cli/pkg/utils/git"
 	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
+	gitutils "github.com/pluralsh/plural-cli/pkg/utils/git"
 
 	"github.com/urfave/cli"
 
@@ -18,13 +19,14 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/wkspace"
 
+	"sigs.k8s.io/yaml"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/utils"
-	"sigs.k8s.io/yaml"
 )
 
 type Plural struct {
@@ -106,13 +108,14 @@ func (p *Plural) HandleInit(c *cli.Context) error {
 	return err
 }
 
-func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifest, error) {
+func (p *Plural) HandleInitWithProject(c *cli.Context) (project *manifest.ProjectManifest, err error) {
 	gitCreated := false
 	repo := ""
+	dryRun := c.Bool("dry-run")
 	p.InitPluralClient()
 
-	git, err := wkspace.Preflight(c.Bool("dry-run"), c.Bool("ignore-preflights"))
-	if err != nil && (git || c.Bool("dry-run")) {
+	git, err := wkspace.Preflight(dryRun, c.Bool("ignore-preflights"))
+	if err != nil && (git || dryRun) {
 		return nil, err
 	}
 
@@ -156,7 +159,7 @@ func (p *Plural) HandleInitWithProject(c *cli.Context) (*manifest.ProjectManifes
 		return nil, err
 	}
 
-	project, err := manifest.FetchProject()
+	project, err = manifest.FetchProject()
 	if err != nil {
 		return nil, err
 	}

@@ -89,6 +89,11 @@ type AzureProvider struct {
 func mkAzure(conf config.Config, dryRun bool) (prov *AzureProvider, err error) {
 	prov = &AzureProvider{}
 	if dryRun {
+		projectManifest := manifest.ProjectManifest{
+			Provider: api.ProviderAzure,
+			Owner:    &manifest.Owner{Email: conf.Email, Endpoint: conf.Endpoint},
+		}
+		prov.writer = func() error { return projectManifest.Write(manifest.ProjectManifestPath()) }
 		return prov, nil
 	}
 	subId, tenID, subName, err := GetAzureAccount()
@@ -155,7 +160,7 @@ func mkAzure(conf config.Config, dryRun bool) (prov *AzureProvider, err error) {
 func AzureFromManifest(man *manifest.ProjectManifest, clientSet *ClientSet) (*AzureProvider, error) {
 	var err error
 	clients := clientSet
-	if clientSet == nil {
+	if clientSet == nil && utils.ToString(man.Context["SubscriptionId"]) != "" {
 		clients, err = GetClientSet(utils.ToString(man.Context["SubscriptionId"]))
 		if err != nil {
 			return nil, err

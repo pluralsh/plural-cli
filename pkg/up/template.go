@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/pluralsh/console/go/polly/retry"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	plrltpl "github.com/pluralsh/plural-cli/pkg/template"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
-func (ctx *Context) redact(file string) error {
+func (c *Context) redact(file string) error {
 	buf, err := utils.ReadFile(file)
 	if err != nil {
 		return err
@@ -22,7 +23,7 @@ func (ctx *Context) redact(file string) error {
 	return utils.WriteFile(file, []byte(re.ReplaceAllString(buf, "")))
 }
 
-func (ctx *Context) uncomment(file string) error {
+func (c *Context) uncomment(file string) error {
 	buf, err := utils.ReadFile(file)
 	if err != nil {
 		return err
@@ -31,13 +32,13 @@ func (ctx *Context) uncomment(file string) error {
 	return utils.WriteFile(file, []byte(re.ReplaceAllString(buf, "")))
 }
 
-func (ctx *Context) templateFrom(file, to string) error {
+func (c *Context) templateFrom(file, to string) error {
 	buf, err := utils.ReadFile(file)
 	if err != nil {
 		return err
 	}
 
-	res, err := ctx.template(buf)
+	res, err := c.template(buf)
 	if err != nil {
 		return err
 	}
@@ -45,8 +46,8 @@ func (ctx *Context) templateFrom(file, to string) error {
 	return utils.WriteFile(to, []byte(res))
 }
 
-func (ctx *Context) template(tmplate string) (string, error) {
-	cluster, provider := ctx.Provider.Cluster(), ctx.Provider.Name()
+func (c *Context) template(tmplate string) (string, error) {
+	cluster, provider := c.Provider.Cluster(), c.Provider.Name()
 
 	client := api.NewClient()
 
@@ -55,7 +56,7 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		return "", fmt.Errorf("you must run `plural login` before installing")
 	}
 	eabCredential := &api.EabCredential{}
-	if ctx.Provider.Name() != api.BYOK {
+	if c.Provider.Name() != api.BYOK && !c.ignorePreflights {
 		retrier := retry.NewConstant(15*time.Millisecond, 3)
 		eabCredential, err = retry.Retry(retrier, func() (*api.EabCredential, error) { return client.GetEabCredential(cluster, provider) })
 		if err != nil {
@@ -67,34 +68,34 @@ func (ctx *Context) template(tmplate string) (string, error) {
 		"UserEmail":      me.Email,
 		"Cluster":        cluster,
 		"Provider":       provider,
-		"Bucket":         ctx.Provider.Bucket(),
-		"Project":        ctx.Provider.Project(),
-		"Region":         ctx.Provider.Region(),
-		"Context":        ctx.Provider.Context(),
-		"Config":         ctx.Config,
-		"RepoUrl":        ctx.RepoUrl,
-		"Identifier":     ctx.identifier(),
+		"Bucket":         c.Provider.Bucket(),
+		"Project":        c.Provider.Project(),
+		"Region":         c.Provider.Region(),
+		"Context":        c.Provider.Context(),
+		"Config":         c.Config,
+		"RepoUrl":        c.RepoUrl,
+		"Identifier":     c.identifier(),
 		"Acme":           eabCredential,
-		"StacksIdentity": ctx.StacksIdentity,
-		"RequireDB":      !ctx.Cloud,
-		"CloudCluster":   ctx.CloudCluster,
-		"Cloud":          ctx.Cloud,
+		"StacksIdentity": c.StacksIdentity,
+		"RequireDB":      !c.Cloud,
+		"CloudCluster":   c.CloudCluster,
+		"Cloud":          c.Cloud,
 		"ClusterName":    cluster,
-		"ProjectID":      ctx.Provider.Project(),
-		"GitUsername":    ctx.GitUsername,
-		"GitPassword":    ctx.GitPassword,
+		"ProjectID":      c.Provider.Project(),
+		"GitUsername":    c.GitUsername,
+		"GitPassword":    c.GitPassword,
 	}
-	if ctx.Manifest.Network != nil {
-		values["Subdomain"] = ctx.Manifest.Network.Subdomain
-		values["Network"] = ctx.Manifest.Network
+	if c.Manifest.Network != nil {
+		values["Subdomain"] = c.Manifest.Network.Subdomain
+		values["Network"] = c.Manifest.Network
 	}
-	if ctx.Manifest.AppDomain != "" {
-		values["AppDomain"] = ctx.Manifest.AppDomain
+	if c.Manifest.AppDomain != "" {
+		values["AppDomain"] = c.Manifest.AppDomain
 	}
 
 	tpl := template.New("tpl").Funcs(plrltpl.GetFuncMap())
-	if ctx.Delims != nil {
-		tpl.Delims(ctx.Delims.left, ctx.Delims.right)
+	if c.Delims != nil {
+		tpl.Delims(c.Delims.left, c.Delims.right)
 	}
 
 	readyTpl, err := tpl.Parse(tmplate)
