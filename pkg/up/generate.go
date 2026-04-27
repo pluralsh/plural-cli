@@ -79,7 +79,11 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters", overwrite: true},
 		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster", overwrite: true},
 		{from: ctx.path("setup"), to: "bootstrap", overwrite: true},
+<<<<<<< Updated upstream
 		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
+=======
+		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra", overwrite: true},
+>>>>>>> Stashed changes
 		{from: ctx.path("templates"), to: "templates", overwrite: true},
 		{from: ctx.path("services"), to: "services", overwrite: true},
 		{from: ctx.path("helm"), to: "helm", overwrite: true},
