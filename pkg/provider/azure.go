@@ -484,6 +484,15 @@ func AzureDNSZones(ctx context.Context, resourceGroup string) ([]string, error) 
 		return nil, err
 	}
 
+	// If the resource group doesn't exist yet, there are no DNS zones to list.
+	_, err = clients.Groups.Get(ctx, resourceGroup, nil)
+	if err != nil {
+		if isNotFoundResourceGroup(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	var zones []string
 	pager := clients.Zones.NewListByResourceGroupPager(resourceGroup, nil)
 	for pager.More() {
