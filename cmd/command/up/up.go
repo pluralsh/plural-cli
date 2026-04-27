@@ -278,6 +278,11 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 			break
 		}
 
+		// Skip domain setup if no DNS zones exist in the resource group.
+		if len(dnsZones) == 0 {
+			break
+		}
+
 		if err := survey.AskOne(
 			&survey.Select{Message: "Select DNS zone (leave as None to skip):", Options: append([]string{noneOption}, dnsZones...)},
 			&domain,
