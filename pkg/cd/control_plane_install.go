@@ -120,13 +120,10 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 		configuration[k] = v
 	}
 
-	cryptos, err := cryptoVals()
-	if err != nil {
-		return "", err
-	}
-
-	for k, v := range cryptos {
-		configuration[k] = v
+	if cryptos, err := cryptoVals(); err == nil {
+		for k, v := range cryptos {
+			configuration[k] = v
+		}
 	}
 
 	clientId, clientSecret, err := ensureInstalledAndOidc(client, consoleDns)
