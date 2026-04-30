@@ -8,10 +8,10 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 )
 
-func (ctx *Context) Prune() error {
-	if ctx.Cloud {
-		return ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:cloud", func() error {
-			return ctx.pruneCloud()
+func (c *Context) Prune() error {
+	if c.Cloud {
+		return c.runCheckpoint(c.Manifest.Checkpoint, "prune:cloud", func() error {
+			return c.pruneCloud()
 		})
 	}
 
@@ -20,7 +20,7 @@ func (ctx *Context) Prune() error {
 		return err
 	}
 
-	if err := ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:mgmt", func() error {
+	if err := c.runCheckpoint(c.Manifest.Checkpoint, "prune:mgmt", func() error {
 		utils.Highlight("\nCleaning up unneeded resources...\n\n")
 
 		toRemove := []string{
@@ -53,7 +53,7 @@ func (ctx *Context) Prune() error {
 	return git.Sync(repoRoot, "Post-setup resource cleanup", true)
 }
 
-func (ctx *Context) pruneCloud() error {
+func (c *Context) pruneCloud() error {
 	utils.Highlight("\nCleaning up unneeded resources...\n\n")
 	repoRoot, err := git.Root()
 	if err != nil {
@@ -81,8 +81,8 @@ func stateRmBestEffort(dir, field string) {
 
 // pruneBYOK removes the bootstrap helm/null resources from terraform state and
 // cleans up the one-shot files used during installation (no cloud infra to touch).
-func (ctx *Context) pruneBYOK() error {
-	return ctx.runCheckpoint(ctx.Manifest.Checkpoint, "prune:mgmt", func() error {
+func (c *Context) pruneBYOK() error {
+	return c.runCheckpoint(c.Manifest.Checkpoint, "prune:mgmt", func() error {
 		utils.Highlight("\nCleaning up unneeded resources...\n\n")
 
 		// These may or may not be in state depending on install_prereqs value.

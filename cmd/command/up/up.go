@@ -122,12 +122,11 @@ func (p *Plural) handleUp(c *cli.Context) error {
 		return err
 	}
 
-	ctx, err := up.Build(c.Bool("cloud"))
-	ctx.IgnorePreflights(c.Bool("ignore-preflights") || c.Bool("dry-run"))
-
+	ctx, err := up.Build(cloud)
 	if err != nil {
 		return err
 	}
+	ctx.IgnorePreflights(c.Bool("ignore-preflights") || dryRun)
 
 	byok := ctx.Provider.Name() == api.BYOK
 

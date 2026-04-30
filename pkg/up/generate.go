@@ -21,13 +21,13 @@ type templatePair struct {
 }
 
 //nolint:gocyclo
-func (ctx *Context) Generate(gitRef string) (dir string, err error) {
-	if ctx.Provider.Name() == api.BYOK && ctx.Cloud {
+func (c *Context) Generate(gitRef string) (dir string, err error) {
+	if c.Provider.Name() == api.BYOK && c.Cloud {
 		return "", nil
 	}
 	dir, err = os.MkdirTemp("", "sampledir")
-	ctx.dir = dir
-	hasDomain := ctx.Manifest.AppDomain != ""
+	c.dir = dir
+	hasDomain := c.Manifest.AppDomain != ""
 	if err != nil {
 		return
 	}
@@ -36,23 +36,23 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		return
 	}
 
-	prov := ctx.Provider.Name()
+	prov := c.Provider.Name()
 	tpls := []templatePair{
-		{from: ctx.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
-		{from: ctx.path("charts/runtime/values.yaml.liquid.tpl"), to: "./helm/runtime.yaml.liquid", overwrite: true},
-		{from: ctx.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
-		{from: ctx.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
-		{from: ctx.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
-		{from: ctx.path(fmt.Sprintf("templates/providers/apps/%s.tf", prov)), to: "terraform/apps/provider.tf", cloudless: true},
-		{from: ctx.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf", cloud: true},
-		{from: ctx.path("templates/setup/cd.tf"), to: "terraform/apps/cd.tf"},
-		{from: ctx.path("README.md"), to: "README.md", overwrite: true},
+		{from: c.path("charts/runtime/values.yaml.tpl"), to: "./temp/helm/runtime.yaml", overwrite: true},
+		{from: c.path("charts/runtime/values.yaml.liquid.tpl"), to: "./helm/runtime.yaml.liquid", overwrite: true},
+		{from: c.path(fmt.Sprintf("templates/providers/bootstrap/%s.tf", prov)), to: "terraform/mgmt/provider.tf"},
+		{from: c.path(fmt.Sprintf("templates/setup/providers/%s.tf", prov)), to: "terraform/mgmt/mgmt.tf"},
+		{from: c.path("templates/setup/console.tf"), to: "terraform/mgmt/console.tf", cloudless: true},
+		{from: c.path(fmt.Sprintf("templates/providers/apps/%s.tf", prov)), to: "terraform/apps/provider.tf", cloudless: true},
+		{from: c.path("templates/providers/apps/cloud.tf"), to: "terraform/apps/provider.tf", cloud: true},
+		{from: c.path("templates/setup/cd.tf"), to: "terraform/apps/cd.tf"},
+		{from: c.path("README.md"), to: "README.md", overwrite: true},
 	}
 
 	if prov == api.ProviderGCP {
-		tpls = append(tpls, templatePair{from: ctx.path("templates/setup/config_secrets_gcp.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
+		tpls = append(tpls, templatePair{from: c.path("templates/setup/config_secrets_gcp.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
 	} else {
-		tpls = append(tpls, templatePair{from: ctx.path("templates/setup/config_secrets.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
+		tpls = append(tpls, templatePair{from: c.path("templates/setup/config_secrets.tf"), to: "terraform/mgmt/config_secrets.tf", cloudless: true})
 	}
 
 	for _, tpl := range tpls {
@@ -61,36 +61,36 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 			continue
 		}
 
-		if tpl.cloudless && ctx.Cloud {
+		if tpl.cloudless && c.Cloud {
 			continue
 		}
 
-		if tpl.cloud && !ctx.Cloud {
+		if tpl.cloud && !c.Cloud {
 			continue
 		}
 
-		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+		if err = c.templateFrom(tpl.from, tpl.to); err != nil {
 			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
 			return
 		}
 	}
 
 	copies := []templatePair{
-		{from: ctx.path("terraform/modules/clusters"), to: "terraform/modules/clusters", overwrite: true},
-		{from: ctx.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster", overwrite: true},
-		{from: ctx.path("setup"), to: "bootstrap", overwrite: true},
-		{from: ctx.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
-		{from: ctx.path("templates"), to: "templates", overwrite: true},
-		{from: ctx.path("services"), to: "services", overwrite: true},
-		{from: ctx.path("helm"), to: "helm", overwrite: true},
+		{from: c.path("terraform/modules/clusters"), to: "terraform/modules/clusters", overwrite: true},
+		{from: c.path(fmt.Sprintf("terraform/clouds/%s", prov)), to: "terraform/mgmt/cluster", overwrite: true},
+		{from: c.path("setup"), to: "bootstrap", overwrite: true},
+		{from: c.path(fmt.Sprintf("terraform/core-infra/%s", prov)), to: "terraform/core-infra"},
+		{from: c.path("templates"), to: "templates", overwrite: true},
+		{from: c.path("services"), to: "services", overwrite: true},
+		{from: c.path("helm"), to: "helm", overwrite: true},
 	}
 
-	if ctx.Cloud {
-		copies = append(copies, templatePair{from: ctx.path("o11y"), to: "bootstrap/o11y"})
+	if c.Cloud {
+		copies = append(copies, templatePair{from: c.path("o11y"), to: "bootstrap/o11y"})
 	}
 
 	if hasDomain {
-		copies = append(copies, templatePair{from: ctx.path("network"), to: "bootstrap/network"})
+		copies = append(copies, templatePair{from: c.path("network"), to: "bootstrap/network"})
 	}
 
 	for _, copy := range copies {
@@ -119,14 +119,14 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		if !utils.Exists(tpl.from) {
 			continue
 		}
-		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+		if err = c.templateFrom(tpl.from, tpl.to); err != nil {
 			err = fmt.Errorf("failed to template %s: %w (you might need to regenerate your repo from scratch if partially applied)", tpl.from, err)
 			return
 		}
 	}
 
 	toRemove := make([]string, 0)
-	if ctx.Cloud {
+	if c.Cloud {
 		toRemove = append(toRemove, "bootstrap/console.yaml")
 	}
 
@@ -142,7 +142,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 		os.Remove(f)
 	}
 
-	ctx.changeDelims()
+	c.changeDelims()
 	overwrites := []templatePair{
 		{from: "bootstrap", to: "bootstrap"},
 	}
@@ -161,7 +161,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 				}
 
 				destFile = filepath.Join(tpl.to, destFile)
-				if err = ctx.templateFrom(file, destFile); err != nil {
+				if err = c.templateFrom(file, destFile); err != nil {
 					err = fmt.Errorf("failed to template %s: %w", file, err)
 					return dir, err
 				}
@@ -170,7 +170,7 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 			continue
 		}
 
-		if err = ctx.templateFrom(tpl.from, tpl.to); err != nil {
+		if err = c.templateFrom(tpl.from, tpl.to); err != nil {
 			return
 		}
 	}
@@ -178,17 +178,17 @@ func (ctx *Context) Generate(gitRef string) (dir string, err error) {
 	return
 }
 
-func (ctx *Context) afterSetup() error {
-	prov := ctx.Provider.Name()
+func (c *Context) afterSetup() error {
+	prov := c.Provider.Name()
 	overwrites := []templatePair{
-		{from: ctx.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "bootstrap/stacks/serviceaccount.yaml"},
+		{from: c.path(fmt.Sprintf("templates/setup/stacks/%s.yaml", prov)), to: "bootstrap/stacks/serviceaccount.yaml"},
 		{from: "bootstrap/stacks/mgmt.yaml", to: "bootstrap/stacks/mgmt.yaml"},
 		{from: "bootstrap/stacks/core-infra.yaml", to: "bootstrap/stacks/core-infra.yaml"},
 	}
 
-	ctx.Delims = nil
+	c.Delims = nil
 	for _, tpl := range overwrites {
-		if err := ctx.templateFrom(tpl.from, tpl.to); err != nil {
+		if err := c.templateFrom(tpl.from, tpl.to); err != nil {
 			err = fmt.Errorf("failed to template %s: %w", tpl.from, err)
 			return err
 		}
@@ -199,7 +199,7 @@ func (ctx *Context) afterSetup() error {
 	}
 
 	for _, redact := range redacts {
-		if err := ctx.redact(redact.from); err != nil {
+		if err := c.redact(redact.from); err != nil {
 			return err
 		}
 	}
@@ -210,7 +210,7 @@ func (ctx *Context) afterSetup() error {
 
 	for _, uncomment := range uncomments {
 		if utils.Exists(uncomment.from) {
-			if err := ctx.uncomment(uncomment.from); err != nil {
+			if err := c.uncomment(uncomment.from); err != nil {
 				return err
 			}
 		}
@@ -219,6 +219,6 @@ func (ctx *Context) afterSetup() error {
 	return nil
 }
 
-func (ctx *Context) path(p string) string {
-	return filepath.Join(ctx.dir, p)
+func (c *Context) path(p string) string {
+	return filepath.Join(c.dir, p)
 }
