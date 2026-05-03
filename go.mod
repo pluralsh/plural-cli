@@ -29,7 +29,7 @@ require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/chartmuseum/helm-push v0.11.1
 	github.com/fatih/color v1.18.0
-	github.com/go-git/go-git/v5 v5.17.1
+	github.com/go-git/go-git/v5 v5.18.0
 	github.com/gofrs/flock v0.13.0
 	github.com/google/go-containerregistry v0.20.3
 	github.com/google/go-github/v45 v45.2.0
