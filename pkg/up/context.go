@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,7 +19,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 
 	"github.com/mitchellh/go-homedir"
-	giturls "github.com/whilp/git-urls"
 )
 
 type Context struct {
@@ -48,7 +48,7 @@ func (c *Context) identifier() string {
 	}
 
 	if strings.HasPrefix(c.RepoUrl, "http") {
-		parsed, err := giturls.Parse(c.RepoUrl)
+		parsed, err := url.Parse(c.RepoUrl)
 		if err == nil {
 			return strings.TrimSuffix(strings.TrimPrefix(parsed.Path, "/"), ".git")
 		}
@@ -274,18 +274,26 @@ var (
 	scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9-._~]+@)?([a-zA-Z0-9._-]+):([a-zA-Z0-9./._-]+)(?:\?||$)(.*)$`)
 )
 
-func getGitUsername(url string) string {
-	match := scpSyntax.FindAllStringSubmatch(url, -1)
+func getGitUsername(gitURL string) string {
+	// Try SCP-like syntax first (e.g., git@github.com:user/repo.git)
+	match := scpSyntax.FindAllStringSubmatch(gitURL, -1)
 	if len(match) > 0 {
 		if match[0][1] != "" {
 			return strings.TrimRight(match[0][1], "@")
 		}
 	}
 
-	uname := "git"
-	parsedUrl, err := giturls.Parse(url)
-	if err == nil {
-		uname = parsedUrl.User.Username()
+	// Try parsing as a standard URL (HTTP/HTTPS/SSH)
+	parsedURL, err := url.Parse(gitURL)
+	if err == nil && parsedURL.User != nil {
+		return parsedURL.User.Username()
 	}
-	return uname
+
+	// For ssh:// URLs without explicit user or unparseable URLs, default to "git"
+	if err == nil && parsedURL.Scheme == "ssh" {
+		return "git"
+	}
+
+	// For other URLs (HTTPS without user), return empty string
+	return ""
 }
