@@ -2,6 +2,7 @@ package up
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,7 +19,6 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
 
 	"github.com/mitchellh/go-homedir"
-	giturls "github.com/whilp/git-urls"
 )
 
 type Context struct {
@@ -42,13 +42,37 @@ type delims struct {
 	right string
 }
 
+// gitURL represents a parsed git URL
+type gitURL struct {
+	Path     string
+	Username string
+}
+
+// parseGitURL parses a git URL (HTTP/HTTPS/SCP-style) and extracts the path and username.
+// This replaces the functionality previously provided by github.com/whilp/git-urls.
+func parseGitURL(rawURL string) (*gitURL, error) {
+	// Try to parse as a standard URL (handles http:// and https://)
+	if parsed, err := url.Parse(rawURL); err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https" || parsed.Scheme == "ssh") {
+		result := &gitURL{
+			Path: parsed.Path,
+		}
+		if parsed.User != nil {
+			result.Username = parsed.User.Username()
+		}
+		return result, nil
+	}
+
+	// Not a standard URL, return error
+	return nil, fmt.Errorf("unable to parse git URL: %s", rawURL)
+}
+
 func (c *Context) identifier() string {
 	if c.RepoUrl == "" {
 		return ""
 	}
 
 	if strings.HasPrefix(c.RepoUrl, "http") {
-		parsed, err := giturls.Parse(c.RepoUrl)
+		parsed, err := parseGitURL(c.RepoUrl)
 		if err == nil {
 			return strings.TrimSuffix(strings.TrimPrefix(parsed.Path, "/"), ".git")
 		}
@@ -283,9 +307,9 @@ func getGitUsername(url string) string {
 	}
 
 	uname := "git"
-	parsedUrl, err := giturls.Parse(url)
+	parsedUrl, err := parseGitURL(url)
 	if err == nil {
-		uname = parsedUrl.User.Username()
+		uname = parsedUrl.Username
 	}
 	return uname
 }
