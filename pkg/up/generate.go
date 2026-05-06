@@ -127,7 +127,7 @@ func (c *Context) Generate(gitRef string) (dir string, err error) {
 
 	toRemove := make([]string, 0)
 	if c.Cloud {
-		toRemove = append(toRemove, "bootstrap/console.yaml")
+		toRemove = append(toRemove, "bootstrap/console.yaml", "bootstrap/runtime.yaml")
 	}
 
 	if !hasDomain {
@@ -143,9 +143,7 @@ func (c *Context) Generate(gitRef string) (dir string, err error) {
 	}
 
 	c.changeDelims()
-	overwrites := []templatePair{
-		{from: "bootstrap", to: "bootstrap"},
-	}
+	overwrites := []templatePair{{from: "bootstrap", to: "bootstrap"}}
 
 	for _, tpl := range overwrites {
 		if utils.IsDir(tpl.from) {
