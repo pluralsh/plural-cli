@@ -18,6 +18,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/console/errors"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
@@ -112,6 +113,10 @@ func (p *Plural) cdClusterCommands() []cli.Command {
 				cli.StringFlag{
 					Name:  "metadata",
 					Usage: "Path to metadata file, or '-' to read from stdin",
+				},
+				cli.BoolFlag{
+					Name:  "confirm",
+					Usage: "print the current kubeconfig API server and prompt before creating the cluster and installing the agent",
 				},
 			},
 		},
@@ -470,6 +475,18 @@ func (p *Plural) handleClusterReinstall(c *cli.Context) error {
 func (p *Plural) handleClusterBootstrap(c *cli.Context) error {
 	if err := p.InitConsoleClient(consoleToken, consoleURL); err != nil {
 		return err
+	}
+
+	restConf, err := kubernetes.KubeConfig()
+	if err != nil {
+		return err
+	}
+	utils.Highlight("Current Kubernetes API server to install the agent on: %s\n", restConf.Host)
+
+	if c.Bool("confirm") {
+		if !common.Affirm("Do you want to deploy the agent to this cluster?", "PLURAL_CD_BOOTSTRAP_AFFIRM_CLUSTER") {
+			return nil
+		}
 	}
 
 	attrs := gqlclient.ClusterAttributes{Name: c.String("name")}

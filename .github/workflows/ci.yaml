@@ -33,8 +33,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9.2.0
         with:
-          version: latest
           skip-cache: true
+          version: v2.11.4
 
   contract-validation:
     name: Validate PR Contracts
