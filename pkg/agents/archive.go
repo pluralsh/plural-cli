@@ -46,9 +46,9 @@ func (in TarGzipArchiveReader) ReadManifest(path string) (*SessionManifest, erro
 		if err := json.NewDecoder(reader).Decode(&manifest); err != nil {
 			return fmt.Errorf("decode session manifest: %w", err)
 		}
-		return foundManifest{manifest: &manifest}
+		return foundManifestError{manifest: &manifest}
 	})
-	if found, ok := errors.AsType[foundManifest](err); ok {
+	if found, ok := errors.AsType[foundManifestError](err); ok {
 		return found.manifest, nil
 	}
 	if err != nil {
@@ -212,10 +212,10 @@ func (in TarGzipArchiveReader) subtreeRel(name, archivePath string) (string, boo
 	return strings.TrimPrefix(name, archivePath+"/"), strings.HasPrefix(name, archivePath+"/")
 }
 
-type foundManifest struct {
+type foundManifestError struct {
 	manifest *SessionManifest
 }
 
-func (f foundManifest) Error() string { return "found manifest" }
+func (f foundManifestError) Error() string { return "found manifest" }
 
 var errFoundEntry = fmt.Errorf("found archive entry")
