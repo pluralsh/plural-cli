@@ -55,6 +55,8 @@ type ConsoleClient interface {
 	CreateNotificationSinks(attr consoleclient.NotificationSinkAttributes) (*consoleclient.NotificationSinkFragment, error)
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
+	GetAgentRun(id string) (*consoleclient.AgentRunMinimalFragment, error)
+	ListAgentRuns(first int64) ([]*consoleclient.AgentRunMinimalFragment, error)
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)

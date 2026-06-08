@@ -13,6 +13,66 @@ type ConsoleClient struct {
 	mock.Mock
 }
 
+// GetAgentRun provides a mock function with given fields: id
+func (_m *ConsoleClient) GetAgentRun(id string) (*client.AgentRunFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAgentRun")
+	}
+
+	var r0 *client.AgentRunFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.AgentRunFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.AgentRunFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.AgentRunFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListAgentRuns provides a mock function with given fields: first
+func (_m *ConsoleClient) ListAgentRuns(first int64) ([]*client.AgentRunFragment, error) {
+	ret := _m.Called(first)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAgentRuns")
+	}
+
+	var r0 []*client.AgentRunFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int64) ([]*client.AgentRunFragment, error)); ok {
+		return rf(first)
+	}
+	if rf, ok := ret.Get(0).(func(int64) []*client.AgentRunFragment); ok {
+		r0 = rf(first)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*client.AgentRunFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int64) error); ok {
+		r1 = rf(first)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AgentUrl provides a mock function with given fields: id
 func (_m *ConsoleClient) AgentUrl(id string) (string, error) {
 	ret := _m.Called(id)
