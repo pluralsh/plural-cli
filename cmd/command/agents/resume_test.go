@@ -2,10 +2,15 @@ package agents
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	consoleclient "github.com/pluralsh/console/go/client"
+
+	pkgagents "github.com/pluralsh/plural-cli/pkg/agents"
 )
 
 func TestAgentRunSelectorLabelOmitsBranch(t *testing.T) {
@@ -104,6 +109,63 @@ func TestDisplayRunPullRequestRefFallsBackToID(t *testing.T) {
 	}
 }
 
+func TestPromptRepoPathUsesCurrentMatchingRepository(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not available")
+	}
+
+	repo := initGitRepo(t, "git@github.com:pluralsh/plural.git")
+	chdir(t, repo)
+
+	interaction := &testInteraction{}
+	service := &Service{
+		interaction: interaction,
+		repository:  pkgagents.NewGitRepository(nil, nil),
+	}
+	path, err := service.promptRepoPath(&pkgagents.SessionManifest{
+		Repository: "https://github.com/pluralsh/plural.git",
+	})
+	if err != nil {
+		t.Fatalf("promptRepoPath returned error: %v", err)
+	}
+	if path != repo {
+		t.Fatalf("expected current repository path %q, got %q", repo, path)
+	}
+	if interaction.directoryMessage != "" {
+		t.Fatalf("expected directory prompt to be skipped, got %q", interaction.directoryMessage)
+	}
+}
+
+func TestPromptRepoPathPromptsWhenCurrentRepositoryDoesNotMatch(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not available")
+	}
+
+	repo := initGitRepo(t, "git@github.com:pluralsh/other.git")
+	chdir(t, repo)
+
+	interaction := &testInteraction{}
+	service := &Service{
+		interaction: interaction,
+		repository:  pkgagents.NewGitRepository(nil, nil),
+	}
+	path, err := service.promptRepoPath(&pkgagents.SessionManifest{
+		Repository: "git@github.com:pluralsh/plural.git",
+	})
+	if err != nil {
+		t.Fatalf("promptRepoPath returned error: %v", err)
+	}
+	if path != repo {
+		t.Fatalf("expected prompted default path %q, got %q", repo, path)
+	}
+	if interaction.directoryMessage == "" {
+		t.Fatalf("expected directory prompt when current repository does not match")
+	}
+	if interaction.directoryDefault != repo {
+		t.Fatalf("expected prompt default %q, got %q", repo, interaction.directoryDefault)
+	}
+}
+
 func TestSelectPullRequestUsesSingleRefWithoutPrompt(t *testing.T) {
 	ref := "plrl/run-1"
 	service := &Service{interaction: &testInteraction{}}
@@ -150,9 +212,11 @@ func TestSelectPullRequestPromptsForMultipleRefs(t *testing.T) {
 }
 
 type testInteraction struct {
-	selectMessage string
-	selectOptions []string
-	selectResult  string
+	selectMessage    string
+	selectOptions    []string
+	selectResult     string
+	directoryMessage string
+	directoryDefault string
 }
 
 func (i *testInteraction) Confirm(string, bool) (bool, error) {
@@ -168,6 +232,44 @@ func (i *testInteraction) Select(message string, options []string) (string, erro
 	return i.selectResult, nil
 }
 
-func (i *testInteraction) Directory(_, def string) (string, error) {
+func (i *testInteraction) Directory(message, def string) (string, error) {
+	i.directoryMessage = message
+	i.directoryDefault = def
 	return def, nil
+}
+
+func initGitRepo(t *testing.T, origin string) string {
+	t.Helper()
+	repo := filepath.Join(t.TempDir(), "repo")
+	if err := os.MkdirAll(repo, 0755); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, repo, "init")
+	runGit(t, repo, "remote", "add", "origin", origin)
+	return repo
+}
+
+func chdir(t *testing.T, dir string) {
+	t.Helper()
+	previous, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(previous); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func runGit(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git %s failed: %v\n%s", strings.Join(args, " "), err, string(out))
+	}
 }

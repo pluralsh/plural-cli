@@ -24,6 +24,7 @@ type Service struct {
 	client      *client.Plural
 	session     *pkgagents.SessionService
 	interaction pkgagents.Interaction
+	repository  *pkgagents.GitRepository
 }
 
 func NewService(client *client.Plural) *Service {
@@ -32,6 +33,7 @@ func NewService(client *client.Plural) *Service {
 		client:      client,
 		interaction: interaction,
 		session:     pkgagents.NewSessionService(pkgagents.WithSessionInteraction(interaction)),
+		repository:  pkgagents.NewGitRepository(nil, nil),
 	}
 	return service
 }
@@ -154,7 +156,14 @@ func (s *Service) selectorLabel(run *consoleclient.AgentRunMinimalFragment) stri
 
 func (s *Service) promptRepoPath(manifest *pkgagents.SessionManifest) (string, error) {
 	def, err := gitutils.Root()
-	if err != nil || def == "" {
+	if err == nil && def != "" {
+		if s.repository == nil {
+			s.repository = pkgagents.NewGitRepository(nil, nil)
+		}
+		if err := s.repository.ValidateRepository(def, manifest); err == nil {
+			return def, nil
+		}
+	} else {
 		def = "."
 	}
 	return s.interaction.Directory(s.localClonePrompt(manifest.Repository), def)

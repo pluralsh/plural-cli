@@ -18,6 +18,10 @@ func (r *testRepository) Prepare(_ context.Context, _ *console.AgentRunMinimalFr
 	return "prepared-branch", nil
 }
 
+func (r *testRepository) ValidateRepository(_ string, _ *SessionManifest) error {
+	return nil
+}
+
 func (r *testRepository) Validate(_ string, manifest *SessionManifest) error {
 	r.validated = true
 	r.validatedBranch = manifest.Branch

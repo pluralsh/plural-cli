@@ -18,6 +18,8 @@ import (
 type Repository interface {
 	// Prepare checks out or creates the branch that should be used for resume.
 	Prepare(ctx context.Context, run *console.AgentRunMinimalFragment, bundle *SessionBundle, repoPath string) (string, error)
+	// ValidateRepository verifies the local repository origin matches the session manifest.
+	ValidateRepository(repoPath string, manifest *SessionManifest) error
 	// Validate verifies the local repository matches the session manifest.
 	Validate(repoPath string, manifest *SessionManifest) error
 }
@@ -47,6 +49,9 @@ func (p *GitRepository) Prepare(ctx context.Context, run *console.AgentRunMinima
 			return "", err
 		}
 		branch := p.localBranchName(ref)
+		if currentBranch, err := p.currentBranch(repoPath); err == nil && currentBranch == branch {
+			return branch, nil
+		}
 		confirmed, err := p.confirmAction(fmt.Sprintf("Checkout branch %s in the selected local clone before resuming?", branch))
 		if err != nil {
 			return "", err
@@ -80,6 +85,11 @@ func (p *GitRepository) Prepare(ctx context.Context, run *console.AgentRunMinima
 		return "", err
 	}
 	return branch, nil
+}
+
+// ValidateRepository ensures the selected directory is the expected repository.
+func (p *GitRepository) ValidateRepository(repoPath string, manifest *SessionManifest) error {
+	return p.validate(repoPath, manifest, false)
 }
 
 // Validate ensures the selected directory is the expected repository and, when
@@ -215,6 +225,10 @@ func (p *GitRepository) ensureClean(repoPath string) error {
 func (p *GitRepository) localBranchExists(repoPath, branch string) bool {
 	_, err := p.git(repoPath, "show-ref", "--verify", "--quiet", "refs/heads/"+branch)
 	return err == nil
+}
+
+func (p *GitRepository) currentBranch(repoPath string) (string, error) {
+	return p.git(repoPath, "rev-parse", "--abbrev-ref", "HEAD")
 }
 
 func (p *GitRepository) downloadPatch(ctx context.Context, url, path string) error {
