@@ -105,7 +105,7 @@ func configuration(pr *v1alpha1.PrAutomation, contextFile string) (map[string]in
 		if t.Condition != nil {
 			condition := &api.Condition{
 				Field:     t.Condition.Field,
-				Operation: t.Condition.String(),
+				Operation: t.Condition.Operation.String(),
 			}
 			if t.Condition.Value != nil {
 				condition.Value = *t.Condition.Value

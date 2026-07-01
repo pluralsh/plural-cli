@@ -1,6 +1,7 @@
 package plural
 
 import (
+	agentscmd "github.com/pluralsh/plural-cli/cmd/command/agents"
 	"github.com/pluralsh/plural-cli/cmd/command/api"
 	"github.com/pluralsh/plural-cli/cmd/command/auth"
 	"github.com/pluralsh/plural-cli/cmd/command/cd"
@@ -105,6 +106,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 	commands := make([]cli.Command, 0, 15+len(plural.getCommands()))
 	commands = append(commands,
 		api.Command(plural.Plural),
+		agentscmd.Command(plural.Plural),
 		auth.Command(plural.Plural),
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		config.Command(),
