@@ -12,7 +12,6 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/pkg/utils/pathing"
-	platformv1alpha1 "github.com/pluralsh/plural-operator/apis/platform/v1alpha1"
 	pluralv1alpha1 "github.com/pluralsh/plural-operator/generated/client/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -52,10 +51,6 @@ type Kube interface {
 	Node(name string) (*v1.Node, error)
 	Nodes() (*v1.NodeList, error)
 	FinalizeNamespace(namespace string) error
-	LogTailList(namespace string) (*platformv1alpha1.LogTailList, error)
-	LogTail(namespace string, name string) (*platformv1alpha1.LogTail, error)
-	ProxyList(namespace string) (*platformv1alpha1.ProxyList, error)
-	Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error)
 	Apply(path string, force bool) error
 	CreateNamespace(namespace string, managedByPlural bool) error
 	GetClient() *kubernetes.Clientset
@@ -192,26 +187,6 @@ func (k *kube) FinalizeNamespace(namespace string) error {
 	ns.Spec.Finalizers = []v1.FinalizerName{}
 	_, err = client.Finalize(ctx, ns, metav1.UpdateOptions{})
 	return err
-}
-
-func (k *kube) LogTailList(namespace string) (*platformv1alpha1.LogTailList, error) {
-	ctx := context.Background()
-	return k.Plural.PlatformV1alpha1().LogTails(namespace).List(ctx, metav1.ListOptions{})
-}
-
-func (k *kube) LogTail(namespace string, name string) (*platformv1alpha1.LogTail, error) {
-	ctx := context.Background()
-	return k.Plural.PlatformV1alpha1().LogTails(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (k *kube) ProxyList(namespace string) (*platformv1alpha1.ProxyList, error) {
-	ctx := context.Background()
-	return k.Plural.PlatformV1alpha1().Proxies(namespace).List(ctx, metav1.ListOptions{})
-}
-
-func (k *kube) Proxy(namespace string, name string) (*platformv1alpha1.Proxy, error) {
-	ctx := context.Background()
-	return k.Plural.PlatformV1alpha1().Proxies(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func (k *kube) GetClient() *kubernetes.Clientset {

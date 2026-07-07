@@ -62,7 +62,7 @@ func PrintTable[T any](list []T, headers []string, rowFun func(T) ([]string, err
 	length := len(headers)
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(headers)
+	table.Header(headers)
 	for _, v := range list {
 		row, err := rowFun(v)
 		if err != nil {
