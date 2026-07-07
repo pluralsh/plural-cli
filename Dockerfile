@@ -35,7 +35,7 @@ FROM golang:1.26.4-alpine3.22 AS final
 
 WORKDIR /
 
-RUN apk update && apk add --no-cache git build-base
+RUN apk update && apk add --no-cache git build-base libssl3=3.5.7-r0 libcrypto3=3.5.7-r0
 
 # Copy nonroot user and switch to it
 COPY --from=user /etc/passwd /etc/passwd
