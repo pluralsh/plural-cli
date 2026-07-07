@@ -47,7 +47,10 @@ func (b *Bitbucket) Init() error {
 	if err != nil {
 		return err
 	}
-	b.Client = bitbucket.NewOAuthbearerToken(accessToken.Token)
+	b.Client, err = bitbucket.NewOAuthbearerToken(accessToken.Token)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
