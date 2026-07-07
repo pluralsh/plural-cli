@@ -71,9 +71,13 @@ func PrintTable[T any](list []T, headers []string, rowFun func(T) ([]string, err
 		if len(row) != length {
 			return fmt.Errorf("row lengths don't align")
 		}
-		table.Append(row)
+		if err := table.Append(row); err != nil {
+			return err
+		}
 	}
-	table.Render()
+	if err := table.Render(); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -37,7 +38,9 @@ func (gl *Gitlab) Init() error {
 		return err
 	}
 
-	git, err := gitlab.NewOAuthClient(accessToken.Token)
+	git, err := gitlab.NewAuthSourceClient(gitlab.OAuthTokenSource{
+		TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken.Token}),
+	})
 	gl.Client = git
 	return err
 }
