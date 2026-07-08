@@ -5,6 +5,7 @@ import (
 	"github.com/pluralsh/oauth"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -37,7 +38,9 @@ func (gl *Gitlab) Init() error {
 		return err
 	}
 
-	git, err := gitlab.NewOAuthClient(accessToken.Token)
+	git, err := gitlab.NewAuthSourceClient(gitlab.OAuthTokenSource{
+		TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken.Token}),
+	})
 	gl.Client = git
 	return err
 }
@@ -65,7 +68,7 @@ func (gl *Gitlab) Setup() (con Context, err error) {
 	}
 
 	orgNames := make([]string, len(groups), len(groups)+1)
-	namespaces := make(map[string]int)
+	namespaces := make(map[string]int64)
 	for i, g := range groups {
 		orgNames[i] = g.Path
 		namespaces[g.Path] = g.ID
