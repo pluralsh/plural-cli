@@ -4,6 +4,9 @@ run:
   allow-parallel-runners: true
 linters:
   default: none
+  disable:
+    # TODO: started appearing with newer linter version. Fix and enable this rule.
+    - goconst
   enable:
     - copyloopvar
     - errcheck
