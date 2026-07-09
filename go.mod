@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.26.4
+go 1.26.5
 
 require (
 	cloud.google.com/go/compute v1.64.0
@@ -31,7 +31,7 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/gofrs/flock v0.13.0
-	github.com/google/go-containerregistry v0.21.7
+	github.com/google/go-containerregistry v0.21.8-0.20260624172245-e8b2b9e51df6
 	github.com/google/go-github/v45 v45.2.0
 	github.com/hashicorp/go-bexpr v0.1.16
 	github.com/ktrysmt/go-bitbucket v0.10.0
