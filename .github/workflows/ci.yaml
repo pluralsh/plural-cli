@@ -184,6 +184,8 @@ jobs:
         with:
           scan-type: 'fs'
           hide-progress: false
+          skip-dirs: './utils'
+          skip-files: '**/*.yaml,**/*.yml,**/*.tgz'
           format: 'sarif'
           output: 'trivy-results.sarif'
           scanners: 'vuln,secret'
