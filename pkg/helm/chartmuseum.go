@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
-	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"helm.sh/helm/v3/pkg/getter"
 )
@@ -44,21 +45,29 @@ func (c *ChartMuseum) Get(fileUrl string, options ...getter.Option) (*bytes.Buff
 	parsedURL.Path = strings.Join(parts[:numParts-numRemoveParts], "/")
 	parsedURL.Scheme = "https"
 	conf := config.Read()
-	client, err := cm.NewClient(
-		cm.URL(parsedURL.String()),
-		cm.AccessToken(conf.Token),
-	)
-
+	req, err := http.NewRequest(http.MethodGet, parsedURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.DownloadFile(filePath)
+	req.URL.Path = path.Join(req.URL.Path, filePath)
+	if conf.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+conf.Token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		body, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("failed to download chart %s: status %s", fileUrl, resp.Status)
+		}
+		return nil, fmt.Errorf("failed to download chart %s: status %s: %s", fileUrl, resp.Status, strings.TrimSpace(string(body)))
+	}
 	var buff bytes.Buffer
 	_, err = io.Copy(&buff, resp.Body)
 	return &buff, err
