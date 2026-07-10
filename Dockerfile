@@ -1,4 +1,4 @@
-FROM ubuntu:22.10 AS user
+FROM ubuntu:kinetic-20230624 AS user
 
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
