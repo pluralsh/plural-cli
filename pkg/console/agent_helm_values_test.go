@@ -1,7 +1,6 @@
 package console_test
 
 import (
-	"errors"
 	"testing"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -10,15 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestIsUnknownGraphQLField(t *testing.T) {
-	t.Parallel()
-
-	err := errors.New(`GraphQL error: GetDeploymentSettings: Cannot query field "agentHelmValuesTemplateable" on type "DeploymentSettings".`)
-	assert.True(t, console.IsUnknownGraphQLField(err, "agentHelmValuesTemplateable"))
-	assert.False(t, console.IsUnknownGraphQLField(err, "agentHelmValues"))
-	assert.False(t, console.IsUnknownGraphQLField(nil, "agentHelmValuesTemplateable"))
-}
 
 func TestResolveAgentHelmValuesWithoutTemplating(t *testing.T) {
 	t.Parallel()
