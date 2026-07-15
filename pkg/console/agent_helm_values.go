@@ -64,8 +64,12 @@ func clusterBindings(cluster *gqlclient.ClusterFragment) map[string]interface{} 
 		"Tags":           clusterTagsMap(cluster.Tags),
 	}
 
+	lowercase := make(map[string]interface{}, len(res))
 	for k, v := range res {
-		res[strings.ToLower(k)] = v
+		lowercase[strings.ToLower(k)] = v
+	}
+	for k, v := range lowercase {
+		res[k] = v
 	}
 	res["kasUrl"] = cluster.KasURL
 	res["currentVersion"] = cluster.CurrentVersion
