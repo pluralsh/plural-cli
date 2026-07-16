@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	consoleclient "github.com/pluralsh/console/go/client"
 	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -15,18 +16,15 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/pluralsh/plural-cli/pkg/common"
-	"github.com/pluralsh/plural-cli/pkg/scm"
-	"github.com/pluralsh/plural-cli/pkg/wkspace"
-
-	"sigs.k8s.io/yaml"
-
 	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
+	"github.com/pluralsh/plural-cli/pkg/scm"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/pkg/wkspace"
 )
 
 type Plural struct {
@@ -243,7 +241,13 @@ func (p *Plural) DoInstallOperator(url, token, values, chart_loc, clusterId stri
 			utils.Highlight("Using Agent v%s\n", version)
 
 			if settings.AgentHelmValues != nil {
-				if err := yaml.Unmarshal([]byte(*settings.AgentHelmValues), &globalVals); err != nil {
+				cluster, err := p.fetchClusterForAgentHelmValues(settings, clusterId)
+				if err != nil {
+					return fmt.Errorf("fetching cluster for agent helm values templating: %w", err)
+				}
+
+				globalVals, err = console.ResolveAgentHelmValues(settings, cluster)
+				if err != nil {
 					return err
 				}
 			} else {
@@ -283,6 +287,20 @@ func (p *Plural) ReinstallOperator(c *cli.Context, id, handle *string, chart_loc
 	}
 
 	return p.DoInstallOperator(url, deployToken, c.String("values"), chart_loc, clusterId)
+}
+
+func (p *Plural) fetchClusterForAgentHelmValues(
+	settings *consoleclient.DeploymentSettingsFragment,
+	clusterId string,
+) (*consoleclient.ClusterFragment, error) {
+	if settings == nil || !lo.FromPtr(settings.AgentHelmValuesTemplateable) {
+		return nil, nil
+	}
+	if clusterId == "" {
+		return nil, fmt.Errorf("cluster id is required to render agent helm values")
+	}
+
+	return p.ConsoleClient.GetCluster(lo.ToPtr(clusterId), nil)
 }
 
 func displayWarning(err error) {

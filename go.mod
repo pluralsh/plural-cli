@@ -41,7 +41,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.1-0.20231216201459-8508981c8b6c
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pluralsh/console/go/client v1.76.4
+	github.com/pluralsh/console/go/client v1.76.5
 	github.com/pluralsh/console/go/polly v1.0.0
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.6.0
@@ -349,5 +349,3 @@ require (
 	sigs.k8s.io/kustomize/api v0.21.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.21.1 // indirect
 )
-
-replace github.com/pluralsh/console/go/client => github.com/pluralsh/console/go/client v0.0.0-20260706120905-5f6ff115eb71

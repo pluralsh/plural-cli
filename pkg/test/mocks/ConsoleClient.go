@@ -631,6 +631,36 @@ func (_m *ConsoleClient) GetGlobalSettings() (*client.DeploymentSettingsFragment
 	return r0, r1
 }
 
+// GetGlobalSettingsMinimal provides a mock function with no fields
+func (_m *ConsoleClient) GetGlobalSettingsMinimal() (*client.DeploymentSettingsFragment, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetGlobalSettingsMinimal")
+	}
+
+	var r0 *client.DeploymentSettingsFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*client.DeploymentSettingsFragment, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *client.DeploymentSettingsFragment); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.DeploymentSettingsFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPipelineContext provides a mock function with given fields: id
 func (_m *ConsoleClient) GetPipelineContext(id string) (*client.PipelineContextFragment, error) {
 	ret := _m.Called(id)

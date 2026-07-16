@@ -22,10 +22,32 @@ func (c *consoleClient) UpdateDeploymentSettings(attr gqlclient.DeploymentSettin
 func (c *consoleClient) GetGlobalSettings() (*gqlclient.DeploymentSettingsFragment, error) {
 	resp, err := c.client.GetDeploymentSettings(c.ctx)
 	if err != nil {
-		return nil, api.GetErrorResponse(err, "GetDeploymentSettings")
+		return c.GetGlobalSettingsMinimal()
 	}
-	if resp == nil {
-		return nil, fmt.Errorf("returned GetDeploymentSettings object is nil")
+	if resp == nil || resp.DeploymentSettings == nil {
+		return c.GetGlobalSettingsMinimal()
 	}
 	return resp.DeploymentSettings, nil
+}
+
+func (c *consoleClient) GetGlobalSettingsMinimal() (*gqlclient.DeploymentSettingsFragment, error) {
+	resp, err := c.client.GetDeploymentSettingsMinimal(c.ctx)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetDeploymentSettingsMinimal")
+	}
+	if resp == nil {
+		return nil, fmt.Errorf("returned GetDeploymentSettingsMinimal object is nil")
+	}
+	return toDeploymentSettingsFragment(resp.DeploymentSettings), nil
+}
+
+func toDeploymentSettingsFragment(minimal *gqlclient.DeploymentSettingsMinimalFragment) *gqlclient.DeploymentSettingsFragment {
+	if minimal == nil {
+		return nil
+	}
+
+	return &gqlclient.DeploymentSettingsFragment{
+		AgentHelmValues: minimal.AgentHelmValues,
+		AgentVsn:        minimal.AgentVsn,
+	}
 }
