@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -15,6 +14,14 @@ func Untar(dst string, r io.Reader) error {
 	if err != nil {
 		return err
 	}
+	if err := os.MkdirAll(root, 0755); err != nil {
+		return err
+	}
+	rootFS, err := os.OpenRoot(root)
+	if err != nil {
+		return err
+	}
+	defer rootFS.Close()
 
 	tr := tar.NewReader(r)
 	madeDir := map[string]bool{}
@@ -34,11 +41,12 @@ func Untar(dst string, r io.Reader) error {
 			continue
 		}
 
-		// the target location where the dir/file should be created
-		target := filepath.Join(root, header.Name)
-		if target != root && !strings.HasPrefix(target, root+string(filepath.Separator)) {
+		if !filepath.IsLocal(header.Name) {
 			return fmt.Errorf("tar entry %q resolves outside destination", header.Name)
 		}
+
+		// the target location where the dir/file should be created
+		target := filepath.Clean(header.Name)
 		// the following switch could also be done using fi.Mode(), not sure if there
 		// a benefit of using one vs. the other.
 		// fi := header.FileInfo()
@@ -47,20 +55,19 @@ func Untar(dst string, r io.Reader) error {
 		switch header.Typeflag {
 		// if its a dir and it doesn't exist create it
 		case tar.TypeDir:
-			if err := makeDir(target, madeDir); err != nil {
+			if err := makeDir(rootFS, target, madeDir); err != nil {
 				return err
 			}
 
 		// if it's a file create it
 		case tar.TypeReg:
-			if err := makeDir(filepath.Dir(target), madeDir); err != nil {
+			if err := makeDir(rootFS, filepath.Dir(target), madeDir); err != nil {
 				return err
 			}
 
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			f, err := rootFS.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
-				fmt.Println("could not open file")
-				return err
+				return fmt.Errorf("extract tar entry %q: %w", header.Name, err)
 			}
 
 			// copy over contents
@@ -75,15 +82,13 @@ func Untar(dst string, r io.Reader) error {
 	}
 }
 
-func makeDir(target string, made map[string]bool) error {
+func makeDir(root *os.Root, target string, made map[string]bool) error {
 	if made[target] {
 		return nil
 	}
 
-	if _, err := os.Stat(target); err != nil {
-		if err := os.MkdirAll(target, 0755); err != nil {
-			return err
-		}
+	if err := root.MkdirAll(target, 0755); err != nil {
+		return err
 	}
 
 	made[target] = true

@@ -36,6 +36,19 @@ func TestUntar(t *testing.T) {
 		_, err = os.Stat(filepath.Join(parent, "outside.txt"))
 		assert.ErrorIs(t, err, os.ErrNotExist)
 	})
+
+	t.Run("rejects symlinks outside destination", func(t *testing.T) {
+		archive := createTar(t, "link/file.txt", "content")
+		dst := t.TempDir()
+		outside := t.TempDir()
+		require.NoError(t, os.Symlink(outside, filepath.Join(dst, "link")))
+
+		err := utils.Untar(dst, archive)
+
+		require.Error(t, err)
+		_, err = os.Stat(filepath.Join(outside, "file.txt"))
+		assert.ErrorIs(t, err, os.ErrNotExist)
+	})
 }
 
 func createTar(t *testing.T, name, content string) *bytes.Reader {
