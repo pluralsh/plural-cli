@@ -6,10 +6,16 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
 func Untar(dst string, r io.Reader) error {
+	root, err := filepath.Abs(dst)
+	if err != nil {
+		return err
+	}
+
 	tr := tar.NewReader(r)
 	madeDir := map[string]bool{}
 	for {
@@ -29,7 +35,10 @@ func Untar(dst string, r io.Reader) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(dst, header.Name)
+		target := filepath.Join(root, header.Name)
+		if target != root && !strings.HasPrefix(target, root+string(filepath.Separator)) {
+			return fmt.Errorf("tar entry %q resolves outside destination", header.Name)
+		}
 		// the following switch could also be done using fi.Mode(), not sure if there
 		// a benefit of using one vs. the other.
 		// fi := header.FileInfo()
