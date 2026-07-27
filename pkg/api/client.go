@@ -71,6 +71,12 @@ func NewClient() Client {
 }
 
 func FromConfig(conf *config.Config) Client {
+	return FromConfigWithContext(context.Background(), conf)
+}
+
+// FromConfigWithContext constructs a client whose requests honor caller-owned
+// cancellation. FromConfig remains as the compatibility entrypoint.
+func FromConfigWithContext(ctx context.Context, conf *config.Config) Client {
 	httpClient := http.Client{
 		Transport: &authedTransport{
 			key:     conf.Token,
@@ -81,7 +87,7 @@ func FromConfig(conf *config.Config) Client {
 	return &client{
 		pluralClient: gqlclient.NewClient(&httpClient, conf.Url(), nil),
 		config:       *conf,
-		ctx:          context.Background(),
+		ctx:          ctx,
 		httpClient:   &httpClient,
 	}
 }

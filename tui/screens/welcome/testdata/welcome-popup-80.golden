@@ -1,0 +1,24 @@
+  ╭─ Plural ───────────────────────────────────── ✓ personal · alex@acme.io ─╮
+  │                    │ ✓ Console                                           │
+  │    ███████   ██    │ URL       https://console.acme.io                   │
+  │    ██        ██    │ ─────────────────────────────────────────────────── │
+  │    ██   ██   ██    │ ✓ Workspace · plrl-dev-aws · /work/plural           │
+  │    ██        ██    │ Provider  aws · eu-west-1                           │
+  │    ██   ███████    │ Owner     alex@acme.io                              │
+  │                    │                                                     │
+  ╰─ v0.13.0 ────────────────────────────────────────────────────────────────╯
+
+
+
+  ╭─ Available commands ───────────────╮
+  │ › access                           │
+  │   console                          │
+  │   diagnostics                      │
+  │   help                             │
+  │   profiles                         │
+  │   workspace                        │
+  ╰────────────────────────────────────╯
+  ╭─ Command ────────────────────────────────────────────────────────────────╮
+  │ › Search commands…                                                       │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+    ↑/↓ choose · enter open · esc close · type to filter · ctrl+c quit
