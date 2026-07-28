@@ -369,6 +369,34 @@ func (_m *ConsoleClient) CreateRepository(url string, privateKey *string, passph
 	return r0, r1
 }
 
+// CreateWorkbenchPRFollowup provides a mock function with given fields: url, prompt
+func (_m *ConsoleClient) CreateWorkbenchPRFollowup(url string, prompt string) (string, error) {
+	ret := _m.Called(url, prompt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateWorkbenchPRFollowup")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) (string, error)); ok {
+		return rf(url, prompt)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(url, prompt)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(url, prompt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteCluster provides a mock function with given fields: id
 func (_m *ConsoleClient) DeleteCluster(id string) error {
 	ret := _m.Called(id)
@@ -1111,12 +1139,12 @@ func (_m *ConsoleClient) ListStackRuns(stackID string) (*client.ListStackRuns, e
 	return r0, r1
 }
 
-// ListaStacks provides a mock function with no fields
-func (_m *ConsoleClient) ListaStacks() (*client.ListInfrastructureStacks, error) {
+// ListStacks provides a mock function with no fields
+func (_m *ConsoleClient) ListStacks() (*client.ListInfrastructureStacks, error) {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListaStacks")
+		panic("no return value specified for ListStacks")
 	}
 
 	var r0 *client.ListInfrastructureStacks

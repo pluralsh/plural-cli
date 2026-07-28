@@ -60,12 +60,13 @@ type ConsoleClient interface {
 	ListAgentRuns(first int64) ([]*consoleclient.AgentRunMinimalFragment, error)
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
+	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
 	GetUser(email string) (*consoleclient.UserFragment, error)
-	ListaStacks() (*consoleclient.ListInfrastructureStacks, error)
+	ListStacks() (*consoleclient.ListInfrastructureStacks, error)
 }
 
 type authedTransport struct {

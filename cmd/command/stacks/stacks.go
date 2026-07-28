@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/samber/lo"
+	"github.com/urfave/cli"
+
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/stacks"
 	"github.com/pluralsh/plural-cli/pkg/utils/git"
-	"github.com/samber/lo"
-	"github.com/urfave/cli"
 )
 
 func init() {
@@ -83,7 +84,7 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 	}
 
 	stackNames := make(map[string]string)
-	infrastructureStacks, err := p.ConsoleClient.ListaStacks()
+	infrastructureStacks, err := p.ConsoleClient.ListStacks()
 	if err != nil {
 		return api.GetErrorResponse(err, "ListaStacks")
 	}

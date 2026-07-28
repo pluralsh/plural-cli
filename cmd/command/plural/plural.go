@@ -17,6 +17,7 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/stacks"
 	"github.com/pluralsh/plural-cli/cmd/command/up"
 	"github.com/pluralsh/plural-cli/cmd/command/version"
+	"github.com/pluralsh/plural-cli/cmd/command/workbenches"
 	"github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	conf "github.com/pluralsh/plural-cli/pkg/config"
@@ -103,7 +104,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
 	app.Flags = globalFlags()
-	commands := make([]cli.Command, 0, 15+len(plural.getCommands()))
+	commands := make([]cli.Command, 0, 16+len(plural.getCommands()))
 	commands = append(commands,
 		api.Command(plural.Plural),
 		agentscmd.Command(plural.Plural),
@@ -121,6 +122,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cmdinit.Command(plural.Plural),
 		up.Command(plural.Plural),
 		version.Command(),
+		workbenches.Command(plural.Plural),
 	)
 	commands = append(commands, plural.getCommands()...)
 	app.Commands = commands

@@ -41,7 +41,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.1-0.20231216201459-8508981c8b6c
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pluralsh/console/go/client v1.76.5
+	github.com/pluralsh/console/go/client v1.78.0
 	github.com/pluralsh/console/go/polly v1.0.0
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.6.0
@@ -247,7 +247,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/Masterminds/squirrel v1.5.4 // indirect
-	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.28
