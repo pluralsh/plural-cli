@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+	"time"
 
 	consoleclient "github.com/pluralsh/console/go/client"
 
@@ -19,4 +20,16 @@ func (c *consoleClient) CreateWorkbenchPRFollowup(url, prompt string) (string, e
 	}
 
 	return activity.GetID(), nil
+}
+
+func (c *consoleClient) EnqueueWorkbenchPRFollowup(url, prompt string, dur time.Duration) (string, error) {
+	dequeableAt := time.Now().Add(dur)
+	result, err := c.client.EnqueueWorkbenchPrFollowup(c.ctx, url, consoleclient.QueuedPromptAttributes{
+		Prompt:      prompt,
+		DequeableAt: dequeableAt.Format(time.RFC3339),
+	})
+	if err != nil {
+		return "", api.GetErrorResponse(err, "EnqueueWorkbenchPrFollowup")
+	}
+	return result.GetEnqueueWorkbenchPrFollowup().GetID(), nil
 }

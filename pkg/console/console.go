@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	neturl "net/url"
+	"time"
 
 	consoleclient "github.com/pluralsh/console/go/client"
 )
@@ -61,6 +62,7 @@ type ConsoleClient interface {
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
+	EnqueueWorkbenchPRFollowup(url, prompt string, dur time.Duration) (string, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)

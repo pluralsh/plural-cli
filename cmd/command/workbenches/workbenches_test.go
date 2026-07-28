@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -28,6 +29,7 @@ func TestCommandShape(t *testing.T) {
 	assert.Equal(t, map[string]bool{
 		"base-url":     true,
 		"commit":       true,
+		"defer":        true,
 		"prompt":       true,
 		"provider":     true,
 		"skip-missing": true,
@@ -39,9 +41,9 @@ func TestHandlePRFollowupUsesConfiguredConsoleClient(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	prompt := " verify the fix "
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("CreateWorkbenchPRFollowup", url, prompt).Return("activity-1", nil).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, prompt, 2*time.Minute).Return("prompt-1", nil).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
-	ctx := prFollowupContext(t, "--url", url, "--prompt", prompt)
+	ctx := prFollowupContext(t, "--url", url, "--prompt", prompt, "--defer", "2m")
 
 	err := workbenches.handlePRFollowup(ctx)
 
@@ -52,7 +54,7 @@ func TestHandlePRFollowupUsesConfiguredConsoleClient(t *testing.T) {
 func TestHandlePRFollowupPropagatesConsoleError(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("CreateWorkbenchPRFollowup", url, mock.Anything).Return("", errors.New("pull request not found")).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return("", errors.New("pull request not found")).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
 	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify")
 
@@ -64,7 +66,7 @@ func TestHandlePRFollowupPropagatesConsoleError(t *testing.T) {
 func TestHandlePRFollowupSkipsMissingPullRequest(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("CreateWorkbenchPRFollowup", url, mock.Anything).Return("", errors.New("GraphQL error: pull request not found: WorkbenchPrFollowup")).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return("", errors.New("GraphQL error: pull request not found: EnqueueWorkbenchPrFollowup")).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
 	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify", "--skip-missing")
 
@@ -92,6 +94,7 @@ func prFollowupContext(t *testing.T, args ...string) *cli.Context {
 	flags.String("base-url", "", "")
 	flags.String("prompt", "", "")
 	flags.String("provider", string(ProviderAuto), "")
+	flags.String("defer", "0s", "")
 	flags.Bool("skip-missing", false, "")
 	require.NoError(t, flags.Parse(args))
 

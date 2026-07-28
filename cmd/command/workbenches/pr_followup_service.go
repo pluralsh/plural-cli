@@ -3,6 +3,7 @@ package workbenches
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pluralsh/plural-cli/pkg/console"
 )
@@ -20,12 +21,13 @@ type PRFollowupService struct {
 
 type PRFollowupOptions struct {
 	Prompt      string
+	Defer       time.Duration
 	PullRequest PullRequestOptions
 	SkipMissing bool
 }
 
 type PRFollowupResult struct {
-	ActivityID     string
+	PromptID       string
 	PullRequestURL string
 	Skipped        bool
 }
@@ -50,7 +52,7 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 		return PRFollowupResult{}, err
 	}
 
-	activityID, err := s.client.CreateWorkbenchPRFollowup(pullRequestURL, options.Prompt)
+	promptID, err := s.client.EnqueueWorkbenchPRFollowup(pullRequestURL, options.Prompt, options.Defer)
 	if err != nil {
 		if options.SkipMissing && isPullRequestNotFound(err) {
 			return PRFollowupResult{PullRequestURL: pullRequestURL, Skipped: true}, nil
@@ -58,11 +60,11 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 
 		return PRFollowupResult{}, err
 	}
-	if activityID == "" {
+	if promptID == "" {
 		return PRFollowupResult{}, fmt.Errorf("console returned an empty workbench PR follow-up response")
 	}
 
-	return PRFollowupResult{ActivityID: activityID, PullRequestURL: pullRequestURL}, nil
+	return PRFollowupResult{PromptID: promptID, PullRequestURL: pullRequestURL}, nil
 }
 
 func isPullRequestNotFound(err error) bool {

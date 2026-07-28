@@ -1,6 +1,9 @@
 package workbenches
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/urfave/cli"
 
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
@@ -74,6 +77,11 @@ func (w *Workbenches) prFollowupCommand() cli.Command {
 				Usage: "source control provider (auto, github, gitlab, or bitbucket)",
 				Value: string(ProviderAuto),
 			},
+			cli.StringFlag{
+				Name:  "defer",
+				Usage: "Defer the follow-up for a duration, eg 1s, 1m, 2h, etc",
+				Value: "0s",
+			},
 			cli.BoolFlag{
 				Name:  "skip-missing",
 				Usage: "exit successfully when the pull request is not associated with a workbench job",
@@ -87,9 +95,19 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return err
 	}
 
+	deferDuration, err := time.ParseDuration(ctx.String("defer"))
+	if err != nil {
+		return fmt.Errorf("invalid defer duration: %w", err)
+	}
+
+	if deferDuration < 0 {
+		return fmt.Errorf("defer duration must be non-negative")
+	}
+
 	service := NewPRFollowupService(w.ConsoleClient, NewPullRequestResolver(nil))
 	result, err := service.Create(PRFollowupOptions{
 		Prompt:      ctx.String("prompt"),
+		Defer:       deferDuration,
 		SkipMissing: ctx.Bool("skip-missing"),
 		PullRequest: PullRequestOptions{
 			URL:      ctx.String("url"),
@@ -106,6 +124,6 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return nil
 	}
 
-	utils.Success("Created workbench PR follow-up %s for %s\n", result.ActivityID, result.PullRequestURL)
+	utils.Success("Created workbench PR follow-up %s for %s\n", result.PromptID, result.PullRequestURL)
 	return nil
 }
