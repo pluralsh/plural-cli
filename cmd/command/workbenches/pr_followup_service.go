@@ -3,20 +3,18 @@ package workbenches
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pluralsh/plural-cli/pkg/console"
 )
 
 const pullRequestNotFoundError = "pull request not found"
-
-type PRFollowupClient interface {
-	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
-}
 
 type PullRequestURLResolver interface {
 	Resolve(options PullRequestOptions) (string, error)
 }
 
 type PRFollowupService struct {
-	client   PRFollowupClient
+	client   console.ConsoleClient
 	resolver PullRequestURLResolver
 }
 
@@ -32,7 +30,7 @@ type PRFollowupResult struct {
 	Skipped        bool
 }
 
-func NewPRFollowupService(client PRFollowupClient, resolver PullRequestURLResolver) *PRFollowupService {
+func NewPRFollowupService(client console.ConsoleClient, resolver PullRequestURLResolver) *PRFollowupService {
 	return &PRFollowupService{client: client, resolver: resolver}
 }
 
