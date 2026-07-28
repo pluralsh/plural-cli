@@ -86,7 +86,7 @@ func (p *Plural) handleGenerateBackend(_ *cli.Context) error {
 	stackNames := make(map[string]string)
 	infrastructureStacks, err := p.ConsoleClient.ListStacks()
 	if err != nil {
-		return api.GetErrorResponse(err, "ListaStacks")
+		return api.GetErrorResponse(err, "ListStacks")
 	}
 	if infrastructureStacks == nil || infrastructureStacks.InfrastructureStacks == nil || len(infrastructureStacks.InfrastructureStacks.Edges) == 0 {
 		return fmt.Errorf("returned objects list [ListStacks] is nil")
