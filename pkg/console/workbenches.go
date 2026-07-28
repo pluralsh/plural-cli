@@ -22,14 +22,19 @@ func (c *consoleClient) CreateWorkbenchPRFollowup(url, prompt string) (string, e
 	return activity.GetID(), nil
 }
 
-func (c *consoleClient) EnqueueWorkbenchPRFollowup(url, prompt string, dur time.Duration) (string, error) {
+func (c *consoleClient) EnqueueWorkbenchPRFollowup(url, prompt string, dur time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error) {
 	dequeableAt := time.Now().Add(dur)
 	result, err := c.client.EnqueueWorkbenchPrFollowup(c.ctx, url, consoleclient.QueuedPromptAttributes{
 		Prompt:      prompt,
 		DequeableAt: dequeableAt.Format(time.RFC3339),
 	})
 	if err != nil {
-		return "", api.GetErrorResponse(err, "EnqueueWorkbenchPrFollowup")
+		return nil, api.GetErrorResponse(err, "EnqueueWorkbenchPrFollowup")
 	}
-	return result.GetEnqueueWorkbenchPrFollowup().GetID(), nil
+	fragment := result.GetEnqueueWorkbenchPrFollowup()
+	if fragment == nil {
+		return nil, fmt.Errorf("enqueued prompt fragment failed")
+	}
+
+	return fragment, nil
 }

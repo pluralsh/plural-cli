@@ -496,22 +496,24 @@ func (_m *ConsoleClient) DetachCluster(id string) error {
 }
 
 // EnqueueWorkbenchPRFollowup provides a mock function with given fields: url, prompt, dur
-func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, dur time.Duration) (string, error) {
+func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, dur time.Duration) (*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error) {
 	ret := _m.Called(url, prompt, dur)
 
 	if len(ret) == 0 {
 		panic("no return value specified for EnqueueWorkbenchPRFollowup")
 	}
 
-	var r0 string
+	var r0 *client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, time.Duration) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, string, time.Duration) (*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)); ok {
 		return rf(url, prompt, dur)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, time.Duration) string); ok {
+	if rf, ok := ret.Get(0).(func(string, string, time.Duration) *client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup); ok {
 		r0 = rf(url, prompt, dur)
 	} else {
-		r0 = ret.Get(0).(string)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, time.Duration) error); ok {

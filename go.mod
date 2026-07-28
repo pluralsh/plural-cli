@@ -41,7 +41,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.1-0.20231216201459-8508981c8b6c
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pluralsh/console/go/client v1.79.0
+	github.com/pluralsh/console/go/client v1.79.1
 	github.com/pluralsh/console/go/polly v1.0.0
 	github.com/pluralsh/gqlclient v1.12.2
 	github.com/pluralsh/plural-operator v0.6.0

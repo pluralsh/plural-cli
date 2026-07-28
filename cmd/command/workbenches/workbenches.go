@@ -1,7 +1,9 @@
 package workbenches
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/urfave/cli"
@@ -82,6 +84,7 @@ func (w *Workbenches) prFollowupCommand() cli.Command {
 				Usage: "Defer the follow-up for a duration, eg 1s, 1m, 2h, etc",
 				Value: "0s",
 			},
+			common.StringEnumFlag("output, o", "output format", common.OutputFormatRaw, common.OutputFormats...),
 			cli.BoolFlag{
 				Name:  "skip-missing",
 				Usage: "exit successfully when the pull request is not associated with a workbench job",
@@ -104,6 +107,11 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return fmt.Errorf("defer duration must be non-negative")
 	}
 
+	output := ctx.String("output")
+	if err := common.ValidateStringEnum("output", output, common.OutputFormats...); err != nil {
+		return err
+	}
+
 	service := NewPRFollowupService(w.ConsoleClient, NewPullRequestResolver(nil))
 	result, err := service.Create(PRFollowupOptions{
 		Prompt:      ctx.String("prompt"),
@@ -119,11 +127,27 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if result.Skipped {
-		utils.Success("No workbench job found for %s; skipping\n", result.PullRequestURL)
-		return nil
+
+	return writePRFollowupResult(output, result)
+}
+
+func writePRFollowupResult(output string, result PRFollowupResult) error {
+	switch output {
+	case common.OutputFormatRaw:
+		writeRawPRFollowupResult(result)
+	case common.OutputFormatJSON:
+		return json.NewEncoder(os.Stdout).Encode(result)
 	}
 
-	utils.Success("Created workbench PR follow-up %s for %s\n", result.PromptID, result.PullRequestURL)
 	return nil
+}
+
+func writeRawPRFollowupResult(result PRFollowupResult) {
+	if result.Skipped {
+		utils.Success("No workbench job found for %s; skipping\n", result.PullRequestURL)
+		return
+	}
+
+	fmt.Printf("Created workbench PR follow-up %s for %s\n", result.PromptID, result.PullRequestURL)
+	utils.Success("Workbench Job URL: %s\n", result.WorkbenchJobURL)
 }

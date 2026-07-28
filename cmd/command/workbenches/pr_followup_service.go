@@ -27,9 +27,10 @@ type PRFollowupOptions struct {
 }
 
 type PRFollowupResult struct {
-	PromptID       string
-	PullRequestURL string
-	Skipped        bool
+	PromptID        string
+	PullRequestURL  string
+	WorkbenchJobURL string
+	Skipped         bool
 }
 
 func NewPRFollowupService(client console.ConsoleClient, resolver PullRequestURLResolver) *PRFollowupService {
@@ -52,7 +53,7 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 		return PRFollowupResult{}, err
 	}
 
-	promptID, err := s.client.EnqueueWorkbenchPRFollowup(pullRequestURL, options.Prompt, options.Defer)
+	result, err := s.client.EnqueueWorkbenchPRFollowup(pullRequestURL, options.Prompt, options.Defer)
 	if err != nil {
 		if options.SkipMissing && isPullRequestNotFound(err) {
 			return PRFollowupResult{PullRequestURL: pullRequestURL, Skipped: true}, nil
@@ -60,11 +61,12 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 
 		return PRFollowupResult{}, err
 	}
-	if promptID == "" {
-		return PRFollowupResult{}, fmt.Errorf("console returned an empty workbench PR follow-up response")
-	}
 
-	return PRFollowupResult{PromptID: promptID, PullRequestURL: pullRequestURL}, nil
+	return PRFollowupResult{
+		PromptID:        result.GetID(),
+		PullRequestURL:  pullRequestURL,
+		WorkbenchJobURL: result.GetWorkbenchJob().GetURL(),
+	}, nil
 }
 
 func isPullRequestNotFound(err error) bool {

@@ -3,9 +3,11 @@ package workbenches
 import (
 	"errors"
 	"flag"
+	"strings"
 	"testing"
 	"time"
 
+	consoleclient "github.com/pluralsh/console/go/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -30,6 +32,8 @@ func TestCommandShape(t *testing.T) {
 		"base-url":     true,
 		"commit":       true,
 		"defer":        true,
+		"o":            true,
+		"output":       true,
 		"prompt":       true,
 		"provider":     true,
 		"skip-missing": true,
@@ -41,7 +45,7 @@ func TestHandlePRFollowupUsesConfiguredConsoleClient(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	prompt := " verify the fix "
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("EnqueueWorkbenchPRFollowup", url, prompt, 2*time.Minute).Return("prompt-1", nil).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, prompt, 2*time.Minute).Return(enqueuedPRFollowup("prompt-1", "https://console.example.com/workbenches/jobs/job-1"), nil).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
 	ctx := prFollowupContext(t, "--url", url, "--prompt", prompt, "--defer", "2m")
 
@@ -54,7 +58,7 @@ func TestHandlePRFollowupUsesConfiguredConsoleClient(t *testing.T) {
 func TestHandlePRFollowupPropagatesConsoleError(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return("", errors.New("pull request not found")).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return(nil, errors.New("pull request not found")).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
 	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify")
 
@@ -66,7 +70,7 @@ func TestHandlePRFollowupPropagatesConsoleError(t *testing.T) {
 func TestHandlePRFollowupSkipsMissingPullRequest(t *testing.T) {
 	url := "https://github.com/pluralsh/plural-cli/pull/5078"
 	consoleMock := mocks.NewConsoleClient(t)
-	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return("", errors.New("GraphQL error: pull request not found: EnqueueWorkbenchPrFollowup")).Once()
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return(nil, errors.New("GraphQL error: pull request not found: EnqueueWorkbenchPrFollowup")).Once()
 	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
 	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify", "--skip-missing")
 
@@ -76,10 +80,23 @@ func TestHandlePRFollowupSkipsMissingPullRequest(t *testing.T) {
 	consoleMock.AssertExpectations(t)
 }
 
+func TestHandlePRFollowupRejectsUnsupportedOutput(t *testing.T) {
+	consoleMock := mocks.NewConsoleClient(t)
+	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
+	ctx := prFollowupContext(t, "--url", "https://github.com/pluralsh/plural-cli/pull/5078", "--prompt", "verify", "--output", "yaml")
+
+	err := workbenches.handlePRFollowup(ctx)
+
+	require.EqualError(t, err, `unsupported output "yaml" (must be one of: raw, json)`)
+	consoleMock.AssertNotCalled(t, "EnqueueWorkbenchPRFollowup", mock.Anything, mock.Anything, mock.Anything)
+}
+
 func flagNames(flags []cli.Flag) map[string]bool {
 	names := make(map[string]bool, len(flags))
 	for _, commandFlag := range flags {
-		names[commandFlag.GetName()] = true
+		for _, name := range strings.Split(commandFlag.GetName(), ",") {
+			names[strings.TrimSpace(name)] = true
+		}
 	}
 
 	return names
@@ -95,8 +112,19 @@ func prFollowupContext(t *testing.T, args ...string) *cli.Context {
 	flags.String("prompt", "", "")
 	flags.String("provider", string(ProviderAuto), "")
 	flags.String("defer", "0s", "")
+	flags.String("output", "raw", "")
+	flags.String("o", "raw", "")
 	flags.Bool("skip-missing", false, "")
 	require.NoError(t, flags.Parse(args))
 
 	return cli.NewContext(nil, flags, nil)
+}
+
+func enqueuedPRFollowup(id, workbenchJobURL string) *consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup {
+	return &consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup{
+		ID: id,
+		WorkbenchJob: &consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup_WorkbenchJob{
+			URL: workbenchJobURL,
+		},
+	}
 }
