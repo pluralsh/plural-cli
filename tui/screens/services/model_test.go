@@ -111,13 +111,13 @@ func TestNoConsoleNavigatesToAccess(t *testing.T) {
 	}
 }
 
-func TestBackFromClustersReturnsWelcome(t *testing.T) {
+func TestBackFromClustersReturnsDeployments(t *testing.T) {
 	model := loadClusters(t, New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII)))
 	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if cmd == nil {
-		t.Fatal("expected welcome navigation")
+		t.Fatal("expected deployments navigation")
 	}
-	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Welcome}) {
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Deployments}) {
 		t.Fatalf("msg = %#v", msg)
 	}
 }

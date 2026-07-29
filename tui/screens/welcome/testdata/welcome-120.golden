@@ -19,12 +19,12 @@
 
 
 
-
-
-
-
-
-  ╭─ Command ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ › Search commands…                                                                                               │
+  ╭─ Choose an area ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ › 1  d   CD / Deployments    clusters · services · repos                                                         │
+  │   2  a   Access              login · profiles · Console                                                          │
+  │   3  g   Diagnose            local context · checks                                                              │
+  │   4  ?   Help                shortcuts · about                                                                   │
+  │                                                                                                                  │
+  │ Setup · Agents · Develop — later                                                                                 │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    tab complete · ↑/↓ suggestions · enter select · esc clear · ctrl+c quit
+    1–4 open · letter shortcut · ↑/↓ · enter · ctrl+c quit

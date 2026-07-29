@@ -56,7 +56,52 @@ func TestReadOnlyWelcomeGoldens(t *testing.T) {
 	}
 }
 
-func TestWelcomeCommandPopupGolden(t *testing.T) {
+func TestUpdateWelcomeGoldens(t *testing.T) {
+	if os.Getenv("UPDATE_GOLDEN") == "" {
+		t.Skip("set UPDATE_GOLDEN=1 to refresh fixtures")
+	}
+	snapshot := bridge.Snapshot{
+		Version: "v0.13.0",
+		App: bridge.AppProfile{
+			Configured: true, Name: "personal", Email: "alex@acme.io",
+			Endpoint: "https://app.plural.sh", SavedProfiles: 2,
+		},
+		Console: bridge.ConsoleConnection{Configured: true, URL: "https://console.acme.io"},
+		Workspace: bridge.Workspace{
+			Configured: true, Path: "/work/path/to/a/very/long/workspace", Name: "plrl-dev-aws",
+			Project: "acme", Provider: "aws", Region: "eu-west-1", Owner: "sebastian@plural.sh",
+		},
+		KubeContext: "plural-platform-prod",
+	}
+	popupSnapshot := bridge.Snapshot{
+		Version:   "v0.13.0",
+		App:       bridge.AppProfile{Configured: true, Name: "personal", Email: "alex@acme.io"},
+		Console:   bridge.ConsoleConnection{Configured: true, URL: "https://console.acme.io"},
+		Workspace: bridge.Workspace{Configured: true, Path: "/work/plural", Name: "plrl-dev-aws", Provider: "aws", Region: "eu-west-1", Owner: "alex@acme.io"},
+	}
+	_ = os.MkdirAll("testdata", 0o755)
+	for _, width := range []int{80, 120} {
+		model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+		model, _ = model.Update(loadedMsg{snapshot: snapshot})
+		height := 24
+		if width == 120 {
+			height = 30
+		}
+		got := normalizeView(model.View(width, height)) + "\n"
+		if err := os.WriteFile(filepath.Join("testdata", "welcome-"+strconv.Itoa(width)+".golden"), []byte(got), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(loadedMsg{snapshot: popupSnapshot})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	got := normalizeView(model.View(80, 24)) + "\n"
+	if err := os.WriteFile(filepath.Join("testdata", "welcome-popup-80.golden"), []byte(got), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestWelcomeGroupPickerGolden(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	model, _ = model.Update(loadedMsg{snapshot: bridge.Snapshot{
 		Version:   "v0.13.0",
@@ -74,7 +119,74 @@ func TestWelcomeCommandPopupGolden(t *testing.T) {
 		t.Fatalf("view changed\nwant:\n%s\n\ngot:\n%s", want, got)
 	}
 	if lines := strings.Split(got, "\n"); len(lines) != 24 {
-		t.Fatalf("popup view height = %d, want 24", len(lines))
+		t.Fatalf("group picker view height = %d, want 24", len(lines))
+	}
+}
+
+func TestWelcomeOpensDeploymentsFromShortcut(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
+	if cmd == nil {
+		t.Fatal("selecting CD did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Deployments {
+		t.Fatalf("route = %q, want deployments", got)
+	}
+	if model.cursor != 0 {
+		t.Fatalf("cursor = %d, want 0", model.cursor)
+	}
+}
+
+func TestWelcomeOpensAccessFromNumber(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '2', Text: "2"})
+	if cmd == nil {
+		t.Fatal("selecting Access did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Access {
+		t.Fatalf("route = %q, want access", got)
+	}
+}
+
+func TestWelcomeArrowAndEnterOpensDiagnose(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("enter did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Diagnostics {
+		t.Fatalf("route = %q, want diagnostics", got)
+	}
+}
+
+func TestWelcomeHelpIsStub(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: '?', Text: "?"})
+	if cmd != nil {
+		t.Fatal("help stub should not navigate")
+	}
+	if !model.helpOpen {
+		t.Fatal("expected help panel open")
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	if model.helpOpen {
+		t.Fatal("esc should close help")
+	}
+}
+
+func TestGroupPickerIsAnchoredAtBottom(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	lines := strings.Split(normalizeView(model.View(80, 24)), "\n")
+	if len(lines) != 24 {
+		t.Fatalf("view height = %d, want 24", len(lines))
+	}
+	if !strings.Contains(lines[len(lines)-9], "Choose an area") {
+		t.Fatalf("group picker is not anchored above help:\n%s", strings.Join(lines, "\n"))
+	}
+	if !strings.Contains(lines[len(lines)-1], "ctrl+c quit") {
+		t.Fatalf("keymap is not at the bottom: %q", lines[len(lines)-1])
 	}
 }
 
@@ -179,46 +291,6 @@ func TestStatusAdaptsToTerminalColorCapability(t *testing.T) {
 	}
 	if got := ansi.Strip(color.status(false)); got != "●" {
 		t.Fatalf("color failure status = %q, want dot", got)
-	}
-}
-
-func TestWelcomeForwardsInputToCommandBar(t *testing.T) {
-	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	model, _ = model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
-	if got := model.command.CurrentSuggestion(); got != "diagnostics" {
-		t.Fatalf("suggestion = %q, want diagnostics", got)
-	}
-	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyTab})
-	if got := model.command.Value(); got != "diagnostics" {
-		t.Fatalf("completed input = %q, want diagnostics", got)
-	}
-	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cmd == nil {
-		t.Fatal("selecting a command did not emit submission")
-	}
-	model, routeCmd := model.Update(cmd())
-	if routeCmd == nil {
-		t.Fatal("submitted command did not route")
-	}
-	if got := routeCmd().(navigation.NavigateMsg).Route; got != navigation.Diagnostics {
-		t.Fatalf("route = %q, want diagnostics", got)
-	}
-	if got := model.command.Selected(); got != "diagnostics" {
-		t.Fatalf("selected command = %q, want diagnostics", got)
-	}
-}
-
-func TestCommandInputIsAnchoredAtBottom(t *testing.T) {
-	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	lines := strings.Split(normalizeView(model.View(80, 24)), "\n")
-	if len(lines) != 24 {
-		t.Fatalf("view height = %d, want 24", len(lines))
-	}
-	if !strings.Contains(lines[len(lines)-4], "Command") {
-		t.Fatalf("command bar is not anchored above help:\n%s", strings.Join(lines, "\n"))
-	}
-	if !strings.Contains(lines[len(lines)-1], "ctrl+c quit") {
-		t.Fatalf("keymap is not at the bottom: %q", lines[len(lines)-1])
 	}
 }
 

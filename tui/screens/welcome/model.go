@@ -7,7 +7,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
-	"github.com/pluralsh/plural-cli/tui/components/commandbar"
 	pluralspinner "github.com/pluralsh/plural-cli/tui/components/spinner"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
@@ -16,25 +15,50 @@ import (
 type loadedMsg struct{ snapshot welcomebridge.Snapshot }
 type failedMsg struct{ err error }
 
+type keyAction uint8
+
+const (
+	keyActionNone keyAction = iota
+	keyActionUp
+	keyActionDown
+	keyActionConfirm
+)
+
+var keyActionKeystrokes = map[keyAction]string{
+	keyActionUp:      "up",
+	keyActionDown:    "down",
+	keyActionConfirm: "enter",
+}
+
+func actionForKeystroke(keystroke string) keyAction {
+	for action, candidate := range keyActionKeystrokes {
+		if keystroke == candidate {
+			return action
+		}
+	}
+	return keyActionNone
+}
+
 type Model struct {
 	ctx      context.Context
 	loader   welcomebridge.Loader
 	theme    theme.Theme
 	spinner  spinner.Model
-	command  commandbar.Model
+	groups   []group
+	cursor   int
 	loading  bool
 	snapshot welcomebridge.Snapshot
 	err      error
+	helpOpen bool
 }
 
 func New(ctx context.Context, loader welcomebridge.Loader, t theme.Theme) Model {
-	commands := []string{"access", "console", "diagnostics", "help", "profiles", "services", "workspace"}
 	return Model{
 		ctx:     ctx,
 		loader:  loader,
 		theme:   t,
 		spinner: pluralspinner.New(t),
-		command: commandbar.New(t, commands),
+		groups:  welcomeGroups(),
 		loading: loader != nil,
 	}
 }
@@ -72,21 +96,55 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
-	case commandbar.SubmittedMsg:
-		switch msg.Command {
-		case "access", "console", "profiles":
-			return m, navigation.Navigate(navigation.Access)
-		case "diagnostics", "workspace":
-			return m, navigation.Navigate(navigation.Diagnostics)
-		case "services":
-			return m, navigation.Navigate(navigation.Services)
+	case tea.KeyPressMsg:
+		return m.updateKey(msg)
+	default:
+		return m, nil
+	}
+}
+
+func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
+	if m.helpOpen {
+		m.helpOpen = false
+		if key.Keystroke() == "esc" {
+			return m, nil
+		}
+	}
+
+	switch actionForKeystroke(key.Keystroke()) {
+	case keyActionUp:
+		if m.cursor > 0 {
+			m.cursor--
 		}
 		return m, nil
-	default:
-		var cmd tea.Cmd
-		m.command, cmd = m.command.Update(msg)
-		return m, cmd
+	case keyActionDown:
+		if m.cursor < len(m.groups)-1 {
+			m.cursor++
+		}
+		return m, nil
+	case keyActionConfirm:
+		return m.openGroup(m.groups[m.cursor])
 	}
+
+	text := key.Text
+	if text == "" && key.Code > 0 && key.Code < 128 {
+		text = string(rune(key.Code))
+	}
+	for i, g := range m.groups {
+		if text == g.number || text == g.shortcut {
+			m.cursor = i
+			return m.openGroup(g)
+		}
+	}
+	return m, nil
+}
+
+func (m Model) openGroup(g group) (Model, tea.Cmd) {
+	if g.route == "" {
+		m.helpOpen = true
+		return m, nil
+	}
+	return m, navigation.Navigate(g.route)
 }
 
 func (m Model) Snapshot() welcomebridge.Snapshot { return m.snapshot }

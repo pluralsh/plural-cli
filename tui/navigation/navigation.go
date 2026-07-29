@@ -12,6 +12,7 @@ const (
 	Welcome     Route = "welcome"
 	Access      Route = "access"
 	Diagnostics Route = "diagnostics"
+	Deployments Route = "deployments"
 	Services    Route = "services"
 )
 

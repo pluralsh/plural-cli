@@ -33,10 +33,64 @@ func (m Model) View(width, height int) string {
 	contentWidth := width - 2*sideMargin
 	version := lo.CoalesceOrEmpty(m.snapshot.Version, "dev")
 	header := m.renderHero(contentWidth, version)
-	command := m.command.View(contentWidth)
-	gap := m.verticalGap(height, header, command)
+	groups := m.renderGroups(contentWidth)
+	gap := m.verticalGap(height, header, groups)
 
-	return m.indent(header+strings.Repeat("\n", gap)+command, sideMargin)
+	return m.indent(header+strings.Repeat("\n", gap)+groups, sideMargin)
+}
+
+func (m Model) renderGroups(width int) string {
+	border := m.primaryBorder()
+	title := "Choose an area"
+	if m.helpOpen {
+		title = "Help"
+	}
+	topRule := max(1, width-5-lipgloss.Width(title))
+	top := border.Render("╭─ " + title + " " + strings.Repeat("─", topRule) + "╮")
+	bottom := border.Render("╰" + strings.Repeat("─", width-2) + "╯")
+
+	innerWidth := width - 4
+	var body []string
+	if m.helpOpen {
+		body = []string{
+			m.theme.Body.Render("1–4 / letter opens an area"),
+			m.theme.Muted.Render("↑/↓ move · enter confirm · esc close help"),
+			m.theme.Muted.Render("ctrl+c quit"),
+			"",
+			m.theme.Muted.Render("More docs will land in a later phase."),
+		}
+	} else {
+		for i, g := range m.groups {
+			prefix := "  "
+			label := fmt.Sprintf("%s  %s   %-18s  %s", g.number, g.shortcut, g.title, g.blurb)
+			if i == m.cursor {
+				prefix = "› "
+				label = m.theme.Title.Render(label)
+			} else {
+				label = m.theme.Body.Render(fmt.Sprintf("%s  %s   ", g.number, g.shortcut)) +
+					m.theme.Body.Render(fmt.Sprintf("%-18s  ", g.title)) +
+					m.theme.Muted.Render(g.blurb)
+			}
+			line := prefix + label
+			line = ansi.Truncate(line, innerWidth, "…")
+			body = append(body, line)
+		}
+		body = append(body, "", m.theme.Muted.Render("Setup · Agents · Develop — later"))
+	}
+
+	rows := make([]string, 0, len(body)+2)
+	rows = append(rows, top)
+	for _, line := range body {
+		padded := line + strings.Repeat(" ", max(0, innerWidth-lipgloss.Width(line)))
+		rows = append(rows, border.Render("│")+" "+padded+" "+border.Render("│"))
+	}
+	rows = append(rows, bottom)
+
+	help := m.theme.Muted.Render(ansi.Truncate("1–4 open · letter shortcut · ↑/↓ · enter · ctrl+c quit", max(1, width-2), "…"))
+	if m.helpOpen {
+		help = m.theme.Muted.Render(ansi.Truncate("any key closes help · ctrl+c quit", max(1, width-2), "…"))
+	}
+	return strings.Join(rows, "\n") + "\n  " + help
 }
 
 func (m Model) viewportSize(width, height int) (int, int) {

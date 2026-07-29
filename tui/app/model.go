@@ -12,6 +12,7 @@ import (
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	accessscreen "github.com/pluralsh/plural-cli/tui/screens/access"
+	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
@@ -37,6 +38,7 @@ type Model struct {
 	welcome     welcomescreen.Model
 	access      accessscreen.Model
 	diagnostics diagnosticsscreen.Model
+	deployments deploymentsscreen.Model
 	services    servicesscreen.Model
 	route       navigation.Route
 }
@@ -48,6 +50,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		welcome:     welcomescreen.New(ctx, dependencies.Welcome, t),
 		access:      accessscreen.New(ctx, dependencies.Access, t),
 		diagnostics: diagnosticsscreen.New(ctx, dependencies.Welcome, t),
+		deployments: deploymentsscreen.New(ctx, t, ""),
 		services:    servicesscreen.New(ctx, dependencies.Services, t),
 		route:       navigation.Welcome,
 		quit: key.NewBinding(
@@ -68,6 +71,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.access.Init()
 		case navigation.Diagnostics:
 			return m, m.diagnostics.Init()
+		case navigation.Deployments:
+			m.deployments.SetConsoleURL(m.welcome.Snapshot().Console.URL)
+			return m, m.deployments.Init()
 		case navigation.Services:
 			return m, m.services.Init()
 		default:
@@ -93,6 +99,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.access, cmd = m.access.Update(msg)
 	case navigation.Diagnostics:
 		m.diagnostics, cmd = m.diagnostics.Update(msg)
+	case navigation.Deployments:
+		m.deployments, cmd = m.deployments.Update(msg)
 	case navigation.Services:
 		m.services, cmd = m.services.Update(msg)
 	default:

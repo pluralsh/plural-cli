@@ -88,12 +88,12 @@ type Model struct {
 	err       error
 	needsAuth bool
 
-	clusters       []servicesbridge.Cluster
-	clusterCursor  int
-	cluster        servicesbridge.Cluster
-	clusterFilter  string
-	serviceFilter  string
-	filterInput    textinput.Model
+	clusters         []servicesbridge.Cluster
+	clusterCursor    int
+	cluster          servicesbridge.Cluster
+	clusterFilter    string
+	serviceFilter    string
+	filterInput      textinput.Model
 	filteringCluster bool
 
 	page        servicesbridge.Page
@@ -284,7 +284,7 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 			m.prevCursors = nil
 			return m, nil
 		default:
-			return m, navigation.Navigate(navigation.Welcome)
+			return m, navigation.Navigate(navigation.Deployments)
 		}
 	}
 	if m.loading {

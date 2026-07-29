@@ -9,16 +9,16 @@
   ╰─ v0.13.0 ────────────────────────────────────────────────────────────────╯
 
 
-  ╭─ Available commands ───────────────╮
-  │ › access                           │
-  │   console                          │
-  │   diagnostics                      │
-  │   help                             │
-  │   profiles                         │
-  │   services                         │
-  │   workspace                        │
-  ╰────────────────────────────────────╯
-  ╭─ Command ────────────────────────────────────────────────────────────────╮
-  │ › Search commands…                                                       │
+
+
+
+
+  ╭─ Choose an area ─────────────────────────────────────────────────────────╮
+  │   1  d   CD / Deployments    clusters · services · repos                 │
+  │ › 2  a   Access              login · profiles · Console                  │
+  │   3  g   Diagnose            local context · checks                      │
+  │   4  ?   Help                shortcuts · about                           │
+  │                                                                          │
+  │ Setup · Agents · Develop — later                                         │
   ╰──────────────────────────────────────────────────────────────────────────╯
-    ↑/↓ choose · enter open · esc close · type to filter · ctrl+c quit
+    1–4 open · letter shortcut · ↑/↓ · enter · ctrl+c quit
