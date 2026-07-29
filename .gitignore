@@ -33,3 +33,7 @@ plural*.o
 
 # Vendored dependencies
 vendor/
+
+# Agents
+.codex/
+AGENTS.md
