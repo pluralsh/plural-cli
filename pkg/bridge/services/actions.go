@@ -3,12 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
+	"github.com/pluralsh/console/go/polly/fs"
 	"github.com/samber/lo"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
@@ -265,8 +265,8 @@ func (s *Service) DownloadTarball(ctx context.Context, id, dir string) (string, 
 	if err != nil {
 		return "", err
 	}
-	defer func(c io.Closer) { _ = c.Close() }(resp)
-	if err := utils.Untar(dir, resp); err != nil {
+	defer resp.Close()
+	if err := fs.Untar(dir, resp); err != nil {
 		return "", err
 	}
 	abs, err := filepath.Abs(dir)
