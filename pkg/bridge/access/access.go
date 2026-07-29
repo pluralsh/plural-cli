@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
+	"github.com/pluralsh/plural-cli/pkg/console"
 )
 
 type Profile = bridge.Profile
@@ -55,6 +56,7 @@ type Manager interface {
 	AddConsoleProfile(context.Context, string, string, string) (ConsoleProfile, error)
 	ActivateProfile(context.Context, string) error
 	ActivateConsole(context.Context, string) error
+	ActiveConsole(context.Context) (url, token string, err error)
 	SearchServiceAccounts(context.Context, string) ([]ServiceAccount, error)
 	Impersonate(context.Context, string) error
 	StopImpersonating()
@@ -189,6 +191,32 @@ func (s *Service) ActivateConsole(ctx context.Context, id string) error {
 	return s.repository.Save(ctx, state)
 }
 
+// ActiveConsole resolves the active Console URL and token for API clients.
+// It prefers the Access registry, then falls back to legacy console.yml so
+// existing plural cd login sessions continue to work.
+func (s *Service) ActiveConsole(ctx context.Context) (url, token string, err error) {
+	if err := ctx.Err(); err != nil {
+		return "", "", err
+	}
+	state, err := s.repository.Load(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	if profile, ok := findConsole(state.ConsoleProfiles, state.ActiveConsoleID); ok && s.credentials != nil {
+		token, err := s.credentials.Get(ctx, profile.ID)
+		if err == nil && strings.TrimSpace(token) != "" && strings.TrimSpace(profile.URL) != "" {
+			return profile.URL, token, nil
+		}
+	}
+	if url, token, ok := readLegacyConsole(); ok {
+		return url, token, nil
+	}
+	return "", "", &bridge.Error{
+		Code: bridge.ErrorUnauthenticated,
+		Err:  errors.New("connect a Console profile before browsing Console resources"),
+	}
+}
+
 func (s *Service) SearchServiceAccounts(ctx context.Context, query string) ([]ServiceAccount, error) {
 	snapshot, err := s.Load(ctx)
 	if err != nil || snapshot.Context.Base == nil {
@@ -284,4 +312,13 @@ func stableID(parts ...string) string {
 		hash *= 1099511628211
 	}
 	return fmt.Sprintf("%s-%x", parts[0], hash)
+}
+
+// readLegacyConsole loads ~/.plural/console.yml for callers that have not
+// migrated into the Access registry yet. Tests may replace it.
+var readLegacyConsole = func() (url, token string, ok bool) {
+	conf := console.ReadConfig()
+	url = strings.TrimSpace(conf.Url)
+	token = strings.TrimSpace(conf.Token)
+	return url, token, url != "" && token != ""
 }

@@ -103,6 +103,38 @@ func TestAccessProfilesSwitchIndependentlyAndClearActingIdentity(t *testing.T) {
 	}
 }
 
+func TestActiveConsolePrefersRegistryThenLegacy(t *testing.T) {
+	repository := &memoryAccessRepository{state: State{
+		ConsoleProfiles: []ConsoleProfile{{ID: "console-a", Name: "production", URL: "https://console.example.com"}},
+		ActiveConsoleID: "console-a",
+	}}
+	credentials := &memoryCredentials{values: map[string]string{"console-a": "registry-token"}}
+	service := NewService(repository, credentials, nil, nil)
+
+	url, token, err := service.ActiveConsole(t.Context())
+	if err != nil {
+		t.Fatalf("ActiveConsole() error = %v", err)
+	}
+	if url != "https://console.example.com" || token != "registry-token" {
+		t.Fatalf("ActiveConsole() = %q, %q", url, token)
+	}
+
+	empty := NewService(&memoryAccessRepository{}, &memoryCredentials{}, nil, nil)
+	original := readLegacyConsole
+	t.Cleanup(func() { readLegacyConsole = original })
+	readLegacyConsole = func() (string, string, bool) { return "https://legacy.example.com", "legacy-token", true }
+	url, token, err = empty.ActiveConsole(t.Context())
+	if err != nil || url != "https://legacy.example.com" || token != "legacy-token" {
+		t.Fatalf("legacy ActiveConsole() = %q, %q, %v", url, token, err)
+	}
+
+	readLegacyConsole = func() (string, string, bool) { return "", "", false }
+	_, _, err = empty.ActiveConsole(t.Context())
+	if !bridge.IsCode(err, bridge.ErrorUnauthenticated) {
+		t.Fatalf("missing console error = %v", err)
+	}
+}
+
 func TestCompleteDeviceLoginStoresBaseCredentialOutsideMetadata(t *testing.T) {
 	repository := &memoryAccessRepository{}
 	credentials := &memoryCredentials{}

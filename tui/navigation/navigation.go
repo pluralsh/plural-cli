@@ -12,6 +12,7 @@ const (
 	Welcome     Route = "welcome"
 	Access      Route = "access"
 	Diagnostics Route = "diagnostics"
+	Services    Route = "services"
 )
 
 // NavigateMsg requests a top-level route change.

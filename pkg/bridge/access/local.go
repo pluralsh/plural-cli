@@ -42,6 +42,15 @@ func (r *LocalRepository) Load(ctx context.Context) (State, error) {
 		if err := yaml.Unmarshal(contents, &state); err != nil {
 			return State{}, err
 		}
+		state, changed, err := r.ensureLegacyConsole(ctx, state)
+		if err != nil {
+			return State{}, err
+		}
+		if changed {
+			if err := r.save(state); err != nil {
+				return State{}, err
+			}
+		}
 		return state, nil
 	}
 	if !errors.Is(err, os.ErrNotExist) {
@@ -174,6 +183,39 @@ func (r *LocalRepository) importLegacy(ctx context.Context) (State, error) {
 		state.ActiveProfileID = state.Profiles[0].ID
 	}
 	return state, nil
+}
+
+// ensureLegacyConsole imports ~/.plural/console.yml when the Access registry
+// has no usable Console profile yet (common after plural cd login while
+// access.yml already existed from App login).
+func (r *LocalRepository) ensureLegacyConsole(ctx context.Context, state State) (State, bool, error) {
+	if _, ok := findConsole(state.ConsoleProfiles, state.ActiveConsoleID); ok {
+		return state, false, nil
+	}
+	contents, err := os.ReadFile(filepath.Join(r.Dir, "console.yml"))
+	if errors.Is(err, os.ErrNotExist) {
+		if state.ActiveConsoleID != "" && len(state.ConsoleProfiles) == 0 {
+			state.ActiveConsoleID = ""
+			return state, true, nil
+		}
+		return state, false, nil
+	}
+	if err != nil {
+		return state, false, err
+	}
+	var legacy legacyConsoleConfig
+	if yaml.Unmarshal(contents, &legacy) != nil || legacy.Spec.URL == "" {
+		return state, false, nil
+	}
+	profile := ConsoleProfile{ID: stableID("console", "default", legacy.Spec.URL), Name: "default", URL: legacy.Spec.URL}
+	state.ConsoleProfiles = upsertConsole(state.ConsoleProfiles, profile)
+	state.ActiveConsoleID = profile.ID
+	if legacy.Spec.Token != "" && r.Credentials != nil {
+		if err := r.Credentials.Set(ctx, profile.ID, legacy.Spec.Token); err != nil {
+			return state, false, err
+		}
+	}
+	return state, true, nil
 }
 
 // NewLocalManager builds the production persistence stack. Callers can

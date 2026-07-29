@@ -8,18 +8,21 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
+	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	accessscreen "github.com/pluralsh/plural-cli/tui/screens/access"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
+	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
 
 // Dependencies contains the services required by TUI screens.
 type Dependencies struct {
-	Welcome welcomebridge.Loader
-	Access  accessbridge.Manager
+	Welcome  welcomebridge.Loader
+	Access   accessbridge.Manager
+	Services servicesbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -34,6 +37,7 @@ type Model struct {
 	welcome     welcomescreen.Model
 	access      accessscreen.Model
 	diagnostics diagnosticsscreen.Model
+	services    servicesscreen.Model
 	route       navigation.Route
 }
 
@@ -44,6 +48,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		welcome:     welcomescreen.New(ctx, dependencies.Welcome, t),
 		access:      accessscreen.New(ctx, dependencies.Access, t),
 		diagnostics: diagnosticsscreen.New(ctx, dependencies.Welcome, t),
+		services:    servicesscreen.New(ctx, dependencies.Services, t),
 		route:       navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -63,6 +68,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.access.Init()
 		case navigation.Diagnostics:
 			return m, m.diagnostics.Init()
+		case navigation.Services:
+			return m, m.services.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -86,6 +93,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.access, cmd = m.access.Update(msg)
 	case navigation.Diagnostics:
 		m.diagnostics, cmd = m.diagnostics.Update(msg)
+	case navigation.Services:
+		m.services, cmd = m.services.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

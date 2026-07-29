@@ -28,7 +28,7 @@ type Model struct {
 }
 
 func New(ctx context.Context, loader welcomebridge.Loader, t theme.Theme) Model {
-	commands := []string{"access", "console", "diagnostics", "help", "profiles", "workspace"}
+	commands := []string{"access", "console", "diagnostics", "help", "profiles", "services", "workspace"}
 	return Model{
 		ctx:     ctx,
 		loader:  loader,
@@ -78,6 +78,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			return m, navigation.Navigate(navigation.Access)
 		case "diagnostics", "workspace":
 			return m, navigation.Navigate(navigation.Diagnostics)
+		case "services":
+			return m, navigation.Navigate(navigation.Services)
 		}
 		return m, nil
 	default:

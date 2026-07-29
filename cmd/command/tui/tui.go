@@ -8,6 +8,7 @@ import (
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
+	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	tuiapp "github.com/pluralsh/plural-cli/tui/app"
@@ -19,7 +20,12 @@ func Command() cli.Command {
 		welcome := welcomebridge.NewService(welcomebridge.NewLocalSource(common.Version))
 		auth := bridge.NewAuthService(bridge.PluralAuthFactory{}, 0)
 		access := accessbridge.NewLocalManager("", auth, nil)
-		return tuiapp.Run(ctx, os.Stdin, os.Stdout, tuiapp.Dependencies{Welcome: welcome, Access: access})
+		services := servicesbridge.NewService(access)
+		return tuiapp.Run(ctx, os.Stdin, os.Stdout, tuiapp.Dependencies{
+			Welcome:  welcome,
+			Access:   access,
+			Services: services,
+		})
 	})
 }
 

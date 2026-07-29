@@ -44,6 +44,33 @@ func TestLocalAccessRepositoryImportsLegacyProfilesOnce(t *testing.T) {
 	}
 }
 
+func TestLocalAccessRepositoryImportsLegacyConsoleIntoExistingRegistry(t *testing.T) {
+	home := t.TempDir()
+	dir := filepath.Join(home, ".plural")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, accessRegistryName), []byte("profiles: []\nconsoleProfiles: []\nactiveConsole: https://stale.example/gql\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	legacy := "apiVersion: platform.plural.sh/v1alpha1\nkind: Console\nspec:\n  url: https://console.example.com/gql\n  token: console-secret\n"
+	if err := os.WriteFile(filepath.Join(dir, "console.yml"), []byte(legacy), 0600); err != nil {
+		t.Fatal(err)
+	}
+	credentials := &memoryCredentials{}
+	repository := NewLocalRepository(home, credentials)
+	state, err := repository.Load(t.Context())
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if len(state.ConsoleProfiles) != 1 || state.ActiveConsoleID == "" || state.ActiveConsoleID == "https://stale.example/gql" {
+		t.Fatalf("state = %#v", state)
+	}
+	if credentials.values[state.ActiveConsoleID] != "console-secret" {
+		t.Fatalf("stored credential = %q", credentials.values[state.ActiveConsoleID])
+	}
+}
+
 func containsSecret(value, secret string) bool {
 	for i := 0; i+len(secret) <= len(value); i++ {
 		if value[i:i+len(secret)] == secret {

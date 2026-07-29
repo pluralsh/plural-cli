@@ -1,0 +1,24 @@
+  Plural  Services                                                     HEALTHY
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › api ──────────────────────────────────────────────────────────────────╮
+  │ Status       HEALTHY                                                     │
+  │ Namespace    default                                                     │
+  │ Cluster      prod-eu · production                                        │
+  │ Revision     main · 91ca21f0                                             │
+  │ Git          main / services/api                                         │
+  │ Components   13 / 14 synced                                              │
+  │                                                                          │
+  │ Errors                                                                   │
+  │ ✗ Deployment/api  exceeded rollout deadline                              │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+  r refresh · esc back · ctrl+c quit

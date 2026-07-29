@@ -18,7 +18,7 @@ const (
 	minimumWidth     = 12
 	title            = "Command"
 	popupTitle       = "Available commands"
-	maximumPopupRows = 6
+	maximumPopupRows = 8
 )
 
 type keyAction uint8

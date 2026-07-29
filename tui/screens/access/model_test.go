@@ -37,6 +37,9 @@ func (f *fakeManager) ActivateConsole(_ context.Context, id string) error {
 	f.activatedConsole = id
 	return nil
 }
+func (f *fakeManager) ActiveConsole(context.Context) (string, string, error) {
+	return "https://console.example.com", "token", nil
+}
 func (f *fakeManager) SearchServiceAccounts(context.Context, string) ([]accessbridge.ServiceAccount, error) {
 	return []accessbridge.ServiceAccount{{ID: "sa", Email: "deploy@example.com"}}, nil
 }
