@@ -81,7 +81,7 @@ func (w *Workbenches) prFollowupCommand() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "defer",
-				Usage: "Defer the follow-up for a duration, eg 1s, 1m, 2h, etc",
+				Usage: "defer the follow-up by a duration (for example, 1s, 1m, or 2h)",
 				Value: "0s",
 			},
 			common.StringEnumFlag("output, o", "output format", common.OutputFormatRaw, common.OutputFormats...),
@@ -98,12 +98,12 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return err
 	}
 
-	deferDuration, err := time.ParseDuration(ctx.String("defer"))
+	deferBy, err := time.ParseDuration(ctx.String("defer"))
 	if err != nil {
 		return fmt.Errorf("invalid defer duration: %w", err)
 	}
 
-	if deferDuration < 0 {
+	if deferBy < 0 {
 		return fmt.Errorf("defer duration must be non-negative")
 	}
 
@@ -115,7 +115,7 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 	service := NewPRFollowupService(w.ConsoleClient, NewPullRequestResolver(nil))
 	result, err := service.Create(PRFollowupOptions{
 		Prompt:      ctx.String("prompt"),
-		Defer:       deferDuration,
+		DeferBy:     deferBy,
 		SkipMissing: ctx.Bool("skip-missing"),
 		PullRequest: PullRequestOptions{
 			URL:      ctx.String("url"),

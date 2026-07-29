@@ -495,9 +495,9 @@ func (_m *ConsoleClient) DetachCluster(id string) error {
 	return r0
 }
 
-// EnqueueWorkbenchPRFollowup provides a mock function with given fields: url, prompt, dur
-func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, dur time.Duration) (*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error) {
-	ret := _m.Called(url, prompt, dur)
+// EnqueueWorkbenchPRFollowup provides a mock function with given fields: url, prompt, deferBy
+func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, deferBy time.Duration) (*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error) {
+	ret := _m.Called(url, prompt, deferBy)
 
 	if len(ret) == 0 {
 		panic("no return value specified for EnqueueWorkbenchPRFollowup")
@@ -506,10 +506,10 @@ func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, d
 	var r0 *client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup
 	var r1 error
 	if rf, ok := ret.Get(0).(func(string, string, time.Duration) (*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)); ok {
-		return rf(url, prompt, dur)
+		return rf(url, prompt, deferBy)
 	}
 	if rf, ok := ret.Get(0).(func(string, string, time.Duration) *client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup); ok {
-		r0 = rf(url, prompt, dur)
+		r0 = rf(url, prompt, deferBy)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*client.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup)
@@ -517,7 +517,7 @@ func (_m *ConsoleClient) EnqueueWorkbenchPRFollowup(url string, prompt string, d
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string, time.Duration) error); ok {
-		r1 = rf(url, prompt, dur)
+		r1 = rf(url, prompt, deferBy)
 	} else {
 		r1 = ret.Error(1)
 	}

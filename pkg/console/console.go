@@ -62,7 +62,7 @@ type ConsoleClient interface {
 	ListStackRuns(stackID string) (*consoleclient.ListStackRuns, error)
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
-	EnqueueWorkbenchPRFollowup(url, prompt string, dur time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)
+	EnqueueWorkbenchPRFollowup(url, prompt string, deferBy time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)

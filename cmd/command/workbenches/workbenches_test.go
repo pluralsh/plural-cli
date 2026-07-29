@@ -1,6 +1,7 @@
 package workbenches
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"strings"
@@ -89,6 +90,48 @@ func TestHandlePRFollowupRejectsUnsupportedOutput(t *testing.T) {
 
 	require.EqualError(t, err, `unsupported output "yaml" (must be one of: raw, json)`)
 	consoleMock.AssertNotCalled(t, "EnqueueWorkbenchPRFollowup", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestHandlePRFollowupRejectsEmptyEnqueueResponse(t *testing.T) {
+	url := "https://github.com/pluralsh/plural-cli/pull/5078"
+	consoleMock := mocks.NewConsoleClient(t)
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return(nil, nil).Once()
+	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
+	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify")
+
+	err := workbenches.handlePRFollowup(ctx)
+
+	require.EqualError(t, err, "console returned an empty workbench PR follow-up response")
+}
+
+func TestHandlePRFollowupRejectsEmptyWorkbenchJobURL(t *testing.T) {
+	url := "https://github.com/pluralsh/plural-cli/pull/5078"
+	consoleMock := mocks.NewConsoleClient(t)
+	consoleMock.On("EnqueueWorkbenchPRFollowup", url, mock.Anything, time.Duration(0)).Return(enqueuedPRFollowup("prompt-1", ""), nil).Once()
+	workbenches := NewWorkbenches(pluralclient.Plural{ConsoleClient: consoleMock})
+	ctx := prFollowupContext(t, "--url", url, "--prompt", "verify")
+
+	err := workbenches.handlePRFollowup(ctx)
+
+	require.EqualError(t, err, "console returned an empty workbench job URL")
+}
+
+func TestPRFollowupResultJSON(t *testing.T) {
+	result := PRFollowupResult{
+		PromptID:        "prompt-1",
+		PullRequestURL:  "https://github.com/pluralsh/plural-cli/pull/5078",
+		WorkbenchJobURL: "https://console.example.com/workbenches/jobs/job-1",
+	}
+
+	data, err := json.Marshal(result)
+
+	require.NoError(t, err)
+	require.JSONEq(t, `{
+		"promptId": "prompt-1",
+		"pullRequestUrl": "https://github.com/pluralsh/plural-cli/pull/5078",
+		"workbenchJobUrl": "https://console.example.com/workbenches/jobs/job-1",
+		"skipped": false
+	}`, string(data))
 }
 
 func flagNames(flags []cli.Flag) map[string]bool {
