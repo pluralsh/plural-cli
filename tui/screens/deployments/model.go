@@ -32,7 +32,7 @@ type resource struct {
 
 func resources() []resource {
 	return []resource{
-		{id: resourceServices, number: "1", shortcut: "s", title: "Services", blurb: "list · describe · (kick later)", route: navigation.Services},
+		{id: resourceServices, number: "1", shortcut: "s", title: "Services", blurb: "browse · kick · create · …", route: navigation.Services},
 		{id: resourceClusters, number: "2", shortcut: "c", title: "Clusters", blurb: "list · describe", soon: true},
 		{id: resourceRepositories, number: "3", shortcut: "r", title: "Repositories", blurb: "list · get", soon: true},
 		{id: resourcePipelines, number: "4", shortcut: "p", title: "Pipelines", blurb: "trigger", soon: true},

@@ -21,6 +21,8 @@ type fakeLoader struct {
 	detail   servicesbridge.Detail
 	err      error
 	listedID string
+	kicked   string
+	deleted  string
 }
 
 func (f *fakeLoader) ListClusters(context.Context, string) ([]servicesbridge.Cluster, error) {
@@ -32,6 +34,26 @@ func (f *fakeLoader) List(_ context.Context, clusterID string, _ *string, _ stri
 }
 func (f *fakeLoader) Get(context.Context, string) (servicesbridge.Detail, error) {
 	return f.detail, f.err
+}
+func (f *fakeLoader) Kick(_ context.Context, id string) (servicesbridge.Detail, error) {
+	f.kicked = id
+	return f.detail, f.err
+}
+func (f *fakeLoader) Delete(_ context.Context, id string) error {
+	f.deleted = id
+	return f.err
+}
+func (f *fakeLoader) Create(context.Context, servicesbridge.CreateInput) (servicesbridge.Detail, error) {
+	return f.detail, f.err
+}
+func (f *fakeLoader) Update(context.Context, servicesbridge.UpdateInput) (servicesbridge.Detail, error) {
+	return f.detail, f.err
+}
+func (f *fakeLoader) Clone(context.Context, servicesbridge.CloneInput) (servicesbridge.Detail, error) {
+	return f.detail, f.err
+}
+func (f *fakeLoader) DownloadTarball(context.Context, string, string) (string, error) {
+	return "/tmp/tarball", f.err
 }
 
 func loadClusters(t *testing.T, model Model) Model {
@@ -108,6 +130,60 @@ func TestNoConsoleNavigatesToAccess(t *testing.T) {
 	}
 	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Access}) {
 		t.Fatalf("msg = %#v", msg)
+	}
+}
+
+func TestKickFromDetail(t *testing.T) {
+	loader := &fakeLoader{
+		clusters: []servicesbridge.Cluster{{ID: "c1", Name: "production", Handle: "prod-eu"}},
+		page:     servicesbridge.Page{Items: []servicesbridge.Summary{{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY"}}},
+		detail:   servicesbridge.Detail{Summary: servicesbridge.Summary{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY"}, ClusterHandle: "prod-eu"},
+	}
+	model := loadClusters(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	model, cmd = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	if model.mode != modeDetail {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
+	if model.mode != modeReview || model.pending.kind != actionKick {
+		t.Fatalf("review = mode=%d kind=%d", model.mode, model.pending.kind)
+	}
+	model, cmd = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("expected kick command")
+	}
+	model, _ = model.Update(cmd())
+	if model.mode != modeResult || loader.kicked != "1" || model.result != "ok" {
+		t.Fatalf("result mode=%d kicked=%q result=%q", model.mode, loader.kicked, model.result)
+	}
+}
+
+func TestDeleteRequiresTypedName(t *testing.T) {
+	loader := &fakeLoader{
+		clusters: []servicesbridge.Cluster{{ID: "c1", Handle: "prod-eu"}},
+		page:     servicesbridge.Page{Items: []servicesbridge.Summary{{ID: "1", Name: "api"}}},
+		detail:   servicesbridge.Detail{Summary: servicesbridge.Summary{ID: "1", Name: "api"}},
+	}
+	model := loadClusters(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	model, cmd = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
+	if model.mode != modeDeleteConfirm {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.err == nil {
+		t.Fatal("expected name mismatch error")
+	}
+	model.formInput.SetValue("api")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeReview || model.pending.kind != actionDelete {
+		t.Fatalf("expected delete review, mode=%d kind=%d", model.mode, model.pending.kind)
 	}
 }
 

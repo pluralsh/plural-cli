@@ -19,11 +19,11 @@ func (f fakeResolver) ActiveConsole(context.Context) (string, string, error) {
 }
 
 type fakeAPI struct {
-	clusters *gqlclient.ListClusters
-	edges    []*gqlclient.ServiceDeploymentEdgeFragment
-	listErr  error
-	detail   *gqlclient.ServiceDeploymentExtended
-	getErr   error
+	clusters  *gqlclient.ListClusters
+	edges     []*gqlclient.ServiceDeploymentEdgeFragment
+	listErr   error
+	detail    *gqlclient.ServiceDeploymentExtended
+	getErr    error
 	clusterID string
 }
 
@@ -39,6 +39,25 @@ func (f *fakeAPI) ListClusterServices(clusterId, _ *string) ([]*gqlclient.Servic
 func (f *fakeAPI) GetClusterService(*string, *string, *string) (*gqlclient.ServiceDeploymentExtended, error) {
 	return f.detail, f.getErr
 }
+func (f *fakeAPI) KickClusterService(*string, *string, *string) (*gqlclient.ServiceDeploymentExtended, error) {
+	return f.detail, f.getErr
+}
+func (f *fakeAPI) DeleteClusterService(string) (*gqlclient.DeleteServiceDeployment, error) {
+	return &gqlclient.DeleteServiceDeployment{}, f.getErr
+}
+func (f *fakeAPI) CreateClusterService(*string, *string, gqlclient.ServiceDeploymentAttributes) (*gqlclient.ServiceDeploymentExtended, error) {
+	return f.detail, f.getErr
+}
+func (f *fakeAPI) UpdateClusterService(*string, *string, *string, gqlclient.ServiceUpdateAttributes) (*gqlclient.ServiceDeploymentExtended, error) {
+	return f.detail, f.getErr
+}
+func (f *fakeAPI) CloneService(string, *string, *string, *string, gqlclient.ServiceCloneAttributes) (*gqlclient.ServiceDeploymentFragment, error) {
+	if f.detail == nil {
+		return nil, f.getErr
+	}
+	return &gqlclient.ServiceDeploymentFragment{ID: f.detail.ID, Name: f.detail.Name, Namespace: f.detail.Namespace}, f.getErr
+}
+func (f *fakeAPI) GetDeployToken(*string, *string) (string, error) { return "token", f.getErr }
 
 func TestListClustersAndScopedServices(t *testing.T) {
 	handle := "prod-eu"
@@ -87,8 +106,8 @@ func TestGetMapsDetail(t *testing.T) {
 	sha := "abc123"
 	api := &fakeAPI{detail: &gqlclient.ServiceDeploymentExtended{
 		ID: "svc-1", Name: "api", Namespace: "default", Status: gqlclient.ServiceDeploymentStatusFailed,
-		Git:     &gqlclient.GitRefFragment{Ref: "main", Folder: "services/api"},
-		Cluster: &gqlclient.BaseClusterFragment{Name: "prod", Handle: &handle},
+		Git:      &gqlclient.GitRefFragment{Ref: "main", Folder: "services/api"},
+		Cluster:  &gqlclient.BaseClusterFragment{Name: "prod", Handle: &handle},
 		Revision: &gqlclient.RevisionFragment{ID: "rev-1", Sha: &sha, Git: &gqlclient.RevisionFragment_Git{Ref: "main"}},
 		Components: []*gqlclient.ServiceDeploymentExtended_Components{
 			{Synced: true},

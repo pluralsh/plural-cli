@@ -1,4 +1,4 @@
-// Package services exposes read-only Console service list/get use cases to
+// Package services exposes Console service list/get/mutation use cases to
 // presentation layers without importing TUI code.
 package services
 
@@ -40,6 +40,7 @@ type ServiceError struct {
 // Detail is the credential-free detail payload for a service deployment.
 type Detail struct {
 	Summary
+	ClusterID     string
 	ClusterName   string
 	ClusterHandle string
 	RevisionSHA   string
@@ -57,23 +58,9 @@ type Page struct {
 	TotalShown int
 }
 
-// Loader is the narrow contract consumed by the Services screen.
-type Loader interface {
-	ListClusters(ctx context.Context, query string) ([]Cluster, error)
-	List(ctx context.Context, clusterID string, after *string, query string) (Page, error)
-	Get(ctx context.Context, id string) (Detail, error)
-}
-
 // ConsoleResolver supplies the active Console URL and token.
 type ConsoleResolver interface {
 	ActiveConsole(ctx context.Context) (url, token string, err error)
-}
-
-// API is the Console surface required by this package.
-type API interface {
-	ListClusters() (*gqlclient.ListClusters, error)
-	ListClusterServices(clusterId, handle *string) ([]*gqlclient.ServiceDeploymentEdgeFragment, error)
-	GetClusterService(serviceId, serviceName, clusterName *string) (*gqlclient.ServiceDeploymentExtended, error)
 }
 
 // ClientFactory builds a Console API for an authenticated endpoint.
@@ -254,6 +241,7 @@ func detailFromExtended(service *gqlclient.ServiceDeploymentExtended) Detail {
 		detail.GitFolder = service.Git.Folder
 	}
 	if service.Cluster != nil {
+		detail.ClusterID = service.Cluster.ID
 		detail.ClusterName = service.Cluster.Name
 		if service.Cluster.Handle != nil {
 			detail.ClusterHandle = *service.Cluster.Handle

@@ -2,7 +2,7 @@
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   ╭─ › Resources ────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ › 1  s   Services        list · describe · (kick later)                                                          │
+  │ › 1  s   Services        browse · kick · create · …                                                              │
   │   2  c   Clusters        list · describe  [soon]                                                                 │
   │   3  r   Repositories    list · get  [soon]                                                                      │
   │   4  p   Pipelines       trigger  [soon]                                                                         │

@@ -1,19 +1,23 @@
-  Plural  Services                                                                                             HEALTHY
+  Plural  Services · api                                                                                       HEALTHY
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  ╭─ › api ──────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  ╭─ Summary ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
   │ Status       HEALTHY                                                                                             │
   │ Namespace    default                                                                                             │
-  │ Cluster      prod-eu · production                                                                                │
+  │ Cluster      @prod-eu · production                                                                               │
   │ Revision     main · 91ca21f0                                                                                     │
   │ Git          main / services/api                                                                                 │
   │ Components   13 / 14 synced                                                                                      │
-  │                                                                                                                  │
-  │ Errors                                                                                                           │
-  │ ✗ Deployment/api  exceeded rollout deadline                                                                      │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
+  │ 1 errors                                                                                                         │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+  ╭─ › Actions ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ › k  Kick        force sync now                                                                                  │
+  │   e  Edit        git ref · folder · config · version                                                             │
+  │   c  Clone       onto another cluster                                                                            │
+  │   t  Tarball     download locally                                                                                │
+  │   m  Template…   liquid / tpl / lua workbench                                                                    │
+  │   d  Delete      remove service  [destructive]                                                                   │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 
@@ -23,8 +27,4 @@
 
 
 
-
-
-
-
-  r refresh · esc back · ctrl+c quit
+  ↑/↓ actions · enter · k e c t m d · r refresh · esc list

@@ -7,7 +7,7 @@
   │   worker                       jobs           FAILED     main services/worker                                    │
   │   canary                       default        SYNCED     release services/canary                                 │
   │                                                                                                                  │
-  │ page · n next                                                                                                    │
+  │ page · ] next                                                                                                    │
   │                                                                                                                  │
   │                                                                                                                  │
   │                                                                                                                  │
@@ -27,4 +27,4 @@
 
 
 
-  ↑/↓ select · enter open · / filter · n/p page · r refresh · esc clusters
+  ↑/↓ · enter detail · n create · / filter · ]/[ page · r refresh · esc
