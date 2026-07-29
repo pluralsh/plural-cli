@@ -55,7 +55,7 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 
 	result, err := s.client.EnqueueWorkbenchPRFollowup(pullRequestURL, options.Prompt, options.DeferBy)
 	if err != nil {
-		if options.SkipMissing && isPullRequestNotFound(err) {
+		if options.SkipMissing && s.isPullRequestNotFound(err) {
 			return PRFollowupResult{PullRequestURL: pullRequestURL, Skipped: true}, nil
 		}
 
@@ -82,7 +82,7 @@ func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult,
 	}, nil
 }
 
-func isPullRequestNotFound(err error) bool {
+func (s *PRFollowupService) isPullRequestNotFound(err error) bool {
 	if err == nil {
 		return false
 	}

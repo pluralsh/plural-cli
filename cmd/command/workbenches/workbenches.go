@@ -13,6 +13,22 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/utils"
 )
 
+type outputFormat string
+
+const (
+	outputFormatRaw  outputFormat = "raw"
+	outputFormatJSON outputFormat = "json"
+)
+
+func (f outputFormat) validate() error {
+	switch f {
+	case outputFormatRaw, outputFormatJSON:
+		return nil
+	default:
+		return fmt.Errorf("unsupported output %q (must be one of: %s, %s)", f, outputFormatRaw, outputFormatJSON)
+	}
+}
+
 type Workbenches struct {
 	pluralclient.Plural
 	consoleToken string
@@ -84,7 +100,11 @@ func (w *Workbenches) prFollowupCommand() cli.Command {
 				Usage: "defer the follow-up by a duration (for example, 1s, 1m, or 2h)",
 				Value: "0s",
 			},
-			common.StringEnumFlag("output, o", "output format", common.OutputFormatRaw, common.OutputFormats...),
+			cli.StringFlag{
+				Name:  "output, o",
+				Usage: "output format (raw or json)",
+				Value: string(outputFormatRaw),
+			},
 			cli.BoolFlag{
 				Name:  "skip-missing",
 				Usage: "exit successfully when the pull request is not associated with a workbench job",
@@ -107,8 +127,8 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return fmt.Errorf("defer duration must be non-negative")
 	}
 
-	output := ctx.String("output")
-	if err := common.ValidateStringEnum("output", output, common.OutputFormats...); err != nil {
+	output := outputFormat(ctx.String("output"))
+	if err := output.validate(); err != nil {
 		return err
 	}
 
@@ -128,26 +148,22 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return err
 	}
 
-	return writePRFollowupResult(output, result)
+	return w.writePRFollowupResult(output, result)
 }
 
-func writePRFollowupResult(output string, result PRFollowupResult) error {
+func (w *Workbenches) writePRFollowupResult(output outputFormat, result PRFollowupResult) error {
 	switch output {
-	case common.OutputFormatRaw:
-		writeRawPRFollowupResult(result)
-	case common.OutputFormatJSON:
+	case outputFormatRaw:
+		if result.Skipped {
+			utils.Success("No workbench job found for %s; skipping\n", result.PullRequestURL)
+			return nil
+		}
+
+		fmt.Printf("Created workbench PR follow-up %s for %s\n", result.PromptID, result.PullRequestURL)
+		utils.Success("Workbench Job URL: %s\n", result.WorkbenchJobURL)
+	case outputFormatJSON:
 		return json.NewEncoder(os.Stdout).Encode(result)
 	}
 
 	return nil
-}
-
-func writeRawPRFollowupResult(result PRFollowupResult) {
-	if result.Skipped {
-		utils.Success("No workbench job found for %s; skipping\n", result.PullRequestURL)
-		return
-	}
-
-	fmt.Printf("Created workbench PR follow-up %s for %s\n", result.PromptID, result.PullRequestURL)
-	utils.Success("Workbench Job URL: %s\n", result.WorkbenchJobURL)
 }
