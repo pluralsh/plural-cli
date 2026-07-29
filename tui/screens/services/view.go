@@ -35,6 +35,8 @@ func (m Model) View(width, height int) string {
 		title = "Edit · " + m.detail.Name
 	case modeClone:
 		title = "Clone · " + m.detail.Name
+	case modeCloneCluster:
+		title = "Clone · choose destination"
 	case modeWorkbench:
 		title = "Workbench · " + m.detail.Name
 	case modeDetail:
@@ -158,6 +160,12 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		return page.Panel(m.theme, "Destination", lines, width, 7, true), "enter review · esc cancel"
 	case modeCreate, modeEdit, modeClone:
 		return m.formView(width)
+	case modeCloneCluster:
+		help := "↑/↓ select · enter use cluster · / filter · r refresh · esc detail"
+		if width < 100 {
+			help = "↑/↓ · enter · / filter · esc detail"
+		}
+		return page.Panel(m.theme, m.cloneClusterTitle(), m.clusterLines(width), width, 14, true), help
 	case modeWorkbench:
 		mode := "› Template (.liquid / .tpl)     Lua engine"
 		if !m.wbTemplate {
@@ -196,7 +204,14 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 }
 
 func (m Model) formView(width int) (string, string) {
-	lines := make([]string, 0, len(m.formFields)+3)
+	lines := make([]string, 0, len(m.formFields)+4)
+	if m.mode == modeClone {
+		lines = append(lines,
+			m.theme.Muted.Render("Destination  "+clusterLabel(m.cloneDest)),
+			m.theme.Muted.Render("Source       "+m.detail.Name+" · "+clusterLabel(m.cluster)),
+			"",
+		)
+	}
 	for i, field := range m.formFields {
 		value := m.formValues[field.key]
 		cursor := "  "
@@ -206,10 +221,19 @@ func (m Model) formView(width int) (string, string) {
 		}
 		lines = append(lines, cursor+pad(field.label, 12)+" "+value)
 	}
-	lines = append(lines, "", fmt.Sprintf("Dry-run attribute  %v  (ctrl+d toggle)", m.formDryRun))
+	if m.mode != modeClone {
+		lines = append(lines, "", fmt.Sprintf("Dry-run attribute  %v  (ctrl+d toggle)", m.formDryRun))
+	}
 	step := fmt.Sprintf("field %d/%d", m.formIndex+1, len(m.formFields))
-	help := "↑/↓ fields · enter next/review · esc cancel · " + step
+	help := "↑/↓ fields · enter next/review · esc back · " + step
 	return page.Panel(m.theme, "Form", lines, width, 12, true), help
+}
+
+func (m Model) cloneClusterTitle() string {
+	if m.clusterFilter != "" {
+		return "Destination clusters · filter “" + m.clusterFilter + "”"
+	}
+	return "Choose destination cluster"
 }
 
 func (m Model) actionLines(width int) []string {
@@ -278,6 +302,9 @@ func (m Model) clusterLines(width int) []string {
 			handle = "@" + handle
 		}
 		row := cursor + pad(handle, handleWidth) + " " + pad(cluster.Name, 24) + " " + cluster.ID
+		if m.mode == modeCloneCluster && cluster.ID != "" && cluster.ID == m.detail.ClusterID {
+			row += "  " + m.theme.Muted.Render("(source)")
+		}
 		lines = append(lines, ansi.Truncate(row, width-2, "…"))
 	}
 	return lines

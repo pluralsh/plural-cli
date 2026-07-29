@@ -31,6 +31,7 @@ const (
 	modeCreate
 	modeEdit
 	modeClone
+	modeCloneCluster
 	modeWorkbench
 )
 
@@ -143,6 +144,9 @@ type Model struct {
 	formDryRun  bool
 	wbTemplate  bool
 	confirmName string
+
+	pickingCloneDest bool
+	cloneDest        servicesbridge.Cluster
 }
 
 type formField struct {
@@ -262,6 +266,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.cursor = 0
 		m.err = nil
 		m.needsAuth = false
+		m.pickingCloneDest = false
+		m.cloneDest = servicesbridge.Cluster{}
 		if m.loader == nil {
 			m.loading = false
 			return m, nil
@@ -277,7 +283,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		if msg.err == nil {
 			m.clusters = msg.clusters
 			m.clusterCursor = clampCursor(m.clusterCursor, len(m.clusters))
-			m.mode = modeClusters
+			if m.pickingCloneDest {
+				m.mode = modeCloneCluster
+			} else {
+				m.mode = modeClusters
+			}
 		}
 		return m, nil
 	case listedMsg:
@@ -374,6 +384,8 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 		return m.updateTarball(action, key)
 	case modeCreate, modeEdit, modeClone:
 		return m.updateForm(action, key)
+	case modeCloneCluster:
+		return m.updateCloneCluster(action)
 	case modeWorkbench:
 		return m.updateWorkbench(action, key, text)
 	case modeDetail:
@@ -409,19 +421,26 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 func (m Model) updateFilter(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
 	switch action {
 	case keyActionBack:
-		m.mode = modeList
-		if m.filteringCluster {
-			m.mode = modeClusters
-		}
 		m.filterInput.Blur()
+		if m.pickingCloneDest {
+			m.mode = modeCloneCluster
+		} else if m.filteringCluster {
+			m.mode = modeClusters
+		} else {
+			m.mode = modeList
+		}
 		return m, nil
 	case keyActionConfirm:
 		value := strings.TrimSpace(m.filterInput.Value())
 		m.filterInput.Blur()
-		if m.filteringCluster {
+		if m.pickingCloneDest || m.filteringCluster {
 			m.clusterFilter = value
-			m.mode = modeClusters
 			m.clusterCursor = 0
+			if m.pickingCloneDest {
+				m.mode = modeCloneCluster
+			} else {
+				m.mode = modeClusters
+			}
 			return m, m.beginClusters()
 		}
 		m.serviceFilter = value
@@ -495,7 +514,7 @@ func (m Model) openAction(a detailAction) (Model, tea.Cmd) {
 	case actionEdit:
 		return m.beginEditForm(), nil
 	case actionClone:
-		return m.beginCloneForm(), nil
+		return m.beginClone()
 	case actionWorkbench:
 		m.mode = modeWorkbench
 		m.wbTemplate = true
@@ -650,21 +669,63 @@ func (m Model) beginEditForm() Model {
 	return m
 }
 
+func (m Model) beginClone() (Model, tea.Cmd) {
+	m.pickingCloneDest = true
+	m.cloneDest = servicesbridge.Cluster{}
+	m.clusterFilter = ""
+	m.clusterCursor = 0
+	m.err = nil
+	m.mode = modeCloneCluster
+	m.loading = true
+	return m, m.beginClusters()
+}
+
+func (m Model) updateCloneCluster(action keyAction) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.pickingCloneDest = false
+		m.clusterFilter = ""
+		m.mode = modeDetail
+		m.err = nil
+		return m, nil
+	case keyActionMoveUp:
+		m.clusterCursor = clampCursor(m.clusterCursor-1, len(m.clusters))
+	case keyActionMoveDown:
+		m.clusterCursor = clampCursor(m.clusterCursor+1, len(m.clusters))
+	case keyActionConfirm:
+		if len(m.clusters) == 0 {
+			return m, nil
+		}
+		m.cloneDest = m.clusters[m.clusterCursor]
+		m.pickingCloneDest = false
+		m.clusterFilter = ""
+		return m.beginCloneForm(), nil
+	case keyActionRefresh:
+		return m, m.beginClusters()
+	case keyActionFilter:
+		m.mode = modeFilter
+		m.filteringCluster = true
+		m.filterInput.Placeholder = "filter destination clusters"
+		m.filterInput.SetValue(m.clusterFilter)
+		m.filterInput.Focus()
+		m.formInput = m.filterInput
+	}
+	return m, nil
+}
+
 func (m Model) beginCloneForm() Model {
 	m.mode = modeClone
 	m.formFields = []formField{
-		{label: "Dest cluster ID", key: "cluster"},
 		{label: "Name", key: "name"},
 		{label: "Namespace", key: "namespace"},
 	}
 	m.formIndex = 0
 	m.formValues = map[string]string{
 		"name":      m.detail.Name + "-clone",
-		"namespace": m.detail.Namespace,
-		"cluster":   m.detail.ClusterID,
+		"namespace": loCoalesce(m.detail.Namespace, "default"),
 	}
-	m.formInput.SetValue(m.formValues["cluster"])
-	m.formInput.Placeholder = "destination cluster id"
+	m.formInput.SetValue(m.formValues["name"])
+	m.formInput.Placeholder = "cloned service name"
 	m.formInput.Focus()
 	m.err = nil
 	return m
@@ -674,9 +735,13 @@ func (m Model) updateForm(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd
 	switch action {
 	case keyActionBack:
 		m.formInput.Blur()
-		if m.mode == modeCreate {
+		switch m.mode {
+		case modeCreate:
 			m.mode = modeList
-		} else {
+		case modeClone:
+			m.pickingCloneDest = true
+			m.mode = modeCloneCluster
+		default:
 			m.mode = modeDetail
 		}
 		return m, nil
@@ -794,19 +859,20 @@ func (m Model) submitForm() (Model, tea.Cmd) {
 	case modeClone:
 		input := servicesbridge.CloneInput{
 			SourceID:      m.detail.ID,
-			DestClusterID: m.formValues["cluster"],
+			DestClusterID: m.cloneDest.ID,
 			Name:          m.formValues["name"],
 			Namespace:     m.formValues["namespace"],
 		}
+		dest := clusterLabel(m.cloneDest)
 		m.pending = pendingOp{
 			kind:  actionClone,
 			title: "Clone · " + m.detail.Name,
-			cli:   "plural cd services clone " + input.DestClusterID + " " + m.detail.ID + " --name " + input.Name,
+			cli:   fmt.Sprintf("plural cd services clone %s %s --name %s --namespace %s", dest, m.detail.ID, input.Name, input.Namespace),
 			clone: &input,
 			lines: []string{
 				"Action     Clone service",
-				"Source     " + m.detail.Name,
-				"Dest       " + input.DestClusterID,
+				"Source     " + m.detail.Name + " · " + clusterLabel(m.cluster),
+				"Dest       " + dest,
 				"Name       " + input.Name,
 				"Namespace  " + input.Namespace,
 			},

@@ -8,6 +8,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
@@ -184,6 +185,58 @@ func TestDeleteRequiresTypedName(t *testing.T) {
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if model.mode != modeReview || model.pending.kind != actionDelete {
 		t.Fatalf("expected delete review, mode=%d kind=%d", model.mode, model.pending.kind)
+	}
+}
+
+func TestClonePicksDestinationCluster(t *testing.T) {
+	loader := &fakeLoader{
+		clusters: []servicesbridge.Cluster{
+			{ID: "c1", Name: "production", Handle: "prod-eu"},
+			{ID: "c2", Name: "staging", Handle: "staging"},
+		},
+		page: servicesbridge.Page{Items: []servicesbridge.Summary{{ID: "1", Name: "api", Namespace: "default"}}},
+		detail: servicesbridge.Detail{
+			Summary:   servicesbridge.Summary{ID: "1", Name: "api", Namespace: "default"},
+			ClusterID: "c1", ClusterHandle: "prod-eu", ClusterName: "production",
+		},
+	}
+	model := loadClusters(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	model, cmd = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	if cmd == nil {
+		t.Fatal("expected cluster reload for clone")
+	}
+	model, _ = model.Update(cmd())
+	if model.mode != modeCloneCluster || !model.pickingCloneDest {
+		t.Fatalf("clone cluster mode = %d picking=%v", model.mode, model.pickingCloneDest)
+	}
+	if !strings.Contains(model.View(80, 24), "Choose destination cluster") {
+		t.Fatalf("missing destination picker:\n%s", model.View(80, 24))
+	}
+	if !strings.Contains(ansi.Strip(model.View(80, 24)), "(source)") {
+		t.Fatalf("source cluster not marked:\n%s", ansi.Strip(model.View(80, 24)))
+	}
+
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeClone || model.cloneDest.ID != "c2" {
+		t.Fatalf("clone form dest = %#v mode=%d", model.cloneDest, model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // accept name
+	model.formInput.SetValue("default")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // accept namespace → review
+	if model.mode != modeReview || model.pending.clone == nil || model.pending.clone.DestClusterID != "c2" {
+		t.Fatalf("review = mode=%d pending=%#v", model.mode, model.pending)
+	}
+	if model.pending.clone.Name != "api-clone" {
+		t.Fatalf("clone name = %q", model.pending.clone.Name)
+	}
+	if !strings.Contains(strings.Join(model.pending.lines, "\n"), "@staging") {
+		t.Fatalf("review missing dest label: %#v", model.pending.lines)
 	}
 }
 
