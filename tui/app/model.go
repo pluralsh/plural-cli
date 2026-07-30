@@ -9,6 +9,7 @@ import (
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
 	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
@@ -17,6 +18,7 @@ import (
 	clustersscreen "github.com/pluralsh/plural-cli/tui/screens/clusters"
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
+	pipelinesscreen "github.com/pluralsh/plural-cli/tui/screens/pipelines"
 	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
@@ -30,6 +32,7 @@ type Dependencies struct {
 	Services     servicesbridge.Loader
 	Clusters     clustersbridge.Loader
 	Repositories repositoriesbridge.Loader
+	Pipelines    pipelinesbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -48,6 +51,7 @@ type Model struct {
 	services     servicesscreen.Model
 	clusters     clustersscreen.Model
 	repositories repositoriesscreen.Model
+	pipelines    pipelinesscreen.Model
 	route        navigation.Route
 }
 
@@ -62,6 +66,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		services:     servicesscreen.New(ctx, dependencies.Services, t),
 		clusters:     clustersscreen.New(ctx, dependencies.Clusters, t),
 		repositories: repositoriesscreen.New(ctx, dependencies.Repositories, t),
+		pipelines:    pipelinesscreen.New(ctx, dependencies.Pipelines, t),
 		route:        navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -90,6 +95,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.clusters.Init()
 		case navigation.Repositories:
 			return m, m.repositories.Init()
+		case navigation.Pipelines:
+			return m, m.pipelines.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -121,6 +128,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.clusters, cmd = m.clusters.Update(msg)
 	case navigation.Repositories:
 		m.repositories, cmd = m.repositories.Update(msg)
+	case navigation.Pipelines:
+		m.pipelines, cmd = m.pipelines.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

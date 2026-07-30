@@ -65,6 +65,11 @@ func TestModelRoutesScreensWithoutRebuildingShell(t *testing.T) {
 	if routed.route != navigation.Repositories || !strings.Contains(routed.View().Content, "Repositories") {
 		t.Fatalf("repositories route/view = %q\n%s", routed.route, routed.View().Content)
 	}
+	updated, _ = routed.Update(navigation.NavigateMsg{Route: navigation.Pipelines})
+	routed = updated.(Model)
+	if routed.route != navigation.Pipelines || !strings.Contains(routed.View().Content, "Pipelines") {
+		t.Fatalf("pipelines route/view = %q\n%s", routed.route, routed.View().Content)
+	}
 	updated, _ = routed.Update(navigation.NavigateMsg{Route: navigation.Welcome})
 	if got := updated.(Model).route; got != navigation.Welcome {
 		t.Fatalf("route = %q", got)

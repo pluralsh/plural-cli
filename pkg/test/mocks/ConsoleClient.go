@@ -721,6 +721,36 @@ func (_m *ConsoleClient) GetGlobalSettingsMinimal() (*client.DeploymentSettingsF
 	return r0, r1
 }
 
+// GetPipeline provides a mock function with given fields: id
+func (_m *ConsoleClient) GetPipeline(id string) (*client.PipelineFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPipeline")
+	}
+
+	var r0 *client.PipelineFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.PipelineFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.PipelineFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.PipelineFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPipelineContext provides a mock function with given fields: id
 func (_m *ConsoleClient) GetPipelineContext(id string) (*client.PipelineContextFragment, error) {
 	ret := _m.Called(id)
@@ -1099,6 +1129,36 @@ func (_m *ConsoleClient) ListProviders() (*client.ListProviders, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*client.ListProviders)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPipelines provides a mock function with no fields
+func (_m *ConsoleClient) ListPipelines() (*client.GetPipelines, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListPipelines")
+	}
+
+	var r0 *client.GetPipelines
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*client.GetPipelines, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *client.GetPipelines); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.GetPipelines)
 		}
 	}
 

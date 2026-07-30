@@ -5,7 +5,7 @@
   │ › 1  s   Services        browse · kick · create · …                      │
   │   2  c   Clusters        list · describe                                 │
   │   3  r   Repositories    list · describe                                 │
-  │   4  p   Pipelines       trigger  [soon]                                 │
+  │   4  p   Pipelines       list · describe                                 │
   │   5  n   Notifications   sinks  [soon]                                   │
   │   6  v   Providers       list  [soon]                                    │
   ╰──────────────────────────────────────────────────────────────────────────╯
