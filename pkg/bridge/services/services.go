@@ -12,7 +12,7 @@ import (
 	"github.com/pluralsh/plural-cli/pkg/console"
 )
 
-const defaultPageSize int64 = 50
+const defaultPageSize int64 = 10
 
 // Cluster is a credential-free Console cluster summary.
 type Cluster struct {

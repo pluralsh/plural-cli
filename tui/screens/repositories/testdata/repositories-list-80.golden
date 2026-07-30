@@ -1,11 +1,11 @@
-  Plural  Clusters                                                  3 clusters
+  Plural  Repositories                                          3 repositories
   ────────────────────────────────────────────────────────────────────────────
 
-  ╭─ › Clusters ─────────────────────────────────────────────────────────────╮
-  │   HANDLE              NAME                     VERSION    DISTRO         │
-  │ › @prod-eu            production               1.30.2     EKS            │
-  │   @staging            staging                  1.29.0     EKS            │
-  │   —                   edge                     1.28.1     K3S            │
+  ╭─ › Repositories ─────────────────────────────────────────────────────────╮
+  │   URL                                              HEALTH     ERROR      │
+  │ › git@github.com:acme/infra.git                    PULLABLE   —          │
+  │   https://github.com/acme/apps.git                 FAILED     auth fail… │
+  │   git@gitlab.com:acme/charts.git                   PULLABLE   —          │
   │                                                                          │
   │ page · n next                                                            │
   │                                                                          │

@@ -7,7 +7,7 @@
   │   @staging             staging                  1.29.0     EKS                                                   │
   │   —                    edge                     1.28.1     K3S                                                   │
   │                                                                                                                  │
-  │                                                                                                                  │
+  │ page · n next                                                                                                    │
   │                                                                                                                  │
   │                                                                                                                  │
   │                                                                                                                  │
@@ -27,4 +27,4 @@
 
 
 
-  ↑/↓ select · enter open · / filter · r refresh · esc back
+  ↑/↓ select · enter open · / filter · n/p page · r refresh · esc back

@@ -189,15 +189,15 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		}
 		return summary + "\n\n" + actions, help
 	case modeClusters:
-		help := "↑/↓ select · enter open cluster · / filter · r refresh · esc back"
+		help := "↑/↓ · j/k select · enter open cluster · / filter · r refresh · esc back"
 		if width < 100 {
 			help = "↑/↓ · enter · / filter · esc back"
 		}
 		return page.Panel(m.theme, m.clusterTitle(), m.clusterLines(width), width, 14, true), help
 	default:
-		help := "↑/↓ · enter detail · n create · / filter · ]/[ page · r refresh · esc"
+		help := "↑/↓ · j/k · enter detail · a create · / filter · n/p page · r refresh · esc"
 		if width < 100 {
-			help = "↑/↓ · enter · n create · / · esc"
+			help = "↑/↓ · enter · a create · n/p page · esc"
 		}
 		return page.Panel(m.theme, m.listTitle(), m.listLines(width), width, 14, true), help
 	}
@@ -290,7 +290,9 @@ func (m Model) clusterLines(width int) []string {
 	}
 	handleWidth := max(12, min(24, width/3))
 	lines := []string{m.theme.Muted.Render("  " + pad("HANDLE", handleWidth) + " " + pad("NAME", 24) + " ID")}
-	for i, cluster := range m.clusters {
+	start, end := visibleWindow(m.clusterCursor, len(m.clusters), 8)
+	for i := start; i < end; i++ {
+		cluster := m.clusters[i]
 		cursor := "  "
 		if i == m.clusterCursor {
 			cursor = "› "
@@ -307,6 +309,9 @@ func (m Model) clusterLines(width int) []string {
 		}
 		lines = append(lines, ansi.Truncate(row, width-2, "…"))
 	}
+	if start > 0 || end < len(m.clusters) {
+		lines = append(lines, m.theme.Muted.Render(fmt.Sprintf("  … %d–%d of %d", start+1, end, len(m.clusters))))
+	}
 	return lines
 }
 
@@ -318,11 +323,13 @@ func (m Model) listLines(width int) []string {
 		return []string{m.theme.Danger.Render("✗ Unable to load services"), m.theme.Danger.Render("Error  " + m.err.Error()), m.theme.Muted.Render("Press r to retry.")}
 	}
 	if len(m.page.Items) == 0 {
-		return []string{m.theme.Warning.Render("○ No services found"), m.theme.Muted.Render("  Press n to create, or adjust the filter.")}
+		return []string{m.theme.Warning.Render("○ No services found"), m.theme.Muted.Render("  Press a to create, or adjust the filter.")}
 	}
 	nameWidth := max(12, min(28, width/3))
 	lines := []string{m.theme.Muted.Render("  " + pad("NAME", nameWidth) + " " + pad("NAMESPACE", 14) + " " + pad("STATUS", 10) + " GIT")}
-	for i, item := range m.page.Items {
+	start, end := visibleWindow(m.cursor, len(m.page.Items), 8)
+	for i := start; i < end; i++ {
+		item := m.page.Items[i]
 		cursor := "  "
 		if i == m.cursor {
 			cursor = "› "
@@ -334,17 +341,42 @@ func (m Model) listLines(width int) []string {
 		row := cursor + pad(item.Name, nameWidth) + " " + pad(item.Namespace, 14) + " " + pad(item.Status, 10) + " " + git
 		lines = append(lines, ansi.Truncate(row, width-2, "…"))
 	}
+	if start > 0 || end < len(m.page.Items) {
+		lines = append(lines, m.theme.Muted.Render(fmt.Sprintf("  … %d–%d of %d", start+1, end, len(m.page.Items))))
+	}
 	if m.page.HasNext || len(m.prevCursors) > 0 {
 		pager := "page"
 		if len(m.prevCursors) > 0 {
-			pager += " · [ prev"
+			pager += " · p prev"
 		}
 		if m.page.HasNext {
-			pager += " · ] next"
+			pager += " · n next"
 		}
 		lines = append(lines, "", m.theme.Muted.Render(pager))
 	}
 	return lines
+}
+
+func visibleWindow(cursor, count, size int) (start, end int) {
+	if count <= 0 {
+		return 0, 0
+	}
+	if size <= 0 {
+		size = count
+	}
+	if count <= size {
+		return 0, count
+	}
+	start = cursor - size/2
+	if start < 0 {
+		start = 0
+	}
+	end = start + size
+	if end > count {
+		end = count
+		start = end - size
+	}
+	return start, end
 }
 
 func (m Model) detailLines() []string {

@@ -1,11 +1,11 @@
-  Plural  Services                                                                               3 services · @prod-eu
+  Plural  Repositories                                                                                  3 repositories
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  ╭─ › Services · @prod-eu ──────────────────────────────────────────────────────────────────────────────────────────╮
-  │   NAME                         NAMESPACE      STATUS     GIT                                                     │
-  │ › api                          default        HEALTHY    main services/api                                       │
-  │   worker                       jobs           FAILED     main services/worker                                    │
-  │   canary                       default        SYNCED     release services/canary                                 │
+  ╭─ › Repositories ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │   URL                                              HEALTH     ERROR                                              │
+  │ › git@github.com:acme/infra.git                    PULLABLE   —                                                  │
+  │   https://github.com/acme/apps.git                 FAILED     auth failed                                        │
+  │   git@gitlab.com:acme/charts.git                   PULLABLE   —                                                  │
   │                                                                                                                  │
   │ page · n next                                                                                                    │
   │                                                                                                                  │
@@ -27,4 +27,4 @@
 
 
 
-  ↑/↓ · j/k · enter detail · a create · / filter · n/p page · r refresh · esc
+  ↑/↓ select · enter open · / filter · n/p page · r refresh · esc back

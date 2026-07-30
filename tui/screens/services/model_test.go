@@ -134,6 +134,55 @@ func TestNoConsoleNavigatesToAccess(t *testing.T) {
 	}
 }
 
+func TestNextPrevPage(t *testing.T) {
+	loader := &fakeLoader{
+		clusters: []servicesbridge.Cluster{{ID: "c1", Handle: "prod-eu"}},
+		page: servicesbridge.Page{
+			Items:     []servicesbridge.Summary{{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY"}},
+			EndCursor: "1",
+			HasNext:   true,
+		},
+	}
+	model := loadClusters(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	if model.mode != modeList {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	if !strings.Contains(model.View(80, 24), "n next") {
+		t.Fatalf("missing next pager:\n%s", model.View(80, 24))
+	}
+
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
+	if cmd == nil {
+		t.Fatal("expected next-page list command")
+	}
+	loader.page = servicesbridge.Page{
+		Items: []servicesbridge.Summary{{ID: "2", Name: "worker", Namespace: "jobs", Status: "FAILED"}},
+	}
+	model, _ = model.Update(cmd())
+	if model.after == nil || *model.after != "1" || len(model.prevCursors) != 1 {
+		t.Fatalf("after page turn after=%v prev=%v", model.after, model.prevCursors)
+	}
+	if !strings.Contains(model.View(80, 24), "worker") || !strings.Contains(model.View(80, 24), "p prev") {
+		t.Fatalf("second page view:\n%s", model.View(80, 24))
+	}
+
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'p', Text: "p"})
+	if cmd == nil {
+		t.Fatal("expected prev-page list command")
+	}
+	loader.page = servicesbridge.Page{
+		Items:     []servicesbridge.Summary{{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY"}},
+		EndCursor: "1",
+		HasNext:   true,
+	}
+	model, _ = model.Update(cmd())
+	if model.after != nil || len(model.prevCursors) != 0 {
+		t.Fatalf("after prev after=%v prev=%v", model.after, model.prevCursors)
+	}
+}
+
 func TestKickFromDetail(t *testing.T) {
 	loader := &fakeLoader{
 		clusters: []servicesbridge.Cluster{{ID: "c1", Name: "production", Handle: "prod-eu"}},
@@ -248,5 +297,34 @@ func TestBackFromClustersReturnsDeployments(t *testing.T) {
 	}
 	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Deployments}) {
 		t.Fatalf("msg = %#v", msg)
+	}
+}
+
+func TestListScrollKeepsCursorVisible(t *testing.T) {
+	items := make([]servicesbridge.Summary, 0, 20)
+	for i := 0; i < 20; i++ {
+		items = append(items, servicesbridge.Summary{
+			ID: string(rune('a'+i)), Name: "svc-" + string(rune('a'+i)), Namespace: "default", Status: "HEALTHY",
+		})
+	}
+	loader := &fakeLoader{
+		clusters: []servicesbridge.Cluster{{ID: "c1", Handle: "prod-eu"}},
+		page:     servicesbridge.Page{Items: items},
+	}
+	model := loadClusters(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	if model.mode != modeList {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	for i := 0; i < 12; i++ {
+		model, _ = model.Update(tea.KeyPressMsg{Code: 'j'})
+	}
+	view := ansi.Strip(model.View(80, 24))
+	if !strings.Contains(view, "svc-m") {
+		t.Fatalf("cursor row not visible after scroll:\n%s", view)
+	}
+	if !strings.Contains(view, "…") {
+		t.Fatalf("expected window indicator:\n%s", view)
 	}
 }

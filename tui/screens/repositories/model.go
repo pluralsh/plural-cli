@@ -1,5 +1,5 @@
-// Package clusters implements the read-only Console clusters browser.
-package clusters
+// Package repositories implements the read-only Console git repositories browser.
+package repositories
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
-	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
@@ -62,20 +62,20 @@ func actionForKeystroke(keystroke string) keyAction {
 
 type initMsg struct{}
 type listedMsg struct {
-	page    clustersbridge.Page
+	page    repositoriesbridge.Page
 	err     error
 	request uint64
 }
 type detailMsg struct {
-	detail  clustersbridge.Detail
+	detail  repositoriesbridge.Detail
 	err     error
 	request uint64
 }
 
-// Model owns Clusters-screen interaction state.
+// Model owns Repositories-screen interaction state.
 type Model struct {
 	ctx       context.Context
-	loader    clustersbridge.Loader
+	loader    repositoriesbridge.Loader
 	theme     theme.Theme
 	mode      mode
 	loading   bool
@@ -83,14 +83,14 @@ type Model struct {
 	needsAuth bool
 	request   uint64
 
-	page        clustersbridge.Page
+	page        repositoriesbridge.Page
 	cursor      int
 	filter      string
 	filterInput textinput.Model
 	after       *string
 	prevCursors []string
 
-	detail     clustersbridge.Detail
+	detail     repositoriesbridge.Detail
 	detailID   string
 	listCursor int
 	listAfter  *string
@@ -98,10 +98,10 @@ type Model struct {
 	listPrev   []string
 }
 
-func New(ctx context.Context, loader clustersbridge.Loader, t theme.Theme) Model {
+func New(ctx context.Context, loader repositoriesbridge.Loader, t theme.Theme) Model {
 	input := textinput.New()
 	input.Prompt = "› "
-	input.Placeholder = "filter clusters"
+	input.Placeholder = "filter repositories"
 	input.CharLimit = 128
 	styles := textinput.DefaultDarkStyles()
 	styles.Focused.Text = t.Body
@@ -145,7 +145,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case initMsg:
 		m.mode = modeList
-		m.page = clustersbridge.Page{}
+		m.page = repositoriesbridge.Page{}
 		m.cursor = 0
 		m.after = nil
 		m.prevCursors = nil
@@ -303,14 +303,4 @@ func clampCursor(cursor, count int) int {
 		return 0
 	}
 	return cursor
-}
-
-func clusterLabel(item clustersbridge.Summary) string {
-	if item.Handle != "" {
-		return "@" + item.Handle
-	}
-	if item.Name != "" {
-		return item.Name
-	}
-	return item.ID
 }

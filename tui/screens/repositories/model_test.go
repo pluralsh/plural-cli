@@ -1,4 +1,4 @@
-package clusters
+package repositories
 
 import (
 	"context"
@@ -14,21 +14,21 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
-	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
 
 type fakeLoader struct {
-	page   clustersbridge.Page
-	detail clustersbridge.Detail
+	page   repositoriesbridge.Page
+	detail repositoriesbridge.Detail
 	err    error
 }
 
-func (f *fakeLoader) List(context.Context, *string, string) (clustersbridge.Page, error) {
+func (f *fakeLoader) List(context.Context, *string, string) (repositoriesbridge.Page, error) {
 	return f.page, f.err
 }
-func (f *fakeLoader) Get(context.Context, string) (clustersbridge.Detail, error) {
+func (f *fakeLoader) Get(context.Context, string) (repositoriesbridge.Detail, error) {
 	return f.detail, f.err
 }
 
@@ -43,34 +43,34 @@ func loadList(t *testing.T, model Model) Model {
 	return model
 }
 
-func TestOpenClusterDetailAndBack(t *testing.T) {
+func TestOpenRepositoryDetailAndBack(t *testing.T) {
 	loader := &fakeLoader{
-		page: clustersbridge.Page{Items: []clustersbridge.Summary{
-			{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-			{ID: "c2", Name: "staging", Handle: "staging", Version: "1.29.0", Distro: "EKS"},
+		page: repositoriesbridge.Page{Items: []repositoriesbridge.Summary{
+			{ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH"},
+			{ID: "r2", URL: "https://github.com/acme/apps.git", Health: "FAILED", Error: "auth failed"},
 		}},
-		detail: clustersbridge.Detail{
-			Summary:  clustersbridge.Summary{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-			Self:     true,
-			Project:  "acme",
-			PingedAt: "2026-07-29T10:00:00Z",
+		detail: repositoriesbridge.Detail{
+			Summary: repositoriesbridge.Summary{
+				ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH",
+			},
+			Decrypt: true,
 		},
 	}
 	model := loadList(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
 	if model.mode != modeList || len(model.page.Items) != 2 {
 		t.Fatalf("list state = mode=%d count=%d", model.mode, len(model.page.Items))
 	}
-	if !strings.Contains(model.View(80, 24), "@prod-eu") {
-		t.Fatalf("list missing handle:\n%s", model.View(80, 24))
+	if !strings.Contains(model.View(80, 24), "git@github.com:acme/infra.git") {
+		t.Fatalf("list missing url:\n%s", model.View(80, 24))
 	}
 
 	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model, _ = model.Update(cmd())
-	if model.mode != modeDetail || model.detail.Handle != "prod-eu" {
+	if model.mode != modeDetail || model.detail.URL != "git@github.com:acme/infra.git" {
 		t.Fatalf("detail = %#v mode=%d", model.detail, model.mode)
 	}
-	if !strings.Contains(model.View(80, 24), "production") {
-		t.Fatalf("detail view missing name:\n%s", model.View(80, 24))
+	if !strings.Contains(model.View(80, 24), "SSH") {
+		t.Fatalf("detail view missing auth:\n%s", model.View(80, 24))
 	}
 
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
@@ -85,9 +85,9 @@ func TestOpenClusterDetailAndBack(t *testing.T) {
 
 func TestNextPrevPage(t *testing.T) {
 	loader := &fakeLoader{
-		page: clustersbridge.Page{
-			Items:     []clustersbridge.Summary{{ID: "c1", Name: "a", Handle: "a"}},
-			EndCursor: "c1",
+		page: repositoriesbridge.Page{
+			Items:     []repositoriesbridge.Summary{{ID: "r1", URL: "git@github.com:acme/a.git", Health: "PULLABLE"}},
+			EndCursor: "r1",
 			HasNext:   true,
 		},
 	}
@@ -99,10 +99,15 @@ func TestNextPrevPage(t *testing.T) {
 	if cmd == nil {
 		t.Fatal("expected next-page list command")
 	}
-	loader.page = clustersbridge.Page{Items: []clustersbridge.Summary{{ID: "c2", Name: "b", Handle: "b"}}}
+	loader.page = repositoriesbridge.Page{
+		Items: []repositoriesbridge.Summary{{ID: "r2", URL: "git@github.com:acme/b.git", Health: "PULLABLE"}},
+	}
 	model, _ = model.Update(cmd())
-	if model.after == nil || *model.after != "c1" || len(model.prevCursors) != 1 {
+	if model.after == nil || *model.after != "r1" || len(model.prevCursors) != 1 {
 		t.Fatalf("after page turn after=%v prev=%v", model.after, model.prevCursors)
+	}
+	if !strings.Contains(model.View(80, 24), "p prev") {
+		t.Fatalf("missing prev pager:\n%s", model.View(80, 24))
 	}
 	model, cmd = model.Update(tea.KeyPressMsg{Code: 'p'})
 	if cmd == nil {
@@ -126,27 +131,23 @@ func TestNoConsoleNavigatesToAccess(t *testing.T) {
 	}
 }
 
-func TestClustersGoldens(t *testing.T) {
+func TestRepositoriesGoldens(t *testing.T) {
 	list := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	list.loading = false
 	list.mode = modeList
-	list.page = clustersbridge.Page{Items: []clustersbridge.Summary{
-		{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-		{ID: "c2", Name: "staging", Handle: "staging", Version: "1.29.0", Distro: "EKS"},
-		{ID: "c3", Name: "edge", Version: "1.28.1", Distro: "K3S"},
-	}, HasNext: true, EndCursor: "c3"}
+	list.page = repositoriesbridge.Page{Items: []repositoriesbridge.Summary{
+		{ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH"},
+		{ID: "r2", URL: "https://github.com/acme/apps.git", Health: "FAILED", Error: "auth failed"},
+		{ID: "r3", URL: "git@gitlab.com:acme/charts.git", Health: "PULLABLE", AuthMethod: "SSH"},
+	}, HasNext: true, EndCursor: "r3"}
 
 	detail := list
 	detail.mode = modeDetail
-	detail.detail = clustersbridge.Detail{
-		Summary:   clustersbridge.Summary{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-		Self:      true,
-		PingedAt:  "2026-07-29T10:00:00Z",
-		Protect:   false,
-		Project:   "acme",
-		Provider:  "aws · EKS",
-		NodePools: 2,
-		Tags:      []clustersbridge.Tag{{Name: "env", Value: "prod"}},
+	detail.detail = repositoriesbridge.Detail{
+		Summary: repositoriesbridge.Summary{
+			ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH",
+		},
+		Decrypt: true,
 	}
 
 	for _, tc := range []struct {
@@ -162,7 +163,7 @@ func TestClustersGoldens(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			got := normalizeView(tc.model.View(tc.width, tc.height))
-			golden := filepath.Join("testdata", "clusters-"+tc.name+".golden")
+			golden := filepath.Join("testdata", "repositories-"+tc.name+".golden")
 			want, err := os.ReadFile(golden)
 			if err != nil {
 				t.Fatalf("read golden: %v\nactual:\n%s", err, got)
@@ -183,29 +184,25 @@ func TestClustersGoldens(t *testing.T) {
 	}
 }
 
-func TestWriteClustersGoldens(t *testing.T) {
+func TestWriteRepositoriesGoldens(t *testing.T) {
 	if os.Getenv("UPDATE_GOLDEN") == "" {
 		t.Skip("set UPDATE_GOLDEN=1 to refresh fixtures")
 	}
 	list := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	list.loading = false
 	list.mode = modeList
-	list.page = clustersbridge.Page{Items: []clustersbridge.Summary{
-		{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-		{ID: "c2", Name: "staging", Handle: "staging", Version: "1.29.0", Distro: "EKS"},
-		{ID: "c3", Name: "edge", Version: "1.28.1", Distro: "K3S"},
-	}, HasNext: true, EndCursor: "c3"}
+	list.page = repositoriesbridge.Page{Items: []repositoriesbridge.Summary{
+		{ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH"},
+		{ID: "r2", URL: "https://github.com/acme/apps.git", Health: "FAILED", Error: "auth failed"},
+		{ID: "r3", URL: "git@gitlab.com:acme/charts.git", Health: "PULLABLE", AuthMethod: "SSH"},
+	}, HasNext: true, EndCursor: "r3"}
 	detail := list
 	detail.mode = modeDetail
-	detail.detail = clustersbridge.Detail{
-		Summary:   clustersbridge.Summary{ID: "c1", Name: "production", Handle: "prod-eu", Version: "1.30.2", Distro: "EKS"},
-		Self:      true,
-		PingedAt:  "2026-07-29T10:00:00Z",
-		Protect:   false,
-		Project:   "acme",
-		Provider:  "aws · EKS",
-		NodePools: 2,
-		Tags:      []clustersbridge.Tag{{Name: "env", Value: "prod"}},
+	detail.detail = repositoriesbridge.Detail{
+		Summary: repositoriesbridge.Summary{
+			ID: "r1", URL: "git@github.com:acme/infra.git", Health: "PULLABLE", AuthMethod: "SSH",
+		},
+		Decrypt: true,
 	}
 	_ = os.MkdirAll("testdata", 0o755)
 	for _, tc := range []struct {
@@ -220,7 +217,7 @@ func TestWriteClustersGoldens(t *testing.T) {
 		{"detail-120", detail, 120, 30},
 	} {
 		got := normalizeView(tc.model.View(tc.width, tc.height)) + "\n"
-		if err := os.WriteFile(filepath.Join("testdata", "clusters-"+tc.name+".golden"), []byte(got), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join("testdata", "repositories-"+tc.name+".golden"), []byte(got), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}

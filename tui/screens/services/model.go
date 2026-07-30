@@ -54,15 +54,15 @@ const (
 
 var keyActionKeystrokes = map[keyAction][]string{
 	keyActionBack:           {"esc"},
-	keyActionMoveUp:         {"up"},
-	keyActionMoveDown:       {"down"},
+	keyActionMoveUp:         {"up", "k"},
+	keyActionMoveDown:       {"down", "j"},
 	keyActionConfirm:        {"enter"},
 	keyActionRefresh:        {"r"},
 	keyActionFilter:         {"/"},
-	keyActionNextPage:       {"right", "]"},
-	keyActionPrevPage:       {"left", "p", "["},
+	keyActionNextPage:       {"n", "right", "]"},
+	keyActionPrevPage:       {"p", "left", "["},
 	keyActionConnectConsole: {"c"},
-	keyActionCreate:         {"n"},
+	keyActionCreate:         {"a"},
 	keyActionBackground:     {"b"},
 }
 
@@ -415,7 +415,7 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 	if m.mode == modeClusters {
 		return m.updateClusters(action)
 	}
-	return m.updateList(action, text)
+	return m.updateList(action)
 }
 
 func (m Model) updateFilter(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
@@ -472,6 +472,12 @@ func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
 		return m, m.beginDetail(m.detailID)
 	}
 	actions := detailActions()
+	for i, a := range actions {
+		if text == a.shortcut {
+			m.actionCursor = i
+			return m.openAction(a)
+		}
+	}
 	switch action {
 	case keyActionMoveUp:
 		m.actionCursor = clampCursor(m.actionCursor-1, len(actions))
@@ -481,12 +487,6 @@ func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
 		return m, nil
 	case keyActionConfirm:
 		return m.openAction(actions[m.actionCursor])
-	}
-	for i, a := range actions {
-		if text == a.shortcut {
-			m.actionCursor = i
-			return m.openAction(a)
-		}
 	}
 	return m, nil
 }
@@ -944,8 +944,8 @@ func (m Model) updateClusters(action keyAction) (Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) updateList(action keyAction, text string) (Model, tea.Cmd) {
-	if action == keyActionCreate || text == "n" {
+func (m Model) updateList(action keyAction) (Model, tea.Cmd) {
+	if action == keyActionCreate {
 		if m.cluster.ID == "" {
 			return m, nil
 		}

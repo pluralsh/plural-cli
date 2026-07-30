@@ -1,13 +1,15 @@
-  Plural  Services                                                                               3 services · @prod-eu
+  Plural  Repositories · git@github.com:acme/infra.git                                                        PULLABLE
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  ╭─ › Services · @prod-eu ──────────────────────────────────────────────────────────────────────────────────────────╮
-  │   NAME                         NAMESPACE      STATUS     GIT                                                     │
-  │ › api                          default        HEALTHY    main services/api                                       │
-  │   worker                       jobs           FAILED     main services/worker                                    │
-  │   canary                       default        SYNCED     release services/canary                                 │
+  ╭─ › Summary ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ URL          git@github.com:acme/infra.git                                                                       │
+  │ Health       PULLABLE                                                                                            │
+  │ Auth         SSH                                                                                                 │
+  │ Decrypt      true                                                                                                │
+  │ ID           r1                                                                                                  │
   │                                                                                                                  │
-  │ page · n next                                                                                                    │
+  │                                                                                                                  │
+  │                                                                                                                  │
   │                                                                                                                  │
   │                                                                                                                  │
   │                                                                                                                  │
@@ -25,6 +27,4 @@
 
 
 
-
-
-  ↑/↓ · j/k · enter detail · a create · / filter · n/p page · r refresh · esc
+  r refresh · esc list · ctrl+c quit

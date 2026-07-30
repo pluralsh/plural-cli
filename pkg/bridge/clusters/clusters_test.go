@@ -56,11 +56,12 @@ func TestListAndGet(t *testing.T) {
 	service := &Service{
 		resolve:   fakeResolver{url: "https://console.example.com", token: "token"},
 		newClient: func(string, string) (API, error) { return api, nil },
+		pageSize:  50,
 	}
 
-	items, err := service.List(t.Context(), "prod")
-	if err != nil || len(items) != 1 || items[0].Handle != "prod-eu" || items[0].Version != "1.30.2" {
-		t.Fatalf("List() = %#v, %v", items, err)
+	page, err := service.List(t.Context(), nil, "prod")
+	if err != nil || len(page.Items) != 1 || page.Items[0].Handle != "prod-eu" || page.Items[0].Version != "1.30.2" {
+		t.Fatalf("List() = %#v, %v", page, err)
 	}
 
 	detail, err := service.Get(t.Context(), "c1")
@@ -69,6 +70,30 @@ func TestListAndGet(t *testing.T) {
 	}
 	if !detail.Self || detail.Project != "acme" || detail.NodePools != 2 || len(detail.Tags) != 1 {
 		t.Fatalf("detail = %#v", detail)
+	}
+}
+
+func TestListPages(t *testing.T) {
+	api := &fakeAPI{
+		clusters: &gqlclient.ListClusters{Clusters: &gqlclient.ListClusters_Clusters{Edges: []*gqlclient.ClusterEdgeFragment{
+			{Node: &gqlclient.ClusterFragment{ID: "c1", Name: "a"}},
+			{Node: &gqlclient.ClusterFragment{ID: "c2", Name: "b"}},
+			{Node: &gqlclient.ClusterFragment{ID: "c3", Name: "c"}},
+		}}},
+	}
+	service := &Service{
+		resolve:   fakeResolver{url: "https://console.example.com", token: "token"},
+		newClient: func(string, string) (API, error) { return api, nil },
+		pageSize:  2,
+	}
+	first, err := service.List(t.Context(), nil, "")
+	if err != nil || len(first.Items) != 2 || !first.HasNext || first.EndCursor != "c2" {
+		t.Fatalf("first = %#v, %v", first, err)
+	}
+	after := first.EndCursor
+	second, err := service.List(t.Context(), &after, "")
+	if err != nil || len(second.Items) != 1 || second.HasNext || second.Items[0].ID != "c3" {
+		t.Fatalf("second = %#v, %v", second, err)
 	}
 }
 

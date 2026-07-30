@@ -101,6 +101,33 @@ func TestListRequiresCluster(t *testing.T) {
 	}
 }
 
+func TestListPages(t *testing.T) {
+	edges := make([]*gqlclient.ServiceDeploymentEdgeFragment, 0, 12)
+	for i := 0; i < 12; i++ {
+		id := string(rune('a' + i))
+		edges = append(edges, &gqlclient.ServiceDeploymentEdgeFragment{
+			Node: &gqlclient.ServiceDeploymentBaseFragment{
+				ID: id, Name: "svc-" + id, Namespace: "default", Status: gqlclient.ServiceDeploymentStatusHealthy,
+			},
+		})
+	}
+	api := &fakeAPI{edges: edges}
+	service := &Service{
+		resolve:   fakeResolver{url: "https://console.example.com", token: "token"},
+		newClient: func(string, string) (API, error) { return api, nil },
+		pageSize:  10,
+	}
+	first, err := service.List(t.Context(), "c1", nil, "")
+	if err != nil || len(first.Items) != 10 || !first.HasNext || first.EndCursor != "j" {
+		t.Fatalf("first = %#v, %v", first, err)
+	}
+	after := first.EndCursor
+	second, err := service.List(t.Context(), "c1", &after, "")
+	if err != nil || len(second.Items) != 2 || second.HasNext || second.Items[0].ID != "k" {
+		t.Fatalf("second = %#v, %v", second, err)
+	}
+}
+
 func TestGetMapsDetail(t *testing.T) {
 	handle := "prod-eu"
 	sha := "abc123"

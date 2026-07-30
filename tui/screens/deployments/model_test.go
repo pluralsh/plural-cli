@@ -76,9 +76,20 @@ func TestClustersNavigates(t *testing.T) {
 	}
 }
 
+func TestRepositoriesNavigates(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "https://console.acme.io")
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
+	if cmd == nil {
+		t.Fatal("expected navigation")
+	}
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Repositories}) {
+		t.Fatalf("msg = %#v", msg)
+	}
+}
+
 func TestSoonResourceDoesNotNavigate(t *testing.T) {
 	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
-	model.cursor = 2 // repositories [soon]
+	model.cursor = 3 // pipelines [soon]
 	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if cmd != nil {
 		t.Fatalf("unexpected cmd %#v", cmd())

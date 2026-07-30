@@ -9,6 +9,7 @@ import (
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/tui/navigation"
@@ -16,6 +17,7 @@ import (
 	clustersscreen "github.com/pluralsh/plural-cli/tui/screens/clusters"
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
+	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
 	"github.com/pluralsh/plural-cli/tui/theme"
@@ -23,10 +25,11 @@ import (
 
 // Dependencies contains the services required by TUI screens.
 type Dependencies struct {
-	Welcome  welcomebridge.Loader
-	Access   accessbridge.Manager
-	Services servicesbridge.Loader
-	Clusters clustersbridge.Loader
+	Welcome      welcomebridge.Loader
+	Access       accessbridge.Manager
+	Services     servicesbridge.Loader
+	Clusters     clustersbridge.Loader
+	Repositories repositoriesbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -38,26 +41,28 @@ type Model struct {
 	theme theme.Theme
 	quit  key.Binding
 
-	welcome     welcomescreen.Model
-	access      accessscreen.Model
-	diagnostics diagnosticsscreen.Model
-	deployments deploymentsscreen.Model
-	services    servicesscreen.Model
-	clusters    clustersscreen.Model
-	route       navigation.Route
+	welcome      welcomescreen.Model
+	access       accessscreen.Model
+	diagnostics  diagnosticsscreen.Model
+	deployments  deploymentsscreen.Model
+	services     servicesscreen.Model
+	clusters     clustersscreen.Model
+	repositories repositoriesscreen.Model
+	route        navigation.Route
 }
 
 // New composes the root model with caller-provided dependencies.
 func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 	return Model{
-		theme:       t,
-		welcome:     welcomescreen.New(ctx, dependencies.Welcome, t),
-		access:      accessscreen.New(ctx, dependencies.Access, t),
-		diagnostics: diagnosticsscreen.New(ctx, dependencies.Welcome, t),
-		deployments: deploymentsscreen.New(ctx, t, ""),
-		services:    servicesscreen.New(ctx, dependencies.Services, t),
-		clusters:    clustersscreen.New(ctx, dependencies.Clusters, t),
-		route:       navigation.Welcome,
+		theme:        t,
+		welcome:      welcomescreen.New(ctx, dependencies.Welcome, t),
+		access:       accessscreen.New(ctx, dependencies.Access, t),
+		diagnostics:  diagnosticsscreen.New(ctx, dependencies.Welcome, t),
+		deployments:  deploymentsscreen.New(ctx, t, ""),
+		services:     servicesscreen.New(ctx, dependencies.Services, t),
+		clusters:     clustersscreen.New(ctx, dependencies.Clusters, t),
+		repositories: repositoriesscreen.New(ctx, dependencies.Repositories, t),
+		route:        navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
 			key.WithHelp("ctrl+c", "quit"),
@@ -83,6 +88,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.services.Init()
 		case navigation.Clusters:
 			return m, m.clusters.Init()
+		case navigation.Repositories:
+			return m, m.repositories.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -112,6 +119,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.services, cmd = m.services.Update(msg)
 	case navigation.Clusters:
 		m.clusters, cmd = m.clusters.Update(msg)
+	case navigation.Repositories:
+		m.repositories, cmd = m.repositories.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

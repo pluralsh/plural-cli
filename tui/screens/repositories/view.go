@@ -1,4 +1,4 @@
-package clusters
+package repositories
 
 import (
 	"fmt"
@@ -16,9 +16,9 @@ func (m Model) View(width, height int) string {
 		return page.Unsupported(m.theme, width, height)
 	}
 	contentWidth := page.ContentWidth(width)
-	title := "Clusters"
-	if m.mode == modeDetail && m.detail.Name != "" {
-		title = "Clusters · " + m.detail.Name
+	title := "Repositories"
+	if m.mode == modeDetail && m.detail.URL != "" {
+		title = "Repositories · " + shortURL(m.detail.URL, 40)
 	}
 	body, help := m.bodyAndHelp(contentWidth)
 	return page.Render(m.theme, width, height, title, m.headerStatus(), body, help)
@@ -36,36 +36,37 @@ func (m Model) headerStatus() string {
 	}
 	switch m.mode {
 	case modeDetail:
-		if m.detail.DeletedAt != "" {
-			return m.theme.Danger.Render("terminating")
+		switch m.detail.Health {
+		case "PULLABLE":
+			return m.theme.Success.Render("PULLABLE")
+		case "FAILED":
+			return m.theme.Danger.Render("FAILED")
+		default:
+			return m.theme.Muted.Render(loCoalesce(m.detail.Health, "UNKNOWN"))
 		}
-		if m.detail.Self {
-			return m.theme.Success.Render("self")
-		}
-		return m.theme.Success.Render(loCoalesce(m.detail.Distro, "ready"))
 	case modeList:
 		if m.filter != "" {
 			return m.theme.Muted.Render(fmt.Sprintf("%d matching", len(m.page.Items)))
 		}
-		return m.theme.Success.Render(fmt.Sprintf("%d clusters", len(m.page.Items)))
+		return m.theme.Success.Render(fmt.Sprintf("%d repositories", len(m.page.Items)))
 	default:
-		return m.theme.Muted.Render("clusters")
+		return m.theme.Muted.Render("repositories")
 	}
 }
 
 func (m Model) bodyAndHelp(width int) (string, string) {
 	if m.mode == modeFilter {
 		lines := []string{
-			m.theme.Muted.Render("Filter by handle, name, id, version, or distro."),
+			m.theme.Muted.Render("Filter by url, id, health, error, or auth method."),
 			"",
 			m.filterInput.View(),
 		}
-		return page.Panel(m.theme, "Filter clusters", lines, width, 6, true), "enter apply · esc cancel"
+		return page.Panel(m.theme, "Filter repositories", lines, width, 6, true), "enter apply · esc cancel"
 	}
 	if m.needsAuth {
 		lines := []string{
 			m.theme.Warning.Render("○ Console is not connected"),
-			m.theme.Muted.Render("  Connect a Console profile to browse clusters."),
+			m.theme.Muted.Render("  Connect a Console profile to browse repositories."),
 			"",
 			m.theme.Body.Render("Press c to open Access."),
 		}
@@ -84,24 +85,30 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 
 func (m Model) listTitle() string {
 	if m.filter != "" {
-		return "Clusters · filter “" + m.filter + "”"
+		return "Repositories · filter “" + m.filter + "”"
 	}
-	return "Clusters"
+	return "Repositories"
 }
 
 func (m Model) listLines(width int) []string {
 	if m.loading && len(m.page.Items) == 0 {
-		return []string{m.theme.Warning.Render("◌ Loading clusters…")}
+		return []string{m.theme.Warning.Render("◌ Loading repositories…")}
 	}
 	if m.err != nil {
-		return []string{m.theme.Danger.Render("✗ Unable to load clusters"), m.theme.Danger.Render("Error  " + m.err.Error()), m.theme.Muted.Render("Press r to retry.")}
+		return []string{
+			m.theme.Danger.Render("✗ Unable to load repositories"),
+			m.theme.Danger.Render("Error  " + m.err.Error()),
+			m.theme.Muted.Render("Press r to retry."),
+		}
 	}
 	if len(m.page.Items) == 0 {
-		return []string{m.theme.Warning.Render("○ No clusters found"), m.theme.Muted.Render("  Adjust the filter or connect another Console.")}
+		return []string{
+			m.theme.Warning.Render("○ No repositories found"),
+			m.theme.Muted.Render("  Adjust the filter or connect another Console."),
+		}
 	}
-	handleWidth := max(12, min(20, width/4))
-	nameWidth := max(12, min(24, width/3))
-	lines := []string{m.theme.Muted.Render("  " + pad("HANDLE", handleWidth) + " " + pad("NAME", nameWidth) + " " + pad("VERSION", 10) + " DISTRO")}
+	urlWidth := max(24, min(48, width*2/3))
+	lines := []string{m.theme.Muted.Render("  " + pad("URL", urlWidth) + " " + pad("HEALTH", 10) + " ERROR")}
 	start, end := visibleWindow(m.cursor, len(m.page.Items), 8)
 	for i := start; i < end; i++ {
 		item := m.page.Items[i]
@@ -109,15 +116,9 @@ func (m Model) listLines(width int) []string {
 		if i == m.cursor {
 			cursor = "› "
 		}
-		handle := item.Handle
-		if handle == "" {
-			handle = "—"
-		} else {
-			handle = "@" + handle
-		}
-		version := loCoalesce(item.Version, "—")
-		distro := loCoalesce(item.Distro, "—")
-		row := cursor + pad(handle, handleWidth) + " " + pad(item.Name, nameWidth) + " " + pad(version, 10) + " " + distro
+		health := loCoalesce(item.Health, "UNKNOWN")
+		errText := loCoalesce(item.Error, "—")
+		row := cursor + pad(item.URL, urlWidth) + " " + pad(health, 10) + " " + errText
 		lines = append(lines, ansi.Truncate(row, width-2, "…"))
 	}
 	if start > 0 || end < len(m.page.Items) {
@@ -160,38 +161,20 @@ func visibleWindow(cursor, count, size int) (start, end int) {
 
 func (m Model) detailLines() []string {
 	if m.loading {
-		return []string{m.theme.Warning.Render("◌ Loading cluster detail…")}
+		return []string{m.theme.Warning.Render("◌ Loading repository detail…")}
 	}
 	if m.err != nil {
-		return []string{m.theme.Danger.Render("✗ Unable to load cluster"), m.theme.Danger.Render(m.err.Error())}
-	}
-	handle := m.detail.Handle
-	if handle != "" {
-		handle = "@" + handle
-	} else {
-		handle = "—"
+		return []string{m.theme.Danger.Render("✗ Unable to load repository"), m.theme.Danger.Render(m.err.Error())}
 	}
 	lines := []string{
-		m.labelValue("Handle", handle),
-		m.labelValue("Name", m.detail.Name),
-		m.labelValue("Version", loCoalesce(m.detail.Version, "—")),
-		m.labelValue("Distro", loCoalesce(m.detail.Distro, "—")),
-		m.labelValue("Project", loCoalesce(m.detail.Project, "—")),
-		m.labelValue("Provider", loCoalesce(m.detail.Provider, "—")),
-		m.labelValue("Pinged", loCoalesce(m.detail.PingedAt, "—")),
-		m.labelValue("Self", fmt.Sprintf("%v", m.detail.Self)),
-		m.labelValue("Protect", fmt.Sprintf("%v", m.detail.Protect)),
-		m.labelValue("Node pools", fmt.Sprintf("%d", m.detail.NodePools)),
+		m.labelValue("URL", m.detail.URL),
+		m.labelValue("Health", loCoalesce(m.detail.Health, "UNKNOWN")),
+		m.labelValue("Auth", loCoalesce(m.detail.AuthMethod, "—")),
+		m.labelValue("Decrypt", fmt.Sprintf("%v", m.detail.Decrypt)),
 		m.labelValue("ID", m.detail.ID),
 	}
-	if m.detail.DeletedAt != "" {
-		lines = append(lines, m.theme.Danger.Render("Deleted   "+m.detail.DeletedAt))
-	}
-	if len(m.detail.Tags) > 0 {
-		lines = append(lines, "", m.theme.Muted.Render("Tags"))
-		for _, tag := range m.detail.Tags {
-			lines = append(lines, "  "+tag.Name+"="+tag.Value)
-		}
+	if m.detail.Error != "" {
+		lines = append(lines, m.theme.Danger.Render("Error      "+m.detail.Error))
 	}
 	return lines
 }
@@ -216,4 +199,11 @@ func loCoalesce(values ...string) string {
 		}
 	}
 	return ""
+}
+
+func shortURL(url string, maxLen int) string {
+	if lipgloss.Width(url) <= maxLen {
+		return url
+	}
+	return ansi.Truncate(url, maxLen, "…")
 }

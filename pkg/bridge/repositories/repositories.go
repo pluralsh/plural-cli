@@ -1,6 +1,6 @@
-// Package clusters exposes read-only Console cluster list/get use cases to
-// presentation layers without importing TUI code.
-package clusters
+// Package repositories exposes read-only Console git repository list/get use
+// cases to presentation layers without importing TUI code.
+package repositories
 
 import (
 	"context"
@@ -16,40 +16,27 @@ import (
 const defaultPageSize int64 = 10
 
 var (
-	errNoConsole      = errors.New("connect a Console profile before browsing Console resources")
-	errMissingID      = errors.New("cluster id is required")
-	errMissingCluster = errors.New("cluster was not found")
+	errNoConsole         = errors.New("connect a Console profile before browsing Console resources")
+	errMissingID         = errors.New("repository id is required")
+	errMissingRepository = errors.New("repository was not found")
 )
 
-// Summary is a credential-free list row for a Console cluster.
+// Summary is a credential-free list row for a Console git repository.
 type Summary struct {
-	ID      string
-	Name    string
-	Handle  string
-	Version string
-	Distro  string
+	ID         string
+	URL        string
+	Health     string
+	Error      string
+	AuthMethod string
 }
 
-// Tag is a credential-free cluster tag.
-type Tag struct {
-	Name  string
-	Value string
-}
-
-// Detail is the credential-free detail payload for a Console cluster.
+// Detail is the credential-free detail payload for a Console git repository.
 type Detail struct {
 	Summary
-	Self      bool
-	PingedAt  string
-	Protect   bool
-	DeletedAt string
-	Project   string
-	Provider  string
-	Tags      []Tag
-	NodePools int
+	Decrypt bool
 }
 
-// Page is one cursor page of cluster summaries.
+// Page is one cursor page of repository summaries.
 type Page struct {
 	Items      []Summary
 	EndCursor  string
@@ -57,7 +44,7 @@ type Page struct {
 	TotalShown int
 }
 
-// Loader is the narrow contract consumed by the Clusters screen.
+// Loader is the narrow contract consumed by the Repositories screen.
 type Loader interface {
 	List(ctx context.Context, after *string, query string) (Page, error)
 	Get(ctx context.Context, id string) (Detail, error)
@@ -70,8 +57,8 @@ type ConsoleResolver interface {
 
 // API is the Console surface required by this package.
 type API interface {
-	ListClusters() (*gqlclient.ListClusters, error)
-	GetCluster(clusterId, clusterName *string) (*gqlclient.ClusterFragment, error)
+	ListRepositories() (*gqlclient.ListGitRepositories, error)
+	GetRepository(id string) (*gqlclient.GetGitRepository, error)
 }
 
 // ClientFactory builds a Console API for an authenticated endpoint.
@@ -120,15 +107,15 @@ func (s *Service) List(ctx context.Context, after *string, query string) (Page, 
 	if err != nil {
 		return Page{}, err
 	}
-	result, err := client.ListClusters()
+	result, err := client.ListRepositories()
 	if err != nil {
 		return Page{}, err
 	}
-	if result == nil || result.Clusters == nil {
+	if result == nil || result.GitRepositories == nil {
 		return Page{}, nil
 	}
-	items := make([]Summary, 0, len(result.Clusters.Edges))
-	for _, edge := range result.Clusters.Edges {
+	items := make([]Summary, 0, len(result.GitRepositories.Edges))
+	for _, edge := range result.GitRepositories.Edges {
 		if edge == nil || edge.Node == nil {
 			continue
 		}
@@ -153,14 +140,14 @@ func (s *Service) Get(ctx context.Context, id string) (Detail, error) {
 	if err != nil {
 		return Detail{}, err
 	}
-	cluster, err := client.GetCluster(&id, nil)
+	result, err := client.GetRepository(id)
 	if err != nil {
 		return Detail{}, err
 	}
-	if cluster == nil {
-		return Detail{}, &bridge.Error{Code: bridge.ErrorUnavailable, Err: errMissingCluster}
+	if result == nil || result.GitRepository == nil {
+		return Detail{}, &bridge.Error{Code: bridge.ErrorUnavailable, Err: errMissingRepository}
 	}
-	return detailFromFragment(cluster), nil
+	return detailFromFragment(result.GitRepository), nil
 }
 
 func pageItems(items []Summary, after *string, pageSize int64) Page {
@@ -190,50 +177,25 @@ func pageItems(items []Summary, after *string, pageSize int64) Page {
 	return page
 }
 
-func summaryFromFragment(node *gqlclient.ClusterFragment) Summary {
-	summary := Summary{ID: node.ID, Name: node.Name}
-	if node.Handle != nil {
-		summary.Handle = *node.Handle
+func summaryFromFragment(node *gqlclient.GitRepositoryFragment) Summary {
+	summary := Summary{ID: node.ID, URL: node.URL, Health: "UNKNOWN"}
+	if node.Health != nil {
+		summary.Health = string(*node.Health)
 	}
-	if node.CurrentVersion != nil {
-		summary.Version = *node.CurrentVersion
+	if node.Error != nil {
+		summary.Error = *node.Error
 	}
-	if node.Distro != nil {
-		summary.Distro = string(*node.Distro)
+	if node.AuthMethod != nil {
+		summary.AuthMethod = string(*node.AuthMethod)
 	}
 	return summary
 }
 
-func detailFromFragment(cluster *gqlclient.ClusterFragment) Detail {
-	detail := Detail{Summary: summaryFromFragment(cluster)}
-	if cluster.Self != nil {
-		detail.Self = *cluster.Self
+func detailFromFragment(node *gqlclient.GitRepositoryFragment) Detail {
+	detail := Detail{Summary: summaryFromFragment(node)}
+	if node.Decrypt != nil {
+		detail.Decrypt = *node.Decrypt
 	}
-	if cluster.PingedAt != nil {
-		detail.PingedAt = *cluster.PingedAt
-	}
-	if cluster.Protect != nil {
-		detail.Protect = *cluster.Protect
-	}
-	if cluster.DeletedAt != nil {
-		detail.DeletedAt = *cluster.DeletedAt
-	}
-	if cluster.Project != nil {
-		detail.Project = cluster.Project.Name
-	}
-	if cluster.Provider != nil {
-		detail.Provider = cluster.Provider.Name
-		if cluster.Provider.Cloud != "" {
-			detail.Provider = strings.TrimSpace(detail.Provider + " · " + cluster.Provider.Cloud)
-		}
-	}
-	for _, tag := range cluster.Tags {
-		if tag == nil {
-			continue
-		}
-		detail.Tags = append(detail.Tags, Tag{Name: tag.Name, Value: tag.Value})
-	}
-	detail.NodePools = len(cluster.NodePools)
 	return detail
 }
 
@@ -242,6 +204,8 @@ func matchesQuery(summary Summary, query string) bool {
 	if query == "" {
 		return true
 	}
-	haystack := strings.ToLower(strings.Join([]string{summary.Name, summary.Handle, summary.ID, summary.Version, summary.Distro}, " "))
+	haystack := strings.ToLower(strings.Join([]string{
+		summary.URL, summary.ID, summary.Health, summary.Error, summary.AuthMethod,
+	}, " "))
 	return strings.Contains(haystack, query)
 }
