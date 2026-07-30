@@ -721,6 +721,36 @@ func (_m *ConsoleClient) GetGlobalSettingsMinimal() (*client.DeploymentSettingsF
 	return r0, r1
 }
 
+// GetNotificationSink provides a mock function with given fields: id
+func (_m *ConsoleClient) GetNotificationSink(id string) (*client.NotificationSinkFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNotificationSink")
+	}
+
+	var r0 *client.NotificationSinkFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.NotificationSinkFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.NotificationSinkFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.NotificationSinkFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPipeline provides a mock function with given fields: id
 func (_m *ConsoleClient) GetPipeline(id string) (*client.PipelineFragment, error) {
 	ret := _m.Called(id)

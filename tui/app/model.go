@@ -9,6 +9,7 @@ import (
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
 	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
@@ -18,6 +19,7 @@ import (
 	clustersscreen "github.com/pluralsh/plural-cli/tui/screens/clusters"
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
+	notificationsscreen "github.com/pluralsh/plural-cli/tui/screens/notifications"
 	pipelinesscreen "github.com/pluralsh/plural-cli/tui/screens/pipelines"
 	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
@@ -27,12 +29,13 @@ import (
 
 // Dependencies contains the services required by TUI screens.
 type Dependencies struct {
-	Welcome      welcomebridge.Loader
-	Access       accessbridge.Manager
-	Services     servicesbridge.Loader
-	Clusters     clustersbridge.Loader
-	Repositories repositoriesbridge.Loader
-	Pipelines    pipelinesbridge.Loader
+	Welcome       welcomebridge.Loader
+	Access        accessbridge.Manager
+	Services      servicesbridge.Loader
+	Clusters      clustersbridge.Loader
+	Repositories  repositoriesbridge.Loader
+	Pipelines     pipelinesbridge.Loader
+	Notifications notificationsbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -44,30 +47,32 @@ type Model struct {
 	theme theme.Theme
 	quit  key.Binding
 
-	welcome      welcomescreen.Model
-	access       accessscreen.Model
-	diagnostics  diagnosticsscreen.Model
-	deployments  deploymentsscreen.Model
-	services     servicesscreen.Model
-	clusters     clustersscreen.Model
-	repositories repositoriesscreen.Model
-	pipelines    pipelinesscreen.Model
-	route        navigation.Route
+	welcome       welcomescreen.Model
+	access        accessscreen.Model
+	diagnostics   diagnosticsscreen.Model
+	deployments   deploymentsscreen.Model
+	services      servicesscreen.Model
+	clusters      clustersscreen.Model
+	repositories  repositoriesscreen.Model
+	pipelines     pipelinesscreen.Model
+	notifications notificationsscreen.Model
+	route         navigation.Route
 }
 
 // New composes the root model with caller-provided dependencies.
 func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 	return Model{
-		theme:        t,
-		welcome:      welcomescreen.New(ctx, dependencies.Welcome, t),
-		access:       accessscreen.New(ctx, dependencies.Access, t),
-		diagnostics:  diagnosticsscreen.New(ctx, dependencies.Welcome, t),
-		deployments:  deploymentsscreen.New(ctx, t, ""),
-		services:     servicesscreen.New(ctx, dependencies.Services, t),
-		clusters:     clustersscreen.New(ctx, dependencies.Clusters, t),
-		repositories: repositoriesscreen.New(ctx, dependencies.Repositories, t),
-		pipelines:    pipelinesscreen.New(ctx, dependencies.Pipelines, t),
-		route:        navigation.Welcome,
+		theme:         t,
+		welcome:       welcomescreen.New(ctx, dependencies.Welcome, t),
+		access:        accessscreen.New(ctx, dependencies.Access, t),
+		diagnostics:   diagnosticsscreen.New(ctx, dependencies.Welcome, t),
+		deployments:   deploymentsscreen.New(ctx, t, ""),
+		services:      servicesscreen.New(ctx, dependencies.Services, t),
+		clusters:      clustersscreen.New(ctx, dependencies.Clusters, t),
+		repositories:  repositoriesscreen.New(ctx, dependencies.Repositories, t),
+		pipelines:     pipelinesscreen.New(ctx, dependencies.Pipelines, t),
+		notifications: notificationsscreen.New(ctx, dependencies.Notifications, t),
+		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
 			key.WithHelp("ctrl+c", "quit"),
@@ -97,6 +102,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.repositories.Init()
 		case navigation.Pipelines:
 			return m, m.pipelines.Init()
+		case navigation.Notifications:
+			return m, m.notifications.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -130,6 +137,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.repositories, cmd = m.repositories.Update(msg)
 	case navigation.Pipelines:
 		m.pipelines, cmd = m.pipelines.Update(msg)
+	case navigation.Notifications:
+		m.notifications, cmd = m.notifications.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

@@ -98,9 +98,20 @@ func TestPipelinesNavigates(t *testing.T) {
 	}
 }
 
+func TestNotificationsNavigates(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "https://console.acme.io")
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
+	if cmd == nil {
+		t.Fatal("expected navigation")
+	}
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Notifications}) {
+		t.Fatalf("msg = %#v", msg)
+	}
+}
+
 func TestSoonResourceDoesNotNavigate(t *testing.T) {
 	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
-	model.cursor = 4 // notifications [soon]
+	model.cursor = 5 // providers [soon]
 	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if cmd != nil {
 		t.Fatalf("unexpected cmd %#v", cmd())

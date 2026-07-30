@@ -9,14 +9,15 @@ import tea "charm.land/bubbletea/v2"
 type Route string
 
 const (
-	Welcome     Route = "welcome"
-	Access      Route = "access"
-	Diagnostics Route = "diagnostics"
-	Deployments Route = "deployments"
-	Services     Route = "services"
-	Clusters     Route = "clusters"
-	Repositories Route = "repositories"
-	Pipelines    Route = "pipelines"
+	Welcome       Route = "welcome"
+	Access        Route = "access"
+	Diagnostics   Route = "diagnostics"
+	Deployments   Route = "deployments"
+	Services      Route = "services"
+	Clusters      Route = "clusters"
+	Repositories  Route = "repositories"
+	Pipelines     Route = "pipelines"
+	Notifications Route = "notifications"
 )
 
 // NavigateMsg requests a top-level route change.

@@ -55,6 +55,7 @@ type ConsoleClient interface {
 	GetServiceContext(name string) (*consoleclient.ServiceContextFragment, error)
 	KickClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	ListNotificationSinks(after *string, first *int64) (*consoleclient.ListNotificationSinks_NotificationSinks, error)
+	GetNotificationSink(id string) (*consoleclient.NotificationSinkFragment, error)
 	CreateNotificationSinks(attr consoleclient.NotificationSinkAttributes) (*consoleclient.NotificationSinkFragment, error)
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
