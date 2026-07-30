@@ -14,6 +14,7 @@ const (
 	Diagnostics Route = "diagnostics"
 	Deployments Route = "deployments"
 	Services    Route = "services"
+	Clusters    Route = "clusters"
 )
 
 // NavigateMsg requests a top-level route change.

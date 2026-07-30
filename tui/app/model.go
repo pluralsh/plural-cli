@@ -8,10 +8,12 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
+	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	accessscreen "github.com/pluralsh/plural-cli/tui/screens/access"
+	clustersscreen "github.com/pluralsh/plural-cli/tui/screens/clusters"
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
@@ -24,6 +26,7 @@ type Dependencies struct {
 	Welcome  welcomebridge.Loader
 	Access   accessbridge.Manager
 	Services servicesbridge.Loader
+	Clusters clustersbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -40,6 +43,7 @@ type Model struct {
 	diagnostics diagnosticsscreen.Model
 	deployments deploymentsscreen.Model
 	services    servicesscreen.Model
+	clusters    clustersscreen.Model
 	route       navigation.Route
 }
 
@@ -52,6 +56,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		diagnostics: diagnosticsscreen.New(ctx, dependencies.Welcome, t),
 		deployments: deploymentsscreen.New(ctx, t, ""),
 		services:    servicesscreen.New(ctx, dependencies.Services, t),
+		clusters:    clustersscreen.New(ctx, dependencies.Clusters, t),
 		route:       navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -76,6 +81,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.deployments.Init()
 		case navigation.Services:
 			return m, m.services.Init()
+		case navigation.Clusters:
+			return m, m.clusters.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -103,6 +110,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.deployments, cmd = m.deployments.Update(msg)
 	case navigation.Services:
 		m.services, cmd = m.services.Update(msg)
+	case navigation.Clusters:
+		m.clusters, cmd = m.clusters.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}
