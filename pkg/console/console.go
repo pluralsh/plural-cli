@@ -41,6 +41,7 @@ type ConsoleClient interface {
 	GetClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	DeleteClusterService(serviceId string) (*consoleclient.DeleteServiceDeployment, error)
 	ListProviders() (*consoleclient.ListProviders, error)
+	GetProvider(id string) (*consoleclient.ClusterProviderFragment, error)
 	CreateProviderCredentials(name string, attr consoleclient.ProviderCredentialAttributes) (*consoleclient.CreateProviderCredential, error)
 	DeleteProviderCredentials(id string) (*consoleclient.DeleteProviderCredential, error)
 	SavePipeline(name string, attrs consoleclient.PipelineAttributes) (*consoleclient.PipelineFragmentMinimal, error)

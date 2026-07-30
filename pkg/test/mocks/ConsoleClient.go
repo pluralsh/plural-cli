@@ -871,6 +871,36 @@ func (_m *ConsoleClient) GetProject(name string) (*client.ProjectFragment, error
 	return r0, r1
 }
 
+// GetProvider provides a mock function with given fields: id
+func (_m *ConsoleClient) GetProvider(id string) (*client.ClusterProviderFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProvider")
+	}
+
+	var r0 *client.ClusterProviderFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.ClusterProviderFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.ClusterProviderFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ClusterProviderFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetRepository provides a mock function with given fields: id
 func (_m *ConsoleClient) GetRepository(id string) (*client.GetGitRepository, error) {
 	ret := _m.Called(id)

@@ -27,6 +27,8 @@ func (m Model) View() tea.View {
 		content = m.pipelines.View(m.width, m.height)
 	case navigation.Notifications:
 		content = m.notifications.View(m.width, m.height)
+	case navigation.Providers:
+		content = m.providers.View(m.width, m.height)
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true

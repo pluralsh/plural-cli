@@ -37,7 +37,7 @@ func resources() []resource {
 		{id: resourceRepositories, number: "3", shortcut: "r", title: "Repositories", blurb: "list · describe", route: navigation.Repositories},
 		{id: resourcePipelines, number: "4", shortcut: "p", title: "Pipelines", blurb: "list · describe", route: navigation.Pipelines},
 		{id: resourceNotifications, number: "5", shortcut: "n", title: "Notifications", blurb: "list · describe", route: navigation.Notifications},
-		{id: resourceProviders, number: "6", shortcut: "v", title: "Providers", blurb: "list", soon: true},
+		{id: resourceProviders, number: "6", shortcut: "v", title: "Providers", blurb: "list · describe", route: navigation.Providers},
 	}
 }
 

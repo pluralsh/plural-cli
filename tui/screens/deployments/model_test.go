@@ -109,12 +109,14 @@ func TestNotificationsNavigates(t *testing.T) {
 	}
 }
 
-func TestSoonResourceDoesNotNavigate(t *testing.T) {
-	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
-	model.cursor = 5 // providers [soon]
-	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cmd != nil {
-		t.Fatalf("unexpected cmd %#v", cmd())
+func TestProvidersNavigates(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "https://console.acme.io")
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 'v', Text: "v"})
+	if cmd == nil {
+		t.Fatal("expected navigation")
+	}
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Providers}) {
+		t.Fatalf("msg = %#v", msg)
 	}
 }
 
