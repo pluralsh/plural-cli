@@ -961,6 +961,36 @@ func (_m *ConsoleClient) GetServiceContext(name string) (*client.ServiceContextF
 	return r0, r1
 }
 
+// GetStack provides a mock function with given fields: id
+func (_m *ConsoleClient) GetStack(id string) (*client.InfrastructureStackFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetStack")
+	}
+
+	var r0 *client.InfrastructureStackFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.InfrastructureStackFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.InfrastructureStackFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.InfrastructureStackFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUser provides a mock function with given fields: email
 func (_m *ConsoleClient) GetUser(email string) (*client.UserFragment, error) {
 	ret := _m.Called(email)

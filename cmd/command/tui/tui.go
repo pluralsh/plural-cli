@@ -14,6 +14,7 @@ import (
 	providersbridge "github.com/pluralsh/plural-cli/pkg/bridge/providers"
 	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
+	stacksbridge "github.com/pluralsh/plural-cli/pkg/bridge/stacks"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	tuiapp "github.com/pluralsh/plural-cli/tui/app"
@@ -31,6 +32,7 @@ func Command() cli.Command {
 		pipelines := pipelinesbridge.NewService(access)
 		notifications := notificationsbridge.NewService(access)
 		providers := providersbridge.NewService(access)
+		stacks := stacksbridge.NewService(access)
 		return tuiapp.Run(ctx, os.Stdin, os.Stdout, tuiapp.Dependencies{
 			Welcome:       welcome,
 			Access:        access,
@@ -40,6 +42,7 @@ func Command() cli.Command {
 			Pipelines:     pipelines,
 			Notifications: notifications,
 			Providers:     providers,
+			Stacks:        stacks,
 		})
 	})
 }

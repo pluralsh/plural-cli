@@ -20,10 +20,10 @@ func (m Model) View(width, height int) string {
 		status = m.theme.Success.Render(ansi.Truncate(m.console, 40, "…"))
 	}
 
-	body := page.Panel(m.theme, "Resources", m.resourceLines(contentWidth-4), contentWidth, 8, true) + "\n\n" +
+	body := page.Panel(m.theme, "Resources", m.resourceLines(contentWidth-4), contentWidth, 10, true) + "\n\n" +
 		page.Panel(m.theme, "Connection", m.connectionLines(), contentWidth, 4, false)
 
-	help := "1–6 / letter · enter open · esc welcome · ctrl+c quit"
+	help := "1–8 / letter · enter open · esc welcome · ctrl+c quit"
 	return page.Render(m.theme, width, height, "CD / Deployments", status, body, help)
 }
 

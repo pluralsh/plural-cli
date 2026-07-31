@@ -8,6 +8,8 @@
   │   4  p   Pipelines       list · describe                                                                         │
   │   5  n   Notifications   list · describe                                                                         │
   │   6  v   Providers       list · describe                                                                         │
+  │   7  t   Stacks          list · describe                                                                         │
+  │   8  u   Pull requests   automations  [soon]                                                                     │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
   ╭─ Connection ─────────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -25,6 +27,4 @@
 
 
 
-
-
-  1–6 / letter · enter open · esc welcome · ctrl+c quit
+  1–8 / letter · enter open · esc welcome · ctrl+c quit

@@ -120,6 +120,30 @@ func TestProvidersNavigates(t *testing.T) {
 	}
 }
 
+func TestSoonResourceDoesNotNavigate(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
+	model.cursor = 7 // pull requests [soon]
+	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd != nil {
+		t.Fatalf("unexpected cmd %#v", cmd())
+	}
+	_, cmd = model.Update(tea.KeyPressMsg{Code: 'u', Text: "u"})
+	if cmd != nil {
+		t.Fatalf("unexpected pull-requests shortcut cmd %#v", cmd())
+	}
+}
+
+func TestStacksNavigates(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "https://console.acme.io")
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 't', Text: "t"})
+	if cmd == nil {
+		t.Fatal("expected navigation")
+	}
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.Stacks}) {
+		t.Fatalf("msg = %#v", msg)
+	}
+}
+
 func TestEscReturnsWelcome(t *testing.T) {
 	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
 	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})

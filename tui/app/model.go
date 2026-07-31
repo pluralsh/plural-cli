@@ -14,6 +14,7 @@ import (
 	providersbridge "github.com/pluralsh/plural-cli/pkg/bridge/providers"
 	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
+	stacksbridge "github.com/pluralsh/plural-cli/pkg/bridge/stacks"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	accessscreen "github.com/pluralsh/plural-cli/tui/screens/access"
@@ -25,6 +26,7 @@ import (
 	providersscreen "github.com/pluralsh/plural-cli/tui/screens/providers"
 	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
+	stacksscreen "github.com/pluralsh/plural-cli/tui/screens/stacks"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
@@ -39,6 +41,7 @@ type Dependencies struct {
 	Pipelines     pipelinesbridge.Loader
 	Notifications notificationsbridge.Loader
 	Providers     providersbridge.Loader
+	Stacks        stacksbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -60,6 +63,7 @@ type Model struct {
 	pipelines     pipelinesscreen.Model
 	notifications notificationsscreen.Model
 	providers     providersscreen.Model
+	stacks        stacksscreen.Model
 	route         navigation.Route
 }
 
@@ -77,6 +81,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		pipelines:     pipelinesscreen.New(ctx, dependencies.Pipelines, t),
 		notifications: notificationsscreen.New(ctx, dependencies.Notifications, t),
 		providers:     providersscreen.New(ctx, dependencies.Providers, t),
+		stacks:        stacksscreen.New(ctx, dependencies.Stacks, t),
 		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -111,6 +116,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.notifications.Init()
 		case navigation.Providers:
 			return m, m.providers.Init()
+		case navigation.Stacks:
+			return m, m.stacks.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -148,6 +155,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.notifications, cmd = m.notifications.Update(msg)
 	case navigation.Providers:
 		m.providers, cmd = m.providers.Update(msg)
+	case navigation.Stacks:
+		m.stacks, cmd = m.stacks.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}
