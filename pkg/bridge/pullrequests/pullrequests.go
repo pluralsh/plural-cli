@@ -1,11 +1,10 @@
-// Package stacks exposes Console infrastructure stack list/get/gen-backend
+// Package pullrequests exposes read-only Console PR automation list/get
 // use cases to presentation layers without importing TUI code.
-package stacks
+package pullrequests
 
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -18,37 +17,29 @@ import (
 const defaultPageSize int64 = 10
 
 var (
-	errNoConsole    = errors.New("connect a Console profile before browsing Console resources")
-	errMissingID    = errors.New("stack id is required")
-	errMissingStack = errors.New("infrastructure stack was not found")
+	errNoConsole         = errors.New("connect a Console profile before browsing Console resources")
+	errMissingID         = errors.New("pr automation id is required")
+	errMissingAutomation = errors.New("pr automation was not found")
 )
 
-// Summary is a credential-free list row for an infrastructure stack.
+// Summary is a credential-free list row for a PR automation.
 type Summary struct {
-	ID       string
-	Name     string
-	Type     string
-	Project  string
-	Cluster  string
-	Approval string
-	RepoURL  string
+	ID         string
+	Name       string
+	Title      string
+	Addon      string
+	Identifier string
 }
 
-// Detail is the credential-free detail payload for an infrastructure stack.
-// Environment and output values are omitted; only names are exposed.
+// Detail is the credential-free detail payload for a PR automation.
 type Detail struct {
 	Summary
-	Workdir       string
-	ManageState   string
-	GitRef        string
-	GitFolder     string
-	ConfigVersion string
-	DeletedAt     string
-	EnvNames      []string
-	OutputNames   []string
+	Message    string
+	InsertedAt string
+	UpdatedAt  string
 }
 
-// Page is one cursor page of stack summaries.
+// Page is one cursor page of PR automation summaries.
 type Page struct {
 	Items      []Summary
 	EndCursor  string
@@ -64,14 +55,10 @@ type ConsoleResolver interface {
 // ClientFactory builds a Console API for an authenticated endpoint.
 type ClientFactory func(token, url string) (API, error)
 
-// ActorFunc resolves the Plural App email used as terraform backend username.
-type ActorFunc func() (string, error)
-
 // Service implements Loader against Console GraphQL.
 type Service struct {
 	resolve   ConsoleResolver
 	newClient ClientFactory
-	actor     ActorFunc
 	pageSize  int64
 }
 
@@ -111,15 +98,15 @@ func (s *Service) List(ctx context.Context, after *string, query string) (Page, 
 	if err != nil {
 		return Page{}, err
 	}
-	result, err := client.ListStacks()
+	result, err := client.ListPrAutomations()
 	if err != nil {
 		return Page{}, err
 	}
-	if result == nil || result.InfrastructureStacks == nil {
+	if result == nil || result.PrAutomations == nil {
 		return Page{}, nil
 	}
-	items := make([]Summary, 0, len(result.InfrastructureStacks.Edges))
-	for _, edge := range result.InfrastructureStacks.Edges {
+	items := make([]Summary, 0, len(result.PrAutomations.Edges))
+	for _, edge := range result.PrAutomations.Edges {
 		if edge == nil || edge.Node == nil {
 			continue
 		}
@@ -144,14 +131,14 @@ func (s *Service) Get(ctx context.Context, id string) (Detail, error) {
 	if err != nil {
 		return Detail{}, err
 	}
-	stack, err := client.GetStack(id)
+	automation, err := client.GetPrAutomation(id)
 	if err != nil {
 		return Detail{}, err
 	}
-	if stack == nil {
-		return Detail{}, &bridge.Error{Code: bridge.ErrorUnavailable, Err: errMissingStack}
+	if automation == nil {
+		return Detail{}, &bridge.Error{Code: bridge.ErrorUnavailable, Err: errMissingAutomation}
 	}
-	return detailFromFragment(stack), nil
+	return detailFromFragment(automation), nil
 }
 
 func pageItems(items []Summary, after *string, pageSize int64) Page {
@@ -181,62 +168,23 @@ func pageItems(items []Summary, after *string, pageSize int64) Page {
 	return page
 }
 
-func summaryFromFragment(node *gqlclient.InfrastructureStackFragment) Summary {
-	summary := Summary{
-		ID:   lo.FromPtr(node.ID),
-		Name: node.Name,
-		Type: string(node.Type),
+func summaryFromFragment(node *gqlclient.PrAutomationFragment) Summary {
+	return Summary{
+		ID:         node.ID,
+		Name:       node.Name,
+		Title:      lo.FromPtr(node.Title),
+		Addon:      lo.FromPtr(node.Addon),
+		Identifier: lo.FromPtr(node.Identifier),
 	}
-	if node.Approval != nil {
-		summary.Approval = strconv.FormatBool(*node.Approval)
-	}
-	if node.Project != nil {
-		summary.Project = node.Project.Name
-	}
-	if node.Cluster != nil {
-		summary.Cluster = node.Cluster.Name
-	}
-	if node.Repository != nil {
-		summary.RepoURL = node.Repository.URL
-	}
-	return summary
 }
 
-func detailFromFragment(node *gqlclient.InfrastructureStackFragment) Detail {
-	detail := Detail{
-		Summary:   summaryFromFragment(node),
-		GitRef:    node.Git.Ref,
-		GitFolder: node.Git.Folder,
+func detailFromFragment(node *gqlclient.PrAutomationFragment) Detail {
+	return Detail{
+		Summary:    summaryFromFragment(node),
+		Message:    lo.FromPtr(node.Message),
+		InsertedAt: lo.FromPtr(node.InsertedAt),
+		UpdatedAt:  lo.FromPtr(node.UpdatedAt),
 	}
-	if node.Workdir != nil {
-		detail.Workdir = *node.Workdir
-	}
-	if node.ManageState != nil {
-		detail.ManageState = strconv.FormatBool(*node.ManageState)
-	}
-	if node.Configuration.Version != nil {
-		detail.ConfigVersion = *node.Configuration.Version
-	}
-	if node.DeletedAt != nil {
-		detail.DeletedAt = *node.DeletedAt
-	}
-	for _, env := range node.Environment {
-		if env == nil || env.Name == "" {
-			continue
-		}
-		detail.EnvNames = append(detail.EnvNames, env.Name)
-	}
-	for _, out := range node.Output {
-		if out == nil || out.Name == "" {
-			continue
-		}
-		name := out.Name
-		if out.Secret != nil && *out.Secret {
-			name += " (secret)"
-		}
-		detail.OutputNames = append(detail.OutputNames, name)
-	}
-	return detail
 }
 
 func matchesQuery(summary Summary, query string) bool {
@@ -245,7 +193,7 @@ func matchesQuery(summary Summary, query string) bool {
 		return true
 	}
 	haystack := strings.ToLower(strings.Join([]string{
-		summary.Name, summary.Type, summary.Project, summary.Cluster, summary.RepoURL, summary.Approval, summary.ID,
+		summary.Name, summary.Title, summary.Addon, summary.Identifier, summary.ID,
 	}, " "))
 	return strings.Contains(haystack, query)
 }

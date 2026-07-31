@@ -68,6 +68,8 @@ type ConsoleClient interface {
 	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
 	EnqueueWorkbenchPRFollowup(url, prompt string, deferBy time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
+	ListPrAutomations() (*consoleclient.ListPrAutomations, error)
+	GetPrAutomation(id string) (*consoleclient.PrAutomationFragment, error)
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)

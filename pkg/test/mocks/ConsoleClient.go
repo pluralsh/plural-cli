@@ -811,6 +811,36 @@ func (_m *ConsoleClient) GetPipelineContext(id string) (*client.PipelineContextF
 	return r0, r1
 }
 
+// GetPrAutomation provides a mock function with given fields: id
+func (_m *ConsoleClient) GetPrAutomation(id string) (*client.PrAutomationFragment, error) {
+	ret := _m.Called(id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrAutomation")
+	}
+
+	var r0 *client.PrAutomationFragment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*client.PrAutomationFragment, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *client.PrAutomationFragment); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.PrAutomationFragment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPrAutomationByName provides a mock function with given fields: name
 func (_m *ConsoleClient) GetPrAutomationByName(name string) (*client.PrAutomationFragment, error) {
 	ret := _m.Called(name)
@@ -1249,6 +1279,36 @@ func (_m *ConsoleClient) ListPipelines() (*client.GetPipelines, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*client.GetPipelines)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPrAutomations provides a mock function with no fields
+func (_m *ConsoleClient) ListPrAutomations() (*client.ListPrAutomations, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListPrAutomations")
+	}
+
+	var r0 *client.ListPrAutomations
+	var r1 error
+	if rf, ok := ret.Get(0).(func() (*client.ListPrAutomations, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() *client.ListPrAutomations); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ListPrAutomations)
 		}
 	}
 

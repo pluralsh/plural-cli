@@ -1,4 +1,4 @@
-package stacks
+package pullrequests
 
 import (
 	"fmt"
@@ -16,14 +16,14 @@ func (m Model) View(width, height int) string {
 		return page.Unsupported(m.theme, width, height)
 	}
 	contentWidth := page.ContentWidth(width)
-	title := "Stacks"
+	title := "Pull requests"
 	if m.mode == modeDetail && m.detail.Name != "" {
-		title = "Stacks · " + m.detail.Name
+		title = "Pull requests · " + m.detail.Name
 	}
 	if m.mode == modeReview || m.mode == modeOperating || m.mode == modeResult {
 		title = m.pending.title
 		if title == "" {
-			title = "Stacks"
+			title = "Pull requests"
 		}
 	}
 	body, help := m.bodyAndHelp(contentWidth)
@@ -37,17 +37,17 @@ func (m Model) headerStatus() string {
 	if m.needsAuth {
 		return m.theme.Warning.Render("○ connect Console")
 	}
-	if m.err != nil && m.mode != modeGenBackendForm {
+	if m.err != nil && m.mode != modeCreateForm && m.mode != modeTriggerForm {
 		return m.theme.Danger.Render("✗ load failed")
 	}
 	switch m.mode {
 	case modeDetail:
-		return m.theme.Success.Render(loCoalesce(m.detail.Type, "stack"))
+		return m.theme.Success.Render(loCoalesce(m.detail.Addon, "automation"))
 	case modeList:
 		if m.filter != "" {
 			return m.theme.Muted.Render(fmt.Sprintf("%d matching", len(m.page.Items)))
 		}
-		return m.theme.Success.Render(fmt.Sprintf("%d stacks", len(m.page.Items)))
+		return m.theme.Success.Render(fmt.Sprintf("%d automations", len(m.page.Items)))
 	case modeReview:
 		return m.theme.Warning.Render("review")
 	case modeResult:
@@ -56,23 +56,23 @@ func (m Model) headerStatus() string {
 		}
 		return m.theme.Success.Render("done")
 	default:
-		return m.theme.Muted.Render("stacks")
+		return m.theme.Muted.Render("pull requests")
 	}
 }
 
 func (m Model) bodyAndHelp(width int) (string, string) {
 	if m.mode == modeFilter {
 		lines := []string{
-			m.theme.Muted.Render("Filter by name, type, project, cluster, or id."),
+			m.theme.Muted.Render("Filter by name, title, addon, identifier, or id."),
 			"",
 			m.filterInput.View(),
 		}
-		return page.Panel(m.theme, "Filter stacks", lines, width, 6, true), "enter apply · esc cancel"
+		return page.Panel(m.theme, "Filter PR automations", lines, width, 6, true), "enter apply · esc cancel"
 	}
 	if m.needsAuth {
 		lines := []string{
 			m.theme.Warning.Render("○ Console is not connected"),
-			m.theme.Muted.Render("  Connect a Console profile to browse stacks."),
+			m.theme.Muted.Render("  Connect a Console profile to browse PR automations."),
 			"",
 			m.theme.Body.Render("Press c to open Access."),
 		}
@@ -82,7 +82,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 	case modeReview:
 		lines := append([]string{}, m.pending.lines...)
 		lines = append(lines, "", m.theme.Muted.Render("Equivalent CLI"), "  "+m.pending.cli)
-		return page.Panel(m.theme, "Plan (immutable)", lines, width, 14, true), "enter confirm · esc back"
+		return page.Panel(m.theme, "Plan (immutable)", lines, width, 12, true), "enter confirm · esc back"
 	case modeOperating:
 		lines := []string{m.theme.Warning.Render("● Running…"), ""}
 		lines = append(lines, m.opLog...)
@@ -93,18 +93,37 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		if m.result == "failed" {
 			head = m.theme.Danger.Render("✗ Failed")
 			help = "enter retry review · esc detail"
+		} else if m.pending.kind == actionTemplate || m.pending.kind == actionTest || m.pending.kind == actionContracts {
+			head = m.theme.Muted.Render("CLI equivalent")
+			help = "esc detail"
 		}
 		lines := []string{head, ""}
 		lines = append(lines, m.opLog...)
 		return page.Panel(m.theme, "Result", lines, width, 12, true), help
-	case modeGenBackendForm:
+	case modeCreateForm, modeTriggerForm:
 		return m.formView(width)
+	case modeCLITip:
+		kind := "Template"
+		switch m.cliKind {
+		case actionTest:
+			kind = "Test"
+		case actionContracts:
+			kind = "Contracts"
+		}
+		lines := []string{
+			m.theme.Muted.Render(kind + " runs locally via the Plural CLI."),
+			"",
+			"File       " + m.formInput.View(),
+			"",
+			m.theme.Muted.Render("Enter shows the CLI equivalent."),
+		}
+		return page.Panel(m.theme, kind+" · CLI", lines, width, 8, true), "enter · esc detail"
 	case modeDetail:
-		summary := page.Panel(m.theme, "Summary", m.detailLines(), width, 12, false)
-		actions := page.Panel(m.theme, "Actions", m.actionLines(width), width, 5, true)
-		help := "↑/↓ actions · enter · g · r refresh · esc list"
+		summary := page.Panel(m.theme, "Summary", m.detailLines(), width, 9, false)
+		actions := page.Panel(m.theme, "Actions", m.actionLines(width), width, 8, true)
+		help := "↑/↓ actions · enter · c t m e o · r refresh · esc list"
 		if width < 100 {
-			help = "↑/↓ · enter · g · r · esc"
+			help = "↑/↓ · enter · letters · r · esc"
 		}
 		return summary + "\n\n" + actions, help
 	default:
@@ -117,8 +136,12 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 }
 
 func (m Model) formView(width int) (string, string) {
+	title := "Create pull request"
+	if m.mode == modeTriggerForm {
+		title = "Trigger PR automation"
+	}
 	lines := []string{
-		"Stack  " + m.detail.Name,
+		"Automation  " + m.detail.Name,
 		"",
 	}
 	for i, field := range m.formFields {
@@ -135,37 +158,36 @@ func (m Model) formView(width int) (string, string) {
 	if m.err != nil {
 		lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
 	}
-	return page.Panel(m.theme, "Generate backend", lines, width, 14, true), "↑/↓ fields · enter next/review · esc cancel"
+	return page.Panel(m.theme, title, lines, width, 12, true), "↑/↓ fields · enter next/review · esc cancel"
 }
 
 func (m Model) listTitle() string {
 	if m.filter != "" {
-		return "Stacks · filter “" + m.filter + "”"
+		return "PR automations · filter “" + m.filter + "”"
 	}
-	return "Stacks"
+	return "PR automations"
 }
 
 func (m Model) listLines(width int) []string {
 	if m.loading && len(m.page.Items) == 0 {
-		return []string{m.theme.Warning.Render("◌ Loading stacks…")}
+		return []string{m.theme.Warning.Render("◌ Loading PR automations…")}
 	}
 	if m.err != nil {
 		return []string{
-			m.theme.Danger.Render("✗ Unable to load stacks"),
+			m.theme.Danger.Render("✗ Unable to load PR automations"),
 			m.theme.Danger.Render("Error  " + m.err.Error()),
 			m.theme.Muted.Render("Press r to retry."),
 		}
 	}
 	if len(m.page.Items) == 0 {
 		return []string{
-			m.theme.Warning.Render("○ No stacks found"),
+			m.theme.Warning.Render("○ No PR automations found"),
 			m.theme.Muted.Render("  Adjust the filter or connect another Console."),
 		}
 	}
-	nameWidth := max(12, min(20, width/4))
-	typeWidth := max(8, min(12, width/8))
-	clusterWidth := max(8, min(14, width/5))
-	lines := []string{m.theme.Muted.Render("  " + pad("NAME", nameWidth) + " " + pad("TYPE", typeWidth) + " " + pad("CLUSTER", clusterWidth) + " PROJECT")}
+	nameWidth := max(12, min(22, width/3))
+	addonWidth := max(6, min(12, width/6))
+	lines := []string{m.theme.Muted.Render("  " + pad("NAME", nameWidth) + " " + pad("ADDON", addonWidth) + " TITLE")}
 	start, end := visibleWindow(m.cursor, len(m.page.Items), 8)
 	for i := start; i < end; i++ {
 		item := m.page.Items[i]
@@ -173,7 +195,7 @@ func (m Model) listLines(width int) []string {
 		if i == m.cursor {
 			cursor = "› "
 		}
-		row := cursor + pad(item.Name, nameWidth) + " " + pad(item.Type, typeWidth) + " " + pad(loCoalesce(item.Cluster, "—"), clusterWidth) + " " + loCoalesce(item.Project, "—")
+		row := cursor + pad(item.Name, nameWidth) + " " + pad(loCoalesce(item.Addon, "—"), addonWidth) + " " + loCoalesce(item.Title, "—")
 		lines = append(lines, ansi.Truncate(row, width-2, "…"))
 	}
 	if start > 0 || end < len(m.page.Items) {
@@ -200,7 +222,11 @@ func (m Model) actionLines(width int) []string {
 		if i == m.actionCursor {
 			cursor = "› "
 		}
-		row := cursor + a.shortcut + "  " + pad(a.title, 12) + " " + a.blurb
+		suffix := ""
+		if a.cliOnly {
+			suffix = "  " + m.theme.Muted.Render("CLI")
+		}
+		row := cursor + a.shortcut + "  " + pad(a.title, 12) + " " + a.blurb + suffix
 		lines = append(lines, ansi.Truncate(row, max(1, width-2), "…"))
 	}
 	return lines
@@ -230,47 +256,22 @@ func visibleWindow(cursor, count, size int) (start, end int) {
 
 func (m Model) detailLines() []string {
 	if m.loading {
-		return []string{m.theme.Warning.Render("◌ Loading stack detail…")}
+		return []string{m.theme.Warning.Render("◌ Loading PR automation detail…")}
 	}
 	if m.err != nil {
-		return []string{m.theme.Danger.Render("✗ Unable to load stack"), m.theme.Danger.Render(m.err.Error())}
+		return []string{m.theme.Danger.Render("✗ Unable to load PR automation"), m.theme.Danger.Render(m.err.Error())}
 	}
 	lines := []string{
 		m.labelValue("Name", m.detail.Name),
-		m.labelValue("Type", loCoalesce(m.detail.Type, "—")),
-		m.labelValue("Project", loCoalesce(m.detail.Project, "—")),
-		m.labelValue("Cluster", loCoalesce(m.detail.Cluster, "—")),
-		m.labelValue("Approval", loCoalesce(m.detail.Approval, "—")),
-		m.labelValue("Repo", loCoalesce(m.detail.RepoURL, "—")),
-		m.labelValue("Git", formatGit(m.detail.GitRef, m.detail.GitFolder)),
-		m.labelValue("Workdir", loCoalesce(m.detail.Workdir, "—")),
-		m.labelValue("State", loCoalesce(m.detail.ManageState, "—")),
-		m.labelValue("Version", loCoalesce(m.detail.ConfigVersion, "—")),
+		m.labelValue("Title", loCoalesce(m.detail.Title, "—")),
+		m.labelValue("Addon", loCoalesce(m.detail.Addon, "—")),
+		m.labelValue("Identifier", loCoalesce(m.detail.Identifier, "—")),
 		m.labelValue("ID", m.detail.ID),
 	}
-	if m.detail.DeletedAt != "" {
-		lines = append(lines, m.labelValue("Deleted", m.detail.DeletedAt))
-	}
-	if len(m.detail.EnvNames) > 0 {
-		lines = append(lines, m.labelValue("Env", strings.Join(m.detail.EnvNames, ", ")))
-	}
-	if len(m.detail.OutputNames) > 0 {
-		lines = append(lines, m.labelValue("Outputs", strings.Join(m.detail.OutputNames, ", ")))
+	if m.detail.Message != "" {
+		lines = append(lines, m.labelValue("Message", m.detail.Message))
 	}
 	return lines
-}
-
-func formatGit(ref, folder string) string {
-	switch {
-	case ref != "" && folder != "":
-		return ref + " · " + folder
-	case ref != "":
-		return ref
-	case folder != "":
-		return folder
-	default:
-		return "—"
-	}
 }
 
 func (m Model) labelValue(label, value string) string {
@@ -284,13 +285,6 @@ func pad(value string, width int) string {
 		return value
 	}
 	return value + strings.Repeat(" ", width-lipgloss.Width(value))
-}
-
-func truncate(v string, n int) string {
-	if len(v) <= n {
-		return v
-	}
-	return v[:n-1] + "…"
 }
 
 func loCoalesce(values ...string) string {

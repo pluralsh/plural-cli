@@ -12,6 +12,7 @@ import (
 	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
 	providersbridge "github.com/pluralsh/plural-cli/pkg/bridge/providers"
+	pullrequestsbridge "github.com/pluralsh/plural-cli/pkg/bridge/pullrequests"
 	repositoriesbridge "github.com/pluralsh/plural-cli/pkg/bridge/repositories"
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	stacksbridge "github.com/pluralsh/plural-cli/pkg/bridge/stacks"
@@ -24,6 +25,7 @@ import (
 	notificationsscreen "github.com/pluralsh/plural-cli/tui/screens/notifications"
 	pipelinesscreen "github.com/pluralsh/plural-cli/tui/screens/pipelines"
 	providersscreen "github.com/pluralsh/plural-cli/tui/screens/providers"
+	pullrequestsscreen "github.com/pluralsh/plural-cli/tui/screens/pullrequests"
 	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	stacksscreen "github.com/pluralsh/plural-cli/tui/screens/stacks"
@@ -42,6 +44,7 @@ type Dependencies struct {
 	Notifications notificationsbridge.Loader
 	Providers     providersbridge.Loader
 	Stacks        stacksbridge.Loader
+	PullRequests  pullrequestsbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -64,6 +67,7 @@ type Model struct {
 	notifications notificationsscreen.Model
 	providers     providersscreen.Model
 	stacks        stacksscreen.Model
+	pullrequests  pullrequestsscreen.Model
 	route         navigation.Route
 }
 
@@ -82,6 +86,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		notifications: notificationsscreen.New(ctx, dependencies.Notifications, t),
 		providers:     providersscreen.New(ctx, dependencies.Providers, t),
 		stacks:        stacksscreen.New(ctx, dependencies.Stacks, t),
+		pullrequests:  pullrequestsscreen.New(ctx, dependencies.PullRequests, t),
 		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -118,6 +123,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.providers.Init()
 		case navigation.Stacks:
 			return m, m.stacks.Init()
+		case navigation.PullRequests:
+			return m, m.pullrequests.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -157,6 +164,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.providers, cmd = m.providers.Update(msg)
 	case navigation.Stacks:
 		m.stacks, cmd = m.stacks.Update(msg)
+	case navigation.PullRequests:
+		m.pullrequests, cmd = m.pullrequests.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

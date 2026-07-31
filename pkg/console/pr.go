@@ -16,6 +16,25 @@ func (c *consoleClient) CreatePullRequest(id string, branch, context *string) (*
 	return result.CreatePullRequest, nil
 }
 
+func (c *consoleClient) ListPrAutomations() (*consoleclient.ListPrAutomations, error) {
+	result, err := c.client.ListPrAutomations(c.ctx, nil, nil, nil)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "ListPrAutomations")
+	}
+	return result, nil
+}
+
+func (c *consoleClient) GetPrAutomation(id string) (*consoleclient.PrAutomationFragment, error) {
+	result, err := c.client.GetPrAutomation(c.ctx, id)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetPrAutomation")
+	}
+	if result == nil || result.PrAutomation == nil {
+		return nil, fmt.Errorf("pr automation %s was not found", id)
+	}
+	return result.PrAutomation, nil
+}
+
 func (c *consoleClient) GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error) {
 	result, err := c.client.GetPrAutomationByName(c.ctx, name)
 	if err != nil {

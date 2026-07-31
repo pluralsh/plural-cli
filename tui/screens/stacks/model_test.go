@@ -22,7 +22,9 @@ import (
 type fakeLoader struct {
 	page   stacksbridge.Page
 	detail stacksbridge.Detail
+	result stacksbridge.GenBackendResult
 	err    error
+	genErr error
 }
 
 func (f *fakeLoader) List(context.Context, *string, string) (stacksbridge.Page, error) {
@@ -30,6 +32,15 @@ func (f *fakeLoader) List(context.Context, *string, string) (stacksbridge.Page, 
 }
 func (f *fakeLoader) Get(context.Context, string) (stacksbridge.Detail, error) {
 	return f.detail, f.err
+}
+func (f *fakeLoader) GenBackend(_ context.Context, input stacksbridge.GenBackendInput) (stacksbridge.GenBackendResult, error) {
+	if f.genErr != nil {
+		return stacksbridge.GenBackendResult{}, f.genErr
+	}
+	if f.result.FilePath == "" {
+		return stacksbridge.GenBackendResult{FilePath: filepath.Join(input.Dir, "_override.tf"), Dir: input.Dir}, nil
+	}
+	return f.result, nil
 }
 
 func loadList(t *testing.T, model Model) Model {
@@ -40,6 +51,17 @@ func loadList(t *testing.T, model Model) Model {
 		t.Fatal("expected list command")
 	}
 	model, _ = model.Update(cmd())
+	return model
+}
+
+func loadDetail(t *testing.T, loader *fakeLoader) Model {
+	t.Helper()
+	model := loadList(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	if model.mode != modeDetail {
+		t.Fatalf("mode = %d", model.mode)
+	}
 	return model
 }
 
@@ -56,30 +78,54 @@ func TestOpenStackDetailAndBack(t *testing.T) {
 			OutputNames: []string{"cluster_name", "token (secret)"},
 		},
 	}
-	model := loadList(t, New(t.Context(), loader, theme.New(colorprofile.ASCII)))
-	if model.mode != modeList || len(model.page.Items) != 2 {
-		t.Fatalf("list state = mode=%d count=%d", model.mode, len(model.page.Items))
-	}
+	model := loadDetail(t, loader)
 	if !strings.Contains(model.View(80, 24), "gke-demo") {
-		t.Fatalf("list missing name:\n%s", model.View(80, 24))
+		t.Fatalf("detail missing name:\n%s", model.View(80, 24))
 	}
-
-	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	model, _ = model.Update(cmd())
-	if model.mode != modeDetail || model.detail.Name != "gke-demo" {
-		t.Fatalf("detail = %#v mode=%d", model.detail, model.mode)
-	}
-	if !strings.Contains(model.View(80, 24), "TF_VAR_cluster") || !strings.Contains(model.View(80, 24), "token (secret)") {
-		t.Fatalf("detail missing env/outputs:\n%s", model.View(80, 24))
+	if !strings.Contains(model.View(80, 24), "Gen-backend") {
+		t.Fatalf("detail missing actions:\n%s", model.View(80, 24))
 	}
 
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if model.mode != modeList {
 		t.Fatalf("mode after detail esc = %d", model.mode)
 	}
-	_, cmd = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if cmd == nil || cmd() != (navigation.NavigateMsg{Route: navigation.Deployments}) {
 		t.Fatalf("expected deployments navigation")
+	}
+}
+
+func TestGenBackendFlow(t *testing.T) {
+	loader := &fakeLoader{
+		page: stacksbridge.Page{Items: []stacksbridge.Summary{
+			{ID: "s1", Name: "gke-demo", Type: "TERRAFORM"},
+		}},
+		detail: stacksbridge.Detail{
+			Summary: stacksbridge.Summary{ID: "s1", Name: "gke-demo", Type: "TERRAFORM"},
+		},
+		result: stacksbridge.GenBackendResult{FilePath: "/tmp/stack/_override.tf", Dir: "/tmp/stack"},
+	}
+	model := loadDetail(t, loader)
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+	if model.mode != modeGenBackendForm {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	model.formInput.SetValue("./terraform")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // next field
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // skip address
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // skip lock
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // review
+	if model.mode != modeReview || model.pending.backend == nil || model.pending.backend.Dir != "./terraform" {
+		t.Fatalf("review = mode=%d pending=%#v", model.mode, model.pending)
+	}
+	if !strings.Contains(model.pending.cli, "plural stacks gen-backend") {
+		t.Fatalf("cli = %q", model.pending.cli)
+	}
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(cmd())
+	if model.mode != modeResult || model.result != "ok" || !strings.Contains(strings.Join(model.opLog, "\n"), "_override.tf") {
+		t.Fatalf("result = mode=%d result=%s log=%v", model.mode, model.result, model.opLog)
 	}
 }
 

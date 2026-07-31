@@ -121,15 +121,37 @@ func TestProvidersNavigates(t *testing.T) {
 }
 
 func TestSoonResourceDoesNotNavigate(t *testing.T) {
+	// All hub resources are live; keep a no-op guard if a soon stub returns.
 	model := New(t.Context(), theme.New(colorprofile.ASCII), "")
-	model.cursor = 7 // pull requests [soon]
-	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if cmd != nil {
-		t.Fatalf("unexpected cmd %#v", cmd())
+	for _, item := range model.items {
+		if !item.soon {
+			continue
+		}
+		model.cursor = indexOfResource(model.items, item.id)
+		_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+		if cmd != nil {
+			t.Fatalf("unexpected cmd for soon resource %s: %#v", item.title, cmd())
+		}
 	}
-	_, cmd = model.Update(tea.KeyPressMsg{Code: 'u', Text: "u"})
-	if cmd != nil {
-		t.Fatalf("unexpected pull-requests shortcut cmd %#v", cmd())
+}
+
+func indexOfResource(items []resource, id resourceID) int {
+	for i, item := range items {
+		if item.id == id {
+			return i
+		}
+	}
+	return 0
+}
+
+func TestPullRequestsNavigates(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), "https://console.acme.io")
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 'u', Text: "u"})
+	if cmd == nil {
+		t.Fatal("expected navigation")
+	}
+	if msg := cmd(); msg != (navigation.NavigateMsg{Route: navigation.PullRequests}) {
+		t.Fatalf("msg = %#v", msg)
 	}
 }
 

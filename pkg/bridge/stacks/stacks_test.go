@@ -2,6 +2,9 @@ package stacks
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -24,6 +27,8 @@ type fakeAPI struct {
 	listErr error
 	detail  *gqlclient.InfrastructureStackFragment
 	getErr  error
+	runs    *gqlclient.ListStackRuns
+	runsErr error
 }
 
 func (f *fakeAPI) ListStacks() (*gqlclient.ListInfrastructureStacks, error) {
@@ -31,6 +36,9 @@ func (f *fakeAPI) ListStacks() (*gqlclient.ListInfrastructureStacks, error) {
 }
 func (f *fakeAPI) GetStack(string) (*gqlclient.InfrastructureStackFragment, error) {
 	return f.detail, f.getErr
+}
+func (f *fakeAPI) ListStackRuns(string) (*gqlclient.ListStackRuns, error) {
+	return f.runs, f.runsErr
 }
 
 func TestListAndGet(t *testing.T) {
@@ -132,5 +140,53 @@ func TestGetRequiresID(t *testing.T) {
 	_, err := service.Get(t.Context(), "")
 	if !bridge.IsCode(err, bridge.ErrorInvalid) {
 		t.Fatalf("Get() error = %v", err)
+	}
+}
+
+func TestGenBackend(t *testing.T) {
+	dir := t.TempDir()
+	api := &fakeAPI{
+		runs: &gqlclient.ListStackRuns{InfrastructureStack: &gqlclient.ListStackRuns_InfrastructureStack{
+			Runs: &gqlclient.ListStackRuns_InfrastructureStack_Runs{
+				Edges: []*gqlclient.ListStackRuns_InfrastructureStack_Runs_Edges{{
+					Node: &gqlclient.StackRunFragment{
+						Type: gqlclient.StackTypeTerraform,
+						StateUrls: &gqlclient.StackRunFragment_StateUrls{
+							Terraform: &gqlclient.StackRunFragment_StateUrls_Terraform{
+								Address: lo.ToPtr("https://console.example.com/v1/tf/state"),
+								Lock:    lo.ToPtr("https://console.example.com/v1/tf/lock"),
+								Unlock:  lo.ToPtr("https://console.example.com/v1/tf/unlock"),
+							},
+						},
+					},
+				}},
+			},
+		}},
+	}
+	service := &Service{
+		resolve:   fakeResolver{url: "https://console.example.com", token: "deploy-token"},
+		newClient: func(string, string) (API, error) { return api, nil },
+		actor:     func() (string, error) { return "ops@acme.io", nil },
+	}
+	result, err := service.GenBackend(t.Context(), GenBackendInput{StackID: "s1", Dir: dir})
+	if err != nil {
+		t.Fatalf("GenBackend() error = %v", err)
+	}
+	if result.FilePath == "" || result.Dir != dir {
+		t.Fatalf("result = %#v", result)
+	}
+	contents, err := os.ReadFile(filepath.Join(dir, "_override.tf"))
+	if err != nil {
+		t.Fatalf("read override: %v", err)
+	}
+	text := string(contents)
+	if !strings.Contains(text, "https://console.example.com/v1/tf/state") ||
+		!strings.Contains(text, "ops@acme.io") ||
+		!strings.Contains(text, "deploy-token") {
+		t.Fatalf("override contents:\n%s", text)
+	}
+	ignore, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
+	if err != nil || !strings.Contains(string(ignore), "_override.tf") {
+		t.Fatalf("gitignore = %q, %v", ignore, err)
 	}
 }

@@ -1,5 +1,5 @@
-// Package stacks implements the Console infrastructure stacks browser and actions.
-package stacks
+// Package pullrequests implements the Console PR automations browser and actions.
+package pullrequests
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
-	stacksbridge "github.com/pluralsh/plural-cli/pkg/bridge/stacks"
+	pullrequestsbridge "github.com/pluralsh/plural-cli/pkg/bridge/pullrequests"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
@@ -21,7 +21,9 @@ const (
 	modeList mode = iota
 	modeDetail
 	modeFilter
-	modeGenBackendForm
+	modeCreateForm
+	modeTriggerForm
+	modeCLITip
 	modeReview
 	modeOperating
 	modeResult
@@ -72,25 +74,26 @@ type formField struct {
 
 type initMsg struct{}
 type listedMsg struct {
-	page    stacksbridge.Page
+	page    pullrequestsbridge.Page
 	err     error
 	request uint64
 }
 type detailMsg struct {
-	detail  stacksbridge.Detail
+	detail  pullrequestsbridge.Detail
 	err     error
 	request uint64
 }
 type opDoneMsg struct {
 	err     error
-	result  stacksbridge.GenBackendResult
+	created pullrequestsbridge.CreatedPR
 	request uint64
+	kind    actionKind
 }
 
-// Model owns Stacks-screen interaction state.
+// Model owns Pull-requests-screen interaction state.
 type Model struct {
 	ctx       context.Context
-	loader    stacksbridge.Loader
+	loader    pullrequestsbridge.Loader
 	theme     theme.Theme
 	mode      mode
 	loading   bool
@@ -98,14 +101,14 @@ type Model struct {
 	needsAuth bool
 	request   uint64
 
-	page        stacksbridge.Page
+	page        pullrequestsbridge.Page
 	cursor      int
 	filter      string
 	filterInput textinput.Model
 	after       *string
 	prevCursors []string
 
-	detail       stacksbridge.Detail
+	detail       pullrequestsbridge.Detail
 	detailID     string
 	listCursor   int
 	listAfter    *string
@@ -121,12 +124,13 @@ type Model struct {
 	pending pendingOp
 	opLog   []string
 	result  string
+	cliKind actionKind
 }
 
-func New(ctx context.Context, loader stacksbridge.Loader, t theme.Theme) Model {
+func New(ctx context.Context, loader pullrequestsbridge.Loader, t theme.Theme) Model {
 	input := textinput.New()
 	input.Prompt = "› "
-	input.Placeholder = "filter stacks"
+	input.Placeholder = "filter PR automations"
 	input.CharLimit = 256
 	styles := textinput.DefaultDarkStyles()
 	styles.Focused.Text = t.Body
@@ -179,11 +183,16 @@ func (m *Model) beginPending() tea.Cmd {
 	ctx := m.ctx
 	op := m.pending
 	return func() tea.Msg {
-		if op.backend == nil {
-			return opDoneMsg{err: fmt.Errorf("missing gen-backend input"), request: request}
+		switch op.kind {
+		case actionCreate:
+			created, err := loader.CreatePR(ctx, *op.create)
+			return opDoneMsg{err: err, created: created, request: request, kind: op.kind}
+		case actionTrigger:
+			created, err := loader.TriggerPR(ctx, *op.trigger)
+			return opDoneMsg{err: err, created: created, request: request, kind: op.kind}
+		default:
+			return opDoneMsg{err: fmt.Errorf("unsupported action"), request: request, kind: op.kind}
 		}
-		result, err := loader.GenBackend(ctx, *op.backend)
-		return opDoneMsg{err: err, result: result, request: request}
 	}
 }
 
@@ -191,7 +200,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case initMsg:
 		m.mode = modeList
-		m.page = stacksbridge.Page{}
+		m.page = pullrequestsbridge.Page{}
 		m.cursor = 0
 		m.after = nil
 		m.prevCursors = nil
@@ -242,7 +251,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 		m.result = "ok"
 		m.err = nil
-		m.opLog = formatResult(msg.result)
+		m.opLog = []string{
+			"PR ID    " + msg.created.ID,
+			"URL      " + loCoalesce(msg.created.URL, "—"),
+			"Title    " + loCoalesce(msg.created.Title, "—"),
+			"Status   " + loCoalesce(msg.created.Status, "—"),
+			"Ref      " + loCoalesce(msg.created.Ref, "—"),
+		}
 		return m, nil
 	case tea.KeyPressMsg:
 		return m.updateKey(msg)
@@ -252,7 +267,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.filterInput, cmd = m.filterInput.Update(msg)
 		return m, cmd
-	case modeGenBackendForm:
+	case modeCreateForm, modeTriggerForm, modeCLITip:
 		var cmd tea.Cmd
 		m.formInput, cmd = m.formInput.Update(msg)
 		return m, cmd
@@ -270,8 +285,10 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 	switch m.mode {
 	case modeFilter:
 		return m.updateFilter(action, key)
-	case modeGenBackendForm:
+	case modeCreateForm, modeTriggerForm:
 		return m.updateForm(action, key)
+	case modeCLITip:
+		return m.updateCLITip(action, key)
 	case modeReview:
 		return m.updateReview(action)
 	case modeResult:
@@ -280,17 +297,9 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 		return m, nil
 	case modeDetail:
 		return m.updateDetail(action, text)
+	default:
+		return m.updateList(action)
 	}
-	if action == keyActionBack {
-		return m, navigation.Navigate(navigation.Deployments)
-	}
-	if m.loading {
-		return m, nil
-	}
-	if m.needsAuth && action == keyActionConnectConsole {
-		return m, navigation.Navigate(navigation.Access)
-	}
-	return m.updateList(action)
 }
 
 func (m Model) updateFilter(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
@@ -311,6 +320,67 @@ func (m Model) updateFilter(action keyAction, key tea.KeyPressMsg) (Model, tea.C
 	var cmd tea.Cmd
 	m.filterInput, cmd = m.filterInput.Update(key)
 	return m, cmd
+}
+
+func (m Model) updateList(action keyAction) (Model, tea.Cmd) {
+	if action == keyActionBack {
+		return m, navigation.Navigate(navigation.Deployments)
+	}
+	if m.loading {
+		return m, nil
+	}
+	if m.needsAuth && action == keyActionConnectConsole {
+		return m, navigation.Navigate(navigation.Access)
+	}
+	switch action {
+	case keyActionMoveUp:
+		m.cursor = clampCursor(m.cursor-1, len(m.page.Items))
+	case keyActionMoveDown:
+		m.cursor = clampCursor(m.cursor+1, len(m.page.Items))
+	case keyActionConfirm:
+		if len(m.page.Items) == 0 {
+			return m, nil
+		}
+		m.listCursor = m.cursor
+		m.listAfter = m.after
+		m.listFilter = m.filter
+		m.listPrev = append([]string(nil), m.prevCursors...)
+		m.detailID = m.page.Items[m.cursor].ID
+		return m, m.beginDetail(m.detailID)
+	case keyActionRefresh:
+		return m, m.beginList(m.after)
+	case keyActionFilter:
+		m.mode = modeFilter
+		m.filterInput.SetValue(m.filter)
+		m.filterInput.Focus()
+	case keyActionNextPage:
+		if !m.page.HasNext || m.page.EndCursor == "" {
+			return m, nil
+		}
+		if m.after != nil {
+			m.prevCursors = append(m.prevCursors, *m.after)
+		} else {
+			m.prevCursors = append(m.prevCursors, "")
+		}
+		cursor := m.page.EndCursor
+		m.after = &cursor
+		m.cursor = 0
+		return m, m.beginList(m.after)
+	case keyActionPrevPage:
+		if len(m.prevCursors) == 0 {
+			return m, nil
+		}
+		previous := m.prevCursors[len(m.prevCursors)-1]
+		m.prevCursors = m.prevCursors[:len(m.prevCursors)-1]
+		if previous == "" {
+			m.after = nil
+		} else {
+			m.after = &previous
+		}
+		m.cursor = 0
+		return m, m.beginList(m.after)
+	}
+	return m, nil
 }
 
 func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
@@ -348,24 +418,48 @@ func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
 }
 
 func (m Model) openAction(a detailAction) (Model, tea.Cmd) {
-	if a.kind == actionGenBackend {
-		return m.beginGenBackendForm(), nil
+	switch a.kind {
+	case actionCreate:
+		return m.beginCreateForm(), nil
+	case actionTrigger:
+		return m.beginTriggerForm(), nil
+	case actionTemplate, actionTest, actionContracts:
+		m.cliKind = a.kind
+		m.mode = modeCLITip
+		m.formInput.SetValue("./automation.yaml")
+		m.formInput.Placeholder = "path to file"
+		m.formInput.Focus()
+		m.err = nil
+		return m, nil
 	}
 	return m, nil
 }
 
-func (m Model) beginGenBackendForm() Model {
-	m.mode = modeGenBackendForm
+func (m Model) beginCreateForm() Model {
+	m.mode = modeCreateForm
 	m.formFields = []formField{
-		{label: "Directory", key: "dir"},
-		{label: "Address", key: "address"},
-		{label: "Lock address", key: "lock"},
-		{label: "Unlock address", key: "unlock"},
+		{label: "Branch", key: "branch"},
+		{label: "Context JSON", key: "context"},
 	}
 	m.formIndex = 0
-	m.formValues = map[string]string{"dir": "."}
-	m.formInput.SetValue(".")
-	m.formInput.Placeholder = "path for _override.tf"
+	m.formValues = map[string]string{}
+	m.formInput.SetValue("")
+	m.formInput.Placeholder = "optional branch"
+	m.formInput.Focus()
+	m.err = nil
+	return m
+}
+
+func (m Model) beginTriggerForm() Model {
+	m.mode = modeTriggerForm
+	m.formFields = []formField{
+		{label: "Branch", key: "branch"},
+		{label: "Configuration", key: "configuration"},
+	}
+	m.formIndex = 0
+	m.formValues = map[string]string{}
+	m.formInput.SetValue("")
+	m.formInput.Placeholder = "optional branch"
 	m.formInput.Focus()
 	m.err = nil
 	return m
@@ -422,14 +516,10 @@ func (m *Model) loadFormField() {
 	field := m.formFields[m.formIndex]
 	m.formInput.SetValue(m.formValues[field.key])
 	switch field.key {
-	case "dir":
-		m.formInput.Placeholder = "defaults to ."
-	case "address":
-		m.formInput.Placeholder = "optional · from Console runs if empty"
-	case "lock":
-		m.formInput.Placeholder = "optional lock URL"
-	case "unlock":
-		m.formInput.Placeholder = "optional unlock URL"
+	case "context":
+		m.formInput.Placeholder = `optional JSON, e.g. {"cluster":"demo"}`
+	case "configuration":
+		m.formInput.Placeholder = "key=value pairs, e.g. cluster=demo region=us-east-1"
 	default:
 		m.formInput.Placeholder = field.label
 	}
@@ -438,17 +528,57 @@ func (m *Model) loadFormField() {
 
 func (m Model) submitForm() (Model, tea.Cmd) {
 	m.formInput.Blur()
-	input := stacksbridge.GenBackendInput{
-		StackID:       m.detail.ID,
-		Dir:           loCoalesce(m.formValues["dir"], "."),
-		Address:       m.formValues["address"],
-		LockAddress:   m.formValues["lock"],
-		UnlockAddress: m.formValues["unlock"],
+	switch m.mode {
+	case modeCreateForm:
+		input := pullrequestsbridge.CreatePRInput{
+			AutomationID: m.detail.ID,
+			Branch:       m.formValues["branch"],
+			Context:      m.formValues["context"],
+		}
+		m.pending = m.createPlan(input)
+		m.mode = modeReview
+		m.err = nil
+		return m, nil
+	case modeTriggerForm:
+		cfg, err := parseConfiguration(m.formValues["configuration"])
+		if err != nil {
+			m.err = err
+			m.formIndex = 1
+			m.loadFormField()
+			return m, nil
+		}
+		input := pullrequestsbridge.TriggerPRInput{
+			AutomationID:  m.detail.ID,
+			Name:          m.detail.Name,
+			Branch:        m.formValues["branch"],
+			Configuration: cfg,
+		}
+		m.pending = m.triggerPlan(input)
+		m.mode = modeReview
+		m.err = nil
+		return m, nil
 	}
-	m.pending = m.genBackendPlan(input)
-	m.mode = modeReview
-	m.err = nil
 	return m, nil
+}
+
+func (m Model) updateCLITip(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.formInput.Blur()
+		m.mode = modeDetail
+		return m, nil
+	case keyActionConfirm:
+		m.formInput.Blur()
+		m.pending = cliTipPlan(m.cliKind, m.detail.Name, m.formInput.Value())
+		m.mode = modeResult
+		m.result = "ok"
+		m.opLog = append([]string{}, m.pending.lines...)
+		m.opLog = append(m.opLog, "", "Equivalent CLI", "  "+m.pending.cli)
+		return m, nil
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
 }
 
 func (m Model) updateReview(action keyAction) (Model, tea.Cmd) {
@@ -474,58 +604,6 @@ func (m Model) updateResult(action keyAction) (Model, tea.Cmd) {
 		}
 		m.mode = modeDetail
 		return m, nil
-	}
-	return m, nil
-}
-
-func (m Model) updateList(action keyAction) (Model, tea.Cmd) {
-	switch action {
-	case keyActionMoveUp:
-		m.cursor = clampCursor(m.cursor-1, len(m.page.Items))
-	case keyActionMoveDown:
-		m.cursor = clampCursor(m.cursor+1, len(m.page.Items))
-	case keyActionConfirm:
-		if len(m.page.Items) == 0 {
-			return m, nil
-		}
-		m.listCursor = m.cursor
-		m.listAfter = m.after
-		m.listFilter = m.filter
-		m.listPrev = append([]string(nil), m.prevCursors...)
-		m.detailID = m.page.Items[m.cursor].ID
-		return m, m.beginDetail(m.detailID)
-	case keyActionRefresh:
-		return m, m.beginList(m.after)
-	case keyActionFilter:
-		m.mode = modeFilter
-		m.filterInput.SetValue(m.filter)
-		m.filterInput.Focus()
-	case keyActionNextPage:
-		if !m.page.HasNext || m.page.EndCursor == "" {
-			return m, nil
-		}
-		if m.after != nil {
-			m.prevCursors = append(m.prevCursors, *m.after)
-		} else {
-			m.prevCursors = append(m.prevCursors, "")
-		}
-		cursor := m.page.EndCursor
-		m.after = &cursor
-		m.cursor = 0
-		return m, m.beginList(m.after)
-	case keyActionPrevPage:
-		if len(m.prevCursors) == 0 {
-			return m, nil
-		}
-		previous := m.prevCursors[len(m.prevCursors)-1]
-		m.prevCursors = m.prevCursors[:len(m.prevCursors)-1]
-		if previous == "" {
-			m.after = nil
-		} else {
-			m.after = &previous
-		}
-		m.cursor = 0
-		return m, m.beginList(m.after)
 	}
 	return m, nil
 }

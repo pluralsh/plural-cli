@@ -40,8 +40,8 @@ func resources() []resource {
 		{id: resourcePipelines, number: "4", shortcut: "p", title: "Pipelines", blurb: "list · describe", route: navigation.Pipelines},
 		{id: resourceNotifications, number: "5", shortcut: "n", title: "Notifications", blurb: "list · describe", route: navigation.Notifications},
 		{id: resourceProviders, number: "6", shortcut: "v", title: "Providers", blurb: "list · describe", route: navigation.Providers},
-		{id: resourceStacks, number: "7", shortcut: "t", title: "Stacks", blurb: "list · describe", route: navigation.Stacks},
-		{id: resourcePullRequests, number: "8", shortcut: "u", title: "Pull requests", blurb: "automations", soon: true},
+		{id: resourceStacks, number: "7", shortcut: "t", title: "Stacks", blurb: "browse · gen-backend", route: navigation.Stacks},
+		{id: resourcePullRequests, number: "8", shortcut: "u", title: "Pull requests", blurb: "browse · create · trigger · …", route: navigation.PullRequests},
 	}
 }
 

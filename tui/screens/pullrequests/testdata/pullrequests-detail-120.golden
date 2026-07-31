@@ -1,22 +1,22 @@
-  Plural  Stacks · gke-demo                                                                                  TERRAFORM
+  Plural  Pull requests · cluster-create                                                                       cluster
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   ╭─ Summary ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ Name         gke-demo                                                                                            │
-  │ Type         TERRAFORM                                                                                           │
-  │ Project      acme                                                                                                │
-  │ Cluster      mgmt                                                                                                │
-  │ Approval     true                                                                                                │
-  │ Repo         https://github.com/acme/fleet                                                                       │
-  │ Git          main · terraform                                                                                    │
-  │ Workdir      gke-cluster                                                                                         │
-  │ State        true                                                                                                │
-  │ …                                                                                                                │
+  │ Name         cluster-create                                                                                      │
+  │ Title        Create cluster                                                                                      │
+  │ Addon        cluster                                                                                             │
+  │ Identifier   ops/cluster-create                                                                                  │
+  │ ID           pra1                                                                                                │
+  │ Message      Opens a PR to provision a new cluster                                                               │
+  │                                                                                                                  │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
   ╭─ › Actions ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ › g  Gen-backend  write _override.tf · terraform backend                                                         │
-  │                                                                                                                  │
+  │ › c  Create       open PR from automation                                                                        │
+  │   t  Trigger      name · configuration · branch                                                                  │
+  │   m  Template     local file · apply tree  CLI                                                                   │
+  │   e  Test         local CRD  CLI                                                                                 │
+  │   o  Contracts    contract suite  CLI                                                                            │
   │                                                                                                                  │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
@@ -27,4 +27,4 @@
 
 
 
-  ↑/↓ actions · enter · g · r refresh · esc list
+  ↑/↓ actions · enter · c t m e o · r refresh · esc list
