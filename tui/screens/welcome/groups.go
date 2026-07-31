@@ -8,6 +8,7 @@ const (
 	groupDeployments groupID = iota
 	groupAccess
 	groupDiagnose
+	groupAI
 	groupHelp
 )
 
@@ -25,6 +26,7 @@ func welcomeGroups() []group {
 		{id: groupDeployments, number: "1", shortcut: "d", title: "CD / Deployments", blurb: "clusters · services · repos", route: navigation.Deployments},
 		{id: groupAccess, number: "2", shortcut: "a", title: "Access", blurb: "login · profiles · Console", route: navigation.Access},
 		{id: groupDiagnose, number: "3", shortcut: "g", title: "Diagnose", blurb: "local context · checks", route: navigation.Diagnostics},
-		{id: groupHelp, number: "4", shortcut: "?", title: "Help", blurb: "shortcuts · about"},
+		{id: groupAI, number: "4", shortcut: "i", title: "AI", blurb: "agents · workbenches", route: navigation.AI},
+		{id: groupHelp, number: "5", shortcut: "?", title: "Help", blurb: "shortcuts · about"},
 	}
 }

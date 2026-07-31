@@ -8,6 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
+	agentsbridge "github.com/pluralsh/plural-cli/pkg/bridge/agents"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
 	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
@@ -17,8 +18,11 @@ import (
 	servicesbridge "github.com/pluralsh/plural-cli/pkg/bridge/services"
 	stacksbridge "github.com/pluralsh/plural-cli/pkg/bridge/stacks"
 	welcomebridge "github.com/pluralsh/plural-cli/pkg/bridge/welcome"
+	workbenchesbridge "github.com/pluralsh/plural-cli/pkg/bridge/workbenches"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	accessscreen "github.com/pluralsh/plural-cli/tui/screens/access"
+	agentsscreen "github.com/pluralsh/plural-cli/tui/screens/agents"
+	aiscreen "github.com/pluralsh/plural-cli/tui/screens/ai"
 	clustersscreen "github.com/pluralsh/plural-cli/tui/screens/clusters"
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
@@ -30,6 +34,7 @@ import (
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	stacksscreen "github.com/pluralsh/plural-cli/tui/screens/stacks"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
+	workbenchesscreen "github.com/pluralsh/plural-cli/tui/screens/workbenches"
 	"github.com/pluralsh/plural-cli/tui/theme"
 )
 
@@ -45,6 +50,8 @@ type Dependencies struct {
 	Providers     providersbridge.Loader
 	Stacks        stacksbridge.Loader
 	PullRequests  pullrequestsbridge.Loader
+	Agents        agentsbridge.Loader
+	Workbenches   workbenchesbridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -68,6 +75,9 @@ type Model struct {
 	providers     providersscreen.Model
 	stacks        stacksscreen.Model
 	pullrequests  pullrequestsscreen.Model
+	ai            aiscreen.Model
+	agents        agentsscreen.Model
+	workbenches   workbenchesscreen.Model
 	route         navigation.Route
 }
 
@@ -87,6 +97,9 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		providers:     providersscreen.New(ctx, dependencies.Providers, t),
 		stacks:        stacksscreen.New(ctx, dependencies.Stacks, t),
 		pullrequests:  pullrequestsscreen.New(ctx, dependencies.PullRequests, t),
+		ai:            aiscreen.New(t),
+		agents:        agentsscreen.New(ctx, dependencies.Agents, t),
+		workbenches:   workbenchesscreen.New(ctx, dependencies.Workbenches, t),
 		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -125,6 +138,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.stacks.Init()
 		case navigation.PullRequests:
 			return m, m.pullrequests.Init()
+		case navigation.AI:
+			return m, m.ai.Init()
+		case navigation.Agents:
+			return m, m.agents.Init()
+		case navigation.Workbenches:
+			return m, m.workbenches.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -166,6 +185,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.stacks, cmd = m.stacks.Update(msg)
 	case navigation.PullRequests:
 		m.pullrequests, cmd = m.pullrequests.Update(msg)
+	case navigation.AI:
+		m.ai, cmd = m.ai.Update(msg)
+	case navigation.Agents:
+		m.agents, cmd = m.agents.Update(msg)
+	case navigation.Workbenches:
+		m.workbenches, cmd = m.workbenches.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

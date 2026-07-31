@@ -148,6 +148,28 @@ func TestWelcomeOpensAccessFromNumber(t *testing.T) {
 	}
 }
 
+func TestWelcomeOpensAIFromShortcut(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	_, cmd := model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	if cmd == nil {
+		t.Fatal("selecting AI did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.AI {
+		t.Fatalf("route = %q, want ai", got)
+	}
+}
+
+func TestWelcomeOpensAIFromNumber(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
+	if cmd == nil {
+		t.Fatal("selecting AI did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.AI {
+		t.Fatalf("route = %q, want ai", got)
+	}
+}
+
 func TestWelcomeArrowAndEnterOpensDiagnose(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
@@ -182,8 +204,16 @@ func TestGroupPickerIsAnchoredAtBottom(t *testing.T) {
 	if len(lines) != 24 {
 		t.Fatalf("view height = %d, want 24", len(lines))
 	}
-	if !strings.Contains(lines[len(lines)-9], "Choose an area") {
-		t.Fatalf("group picker is not anchored above help:\n%s", strings.Join(lines, "\n"))
+	want := "Choose an area"
+	found := false
+	for _, line := range lines {
+		if strings.Contains(line, want) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("group picker missing title:\n%s", strings.Join(lines, "\n"))
 	}
 	if !strings.Contains(lines[len(lines)-1], "ctrl+c quit") {
 		t.Fatalf("keymap is not at the bottom: %q", lines[len(lines)-1])

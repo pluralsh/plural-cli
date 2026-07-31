@@ -70,9 +70,23 @@ func TestModelRoutesScreensWithoutRebuildingShell(t *testing.T) {
 	if routed.route != navigation.Pipelines || !strings.Contains(routed.View().Content, "Pipelines") {
 		t.Fatalf("pipelines route/view = %q\n%s", routed.route, routed.View().Content)
 	}
+	updated, _ = routed.Update(navigation.NavigateMsg{Route: navigation.AI})
+	routed = updated.(Model)
+	if routed.route != navigation.AI || !strings.Contains(routed.View().Content, "AI workspaces") {
+		t.Fatalf("ai route/view = %q\n%s", routed.route, routed.View().Content)
+	}
 	updated, _ = routed.Update(navigation.NavigateMsg{Route: navigation.Welcome})
 	if got := updated.(Model).route; got != navigation.Welcome {
 		t.Fatalf("route = %q", got)
+	}
+}
+
+func TestModelRoutesAIDedicatedScreen(t *testing.T) {
+	model := New(t.Context(), theme.New(colorprofile.ASCII), Dependencies{})
+	updated, _ := model.Update(navigation.NavigateMsg{Route: navigation.AI})
+	routed := updated.(Model)
+	if routed.route != navigation.AI || !strings.Contains(routed.View().Content, "AI workspaces") {
+		t.Fatalf("ai route/view = %q\n%s", routed.route, routed.View().Content)
 	}
 }
 
