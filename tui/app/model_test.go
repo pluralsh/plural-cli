@@ -79,6 +79,11 @@ func TestModelRoutesScreensWithoutRebuildingShell(t *testing.T) {
 	if got := updated.(Model).route; got != navigation.Welcome {
 		t.Fatalf("route = %q", got)
 	}
+	updated, _ = model.Update(navigation.NavigateMsg{Route: navigation.Up})
+	routed = updated.(Model)
+	if routed.route != navigation.Up || !strings.Contains(routed.View().Content, "Setup mode") {
+		t.Fatalf("up route/view = %q\n%s", routed.route, routed.View().Content)
+	}
 }
 
 func TestModelRoutesAIDedicatedScreen(t *testing.T) {

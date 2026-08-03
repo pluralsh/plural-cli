@@ -123,6 +123,20 @@ func TestWelcomeGroupPickerGolden(t *testing.T) {
 	}
 }
 
+func TestWelcomeOpensUpFromShortcut(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'u', Text: "u"})
+	if cmd == nil {
+		t.Fatal("selecting Up did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Up {
+		t.Fatalf("route = %q, want up", got)
+	}
+	if model.cursor != 0 {
+		t.Fatalf("cursor = %d, want 0", model.cursor)
+	}
+}
+
 func TestWelcomeOpensDeploymentsFromShortcut(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	model, cmd := model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
@@ -132,14 +146,14 @@ func TestWelcomeOpensDeploymentsFromShortcut(t *testing.T) {
 	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Deployments {
 		t.Fatalf("route = %q, want deployments", got)
 	}
-	if model.cursor != 0 {
-		t.Fatalf("cursor = %d, want 0", model.cursor)
+	if model.cursor != 1 {
+		t.Fatalf("cursor = %d, want 1", model.cursor)
 	}
 }
 
 func TestWelcomeOpensAccessFromNumber(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	_, cmd := model.Update(tea.KeyPressMsg{Code: '2', Text: "2"})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
 	if cmd == nil {
 		t.Fatal("selecting Access did not emit navigation")
 	}
@@ -161,7 +175,7 @@ func TestWelcomeOpensAIFromShortcut(t *testing.T) {
 
 func TestWelcomeOpensAIFromNumber(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	_, cmd := model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '5', Text: "5"})
 	if cmd == nil {
 		t.Fatal("selecting AI did not emit navigation")
 	}
@@ -172,6 +186,7 @@ func TestWelcomeOpensAIFromNumber(t *testing.T) {
 
 func TestWelcomeArrowAndEnterOpensDiagnose(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})

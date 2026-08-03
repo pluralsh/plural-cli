@@ -53,7 +53,7 @@ func (m Model) renderGroups(width int) string {
 	var body []string
 	if m.helpOpen {
 		body = []string{
-			m.theme.Body.Render("1–5 / letter opens an area"),
+			m.theme.Body.Render("1–6 / letter opens an area"),
 			m.theme.Muted.Render("↑/↓ move · enter confirm · esc close help"),
 			m.theme.Muted.Render("ctrl+c quit"),
 			"",
@@ -86,7 +86,7 @@ func (m Model) renderGroups(width int) string {
 	}
 	rows = append(rows, bottom)
 
-	help := m.theme.Muted.Render(ansi.Truncate("1–5 open · letter shortcut · ↑/↓ · enter · ctrl+c quit", max(1, width-2), "…"))
+	help := m.theme.Muted.Render(ansi.Truncate("1–6 open · letter shortcut · ↑/↓ · enter · ctrl+c quit", max(1, width-2), "…"))
 	if m.helpOpen {
 		help = m.theme.Muted.Render(ansi.Truncate("any key closes help · ctrl+c quit", max(1, width-2), "…"))
 	}

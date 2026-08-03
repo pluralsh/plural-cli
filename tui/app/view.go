@@ -39,6 +39,8 @@ func (m Model) View() tea.View {
 		content = m.agents.View(m.width, m.height)
 	case navigation.Workbenches:
 		content = m.workbenches.View(m.width, m.height)
+	case navigation.Up:
+		content = m.up.View(m.width, m.height)
 	}
 	view := tea.NewView(content)
 	view.AltScreen = true

@@ -24,6 +24,7 @@ const (
 	Providers     Route = "providers"
 	Stacks        Route = "stacks"
 	PullRequests  Route = "pullrequests"
+	Up            Route = "up"
 )
 
 // NavigateMsg requests a top-level route change.

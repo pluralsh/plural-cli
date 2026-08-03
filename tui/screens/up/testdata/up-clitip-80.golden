@@ -1,0 +1,24 @@
+  Plural  Up                                                             cloud
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Coming next ──────────────────────────────────────────────────────────╮
+  │ Plural Cloud uses a different path than self-hosted.                     │
+  │ Provider selection only applies to self-hosted up.                       │
+  │                                                                          │
+  │ Mode         Plural Cloud                                                │
+  │              pick a Console instance (--cloud) · coming next             │
+  │ Preflights   ignored (--ignore-preflights)                               │
+  │                                                                          │
+  │ Equivalent CLI                                                           │
+  │   plural up --cloud --ignore-preflights                                  │
+  │                                                                          │
+  │ Cloud / dry-run wizards land in a later step.                            │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+  esc change preflights · ctrl+c quit

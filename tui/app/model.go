@@ -33,6 +33,7 @@ import (
 	repositoriesscreen "github.com/pluralsh/plural-cli/tui/screens/repositories"
 	servicesscreen "github.com/pluralsh/plural-cli/tui/screens/services"
 	stacksscreen "github.com/pluralsh/plural-cli/tui/screens/stacks"
+	upscreen "github.com/pluralsh/plural-cli/tui/screens/up"
 	welcomescreen "github.com/pluralsh/plural-cli/tui/screens/welcome"
 	workbenchesscreen "github.com/pluralsh/plural-cli/tui/screens/workbenches"
 	"github.com/pluralsh/plural-cli/tui/theme"
@@ -78,6 +79,7 @@ type Model struct {
 	ai            aiscreen.Model
 	agents        agentsscreen.Model
 	workbenches   workbenchesscreen.Model
+	up            upscreen.Model
 	route         navigation.Route
 }
 
@@ -100,6 +102,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		ai:            aiscreen.New(t),
 		agents:        agentsscreen.New(ctx, dependencies.Agents, t),
 		workbenches:   workbenchesscreen.New(ctx, dependencies.Workbenches, t),
+		up:            upscreen.New(ctx, t),
 		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -144,6 +147,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.agents.Init()
 		case navigation.Workbenches:
 			return m, m.workbenches.Init()
+		case navigation.Up:
+			return m, m.up.Init()
 		default:
 			return m, m.welcome.Init()
 		}
@@ -191,6 +196,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.agents, cmd = m.agents.Update(msg)
 	case navigation.Workbenches:
 		m.workbenches, cmd = m.workbenches.Update(msg)
+	case navigation.Up:
+		m.up, cmd = m.up.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

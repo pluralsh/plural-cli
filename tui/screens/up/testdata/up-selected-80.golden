@@ -1,0 +1,24 @@
+  Plural  Up                                                               aws
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Plan ─────────────────────────────────────────────────────────────────╮
+  │ ✓ Continuing plural up init                                              │
+  │                                                                          │
+  │ Mode         Self-hosted                                                 │
+  │ Preflights   ignored (--ignore-preflights)                               │
+  │ Provider     AWS (aws)                                                   │
+  │ Credentials  fake credentials ok · account 123456789012                  │
+  │ Cluster name  demo                                                       │
+  │ Region       us-east-2                                                   │
+  │ Git          already inside a work tree                                  │
+  │ App domain   (skipped)                                                   │
+  │                                                                          │
+  │ Equivalent CLI                                                           │
+  │   plural up --ignore-preflights                                          │
+  │                                                                          │
+  │ Affirmed deploy · next: workspace.yaml · generate · deploy.              │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+  esc back · ctrl+c quit
