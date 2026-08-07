@@ -11,6 +11,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
+	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	pluralspinner "github.com/pluralsh/plural-cli/tui/components/spinner"
 	"github.com/pluralsh/plural-cli/tui/navigation"
@@ -22,6 +23,9 @@ type mode uint8
 const (
 	modeSelectFlow mode = iota
 	modeIgnorePreflights
+	modeLoadInstances  // GetConsoleInstances
+	modeSelectInstance // choseCluster survey
+	modeConsoleLogin   // HandleCdLogin Affirm or token
 	modeSelectProvider
 	modeProbing
 	modeProviderForm
@@ -31,7 +35,12 @@ const (
 	modeSelectSCM      // scm.Setup: github / gitlab / bitbucket
 	modeAppDomain      // askAppDomain parity
 	modeAffirmDeploy   // common.AffirmUp before deploy
-	modeSelected
+	modeSelected       // Plan summary
+	modeRunning        // Flush + Generate
+	modeDone           // generate finished (or failed)
+	modeCommitMsg      // optional commit before Deploy
+	modeDeploying      // up.Context.Deploy
+	modeComplete       // deploy finished
 	modeCLITip
 )
 
@@ -95,6 +104,13 @@ func affirmDeployOptions() []yesNoOption {
 	}
 }
 
+func consoleCredOptions(priorURL string) []yesNoOption {
+	return []yesNoOption{
+		{value: true, title: "Yes", blurb: "keep credentials for " + truncate(priorURL, 40)},
+		{value: false, title: "No", blurb: "enter a new console access token"},
+	}
+}
+
 type probeMsg struct {
 	result upbridge.ProbeResult
 	err    error
@@ -115,6 +131,22 @@ type domainMsg struct {
 
 type preflightMsg struct {
 	err error
+}
+
+type instancesMsg struct {
+	items []upbridge.ConsoleInstance
+	err   error
+}
+
+type runDoneMsg struct {
+	err             error
+	steps           []string
+	importClusterID string
+}
+
+type deployDoneMsg struct {
+	err   error
+	steps []string
 }
 
 // Model owns Up-wizard interaction state.
@@ -143,16 +175,29 @@ type Model struct {
 	domainNote  string // zone fetch ignored (CLI "ignoring domain setup...")
 	spinner     spinner.Model
 
-	formInput    textinput.Model
-	formFields   []upbridge.FormField
-	formIndex    int
-	formValues   map[string]string
-	optionCursor int
-	freeTextKeys map[string]bool // Azure "Create new…" → free text
-	err          error
-	gitChecker   func() bool
-	domainLoader func() domainMsg // tests stub zone listing
-	gitAffirmOpen bool           // Esc from domain returns here when Affirm was shown
+	instances        []upbridge.ConsoleInstance
+	cloudInstance    upbridge.ConsoleInstance
+	consoleTokenMode bool // true = token textinput; false = use-existing Affirm
+	instanceLister   upbridge.InstanceLister
+	priorConsole     func() (url, token string)
+	saveConsole      func(url, token string) error
+	runner          upbridge.Runner
+	runSteps        []string
+	runErr          error
+	importClusterID string
+	commitMsg       string
+	deployErr       error
+
+	formInput     textinput.Model
+	formFields    []upbridge.FormField
+	formIndex     int
+	formValues    map[string]string
+	optionCursor  int
+	freeTextKeys  map[string]bool // Azure "Create new…" → free text
+	err           error
+	gitChecker    func() bool
+	domainLoader  func() domainMsg // tests stub zone listing
+	gitAffirmOpen bool             // Esc from domain returns here when Affirm was shown
 }
 
 // New creates the Up wizard starting at setup-flow selection.
@@ -175,16 +220,23 @@ func NewWithProber(ctx context.Context, t theme.Theme, prober upbridge.Prober) M
 		prober = upbridge.DefaultProber()
 	}
 	return Model{
-		theme:      t,
-		prober:     prober,
-		ctx:        ctx,
-		mode:       modeSelectFlow,
-		flows:      upbridge.Flows(),
-		providers:  upbridge.CloudProviders(),
-		scms:       upbridge.SCMProviders(),
-		formInput:  input,
-		spinner:    pluralspinner.New(t),
-		gitChecker: upbridge.InGitRepo,
+		theme:          t,
+		prober:         prober,
+		ctx:            ctx,
+		mode:           modeSelectFlow,
+		flows:          upbridge.Flows(),
+		providers:      upbridge.CloudProviders(),
+		scms:           upbridge.SCMProviders(),
+		formInput:      input,
+		spinner:        pluralspinner.New(t),
+		gitChecker:     upbridge.InGitRepo,
+		instanceLister: upbridge.DefaultInstanceLister(),
+		runner:         upbridge.DefaultRunner(),
+		priorConsole: func() (string, string) {
+			c := upbridge.ReadPriorConsole()
+			return c.Url, c.Token
+		},
+		saveConsole: upbridge.SaveConsoleConfig,
 	}
 }
 
@@ -202,8 +254,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m.applyOptions(msg)
 	case domainMsg:
 		return m.applyDomain(msg)
+	case instancesMsg:
+		return m.applyInstances(msg)
+	case runDoneMsg:
+		return m.applyRunDone(msg)
+	case deployDoneMsg:
+		return m.applyDeployDone(msg)
 	case spinner.TickMsg:
-		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights {
+		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying {
 			return m, nil
 		}
 		if m.mode == modeAppDomain && (len(m.domainOpts) > 0 || m.formInput.Focused()) {
@@ -229,6 +287,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.formInput, cmd = m.formInput.Update(msg)
 				return m, cmd
 			}
+		case modeConsoleLogin:
+			if m.consoleTokenMode {
+				var cmd tea.Cmd
+				m.formInput, cmd = m.formInput.Update(msg)
+				return m, cmd
+			}
+		case modeCommitMsg:
+			var cmd tea.Cmd
+			m.formInput, cmd = m.formInput.Update(msg)
+			return m, cmd
 		}
 		return m, nil
 	}
@@ -237,6 +305,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch m.mode {
 	case modeSelected:
 		return m.updateSelected(action)
+	case modeRunning, modeDeploying:
+		return m, nil // ignore keys while running
+	case modeDone:
+		return m.updateDone(action)
+	case modeCommitMsg:
+		return m.updateCommitMsg(action, key)
+	case modeComplete:
+		return m.updateComplete(action)
 	case modeIgnoreContinue:
 		return m.updateIgnoreContinue(action)
 	case modeAffirmDeploy:
@@ -251,11 +327,18 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m.updateCLITip(action)
 	case modeProviderForm:
 		return m.updateProviderForm(action, key)
-	case modeRunPreflights, modeProbing:
+	case modeRunPreflights, modeProbing, modeLoadInstances:
 		if action == keyActionBack {
+			if m.mode == modeLoadInstances {
+				return m.updateLoadInstances(action)
+			}
 			return m.updateProbing(action)
 		}
 		return m, nil
+	case modeSelectInstance:
+		return m.updateSelectInstance(action, key)
+	case modeConsoleLogin:
+		return m.updateConsoleLogin(action, key)
 	case modeSelectProvider:
 		return m.updateSelectProvider(action, key)
 	case modeIgnorePreflights:
@@ -332,12 +415,27 @@ func (m Model) updateIgnorePreflights(action keyAction, key tea.KeyPressMsg) (Mo
 func (m Model) updateSelectProvider(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
 	switch action {
 	case keyActionBack:
+		m.err = nil
+		if m.flow.ID == "cloud" {
+			m.resetConsoleInput()
+			if len(m.instances) > 1 {
+				m.mode = modeSelectInstance
+				priorURL, _ := m.readPriorConsole()
+				m.cursor = upbridge.DefaultInstanceIndex(m.instances, priorURL)
+				return m, nil
+			}
+			m.mode = modeIgnorePreflights
+			m.cursor = 0
+			if m.ignorePreflights {
+				m.cursor = 1
+			}
+			return m, nil
+		}
 		m.mode = modeIgnorePreflights
 		m.cursor = 0
 		if m.ignorePreflights {
 			m.cursor = 1
 		}
-		m.err = nil
 		return m, nil
 	case keyActionUp:
 		if m.cursor > 0 {
@@ -466,7 +564,24 @@ func (m Model) updateProviderForm(action keyAction, key tea.KeyPressMsg) (Model,
 }
 
 func (m Model) updateSelected(action keyAction) (Model, tea.Cmd) {
-	if action == keyActionBack {
+	switch action {
+	case keyActionConfirm:
+		return m.beginRun()
+	case keyActionBack:
+		if m.flow.Cloud {
+			// Cloud skips Affirm — Esc returns to domain (or provider when dry-run).
+			if !m.flow.DryRun {
+				m.mode = modeAppDomain
+				if m.domainIsSelect() {
+					m.formInput.Blur()
+				} else {
+					m.formInput.SetValue(m.appDomain)
+					m.formInput.Focus()
+				}
+				m.err = nil
+				return m, nil
+			}
+		}
 		if !m.flow.DryRun {
 			m.mode = modeAffirmDeploy
 			m.cursor = 0
@@ -486,6 +601,170 @@ func (m Model) updateSelected(action keyAction) (Model, tea.Cmd) {
 		m.mode = modeSelectProvider
 		m.cursor = 0
 		return m, nil
+	}
+	return m, nil
+}
+
+func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.mode = modeSelected
+		m.runErr = nil
+		m.runSteps = nil
+		return m, nil
+	case keyActionConfirm:
+		if m.runErr != nil || m.flow.DryRun {
+			return m, nil
+		}
+		return m.beginCommitMsg()
+	}
+	return m, nil
+}
+
+func (m Model) updateComplete(action keyAction) (Model, tea.Cmd) {
+	if action == keyActionBack {
+		m.mode = modeDone
+		m.deployErr = nil
+		return m, nil
+	}
+	return m, nil
+}
+
+func (m Model) beginCommitMsg() (Model, tea.Cmd) {
+	m.mode = modeCommitMsg
+	m.err = nil
+	m.formInput.EchoMode = textinput.EchoNormal
+	m.formInput.SetValue(m.commitMsg)
+	m.formInput.Placeholder = "empty to skip git commit/push"
+	m.formInput.Focus()
+	return m, nil
+}
+
+func (m Model) updateCommitMsg(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.formInput.Blur()
+		m.mode = modeDone
+		return m, nil
+	case keyActionConfirm:
+		m.commitMsg = strings.TrimSpace(m.formInput.Value())
+		m.formInput.Blur()
+		return m.beginDeploy()
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
+}
+
+func (m Model) beginDeploy() (Model, tea.Cmd) {
+	m.mode = modeDeploying
+	m.deployErr = nil
+	m.runSteps = nil
+	m.err = nil
+	return m, tea.Batch(m.spinner.Tick, m.deployCmd())
+}
+
+func (m Model) deployCmd() tea.Cmd {
+	runner := m.runner
+	if runner == nil {
+		runner = upbridge.DefaultRunner()
+	}
+	in := upbridge.DeployInput{
+		Cloud:            m.flow.Cloud,
+		CloudCluster:     m.cloudInstance.Name,
+		ImportClusterID:  m.importClusterID,
+		IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
+		CommitMsg:        m.commitMsg,
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return func() tea.Msg {
+		var steps []string
+		err := runner.Deploy(ctx, in, func(step string) {
+			steps = append(steps, step)
+		})
+		return deployDoneMsg{err: err, steps: steps}
+	}
+}
+
+func (m Model) applyDeployDone(msg deployDoneMsg) (Model, tea.Cmd) {
+	if m.mode != modeDeploying {
+		return m, nil
+	}
+	if len(msg.steps) > 0 {
+		m.runSteps = msg.steps
+	}
+	m.deployErr = msg.err
+	m.mode = modeComplete
+	if msg.err != nil {
+		m.err = msg.err
+	} else {
+		m.err = nil
+	}
+	return m, nil
+}
+
+func (m Model) beginRun() (Model, tea.Cmd) {
+	if len(m.formValues) == 0 {
+		m.err = fmt.Errorf("provider survey values are required to write workspace.yaml (complete credentials/region first)")
+		return m, nil
+	}
+	m.err = nil
+	m.runErr = nil
+	m.deployErr = nil
+	m.runSteps = nil
+	m.importClusterID = ""
+	m.mode = modeRunning
+	return m, tea.Batch(m.spinner.Tick, m.runCmd())
+}
+
+func (m Model) runCmd() tea.Cmd {
+	runner := m.runner
+	if runner == nil {
+		runner = upbridge.DefaultRunner()
+	}
+	in := upbridge.RunInput{
+		Flush: upbridge.FlushInput{
+			ProviderID: m.provider.ID,
+			Values:     copyStringMap(m.formValues),
+			AppDomain:  m.appDomain,
+			Cloud:      m.flow.Cloud,
+		},
+		Generate: upbridge.GenerateInput{
+			Cloud:            m.flow.Cloud,
+			CloudCluster:     m.cloudInstance.Name,
+			IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
+		},
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return func() tea.Msg {
+		var steps []string
+		res, err := runner.Run(ctx, in, func(step string) {
+			steps = append(steps, step)
+		})
+		return runDoneMsg{err: err, steps: steps, importClusterID: res.ImportClusterID}
+	}
+}
+
+func (m Model) applyRunDone(msg runDoneMsg) (Model, tea.Cmd) {
+	if m.mode != modeRunning {
+		return m, nil
+	}
+	if len(msg.steps) > 0 {
+		m.runSteps = msg.steps
+	}
+	m.importClusterID = msg.importClusterID
+	m.runErr = msg.err
+	m.mode = modeDone
+	if msg.err != nil {
+		m.err = msg.err
+	} else {
+		m.err = nil
 	}
 	return m, nil
 }
@@ -681,12 +960,294 @@ func (m Model) chooseIgnorePreflights(ignore bool) (Model, tea.Cmd) {
 	m.ignorePreflights = ignore
 	m.ignoreAsked = true
 	m.err = nil
+	if m.flow.ID == "cloud" {
+		return m.beginLoadInstances()
+	}
 	if m.flow.NeedsProvider() {
 		m.mode = modeSelectProvider
 		m.cursor = 0
 		return m, nil
 	}
 	m.mode = modeCLITip
+	return m, nil
+}
+
+func (m Model) readPriorConsole() (url, token string) {
+	if m.priorConsole != nil {
+		return m.priorConsole()
+	}
+	c := upbridge.ReadPriorConsole()
+	return c.Url, c.Token
+}
+
+func (m Model) resetConsoleInput() {
+	m.formInput.EchoMode = textinput.EchoNormal
+	m.formInput.SetValue("")
+	m.formInput.Placeholder = ""
+	m.formInput.Blur()
+	m.consoleTokenMode = false
+}
+
+func (m Model) beginLoadInstances() (Model, tea.Cmd) {
+	m.mode = modeLoadInstances
+	m.instances = nil
+	m.cloudInstance = upbridge.ConsoleInstance{}
+	m.err = nil
+	m.resetConsoleInput()
+	return m, tea.Batch(m.spinner.Tick, m.listInstancesCmd())
+}
+
+func (m Model) listInstancesCmd() tea.Cmd {
+	lister := m.instanceLister
+	if lister == nil {
+		lister = upbridge.DefaultInstanceLister()
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return func() tea.Msg {
+		items, err := lister.List(ctx)
+		return instancesMsg{items: items, err: err}
+	}
+}
+
+func (m Model) applyInstances(msg instancesMsg) (Model, tea.Cmd) {
+	if m.mode != modeLoadInstances {
+		return m, nil
+	}
+	if msg.err != nil {
+		m.err = msg.err
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	}
+	if len(msg.items) == 0 {
+		m.err = fmt.Errorf("no cloud instances are available for this account")
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	}
+	m.instances = msg.items
+	m.err = nil
+	if len(msg.items) == 1 {
+		return m.chooseInstance(msg.items[0])
+	}
+	priorURL, _ := m.readPriorConsole()
+	m.mode = modeSelectInstance
+	m.cursor = upbridge.DefaultInstanceIndex(msg.items, priorURL)
+	return m, nil
+}
+
+func (m Model) updateLoadInstances(action keyAction) (Model, tea.Cmd) {
+	if action == keyActionBack {
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		m.err = nil
+		return m, nil
+	}
+	return m, nil
+}
+
+func (m Model) updateSelectInstance(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		m.err = nil
+		m.cloudInstance = upbridge.ConsoleInstance{}
+		return m, nil
+	case keyActionUp:
+		if m.cursor > 0 {
+			m.cursor--
+		}
+		return m, nil
+	case keyActionDown:
+		if m.cursor < len(m.instances)-1 {
+			m.cursor++
+		}
+		return m, nil
+	case keyActionConfirm:
+		if m.cursor >= 0 && m.cursor < len(m.instances) {
+			return m.chooseInstance(m.instances[m.cursor])
+		}
+		return m, nil
+	}
+	text := keyText(key)
+	for i := range m.instances {
+		if text == string(rune('1'+i)) {
+			m.cursor = i
+			return m.chooseInstance(m.instances[i])
+		}
+	}
+	return m, nil
+}
+
+func (m Model) chooseInstance(inst upbridge.ConsoleInstance) (Model, tea.Cmd) {
+	m.cloudInstance = inst
+	m.err = nil
+	return m.beginConsoleLogin()
+}
+
+func (m Model) beginConsoleLogin() (Model, tea.Cmd) {
+	m.mode = modeConsoleLogin
+	m.err = nil
+	priorURL, _ := m.readPriorConsole()
+	if upbridge.PriorConsoleMatches(priorURL, m.cloudInstance.URL) {
+		m.resetConsoleInput()
+		m.consoleTokenMode = false
+		m.cursor = 0 // Yes keep existing
+		return m, nil
+	}
+	return m.beginConsoleToken()
+}
+
+func (m Model) beginConsoleToken() (Model, tea.Cmd) {
+	m.consoleTokenMode = true
+	m.mode = modeConsoleLogin
+	m.err = nil
+	m.formInput.EchoMode = textinput.EchoPassword
+	m.formInput.EchoCharacter = '*'
+	m.formInput.SetValue("")
+	m.formInput.Placeholder = "console access token"
+	m.formInput.Focus()
+	return m, nil
+}
+
+func (m Model) updateConsoleLogin(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	if m.consoleTokenMode {
+		return m.updateConsoleToken(action, key)
+	}
+	priorURL, _ := m.readPriorConsole()
+	opts := consoleCredOptions(priorURL)
+	switch action {
+	case keyActionBack:
+		m.resetConsoleInput()
+		if len(m.instances) > 1 {
+			m.mode = modeSelectInstance
+			m.cursor = upbridge.DefaultInstanceIndex(m.instances, priorURL)
+			return m, nil
+		}
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	case keyActionUp:
+		if m.cursor > 0 {
+			m.cursor--
+		}
+		return m, nil
+	case keyActionDown:
+		if m.cursor < len(opts)-1 {
+			m.cursor++
+		}
+		return m, nil
+	case keyActionConfirm:
+		return m.chooseConsoleCreds(opts[m.cursor].value)
+	}
+	text := keyText(key)
+	switch text {
+	case "1", "y", "Y":
+		m.cursor = 0
+		return m.chooseConsoleCreds(true)
+	case "2", "n", "N":
+		m.cursor = 1
+		return m.chooseConsoleCreds(false)
+	}
+	return m, nil
+}
+
+func (m Model) chooseConsoleCreds(keep bool) (Model, tea.Cmd) {
+	if keep {
+		return m.finishConsoleLogin("")
+	}
+	return m.beginConsoleToken()
+}
+
+func (m Model) updateConsoleToken(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		priorURL, _ := m.readPriorConsole()
+		if upbridge.PriorConsoleMatches(priorURL, m.cloudInstance.URL) {
+			m.resetConsoleInput()
+			m.consoleTokenMode = false
+			m.cursor = 0
+			m.err = nil
+			return m, nil
+		}
+		m.resetConsoleInput()
+		if len(m.instances) > 1 {
+			m.mode = modeSelectInstance
+			m.cursor = upbridge.DefaultInstanceIndex(m.instances, priorURL)
+			return m, nil
+		}
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	case keyActionConfirm:
+		token := strings.TrimSpace(m.formInput.Value())
+		if token == "" {
+			m.err = fmt.Errorf("console access token is required")
+			return m, nil
+		}
+		return m.finishConsoleLogin(token)
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
+}
+
+func (m Model) finishConsoleLogin(newToken string) (Model, tea.Cmd) {
+	priorURL, priorToken := m.readPriorConsole()
+	url := m.cloudInstance.URL
+	token := priorToken
+	confURL := priorURL
+
+	if newToken != "" {
+		token = newToken
+		confURL = url
+		save := m.saveConsole
+		if save == nil {
+			save = upbridge.SaveConsoleConfig
+		}
+		if err := save(url, token); err != nil {
+			m.err = err
+			return m, nil
+		}
+	} else if !upbridge.PriorConsoleMatches(priorURL, url) {
+		m.err = fmt.Errorf("console credentials do not match the selected instance")
+		return m, nil
+	}
+	if confURL == "" {
+		confURL = url
+	}
+
+	if err := upbridge.ValidateConsoleConfig(m.instances, console.Config{Url: confURL, Token: token}); err != nil {
+		m.err = err
+		return m, nil
+	}
+
+	m.resetConsoleInput()
+	m.err = nil
+	m.mode = modeSelectProvider
+	m.cursor = 0
 	return m, nil
 }
 
@@ -953,6 +1514,12 @@ func (m Model) confirmAppDomain() (Model, tea.Cmd) {
 }
 
 func (m Model) beginAffirmDeploy() (Model, tea.Cmd) {
+	// CLI skips AffirmUp when --cloud.
+	if m.flow.Cloud {
+		m.mode = modeSelected
+		m.err = nil
+		return m, nil
+	}
 	m.mode = modeAffirmDeploy
 	m.cursor = 0 // Yes
 	m.err = nil

@@ -24,6 +24,15 @@ func (m Model) headerStatus() string {
 	switch m.mode {
 	case modeIgnorePreflights:
 		return m.theme.Muted.Render("step 2 · preflights")
+	case modeLoadInstances:
+		return m.theme.Muted.Render("loading Console instances…")
+	case modeSelectInstance:
+		return m.theme.Muted.Render("step · Console instance")
+	case modeConsoleLogin:
+		if m.consoleTokenMode {
+			return m.theme.Muted.Render("step · console token")
+		}
+		return m.theme.Muted.Render("step · console credentials")
 	case modeSelectProvider:
 		return m.theme.Muted.Render("step 3 · provider")
 	case modeProbing:
@@ -43,10 +52,29 @@ func (m Model) headerStatus() string {
 	case modeAffirmDeploy:
 		return m.theme.Muted.Render("step · deploy Affirm")
 	case modeSelected:
+		if m.cloudInstance.Name != "" {
+			return m.theme.Success.Render(m.cloudInstance.Name)
+		}
 		if m.provider.ID != "" {
 			return m.theme.Success.Render(m.provider.ID)
 		}
 		return m.theme.Success.Render("ready")
+	case modeRunning:
+		return m.theme.Muted.Render("running Flush + Generate…")
+	case modeDone:
+		if m.runErr != nil {
+			return m.theme.Danger.Render("failed")
+		}
+		return m.theme.Success.Render("generated")
+	case modeCommitMsg:
+		return m.theme.Muted.Render("step · commit message")
+	case modeDeploying:
+		return m.theme.Muted.Render("deploying…")
+	case modeComplete:
+		if m.deployErr != nil {
+			return m.theme.Danger.Render("deploy failed")
+		}
+		return m.theme.Success.Render("deployed")
 	case modeCLITip:
 		return m.theme.Muted.Render(m.flow.ID)
 	default:
@@ -62,6 +90,12 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			"",
 			"Mode         " + m.flow.Title,
 			"Preflights   " + yesNoLabel(m.ignorePreflights),
+		}
+		if m.cloudInstance.Name != "" {
+			lines = append(lines, "Console      "+m.cloudInstance.Name)
+			if m.cloudInstance.URL != "" {
+				lines = append(lines, "             "+truncate(m.cloudInstance.URL, max(20, width-16)))
+			}
 		}
 		if m.provider.Title != "" {
 			lines = append(lines, "Provider     "+m.provider.Title+" ("+m.provider.ID+")")
@@ -95,18 +129,146 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		if !m.flow.DryRun {
 			lines = append(lines, "App domain   "+domain)
 		}
+		next := "Enter to Flush workspace.yaml + Generate, then Deploy."
+		if m.flow.Cloud {
+			next = "Enter to Flush + ImportCluster + Generate, then Deploy."
+		}
 		lines = append(lines,
 			"",
 			m.theme.Muted.Render("Equivalent CLI"),
 			"  "+m.cli(),
 			"",
-			m.theme.Muted.Render("Affirmed deploy · next: workspace.yaml · generate · deploy."),
+			m.theme.Muted.Render(next),
 		)
-		return page.Panel(m.theme, "Plan", lines, width, 18, true), "esc back · ctrl+c quit"
+		help := "enter run · esc back · ctrl+c quit"
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Plan", lines, width, 18, true), help
+	case modeRunning:
+		lines := []string{
+			m.spinner.View() + " " + m.theme.Muted.Render("Running Flush + Generate…"),
+			m.theme.Muted.Render("Next: commit message → Deploy."),
+			"",
+		}
+		if len(m.runSteps) == 0 {
+			lines = append(lines, m.theme.Muted.Render("Starting…"))
+		} else {
+			for _, s := range m.runSteps {
+				lines = append(lines, "  · "+s)
+			}
+		}
+		return page.Panel(m.theme, "Generating", lines, width, 12, true), "please wait"
+	case modeDone:
+		lines := []string{}
+		if m.runErr != nil {
+			lines = append(lines,
+				m.theme.Danger.Render("Generate failed"),
+				"",
+				m.theme.Danger.Render(m.runErr.Error()),
+				"",
+				m.theme.Muted.Render("Esc returns to Plan to retry."),
+			)
+			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
+		}
+		lines = append(lines,
+			m.theme.Success.Render("✓ Finished generating the repo"),
+			"",
+		)
+		if m.flow.Cloud {
+			lines = append(lines, "Console  "+m.cloudInstance.Name)
+		}
+		if m.provider.Title != "" {
+			lines = append(lines, "Provider "+m.provider.Title)
+		}
+		for _, s := range m.runSteps {
+			lines = append(lines, m.theme.Muted.Render("  · "+s))
+		}
+		if m.flow.DryRun {
+			lines = append(lines, "",
+				m.theme.Muted.Render("Dry-run: no Deploy will run."),
+			)
+			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
+		}
+		lines = append(lines, "",
+			m.theme.Muted.Render("Enter to continue to Deploy (commit message, then terraform)."),
+			m.theme.Muted.Render("Equivalent CLI: "+m.cli()),
+		)
+		return page.Panel(m.theme, "Generated", lines, width, 16, true), "enter deploy · esc plan · ctrl+c quit"
+	case modeCommitMsg:
+		lines := []string{
+			m.theme.Muted.Render("Enter a commit message to push your configuration."),
+			m.theme.Muted.Render("Leave empty to skip commit/push (same as plural up CommitMsg)."),
+			"",
+			"› Message",
+			"  " + m.formInput.View(),
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Git commit", lines, width, 12, true), "enter deploy · esc back"
+	case modeDeploying:
+		lines := []string{
+			m.spinner.View() + " " + m.theme.Muted.Render("Running Deploy (terraform / import / apps)…"),
+			"",
+		}
+		if len(m.runSteps) == 0 {
+			lines = append(lines, m.theme.Muted.Render("Starting…"))
+		} else {
+			for _, s := range m.runSteps {
+				lines = append(lines, "  · "+s)
+			}
+		}
+		return page.Panel(m.theme, "Deploying", lines, width, 12, true), "please wait"
+	case modeComplete:
+		lines := []string{}
+		if m.deployErr != nil {
+			lines = append(lines,
+				m.theme.Danger.Render("Deploy failed"),
+				"",
+				m.theme.Danger.Render(m.deployErr.Error()),
+				"",
+				m.theme.Muted.Render("Esc returns to Generated to retry Deploy."),
+			)
+		} else {
+			lines = append(lines,
+				m.theme.Success.Render("✓ Finished setting up your management cluster!"),
+				"",
+			)
+			if m.flow.Cloud {
+				lines = append(lines, "Console  "+m.cloudInstance.Name)
+			}
+			if m.provider.Title != "" {
+				lines = append(lines, "Provider "+m.provider.Title)
+			}
+			if m.commitMsg != "" {
+				lines = append(lines, "Commit   "+truncate(m.commitMsg, max(20, width-12)))
+			} else {
+				lines = append(lines, "Commit   (skipped)")
+			}
+			for _, s := range m.runSteps {
+				lines = append(lines, m.theme.Muted.Render("  · "+s))
+			}
+			if m.provider.ID == "byok" && m.flow.Cloud {
+				lines = append(lines, "",
+					m.theme.Muted.Render("BYOK cloud: configure IAM for plrl-deploy-operator/stacks"),
+					m.theme.Muted.Render("(operator reinstall not run from TUI yet)."),
+				)
+			} else {
+				lines = append(lines, "",
+					m.theme.Muted.Render("Use terraform as usual; gitops lives under bootstrap/."),
+				)
+			}
+			lines = append(lines, "",
+				m.theme.Muted.Render("Equivalent CLI"),
+				"  "+m.cli(),
+			)
+		}
+		return page.Panel(m.theme, "Complete", lines, width, 16, true), "esc back · ctrl+c quit"
 	case modeCLITip:
 		lines := []string{
-			m.theme.Muted.Render(m.flow.Title + " uses a different path than self-hosted."),
-			m.theme.Muted.Render("Provider selection only applies to self-hosted up."),
+			m.theme.Muted.Render(m.flow.Title + " is not fully wired in the TUI yet."),
+			m.theme.Muted.Render("Use the CLI for this path, or pick Self-hosted / Plural Cloud."),
 			"",
 			"Mode         " + m.flow.Title,
 			m.theme.Muted.Render("             " + m.flow.Blurb),
@@ -115,9 +277,60 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			m.theme.Muted.Render("Equivalent CLI"),
 			"  " + m.cli(),
 			"",
-			m.theme.Muted.Render("Cloud / dry-run wizards land in a later step."),
+			m.theme.Muted.Render("Dry-run wizards land in a later step."),
 		}
 		return page.Panel(m.theme, "Coming next", lines, width, 14, true), "esc change preflights · ctrl+c quit"
+	case modeLoadInstances:
+		lines := []string{
+			"Mode  " + m.flow.Title,
+			"",
+			m.spinner.View() + " " + m.theme.Muted.Render("Fetching Console instances (GetConsoleInstances)…"),
+			m.theme.Muted.Render("Same list plural up --cloud uses in choseCluster."),
+		}
+		return page.Panel(m.theme, "Plural Cloud", lines, width, 10, true), "esc cancel"
+	case modeSelectInstance:
+		lines := []string{
+			m.theme.Muted.Render("Select one of the following clusters:"),
+			m.theme.Muted.Render("Same survey as plural up --cloud choseCluster."),
+			"",
+		}
+		lines = append(lines, m.instanceLines(width)...)
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		help := "↑/↓ · 1–n · enter · esc preflights"
+		return page.Panel(m.theme, "Console instance", lines, width, 14, true), help
+	case modeConsoleLogin:
+		if m.consoleTokenMode {
+			lines := []string{
+				"Instance  " + m.cloudInstance.Name,
+				m.theme.Muted.Render("          "+truncate(m.cloudInstance.URL, max(20, width-12))),
+				"",
+				m.theme.Muted.Render("Enter your console access token (plural cd login)."),
+				"",
+				"› Token",
+				"  " + m.formInput.View(),
+			}
+			if m.err != nil {
+				lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+			}
+			return page.Panel(m.theme, "Console login", lines, width, 14, true), "enter continue · esc back"
+		}
+		priorURL, _ := m.readPriorConsole()
+		lines := []string{
+			"Instance  " + m.cloudInstance.Name,
+			m.theme.Muted.Render("          "+truncate(m.cloudInstance.URL, max(20, width-12))),
+			"",
+			m.theme.Muted.Render(fmt.Sprintf("You've already configured your console at %s,", truncate(priorURL, max(24, width-8)))),
+			m.theme.Muted.Render("continue using those credentials?"),
+			m.theme.Muted.Render("Same Affirm as HandleCdLogin (PLURAL_CD_USE_EXISTING_CREDENTIALS)."),
+			"",
+		}
+		lines = append(lines, m.consoleCredLines(width)...)
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Console credentials", lines, width, 14, true), "↑/↓ · y/n · enter · esc back"
 	case modeSetupGit:
 		lines := []string{}
 		if m.probeWarn != "" {
@@ -423,6 +636,56 @@ func (m Model) setupGitLines(width int) []string {
 			shortcut = "n"
 		}
 		left := fmt.Sprintf("%s %s   %-4s  %s", check, shortcut, opt.title, opt.blurb)
+		var row string
+		if i == m.cursor {
+			row = cursor + m.theme.Title.Render(left)
+		} else {
+			row = cursor + m.theme.Body.Render(left)
+		}
+		lines = append(lines, ansi.Truncate(row, max(1, width-2), "…"))
+	}
+	return lines
+}
+
+func (m Model) consoleCredLines(width int) []string {
+	priorURL, _ := m.readPriorConsole()
+	opts := consoleCredOptions(priorURL)
+	lines := make([]string, 0, len(opts))
+	for i, opt := range opts {
+		cursor := "  "
+		if i == m.cursor {
+			cursor = "› "
+		}
+		check := "[ ]"
+		if i == m.cursor {
+			check = "[x]"
+		}
+		shortcut := "y"
+		if !opt.value {
+			shortcut = "n"
+		}
+		left := fmt.Sprintf("%s %s   %-4s  %s", check, shortcut, opt.title, opt.blurb)
+		var row string
+		if i == m.cursor {
+			row = cursor + m.theme.Title.Render(left)
+		} else {
+			row = cursor + m.theme.Body.Render(left)
+		}
+		lines = append(lines, ansi.Truncate(row, max(1, width-2), "…"))
+	}
+	return lines
+}
+
+func (m Model) instanceLines(width int) []string {
+	lines := make([]string, 0, len(m.instances))
+	start, end := optionWindow(m.cursor, len(m.instances), 8)
+	for i := start; i < end; i++ {
+		inst := m.instances[i]
+		cursor := "  "
+		if i == m.cursor {
+			cursor = "› "
+		}
+		left := fmt.Sprintf("%d   %-20s  %s", i+1, inst.Name, truncate(inst.URL, max(12, width-28)))
 		var row string
 		if i == m.cursor {
 			row = cursor + m.theme.Title.Render(left)

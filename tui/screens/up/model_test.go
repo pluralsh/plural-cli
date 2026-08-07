@@ -64,6 +64,15 @@ func testModel(t *testing.T) Model {
 	model := NewWithProber(t.Context(), theme.New(colorprofile.ASCII), fakeProber{})
 	model.gitChecker = func() bool { return true }
 	model.domainLoader = func() domainMsg { return domainMsg{text: true} }
+	model.instanceLister = fakeInstanceLister{
+		items: []upbridge.ConsoleInstance{
+			{ID: "1", Name: "demo-cloud", URL: "https://demo.onplural.sh"},
+			{ID: "2", Name: "other-cloud", URL: "https://other.onplural.sh"},
+		},
+	}
+	model.priorConsole = func() (string, string) { return "", "" }
+	model.saveConsole = func(url, token string) error { return nil }
+	model.runner = &stubRunner{}
 	return model
 }
 
@@ -72,6 +81,101 @@ func testModelOutsideGit(t *testing.T, prober upbridge.Prober) Model {
 	model := NewWithProber(t.Context(), theme.New(colorprofile.ASCII), prober)
 	model.gitChecker = func() bool { return false }
 	model.domainLoader = func() domainMsg { return domainMsg{text: true} }
+	model.instanceLister = fakeInstanceLister{items: []upbridge.ConsoleInstance{
+		{ID: "1", Name: "demo-cloud", URL: "https://demo.onplural.sh"},
+	}}
+	model.priorConsole = func() (string, string) { return "", "" }
+	model.saveConsole = func(url, token string) error { return nil }
+	model.runner = &stubRunner{}
+	return model
+}
+
+type fakeInstanceLister struct {
+	items []upbridge.ConsoleInstance
+	err   error
+}
+
+func (f fakeInstanceLister) List(context.Context) ([]upbridge.ConsoleInstance, error) {
+	return f.items, f.err
+}
+
+type stubRunner struct {
+	err       error
+	deployErr error
+	calls     []upbridge.RunInput
+	deploys   []upbridge.DeployInput
+}
+
+func (s *stubRunner) Run(_ context.Context, in upbridge.RunInput, progress upbridge.ProgressFunc) (upbridge.RunResult, error) {
+	s.calls = append(s.calls, in)
+	if progress != nil {
+		progress("Writing workspace.yaml…")
+		if in.Generate.Cloud {
+			progress("Resolving management cluster (ImportCluster)…")
+		}
+		progress("Generating bootstrap / terraform…")
+	}
+	res := upbridge.RunResult{}
+	if in.Generate.Cloud {
+		res.ImportClusterID = "mgmt-test-id"
+	}
+	return res, s.err
+}
+
+func (s *stubRunner) Deploy(_ context.Context, in upbridge.DeployInput, progress upbridge.ProgressFunc) error {
+	s.deploys = append(s.deploys, in)
+	if progress != nil {
+		progress("Deploying management cluster…")
+	}
+	return s.deployErr
+}
+
+func drainRun(t *testing.T, model Model, _ tea.Cmd) Model {
+	t.Helper()
+	if model.mode != modeRunning {
+		return model
+	}
+	msg := model.runCmd()()
+	model, _ = model.Update(msg)
+	return model
+}
+
+func drainDeploy(t *testing.T, model Model) Model {
+	t.Helper()
+	if model.mode != modeDeploying {
+		return model
+	}
+	msg := model.deployCmd()()
+	model, _ = model.Update(msg)
+	return model
+}
+
+func drainInstances(t *testing.T, model Model) Model {
+	t.Helper()
+	if model.mode != modeLoadInstances {
+		return model
+	}
+	msg := model.listInstancesCmd()()
+	model, _ = model.Update(msg)
+	return model
+}
+
+func finishCloudToProvider(t *testing.T, model Model) Model {
+	t.Helper()
+	model = drainInstances(t, model)
+	if model.mode == modeSelectInstance {
+		model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	}
+	if model.mode == modeConsoleLogin && !model.consoleTokenMode {
+		model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	}
+	if model.mode == modeConsoleLogin && model.consoleTokenMode {
+		model.formInput.SetValue("test-token")
+		model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	}
+	if model.mode != modeSelectProvider {
+		t.Fatalf("expected provider select after cloud login, got %d err=%v", model.mode, model.err)
+	}
 	return model
 }
 
@@ -357,16 +461,245 @@ func TestCloudModeAsksIgnorePreflights(t *testing.T) {
 	if model.mode != modeIgnorePreflights || !model.Cloud() {
 		t.Fatalf("cloud = mode=%d cloud=%v", model.mode, model.Cloud())
 	}
-	model, _ = model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
-	if model.mode != modeCLITip || model.IgnorePreflights() {
-		t.Fatalf("cli tip = mode=%d ignore=%v", model.mode, model.IgnorePreflights())
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
+	if model.mode != modeLoadInstances || model.IgnorePreflights() {
+		t.Fatalf("load instances = mode=%d ignore=%v", model.mode, model.IgnorePreflights())
 	}
-	if !strings.Contains(model.View(80, 24), "plural up --cloud") || strings.Contains(model.View(80, 24), "--ignore-preflights") {
-		t.Fatalf("cli tip:\n%s", model.View(80, 24))
+	_ = cmd
+	model = drainInstances(t, model)
+	if model.mode != modeSelectInstance {
+		t.Fatalf("expected instance select, got %d err=%v", model.mode, model.err)
+	}
+	if !strings.Contains(model.View(80, 24), "demo-cloud") {
+		t.Fatalf("missing instance:\n%s", model.View(80, 24))
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if model.mode != modeIgnorePreflights {
 		t.Fatalf("esc = %d", model.mode)
+	}
+}
+
+func TestCloudPicksInstanceThenProvider(t *testing.T) {
+	model := testModel(t)
+	model.priorConsole = func() (string, string) {
+		return "https://demo.onplural.sh", "existing-token"
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	model = drainInstances(t, model)
+	if model.mode != modeSelectInstance {
+		t.Fatalf("select instance = %d", model.mode)
+	}
+	// default cursor should prefer prior hostname match (demo-cloud)
+	if model.cursor != 0 {
+		t.Fatalf("default cursor = %d", model.cursor)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeConsoleLogin || model.consoleTokenMode {
+		t.Fatalf("expected use-existing Affirm, mode=%d token=%v", model.mode, model.consoleTokenMode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	if model.mode != modeSelectProvider || model.cloudInstance.Name != "demo-cloud" {
+		t.Fatalf("after login = mode=%d inst=%q err=%v", model.mode, model.cloudInstance.Name, model.err)
+	}
+}
+
+func TestCloudSingleInstanceAutoSelects(t *testing.T) {
+	model := testModel(t)
+	model.instanceLister = fakeInstanceLister{items: []upbridge.ConsoleInstance{
+		{ID: "1", Name: "only", URL: "https://only.onplural.sh"},
+	}}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainInstances(t, model)
+	if model.mode != modeConsoleLogin || model.cloudInstance.Name != "only" {
+		t.Fatalf("auto-select = mode=%d inst=%q err=%v", model.mode, model.cloudInstance.Name, model.err)
+	}
+}
+
+func TestCloudEmptyInstancesErrors(t *testing.T) {
+	model := testModel(t)
+	model.instanceLister = fakeInstanceLister{}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainInstances(t, model)
+	if model.mode != modeIgnorePreflights || model.err == nil {
+		t.Fatalf("expected error back to preflights, mode=%d err=%v", model.mode, model.err)
+	}
+}
+
+func TestCloudSkipsDeployAffirm(t *testing.T) {
+	model := testModel(t)
+	model.priorConsole = func() (string, string) {
+		return "https://demo.onplural.sh", "tok"
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	model = finishCloudToProvider(t, model)
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
+	model = drainProbe(t, model, cmd)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	if model.mode != modeSelected {
+		t.Fatalf("expected plan, got %d", model.mode)
+	}
+	view := model.View(100, 30)
+	if !strings.Contains(view, "demo-cloud") || !strings.Contains(view, "plural up --cloud") {
+		t.Fatalf("plan:\n%s", view)
+	}
+	// Esc from plan goes to domain (cloud skipped Affirm)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	if model.mode != modeAppDomain {
+		t.Fatalf("esc from cloud plan = %d", model.mode)
+	}
+}
+
+func TestDryRunStillShowsCLITip(t *testing.T) {
+	model := testModel(t)
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
+	if model.mode != modeCLITip {
+		t.Fatalf("dry-run tip = %d", model.mode)
+	}
+}
+
+func TestPlanEnterRunsGenerate(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	runner := model.runner.(*stubRunner)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeRunning {
+		t.Fatalf("expected running, got %d err=%v", model.mode, model.err)
+	}
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone || model.runErr != nil {
+		t.Fatalf("done = mode=%d err=%v", model.mode, model.runErr)
+	}
+	if len(runner.calls) != 1 || runner.calls[0].Flush.Values["cluster"] != "demo" {
+		t.Fatalf("runner calls = %#v", runner.calls)
+	}
+	if !strings.Contains(model.View(80, 24), "Finished generating") {
+		t.Fatalf("done view:\n%s", model.View(80, 24))
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	if model.mode != modeSelected {
+		t.Fatalf("esc to plan = %d", model.mode)
+	}
+}
+
+func TestPlanEnterWithoutFormValuesBlocked(t *testing.T) {
+	model := testModel(t)
+	model.mode = modeSelected
+	model.flow = model.flows[0]
+	model.provider = model.providers[0]
+	model.formValues = nil
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeSelected || model.err == nil {
+		t.Fatalf("expected stay on plan with error, mode=%d err=%v", model.mode, model.err)
+	}
+}
+
+func TestPlanRunErrorShowsDone(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	model.runner = &stubRunner{err: context.DeadlineExceeded}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone || model.runErr == nil {
+		t.Fatalf("expected failed done, mode=%d err=%v", model.mode, model.runErr)
+	}
+	if !strings.Contains(model.View(80, 24), "Generate failed") {
+		t.Fatalf("view:\n%s", model.View(80, 24))
+	}
+}
+
+func TestCloudPlanRunPassesCloudFlags(t *testing.T) {
+	model := testModel(t)
+	model.priorConsole = func() (string, string) {
+		return "https://demo.onplural.sh", "tok"
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	model = finishCloudToProvider(t, model)
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
+	model = drainProbe(t, model, cmd)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	runner := model.runner.(*stubRunner)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone || len(runner.calls) != 1 {
+		t.Fatalf("mode=%d calls=%d", model.mode, len(runner.calls))
+	}
+	call := runner.calls[0]
+	if !call.Flush.Cloud || !call.Generate.Cloud || call.Generate.CloudCluster != "demo-cloud" {
+		t.Fatalf("cloud run input = %#v", call)
+	}
+	if model.importClusterID != "mgmt-test-id" {
+		t.Fatalf("importClusterID = %q", model.importClusterID)
+	}
+}
+
+func TestDeployAfterGenerate(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	runner := model.runner.(*stubRunner)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone {
+		t.Fatalf("after generate = %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeCommitMsg {
+		t.Fatalf("expected commit msg, got %d", model.mode)
+	}
+	model.formInput.SetValue("bootstrap mgmt")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeDeploying {
+		t.Fatalf("expected deploying, got %d", model.mode)
+	}
+	model = drainDeploy(t, model)
+	if model.mode != modeComplete || model.deployErr != nil {
+		t.Fatalf("complete = mode=%d err=%v", model.mode, model.deployErr)
+	}
+	if len(runner.deploys) != 1 || runner.deploys[0].CommitMsg != "bootstrap mgmt" {
+		t.Fatalf("deploys = %#v", runner.deploys)
+	}
+	if !strings.Contains(model.View(80, 24), "Finished setting up") {
+		t.Fatalf("view:\n%s", model.View(80, 24))
+	}
+}
+
+func TestDeployErrorShowsComplete(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	model.runner = &stubRunner{deployErr: context.DeadlineExceeded}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // empty commit
+	model = drainDeploy(t, model)
+	if model.mode != modeComplete || model.deployErr == nil {
+		t.Fatalf("expected deploy failure, mode=%d err=%v", model.mode, model.deployErr)
+	}
+	if !strings.Contains(model.View(80, 24), "Deploy failed") {
+		t.Fatalf("view:\n%s", model.View(80, 24))
 	}
 }
 
@@ -416,7 +749,7 @@ func goldenModels(t *testing.T) (flow, ignore, provider, form, selected, cliTip,
 	selected.formValues = map[string]string{"cluster": "demo", "region": "us-east-2"}
 	cliTip = flow
 	cliTip.mode = modeCLITip
-	cliTip.flow = cliTip.flows[1]
+	cliTip.flow = cliTip.flows[2] // dry-run stub tip
 	cliTip.ignorePreflights = true
 	cliTip.ignoreAsked = true
 	git = flow

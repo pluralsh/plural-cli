@@ -10,9 +10,12 @@ func TestFlows(t *testing.T) {
 	if !flows[0].NeedsProvider() {
 		t.Fatal("self-hosted should need provider")
 	}
-	for _, f := range flows[1:] {
+	if !flows[1].NeedsProvider() {
+		t.Fatal("cloud should need provider after Console pick")
+	}
+	for _, f := range flows[2:] {
 		if f.NeedsProvider() {
-			t.Fatalf("%s should not need provider list", f.ID)
+			t.Fatalf("%s should not need provider list yet", f.ID)
 		}
 	}
 	want := []struct {

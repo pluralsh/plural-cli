@@ -1,18 +1,18 @@
-  Plural  Up                                                                                                     cloud
+  Plural  Up                                                                                                   dry-run
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   ╭─ › Coming next ──────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ Plural Cloud uses a different path than self-hosted.                                                             │
-  │ Provider selection only applies to self-hosted up.                                                               │
+  │ Dry-run is not fully wired in the TUI yet.                                                                       │
+  │ Use the CLI for this path, or pick Self-hosted / Plural Cloud.                                                   │
   │                                                                                                                  │
-  │ Mode         Plural Cloud                                                                                        │
-  │              pick a Console instance (--cloud) · coming next                                                     │
+  │ Mode         Dry-run                                                                                             │
+  │              generate repo only (--dry-run) · coming next                                                        │
   │ Preflights   ignored (--ignore-preflights)                                                                       │
   │                                                                                                                  │
   │ Equivalent CLI                                                                                                   │
-  │   plural up --cloud --ignore-preflights                                                                          │
+  │   plural up --dry-run --ignore-preflights                                                                        │
   │                                                                                                                  │
-  │ Cloud / dry-run wizards land in a later step.                                                                    │
+  │ Dry-run wizards land in a later step.                                                                            │
   │                                                                                                                  │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 

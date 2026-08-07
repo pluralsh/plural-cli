@@ -16,7 +16,7 @@
   │ Equivalent CLI                                                                                                   │
   │   plural up --ignore-preflights                                                                                  │
   │                                                                                                                  │
-  │ Affirmed deploy · next: workspace.yaml · generate · deploy.                                                      │
+  │ Enter to Flush workspace.yaml + Generate, then Deploy.                                                           │
   │                                                                                                                  │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
@@ -27,4 +27,4 @@
 
 
 
-  esc back · ctrl+c quit
+  enter run · esc back · ctrl+c quit

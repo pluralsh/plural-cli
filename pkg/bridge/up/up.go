@@ -15,10 +15,11 @@ type Flow struct {
 	DryRun bool
 }
 
-// NeedsProvider is true when this flow runs the self-hosted provider survey
-// (CLI GetProvider). Cloud paths pick a Console instance instead.
+// NeedsProvider is true when this flow runs the provider survey (CLI GetProvider
+// via HandleInitWithProject). Cloud runs that survey after Console instance pick;
+// dry-run-only stubs still skip it in the TUI for now.
 func (f Flow) NeedsProvider() bool {
-	return f.ID == "self-hosted"
+	return f.ID == "self-hosted" || f.ID == "cloud"
 }
 
 // CLI returns the equivalent plural up invocation for this flow.
@@ -47,7 +48,7 @@ func Flows() []Flow {
 		{
 			ID:    "cloud",
 			Title: "Plural Cloud",
-			Blurb: "pick a Console instance (--cloud) · coming next",
+			Blurb: "pick a Console instance (--cloud) · then provider survey",
 			Cloud: true,
 		},
 		{
