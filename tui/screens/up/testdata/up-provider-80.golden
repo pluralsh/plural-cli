@@ -1,0 +1,24 @@
+  Plural  Up                                                 step 3 · provider
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Cloud provider ───────────────────────────────────────────────────────╮
+  │ Mode         Self-hosted                                                 │
+  │ Preflights   run (default)                                               │
+  │              plural up                                                   │
+  │                                                                          │
+  │ Select the cloud provider (same list as plural up init).                 │
+  │ Next: verify credentials · fetch regions/projects.                       │
+  │                                                                          │
+  │ › 1  a   AWS     Amazon Web Services                                     │
+  │   2  z   Azure   Microsoft Azure                                         │
+  │   3  g   GCP     Google Cloud Platform                                   │
+  │   4  b   BYOK    bring your own Kubernetes cluster                       │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+  ↑/↓ · enter · esc preflights

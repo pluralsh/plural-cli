@@ -48,6 +48,14 @@ type VersionedConfig struct {
 	Spec       *Config   `yaml:"spec"`
 }
 
+// ProfileName exposes non-secret profile metadata to application services.
+func (c *Config) ProfileName() string {
+	if c.metadata == nil {
+		return ""
+	}
+	return c.metadata.Name
+}
+
 func SetConfig(conf *Config) {
 	config = conf
 }
@@ -199,7 +207,12 @@ func (c *Config) Save(filename string) error {
 		return err
 	}
 
-	return os.WriteFile(f, io, 0644)
+	if err := os.WriteFile(f, io, 0600); err != nil {
+		return err
+	}
+	// WriteFile preserves permissions on an existing file. Enforce the
+	// credential fallback contract when upgrading legacy 0644 profiles.
+	return os.Chmod(f, 0600)
 }
 
 func (c *Config) Flush() error {

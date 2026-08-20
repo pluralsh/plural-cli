@@ -1,0 +1,30 @@
+  Plural  Up                                                                                                   dry-run
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Coming next ──────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ Dry-run is not fully wired in the TUI yet.                                                                       │
+  │ Use the CLI for this path, or pick Self-hosted / Plural Cloud.                                                   │
+  │                                                                                                                  │
+  │ Mode         Dry-run                                                                                             │
+  │              generate repo only (--dry-run) · coming next                                                        │
+  │ Preflights   ignored (--ignore-preflights)                                                                       │
+  │                                                                                                                  │
+  │ Equivalent CLI                                                                                                   │
+  │   plural up --dry-run --ignore-preflights                                                                        │
+  │                                                                                                                  │
+  │ Dry-run wizards land in a later step.                                                                            │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+  esc change preflights · ctrl+c quit

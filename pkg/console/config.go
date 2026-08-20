@@ -76,5 +76,8 @@ func (conf *Config) Save() error {
 		return err
 	}
 
-	return os.WriteFile(f, io, 0644)
+	if err := os.WriteFile(f, io, 0600); err != nil {
+		return err
+	}
+	return os.Chmod(f, 0600)
 }

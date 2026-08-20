@@ -1,0 +1,24 @@
+  Plural  Up                                               step 2 · preflights
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Preflight checks ─────────────────────────────────────────────────────╮
+  │ Mode  Self-hosted                                                        │
+  │       plural up                                                          │
+  │                                                                          │
+  │ After provider setup, run provider.Preflights() (IAM, permissions, …)?   │
+  │ Ignore = warn and continue — same as plural up --ignore-preflights.      │
+  │ Credential login + region survey still run first (CLI GetProvider).      │
+  │                                                                          │
+  │ › [x] r   Run checks  stop if provider.Preflights() fail (default)       │
+  │   [ ] i   Ignore      warn and continue (--ignore-preflights)            │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+  ↑/↓ · enter · esc mode

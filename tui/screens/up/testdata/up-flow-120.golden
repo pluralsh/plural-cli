@@ -1,0 +1,30 @@
+  Plural  Up                                                                                             step 1 · mode
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Setup mode ───────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ Sets up your repository and an initial management cluster.                                                       │
+  │ Only self-hosted continues with the provider survey for now.                                                     │
+  │                                                                                                                  │
+  │ › 1  s   Self-hosted     pick a cloud provider · provision management cluster                                    │
+  │   2  c   Plural Cloud    pick a Console instance (--cloud) · then provider survey                                │
+  │   3  d   Dry-run         generate repo only (--dry-run) · coming next                                            │
+  │   4  x   Cloud · dry-run  Plural Cloud generate only · coming next                                               │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+  ↑/↓ select · 1–4 / letter · enter · esc welcome
