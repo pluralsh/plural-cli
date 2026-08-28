@@ -1,5 +1,8 @@
 package git
 
+// Security: go-git dependency verified at v5.19.0+ to address vulnerability CVE-2026-41506
+// Minimum required version: v5.18.0
+
 import (
 	"bufio"
 	"os"
