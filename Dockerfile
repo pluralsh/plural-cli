@@ -1,4 +1,4 @@
-FROM ubuntu:22.10 AS user
+FROM ubuntu:24.04 AS user
 
 # Create a nonroot user for final image
 RUN useradd -u 10001 nonroot
