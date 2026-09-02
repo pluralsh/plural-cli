@@ -16,15 +16,15 @@
 
 
 
-
   ╭─ Choose an area ─────────────────────────────────────────────────────────────────────────────────────────────────╮
   │ › 1  u   Up                  bootstrap · management cluster                                                      │
-  │   2  d   CD / Deployments    clusters · services · repos                                                         │
-  │   3  a   Access              login · profiles · Console                                                          │
-  │   4  g   Diagnose            local context · checks                                                              │
-  │   5  i   AI                  agents · workbenches                                                                │
-  │   6  ?   Help                shortcuts · about                                                                   │
+  │   2  x   Down                destroy · management cluster                                                        │
+  │   3  d   CD / Deployments    clusters · services · repos                                                         │
+  │   4  a   Access              login · profiles · Console                                                          │
+  │   5  g   Diagnose            local context · checks                                                              │
+  │   6  i   AI                  agents · workbenches                                                                │
+  │   7  ?   Help                shortcuts · about                                                                   │
   │                                                                                                                  │
   │ Setup · Agents · Develop — later                                                                                 │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    1–6 open · letter shortcut · ↑/↓ · enter · ctrl+c quit
+    1–7 open · letter shortcut · ↑/↓ · enter · ctrl+c quit

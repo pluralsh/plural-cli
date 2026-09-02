@@ -73,6 +73,12 @@ func testModel(t *testing.T) Model {
 	model.priorConsole = func() (string, string) { return "", "" }
 	model.saveConsole = func(url, token string) error { return nil }
 	model.runner = &stubRunner{}
+	model.scmSetup = func(string) (string, error) { return "demo-repo", nil }
+	model.registerDomain = func(sub string) (string, error) {
+		return upbridge.PluralDomain(sub), nil
+	}
+	model.hasWorkspace = func() bool { return false }
+	model.ensureWorkspace = func() error { return nil }
 	return model
 }
 
@@ -87,6 +93,12 @@ func testModelOutsideGit(t *testing.T, prober upbridge.Prober) Model {
 	model.priorConsole = func() (string, string) { return "", "" }
 	model.saveConsole = func(url, token string) error { return nil }
 	model.runner = &stubRunner{}
+	model.scmSetup = func(string) (string, error) { return "demo-repo", nil }
+	model.registerDomain = func(sub string) (string, error) {
+		return upbridge.PluralDomain(sub), nil
+	}
+	model.hasWorkspace = func() bool { return false }
+	model.ensureWorkspace = func() error { return nil }
 	return model
 }
 
@@ -109,7 +121,11 @@ type stubRunner struct {
 func (s *stubRunner) Run(_ context.Context, in upbridge.RunInput, progress upbridge.ProgressFunc) (upbridge.RunResult, error) {
 	s.calls = append(s.calls, in)
 	if progress != nil {
-		progress("Writing workspace.yaml…")
+		if in.SkipFlush {
+			progress("Skipping workspace.yaml write (already initialized)…")
+		} else {
+			progress("Writing workspace.yaml…")
+		}
 		if in.Generate.Cloud {
 			progress("Resolving management cluster (ImportCluster)…")
 		}
@@ -128,6 +144,13 @@ func (s *stubRunner) Deploy(_ context.Context, in upbridge.DeployInput, progress
 		progress("Deploying management cluster…")
 	}
 	return s.deployErr
+}
+
+func (s *stubRunner) Destroy(_ context.Context, in upbridge.DestroyInput, progress upbridge.ProgressFunc) error {
+	if progress != nil {
+		progress("Destroying management cluster terraform…")
+	}
+	return nil
 }
 
 func drainRun(t *testing.T, model Model, _ tea.Cmd) Model {
@@ -212,17 +235,52 @@ func drainDomain(t *testing.T, model Model) Model {
 	return model
 }
 
+func drainConfigure(t *testing.T, model Model) Model {
+	t.Helper()
+	if model.mode == modeBucketPrefix {
+		model.formInput.SetValue("acme")
+		model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	}
+	if model.mode == modePluralSubdomain {
+		model.formInput.SetValue("acme")
+		model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	}
+	return model
+}
+
+func drainSCM(t *testing.T, model Model, _ tea.Cmd) Model {
+	t.Helper()
+	if model.mode != modeSCMSetup {
+		return model
+	}
+	msg := model.scmSetupCmdForTest()()
+	model, _ = model.Update(msg)
+	return model
+}
+
+// scmSetupCmdForTest rebuilds the stub Cmd when finish helpers lost the original.
+func (m Model) scmSetupCmdForTest() tea.Cmd {
+	setup := m.scmSetup
+	if setup == nil {
+		setup = func(string) (string, error) { return "demo-repo", nil }
+	}
+	return scmSetupCmd(m.scm.ID, setup, false)
+}
+
 func finishToSelected(t *testing.T, model Model) Model {
 	t.Helper()
 	model = drainPreflight(t, model)
 	if model.mode == modeIgnoreContinue {
 		model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	}
+	model = drainConfigure(t, model)
 	if model.mode == modeSetupGit {
 		model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	}
 	if model.mode == modeSelectSCM {
-		model, _ = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+		var cmd tea.Cmd
+		model, cmd = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+		model = drainSCM(t, model, cmd)
 	}
 	model = drainDomain(t, model)
 	if model.mode == modeAppDomain {
@@ -305,6 +363,14 @@ func TestSelfHostedProviderFormFlow(t *testing.T) {
 		t.Fatalf("esc to domain = %d", model.mode)
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	if model.mode != modePluralSubdomain {
+		t.Fatalf("esc to plural dns = %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("esc to bucket = %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if model.mode != modeProviderForm {
 		t.Fatalf("esc to form = %d", model.mode)
 	}
@@ -351,11 +417,15 @@ func TestProbeFailureContinuesToGitAffirmWithIgnore(t *testing.T) {
 		t.Fatalf("missing ignore warning:\n%s", view)
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if model.mode != modeSetupGit {
-		t.Fatalf("expected git affirm after enter, got %d", model.mode)
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("expected bucket naming after enter, got %d", model.mode)
 	}
 	if len(model.formFields) != 0 {
 		t.Fatalf("should not open region form, fields=%v", model.formFields)
+	}
+	model = drainConfigure(t, model)
+	if model.mode != modeSetupGit {
+		t.Fatalf("expected git affirm after configure, got %d", model.mode)
 	}
 	if !strings.Contains(model.View(80, 28), "outside a git repository") {
 		t.Fatalf("view:\n%s", model.View(80, 28))
@@ -365,7 +435,8 @@ func TestProbeFailureContinuesToGitAffirmWithIgnore(t *testing.T) {
 	if model.mode != modeSelectSCM {
 		t.Fatalf("after yes = %d err=%v", model.mode, model.err)
 	}
-	model, _ = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+	model = drainSCM(t, model, cmd)
 	if model.mode != modeAppDomain {
 		t.Fatalf("after scm expected app domain, got %d", model.mode)
 	}
@@ -401,8 +472,8 @@ func TestPreflightFailureContinuesWithIgnore(t *testing.T) {
 		t.Fatal("should keep form values when preflights fail with ignore")
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if model.mode != modeSetupGit {
-		t.Fatalf("expected git affirm after enter, got %d", model.mode)
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("expected bucket naming after enter, got %d", model.mode)
 	}
 	model = finishToSelected(t, model)
 }
@@ -418,15 +489,13 @@ func TestProbeFailureIgnoreInGitStillOpensAffirm(t *testing.T) {
 		t.Fatalf("expected ignore-continue, got %d", model.mode)
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if model.mode != modeSetupGit || !model.inGitRepo {
-		t.Fatalf("expected in-repo git continue screen, mode=%d inGit=%v", model.mode, model.inGitRepo)
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("expected bucket naming, mode=%d", model.mode)
 	}
-	if !strings.Contains(model.View(80, 28), "Already inside a git work tree") {
-		t.Fatalf("view:\n%s", model.View(80, 28))
-	}
-	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	model = drainConfigure(t, model)
+	// Already in a git work tree — CLI skips Affirm / scm.Setup.
 	if model.mode != modeAppDomain {
-		t.Fatalf("yes should continue to app domain when already in git, got %d", model.mode)
+		t.Fatalf("expected app domain when already in git, got %d inGit=%v", model.mode, model.inGitRepo)
 	}
 	model = drainDomain(t, model)
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
@@ -583,6 +652,10 @@ func TestPlanEnterRunsGenerate(t *testing.T) {
 	if len(runner.calls) != 1 || runner.calls[0].Flush.Values["cluster"] != "demo" {
 		t.Fatalf("runner calls = %#v", runner.calls)
 	}
+	flush := runner.calls[0].Flush
+	if flush.BucketPrefix != "acme" || flush.PluralDNS != "acme.onplural.sh" || flush.Cloud {
+		t.Fatalf("self-hosted flush = %#v", flush)
+	}
 	if !strings.Contains(model.View(80, 24), "Finished generating") {
 		t.Fatalf("done view:\n%s", model.View(80, 24))
 	}
@@ -663,20 +736,18 @@ func TestDeployAfterGenerate(t *testing.T) {
 		t.Fatalf("after generate = %d", model.mode)
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	if model.mode != modeCommitMsg {
-		t.Fatalf("expected commit msg, got %d", model.mode)
-	}
-	model.formInput.SetValue("bootstrap mgmt")
-	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if model.mode != modeDeploying {
-		t.Fatalf("expected deploying, got %d", model.mode)
+		t.Fatalf("expected deploying (commit is mid-Deploy), got %d", model.mode)
 	}
 	model = drainDeploy(t, model)
 	if model.mode != modeComplete || model.deployErr != nil {
 		t.Fatalf("complete = mode=%d err=%v", model.mode, model.deployErr)
 	}
-	if len(runner.deploys) != 1 || runner.deploys[0].CommitMsg != "bootstrap mgmt" {
+	if len(runner.deploys) != 1 {
 		t.Fatalf("deploys = %#v", runner.deploys)
+	}
+	if runner.deploys[0].PromptCommit {
+		t.Fatal("stub path should not prompt commit")
 	}
 	if !strings.Contains(model.View(80, 24), "Finished setting up") {
 		t.Fatalf("view:\n%s", model.View(80, 24))
@@ -692,8 +763,7 @@ func TestDeployErrorShowsComplete(t *testing.T) {
 	model.runner = &stubRunner{deployErr: context.DeadlineExceeded}
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model = drainRun(t, model, nil)
-	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // empty commit
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter}) // start deploy
 	model = drainDeploy(t, model)
 	if model.mode != modeComplete || model.deployErr == nil {
 		t.Fatalf("expected deploy failure, mode=%d err=%v", model.mode, model.deployErr)
@@ -723,8 +793,99 @@ func TestFormThenGitAffirmOutsideRepo(t *testing.T) {
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model = drainPreflight(t, model)
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("expected bucket prefix after form, got %d", model.mode)
+	}
+	model = drainConfigure(t, model)
 	if model.mode != modeSetupGit {
-		t.Fatalf("expected git affirm after form, got %d", model.mode)
+		t.Fatalf("expected git affirm after configure, got %d", model.mode)
+	}
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	if model.mode != modeSelectSCM {
+		t.Fatalf("expected scm select, got %d", model.mode)
+	}
+	model, cmd = model.Update(tea.KeyPressMsg{Code: 'g', Text: "g"})
+	if model.mode != modeSCMSetup {
+		t.Fatalf("expected scm setup, got %d", model.mode)
+	}
+	model = drainSCM(t, model, cmd)
+	if model.err != nil {
+		t.Fatalf("scm setup: %v", model.err)
+	}
+	if model.scmRepo != "demo-repo" {
+		t.Fatalf("scmRepo = %q", model.scmRepo)
+	}
+}
+
+func TestConfigureValidation(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainPreflight(t, model)
+	if model.mode != modeBucketPrefix {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	model.formInput.SetValue("BAD")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeBucketPrefix || model.err == nil {
+		t.Fatalf("expected bucket validation, mode=%d err=%v", model.mode, model.err)
+	}
+}
+
+func TestAlreadyInitializedSkipsProvider(t *testing.T) {
+	model := testModel(t)
+	model.hasWorkspace = func() bool { return true }
+	model.loadWorkspace = func() (upbridge.ExistingWorkspace, error) {
+		return upbridge.ExistingWorkspace{
+			ProviderID:   "aws",
+			Cluster:      "demo",
+			Region:       "us-east-2",
+			BucketPrefix: "acme",
+			PluralDNS:    "acme.onplural.sh",
+		}, nil
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	if model.mode != modeAlreadyInit || !model.alreadyInit {
+		t.Fatalf("expected already-init, mode=%d init=%v err=%v", model.mode, model.alreadyInit, model.err)
+	}
+	if model.provider.ID != "aws" || model.formValues["cluster"] != "demo" {
+		t.Fatalf("provider=%q values=%v", model.provider.ID, model.formValues)
+	}
+	if !strings.Contains(model.View(80, 24), "skipping init") {
+		t.Fatalf("view:\n%s", model.View(80, 24))
+	}
+
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeEnsuringInit {
+		t.Fatalf("expected ensuring, got %d", model.mode)
+	}
+	if cmd != nil {
+		// spinner tick + ensure — drive ensure msg directly
+	}
+	model, _ = model.Update(ensureInitMsg{})
+	model = drainDomain(t, model)
+	if model.mode != modeAppDomain {
+		t.Fatalf("expected app domain after ensure, got %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeAffirmDeploy {
+		t.Fatalf("expected deploy affirm, got %d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	if model.mode != modeSelected {
+		t.Fatalf("expected plan, got %d", model.mode)
+	}
+
+	runner := model.runner.(*stubRunner)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone || len(runner.calls) != 1 {
+		t.Fatalf("done = mode=%d calls=%d", model.mode, len(runner.calls))
+	}
+	if !runner.calls[0].SkipFlush {
+		t.Fatalf("expected SkipFlush, got %#v", runner.calls[0])
 	}
 }
 

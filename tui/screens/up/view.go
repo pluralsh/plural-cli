@@ -43,10 +43,20 @@ func (m Model) headerStatus() string {
 		return m.theme.Muted.Render("running preflights…")
 	case modeIgnoreContinue:
 		return m.theme.Muted.Render("continuing · ignored failures")
+	case modeAlreadyInit:
+		return m.theme.Muted.Render("step · already initialized")
+	case modeEnsuringInit:
+		return m.theme.Muted.Render("checking workspace…")
+	case modeBucketPrefix:
+		return m.theme.Muted.Render("step · bucket naming")
+	case modePluralSubdomain:
+		return m.theme.Muted.Render("step · onplural.sh")
 	case modeSetupGit:
 		return m.theme.Muted.Render("step · git repository")
 	case modeSelectSCM:
 		return m.theme.Muted.Render("step · scm provider")
+	case modeSCMSetup:
+		return m.theme.Muted.Render("scm · authenticate / create / clone")
 	case modeAppDomain:
 		return m.theme.Muted.Render("step · app domain")
 	case modeAffirmDeploy:
@@ -66,8 +76,6 @@ func (m Model) headerStatus() string {
 			return m.theme.Danger.Render("failed")
 		}
 		return m.theme.Success.Render("generated")
-	case modeCommitMsg:
-		return m.theme.Muted.Render("step · commit message")
 	case modeDeploying:
 		return m.theme.Muted.Render("deploying…")
 	case modeComplete:
@@ -117,8 +125,22 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			label := field.Label + strings.Repeat(" ", max(1, 12-len(field.Label)))
 			lines = append(lines, label+" "+formValue(m.formValues, field.Key))
 		}
+		if !m.flow.Cloud {
+			if m.bucketPrefix != "" {
+				lines = append(lines, "Bucket       "+m.bucketPrefix)
+			}
+			if m.pluralDNS != "" {
+				lines = append(lines, "Plural DNS   "+m.pluralDNS)
+			}
+		}
 		if m.scm.ID != "" {
-			lines = append(lines, "SCM          "+m.scm.Title+" (scm.Setup)")
+			scmLine := "SCM          " + m.scm.Title
+			if m.scmRepo != "" {
+				scmLine += " → " + m.scmRepo
+			}
+			lines = append(lines, scmLine)
+		} else if m.alreadyInit {
+			lines = append(lines, "Git          workspace.yaml present · init skipped")
 		} else if m.inGitRepo {
 			lines = append(lines, "Git          already inside a work tree")
 		}
@@ -132,6 +154,12 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		next := "Enter to Flush workspace.yaml + Generate, then Deploy."
 		if m.flow.Cloud {
 			next = "Enter to Flush + ImportCluster + Generate, then Deploy."
+		}
+		if m.alreadyInit {
+			next = "Enter to Generate (skip Flush — workspace.yaml exists), then Deploy."
+			if m.flow.Cloud {
+				next = "Enter to ImportCluster + Generate (skip Flush), then Deploy."
+			}
 		}
 		lines = append(lines,
 			"",
@@ -148,7 +176,9 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 	case modeRunning:
 		lines := []string{
 			m.spinner.View() + " " + m.theme.Muted.Render("Running Flush + Generate…"),
-			m.theme.Muted.Render("Next: commit message → Deploy."),
+			"",
+			m.theme.Muted.Render("Terminal is released for generation output (same as plural up)."),
+			m.theme.Muted.Render("Skip / template messages appear below; the wizard resumes when finished."),
 			"",
 		}
 		if len(m.runSteps) == 0 {
@@ -158,7 +188,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 				lines = append(lines, "  · "+s)
 			}
 		}
-		return page.Panel(m.theme, "Generating", lines, width, 12, true), "please wait"
+		return page.Panel(m.theme, "Generating", lines, width, 14, true), "please wait"
 	case modeDone:
 		lines := []string{}
 		if m.runErr != nil {
@@ -191,25 +221,16 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
 		}
 		lines = append(lines, "",
-			m.theme.Muted.Render("Enter to continue to Deploy (commit message, then terraform)."),
+			m.theme.Muted.Render("Enter to Deploy (terraform). Commit is prompted after management cluster apply."),
 			m.theme.Muted.Render("Equivalent CLI: "+m.cli()),
 		)
 		return page.Panel(m.theme, "Generated", lines, width, 16, true), "enter deploy · esc plan · ctrl+c quit"
-	case modeCommitMsg:
-		lines := []string{
-			m.theme.Muted.Render("Enter a commit message to push your configuration."),
-			m.theme.Muted.Render("Leave empty to skip commit/push (same as plural up CommitMsg)."),
-			"",
-			"› Message",
-			"  " + m.formInput.View(),
-		}
-		if m.err != nil {
-			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
-		}
-		return page.Panel(m.theme, "Git commit", lines, width, 12, true), "enter deploy · esc back"
 	case modeDeploying:
 		lines := []string{
 			m.spinner.View() + " " + m.theme.Muted.Render("Running Deploy (terraform / import / apps)…"),
+			"",
+			m.theme.Muted.Render("Terminal is released for terraform output (same as plural up)."),
+			m.theme.Muted.Render("After mgmt apply you will be asked for a git commit message, then apps continue."),
 			"",
 		}
 		if len(m.runSteps) == 0 {
@@ -219,7 +240,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 				lines = append(lines, "  · "+s)
 			}
 		}
-		return page.Panel(m.theme, "Deploying", lines, width, 12, true), "please wait"
+		return page.Panel(m.theme, "Deploying", lines, width, 14, true), "please wait"
 	case modeComplete:
 		lines := []string{}
 		if m.deployErr != nil {
@@ -383,10 +404,60 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			"Provider     " + m.provider.Title,
 			"Preflights   " + yesNoLabel(true),
 			"",
-			m.theme.Muted.Render("Press enter to continue to the git Affirm (next step)."),
-			m.theme.Muted.Render("Then: scm.Setup (if needed) → app domain → deploy Affirm → plan."),
+			m.theme.Muted.Render("Press enter to continue."),
+			m.theme.Muted.Render("Next: Configure (self-hosted) → git Affirm → scm.Setup → domain → plan."),
 		}
 		return page.Panel(m.theme, "Continuing with warning", lines, width, 14, true), "enter continue · esc back"
+	case modeAlreadyInit:
+		lines := []string{
+			m.theme.Success.Render("Found workspace.yaml, skipping init as this repo has already been initialized"),
+			"",
+			m.theme.Muted.Render("Same path as plural up when workspace.yaml is present."),
+			m.theme.Muted.Render("Next: ensure domain / branch → app domain → deploy Affirm → Generate."),
+			"",
+			"Mode         " + m.flow.Title,
+			"Provider     " + m.provider.Title + " (" + m.provider.ID + ")",
+		}
+		if cluster := formValue(m.formValues, "cluster"); cluster != "" {
+			lines = append(lines, "Cluster      "+cluster)
+		}
+		if m.pluralDNS != "" {
+			lines = append(lines, "Plural DNS   "+m.pluralDNS)
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Already initialized", lines, width, 14, true), "enter continue · esc back"
+	case modeEnsuringInit:
+		lines := []string{
+			m.spinner.View() + " " + m.theme.Muted.Render("Checking domain…"),
+			m.theme.Muted.Render("ensureWorkspace — Plural DNS / branch / .gitignore"),
+		}
+		return page.Panel(m.theme, "Workspace check", lines, width, 10, true), "please wait"
+	case modeBucketPrefix:
+		lines := []string{
+			m.theme.Muted.Render(upbridge.BucketPrefixPrompt),
+			m.theme.Muted.Render("Same as plural up Configure (workspace bucket naming)."),
+			"",
+			"› Prefix",
+			"  " + m.formInput.View(),
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Bucket naming", lines, width, 12, true), "enter · esc back"
+	case modePluralSubdomain:
+		lines := []string{
+			m.theme.Muted.Render(upbridge.PluralSubdomainPrompt),
+			m.theme.Muted.Render("Registers subdomain.onplural.sh (CreateDomain)."),
+			"",
+			"› Subdomain",
+			"  " + m.formInput.View(),
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "Plural DNS", lines, width, 12, true), "enter · esc back"
 	case modeRunPreflights:
 		lines := []string{
 			"Provider  " + m.provider.Title,
@@ -404,6 +475,18 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		lines = append(lines, m.scmLines(width)...)
 		help := "↑/↓ · 1–3 / letter · enter · esc git"
 		return page.Panel(m.theme, "SCM provider", lines, width, 12, true), help
+	case modeSCMSetup:
+		lines := []string{
+			"SCM  " + m.scm.Title,
+			"",
+			m.spinner.View() + " " + m.theme.Muted.Render("Device login · create repo · clone…"),
+			m.theme.Muted.Render("Terminal released for GitHub/GitLab/Bitbucket oauth (same as plural up)."),
+			m.theme.Muted.Render("Follow the one-time code prompt in the terminal, then return here."),
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+		}
+		return page.Panel(m.theme, "SCM setup", lines, width, 12, true), "wait for browser / device flow"
 	case modeAppDomain:
 		lines := []string{
 			m.theme.Muted.Render("Application domain (askAppDomain)."),

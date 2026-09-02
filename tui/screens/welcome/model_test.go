@@ -146,6 +146,20 @@ func TestWelcomeOpensDeploymentsFromShortcut(t *testing.T) {
 	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Deployments {
 		t.Fatalf("route = %q, want deployments", got)
 	}
+	if model.cursor != 2 {
+		t.Fatalf("cursor = %d, want 2", model.cursor)
+	}
+}
+
+func TestWelcomeOpensDownFromShortcut(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'x', Text: "x"})
+	if cmd == nil {
+		t.Fatal("selecting Down did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Down {
+		t.Fatalf("route = %q, want down", got)
+	}
 	if model.cursor != 1 {
 		t.Fatalf("cursor = %d, want 1", model.cursor)
 	}
@@ -153,7 +167,7 @@ func TestWelcomeOpensDeploymentsFromShortcut(t *testing.T) {
 
 func TestWelcomeOpensAccessFromNumber(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	_, cmd := model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
 	if cmd == nil {
 		t.Fatal("selecting Access did not emit navigation")
 	}
@@ -175,7 +189,7 @@ func TestWelcomeOpensAIFromShortcut(t *testing.T) {
 
 func TestWelcomeOpensAIFromNumber(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
-	_, cmd := model.Update(tea.KeyPressMsg{Code: '5', Text: "5"})
+	_, cmd := model.Update(tea.KeyPressMsg{Code: '6', Text: "6"})
 	if cmd == nil {
 		t.Fatal("selecting AI did not emit navigation")
 	}
@@ -186,6 +200,7 @@ func TestWelcomeOpensAIFromNumber(t *testing.T) {
 
 func TestWelcomeArrowAndEnterOpensDiagnose(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyDown})

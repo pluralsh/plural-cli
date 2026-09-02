@@ -24,10 +24,12 @@ const defaultBootstrapBranch = "main"
 
 // FlushInput carries wizard survey values for writing workspace.yaml.
 type FlushInput struct {
-	ProviderID string
-	Values     map[string]string
-	AppDomain  string
-	Cloud      bool
+	ProviderID   string
+	Values       map[string]string
+	AppDomain    string
+	Cloud        bool
+	BucketPrefix string // self-hosted Configure bucket naming
+	PluralDNS    string // self-hosted subdomain.onplural.sh (full domain)
 }
 
 // GenerateInput is the post-Flush generate step (Build → ImportCluster → Backfill → Generate).
@@ -40,18 +42,28 @@ type GenerateInput struct {
 }
 
 // DeployInput runs up.Context.Deploy after Generate (terraform + optional git sync).
+// Git commit runs inside Deploy at the "commit" checkpoint (after mgmt terraform,
+// before apps) — matching plural up. Set PromptCommit to survey during that step.
 type DeployInput struct {
 	Cloud            bool
 	CloudCluster     string
 	ImportClusterID  string
 	IgnorePreflights bool
-	CommitMsg        string // empty skips git.Sync (CLI CommitMsg parity)
+	CommitMsg        string  // if set, used at commit checkpoint; empty + !PromptCommit skips
+	PromptCommit     bool    // survey for commit message mid-Deploy (CLI CommitMsg parity)
+	CommittedMsg     *string // optional out: final commit message used (may be empty if skipped)
+}
+
+// DestroyInput tears down the management cluster (plural down).
+type DestroyInput struct {
+	Cloud bool
 }
 
 // RunInput is the Plan → Flush + Generate pipeline.
 type RunInput struct {
-	Flush    FlushInput
-	Generate GenerateInput
+	Flush     FlushInput
+	Generate  GenerateInput
+	SkipFlush bool // true when workspace.yaml already exists (CLI ensureWorkspace path)
 }
 
 // RunResult carries values needed for a later Deploy step.
@@ -59,19 +71,20 @@ type RunResult struct {
 	ImportClusterID string
 }
 
-// Progress reports a human-readable step while Run/Deploy executes.
+// Progress reports a human-readable step while Run/Deploy/Destroy executes.
 type ProgressFunc func(step string)
 
-// Runner executes Flush + Generate, then optionally Deploy.
+// Runner executes Flush + Generate, Deploy, and Destroy.
 type Runner interface {
 	Run(ctx context.Context, in RunInput, progress ProgressFunc) (RunResult, error)
 	Deploy(ctx context.Context, in DeployInput, progress ProgressFunc) error
+	Destroy(ctx context.Context, in DestroyInput, progress ProgressFunc) error
 }
 
 // LiveRunner writes workspace.yaml and runs up.Build / Generate / Deploy.
 type LiveRunner struct{}
 
-// DefaultRunner returns the live Flush+Generate+Deploy runner.
+// DefaultRunner returns the live Flush+Generate+Deploy+Destroy runner.
 func DefaultRunner() Runner { return LiveRunner{} }
 
 // Run flushes the workspace, resolves ImportCluster when cloud, then generates.
@@ -82,9 +95,13 @@ func (LiveRunner) Run(ctx context.Context, in RunInput, progress ProgressFunc) (
 	}
 	var result RunResult
 
-	report("Writing workspace.yaml…")
-	if err := FlushWorkspace(ctx, in.Flush); err != nil {
-		return result, err
+	if in.SkipFlush {
+		report("Skipping workspace.yaml write (already initialized)…")
+	} else {
+		report("Writing workspace.yaml…")
+		if err := FlushWorkspace(ctx, in.Flush); err != nil {
+			return result, err
+		}
 	}
 
 	gen := in.Generate
@@ -133,6 +150,13 @@ func (LiveRunner) Deploy(ctx context.Context, in DeployInput, progress ProgressF
 	report("Deploying management cluster…")
 	return upCtx.Deploy(func() error {
 		msg := strings.TrimSpace(in.CommitMsg)
+		if msg == "" && in.PromptCommit {
+			report("Commit checkpoint — enter a commit message…")
+			msg = promptCommitMessage()
+		}
+		if in.CommittedMsg != nil {
+			*in.CommittedMsg = msg
+		}
 		if msg == "" {
 			report("Skipping git commit (empty message)…")
 			return nil
@@ -144,6 +168,23 @@ func (LiveRunner) Deploy(ctx context.Context, in DeployInput, progress ProgressF
 		}
 		return git.Sync(root, msg, false)
 	})
+}
+
+// Destroy tears down the management cluster (plural down).
+func (LiveRunner) Destroy(ctx context.Context, in DestroyInput, progress ProgressFunc) error {
+	_ = ctx
+	report := func(step string) {
+		if progress != nil {
+			progress(step)
+		}
+	}
+	report("Building destroy context…")
+	upCtx, err := pkgup.Build(in.Cloud)
+	if err != nil {
+		return err
+	}
+	report("Destroying management cluster terraform…")
+	return upCtx.Destroy()
 }
 
 // FlushWorkspace builds ProjectManifest from survey values and writes workspace.yaml.
@@ -164,7 +205,7 @@ func FlushWorkspace(ctx context.Context, in FlushInput) error {
 	if err != nil {
 		return err
 	}
-	if err := writeWorkspaceSilent(pm, in.Cloud, cluster); err != nil {
+	if err := writeWorkspaceSilent(pm, in.Cloud, cluster, in.BucketPrefix, in.PluralDNS); err != nil {
 		return err
 	}
 	if d := strings.TrimSpace(in.AppDomain); d != "" {
@@ -281,13 +322,25 @@ func projectManifestFromSurvey(ctx context.Context, providerID string, values ma
 	}
 }
 
-// writeWorkspaceSilent mirrors Configure without interactive bucket/network surveys.
-func writeWorkspaceSilent(pm *manifest.ProjectManifest, cloud bool, cluster string) error {
-	pm.BucketPrefix = cluster
+// writeWorkspaceSilent mirrors Configure without interactive surveys.
+// Self-hosted requires BucketPrefix (+ optional PluralDNS from the TUI prompts).
+func writeWorkspaceSilent(pm *manifest.ProjectManifest, cloud bool, cluster, bucketPrefix, pluralDNS string) error {
 	if cloud {
+		pm.BucketPrefix = cluster
 		pm.Bucket = fmt.Sprintf("plrl-cloud-%s-%s", cluster, algorithms.String(4))
 	} else {
-		pm.Bucket = fmt.Sprintf("%s-tf-state", cluster)
+		prefix := strings.TrimSpace(bucketPrefix)
+		if prefix == "" {
+			return fmt.Errorf("bucket naming prefix is required for self-hosted up")
+		}
+		if err := ValidateBucketPrefix(prefix); err != nil {
+			return err
+		}
+		pm.BucketPrefix = prefix
+		pm.Bucket = fmt.Sprintf("%s-tf-state", prefix)
+		if d := strings.TrimSpace(pluralDNS); d != "" {
+			pm.Network = &manifest.NetworkConfig{Subdomain: d, PluralDns: true}
+		}
 	}
 	return pm.Write(manifest.ProjectManifestPath())
 }

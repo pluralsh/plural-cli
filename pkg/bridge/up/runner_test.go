@@ -54,6 +54,17 @@ func TestFlushWorkspaceAWSWritesManifest(t *testing.T) {
 	}
 }
 
+func TestFlushWorkspaceSelfHostedRequiresPrefix(t *testing.T) {
+	err := FlushWorkspace(context.Background(), FlushInput{
+		ProviderID: api.ProviderAWS,
+		Values:     map[string]string{"cluster": "acme", "region": "eu-west-1"},
+		Cloud:      false,
+	})
+	if err == nil || !strings.Contains(err.Error(), "bucket naming prefix") {
+		t.Fatalf("expected prefix required, got %v", err)
+	}
+}
+
 func TestFlushWorkspaceSelfHostedBucket(t *testing.T) {
 	dir := t.TempDir()
 	prev, _ := os.Getwd()
@@ -63,9 +74,11 @@ func TestFlushWorkspaceSelfHostedBucket(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(prev) })
 
 	if err := FlushWorkspace(context.Background(), FlushInput{
-		ProviderID: api.ProviderAWS,
-		Values:     map[string]string{"cluster": "acme", "region": "eu-west-1"},
-		Cloud:      false,
+		ProviderID:   api.ProviderAWS,
+		Values:       map[string]string{"cluster": "acme", "region": "eu-west-1"},
+		Cloud:        false,
+		BucketPrefix: "acme",
+		PluralDNS:    "acme.onplural.sh",
 	}); err != nil {
 		t.Fatalf("FlushWorkspace: %v", err)
 	}
@@ -73,8 +86,11 @@ func TestFlushWorkspaceSelfHostedBucket(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pm.Bucket != "acme-tf-state" {
-		t.Fatalf("self-hosted bucket = %q", pm.Bucket)
+	if pm.Bucket != "acme-tf-state" || pm.BucketPrefix != "acme" {
+		t.Fatalf("self-hosted bucket = %q prefix=%q", pm.Bucket, pm.BucketPrefix)
+	}
+	if pm.Network == nil || pm.Network.Subdomain != "acme.onplural.sh" || !pm.Network.PluralDns {
+		t.Fatalf("network = %#v", pm.Network)
 	}
 }
 
@@ -100,14 +116,22 @@ func TestFakeRunnerRecordsCloud(t *testing.T) {
 	if len(f.deploys) != 1 || f.deploys[0].CommitMsg != "init" {
 		t.Fatalf("deploys = %#v", f.deploys)
 	}
+	if err := f.Destroy(context.Background(), DestroyInput{Cloud: true}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.destroys) != 1 || !f.destroys[0].Cloud {
+		t.Fatalf("destroys = %#v", f.destroys)
+	}
 }
 
 type fakeRunner struct {
-	calls    []RunInput
-	deploys  []DeployInput
-	progress []string
-	err      error
-	deployErr error
+	calls      []RunInput
+	deploys    []DeployInput
+	destroys   []DestroyInput
+	progress   []string
+	err        error
+	deployErr  error
+	destroyErr error
 }
 
 func (f *fakeRunner) Run(_ context.Context, in RunInput, progress ProgressFunc) (RunResult, error) {
@@ -130,4 +154,12 @@ func (f *fakeRunner) Deploy(_ context.Context, in DeployInput, progress Progress
 		progress("Deploying…")
 	}
 	return f.deployErr
+}
+
+func (f *fakeRunner) Destroy(_ context.Context, in DestroyInput, progress ProgressFunc) error {
+	f.destroys = append(f.destroys, in)
+	if progress != nil {
+		progress("Destroying…")
+	}
+	return f.destroyErr
 }

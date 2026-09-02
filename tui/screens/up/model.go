@@ -31,15 +31,19 @@ const (
 	modeProviderForm
 	modeRunPreflights  // provider.Preflights() after survey
 	modeIgnoreContinue // failed check + --ignore-preflights → Enter to continue
+	modeBucketPrefix   // self-hosted Configure bucket naming
+	modePluralSubdomain // self-hosted ConfigureNetwork onplural.sh
+	modeAlreadyInit    // workspace.yaml present — skip provider/git init
+	modeEnsuringInit   // ensureWorkspace (domain / branch / gitignore)
 	modeSetupGit       // CLI Affirm: setup git repo here? (Y/n)
 	modeSelectSCM      // scm.Setup: github / gitlab / bitbucket
+	modeSCMSetup       // tea.Exec: device login + create + clone
 	modeAppDomain      // askAppDomain parity
 	modeAffirmDeploy   // common.AffirmUp before deploy
 	modeSelected       // Plan summary
 	modeRunning        // Flush + Generate
 	modeDone           // generate finished (or failed)
-	modeCommitMsg      // optional commit before Deploy
-	modeDeploying      // up.Context.Deploy
+	modeDeploying      // up.Context.Deploy (commit prompt mid-Deploy at checkpoint)
 	modeComplete       // deploy finished
 	modeCLITip
 )
@@ -145,8 +149,18 @@ type runDoneMsg struct {
 }
 
 type deployDoneMsg struct {
-	err   error
-	steps []string
+	err       error
+	steps     []string
+	commitMsg string
+}
+
+type scmDoneMsg struct {
+	repo string
+	err  error
+}
+
+type ensureInitMsg struct {
+	err error
 }
 
 // Model owns Up-wizard interaction state.
@@ -170,10 +184,15 @@ type Model struct {
 	inGitRepo   bool
 	scm         upbridge.SCMProvider
 	scms        []upbridge.SCMProvider
+	scmRepo     string
 	appDomain   string
 	domainOpts  []string
 	domainNote  string // zone fetch ignored (CLI "ignoring domain setup...")
 	spinner     spinner.Model
+
+	bucketPrefix string // self-hosted Configure
+	pluralDNS    string // full subdomain.onplural.sh
+	alreadyInit  bool   // workspace.yaml present — skip init (CLI ensureWorkspace)
 
 	instances        []upbridge.ConsoleInstance
 	cloudInstance    upbridge.ConsoleInstance
@@ -181,12 +200,12 @@ type Model struct {
 	instanceLister   upbridge.InstanceLister
 	priorConsole     func() (url, token string)
 	saveConsole      func(url, token string) error
-	runner          upbridge.Runner
-	runSteps        []string
-	runErr          error
-	importClusterID string
-	commitMsg       string
-	deployErr       error
+	runner           upbridge.Runner
+	runSteps         []string
+	runErr           error
+	importClusterID  string
+	commitMsg        string
+	deployErr        error
 
 	formInput     textinput.Model
 	formFields    []upbridge.FormField
@@ -198,6 +217,14 @@ type Model struct {
 	gitChecker    func() bool
 	domainLoader  func() domainMsg // tests stub zone listing
 	gitAffirmOpen bool             // Esc from domain returns here when Affirm was shown
+	// scmSetup stubs SCM auth/create/clone in tests; nil uses upbridge.SetupSCM under tea.Exec.
+	scmSetup func(providerID string) (repoName string, err error)
+	// registerDomain stubs CreateDomain in tests; nil uses upbridge.RegisterPluralDomain.
+	registerDomain func(subdomain string) (fullDomain string, err error)
+	// hasWorkspace / loadWorkspace / ensureWorkspace stub the skip-init path in tests.
+	hasWorkspace    func() bool
+	loadWorkspace   func() (upbridge.ExistingWorkspace, error)
+	ensureWorkspace func() error
 }
 
 // New creates the Up wizard starting at setup-flow selection.
@@ -260,8 +287,12 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m.applyRunDone(msg)
 	case deployDoneMsg:
 		return m.applyDeployDone(msg)
+	case scmDoneMsg:
+		return m.applySCMDone(msg)
+	case ensureInitMsg:
+		return m.applyEnsureInit(msg)
 	case spinner.TickMsg:
-		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying {
+		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying && m.mode != modeSCMSetup && m.mode != modeEnsuringInit {
 			return m, nil
 		}
 		if m.mode == modeAppDomain && (len(m.domainOpts) > 0 || m.formInput.Focused()) {
@@ -293,7 +324,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.formInput, cmd = m.formInput.Update(msg)
 				return m, cmd
 			}
-		case modeCommitMsg:
+		case modeBucketPrefix, modePluralSubdomain:
 			var cmd tea.Cmd
 			m.formInput, cmd = m.formInput.Update(msg)
 			return m, cmd
@@ -305,16 +336,20 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch m.mode {
 	case modeSelected:
 		return m.updateSelected(action)
-	case modeRunning, modeDeploying:
-		return m, nil // ignore keys while running
+	case modeRunning, modeDeploying, modeSCMSetup, modeEnsuringInit:
+		return m, nil // ignore keys while running / SCM oauth / ensure
 	case modeDone:
 		return m.updateDone(action)
-	case modeCommitMsg:
-		return m.updateCommitMsg(action, key)
 	case modeComplete:
 		return m.updateComplete(action)
 	case modeIgnoreContinue:
 		return m.updateIgnoreContinue(action)
+	case modeAlreadyInit:
+		return m.updateAlreadyInit(action)
+	case modeBucketPrefix:
+		return m.updateBucketPrefix(action, key)
+	case modePluralSubdomain:
+		return m.updatePluralSubdomain(action, key)
 	case modeAffirmDeploy:
 		return m.updateAffirmDeploy(action, key)
 	case modeAppDomain:
@@ -489,21 +524,133 @@ func (m Model) updateIgnoreContinue(action keyAction) (Model, tea.Cmd) {
 	return m, nil
 }
 
-// continueAfterIgnoredFailure always opens the git Affirm after Enter so the
-// warning gate never feels like a dead end. When already in a work tree, Yes
-// skips scm.Setup (CLI Affirm is skipped entirely in that case — we still ask
-// once here so the TUI has a clear next step).
+// continueAfterIgnoredFailure advances past the ignore-preflights warning gate.
+// Self-hosted still collects Configure (bucket + onplural.sh) before the git Affirm.
 func (m Model) continueAfterIgnoredFailure() (Model, tea.Cmd) {
-	check := m.gitChecker
-	if check == nil {
-		check = upbridge.InGitRepo
-	}
-	m.inGitRepo = check()
 	m.err = nil
-	m.mode = modeSetupGit
-	m.gitAffirmOpen = true
-	m.cursor = 0 // Yes
+	return m.beginAfterPreflight()
+}
+
+func (m Model) beginAlreadyInit() (Model, tea.Cmd) {
+	load := m.loadWorkspace
+	if load == nil {
+		load = upbridge.LoadExistingWorkspace
+	}
+	ws, err := load()
+	if err != nil {
+		m.err = err
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	}
+	m.alreadyInit = true
+	m.inGitRepo = true
+	m.gitAffirmOpen = false
+	m.scm = upbridge.SCMProvider{}
+	m.scmRepo = ""
+	m.bucketPrefix = ws.BucketPrefix
+	m.pluralDNS = ws.PluralDNS
+	m.appDomain = ws.AppDomain
+	m.provider = providerFromID(m.providers, ws.ProviderID)
+	m.formValues = formValuesFromWorkspace(ws)
+	m.formFields = upbridge.ProviderFormFields(ws.ProviderID)
+	m.credSummary = "workspace.yaml · already initialized"
+	m.err = nil
+	m.mode = modeAlreadyInit
 	return m, nil
+}
+
+func providerFromID(providers []upbridge.Provider, id string) upbridge.Provider {
+	for _, p := range providers {
+		if p.ID == id {
+			return p
+		}
+	}
+	return upbridge.Provider{ID: id, Title: id}
+}
+
+func formValuesFromWorkspace(ws upbridge.ExistingWorkspace) map[string]string {
+	values := map[string]string{"cluster": ws.Cluster}
+	switch ws.ProviderID {
+	case "aws":
+		values["region"] = ws.Region
+	case "azure":
+		values["location"] = ws.Region
+		values["resourceGroup"] = ws.Project
+	case "gcp", "google":
+		values["region"] = ws.Region
+		values["project"] = ws.Project
+	default:
+		if ws.Region != "" {
+			values["region"] = ws.Region
+		}
+		if ws.Project != "" {
+			values["project"] = ws.Project
+		}
+	}
+	return values
+}
+
+func (m Model) updateAlreadyInit(action keyAction) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.err = nil
+		m.alreadyInit = false
+		m.provider = upbridge.Provider{}
+		m.formFields = nil
+		m.formValues = nil
+		m.credSummary = ""
+		if m.flow.ID == "cloud" {
+			m.resetConsoleInput()
+			if len(m.instances) > 1 {
+				m.mode = modeSelectInstance
+				priorURL, _ := m.readPriorConsole()
+				m.cursor = upbridge.DefaultInstanceIndex(m.instances, priorURL)
+				return m, nil
+			}
+		}
+		m.mode = modeIgnorePreflights
+		m.cursor = 0
+		if m.ignorePreflights {
+			m.cursor = 1
+		}
+		return m, nil
+	case keyActionConfirm:
+		m.mode = modeEnsuringInit
+		m.err = nil
+		return m, tea.Batch(m.spinner.Tick, m.ensureInitCmd())
+	}
+	return m, nil
+}
+
+func (m Model) ensureInitCmd() tea.Cmd {
+	ensure := m.ensureWorkspace
+	if ensure == nil {
+		ensure = upbridge.EnsureExistingWorkspace
+	}
+	return func() tea.Msg {
+		return ensureInitMsg{err: ensure()}
+	}
+}
+
+func (m Model) applyEnsureInit(msg ensureInitMsg) (Model, tea.Cmd) {
+	if m.mode != modeEnsuringInit {
+		return m, nil
+	}
+	if msg.err != nil {
+		m.err = msg.err
+		m.mode = modeAlreadyInit
+		return m, nil
+	}
+	m.err = nil
+	if m.flow.DryRun {
+		m.mode = modeSelected
+		return m, nil
+	}
+	return m.beginAppDomain()
 }
 
 func (m Model) updateProviderForm(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
@@ -616,7 +763,8 @@ func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
 		if m.runErr != nil || m.flow.DryRun {
 			return m, nil
 		}
-		return m.beginCommitMsg()
+		// CLI: Affirm already done; Deploy runs terraform then prompts commit mid-flight.
+		return m.beginDeploy()
 	}
 	return m, nil
 }
@@ -630,37 +778,31 @@ func (m Model) updateComplete(action keyAction) (Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) beginCommitMsg() (Model, tea.Cmd) {
-	m.mode = modeCommitMsg
-	m.err = nil
-	m.formInput.EchoMode = textinput.EchoNormal
-	m.formInput.SetValue(m.commitMsg)
-	m.formInput.Placeholder = "empty to skip git commit/push"
-	m.formInput.Focus()
-	return m, nil
-}
-
-func (m Model) updateCommitMsg(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
-	switch action {
-	case keyActionBack:
-		m.formInput.Blur()
-		m.mode = modeDone
-		return m, nil
-	case keyActionConfirm:
-		m.commitMsg = strings.TrimSpace(m.formInput.Value())
-		m.formInput.Blur()
-		return m.beginDeploy()
-	}
-	var cmd tea.Cmd
-	m.formInput, cmd = m.formInput.Update(key)
-	return m, cmd
-}
-
 func (m Model) beginDeploy() (Model, tea.Cmd) {
 	m.mode = modeDeploying
 	m.deployErr = nil
 	m.runSteps = nil
 	m.err = nil
+	m.commitMsg = ""
+	runner := m.runner
+	if runner == nil {
+		runner = upbridge.DefaultRunner()
+	}
+	live := shouldExecDeploy(runner)
+	in := upbridge.DeployInput{
+		Cloud:            m.flow.Cloud,
+		CloudCluster:     m.cloudInstance.Name,
+		ImportClusterID:  m.importClusterID,
+		IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
+		PromptCommit:     live, // survey at commit checkpoint after mgmt terraform
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if live {
+		return m, deployExecCmd(ctx, runner, in)
+	}
 	return m, tea.Batch(m.spinner.Tick, m.deployCmd())
 }
 
@@ -675,6 +817,7 @@ func (m Model) deployCmd() tea.Cmd {
 		ImportClusterID:  m.importClusterID,
 		IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
 		CommitMsg:        m.commitMsg,
+		PromptCommit:     false,
 	}
 	ctx := m.ctx
 	if ctx == nil {
@@ -685,7 +828,7 @@ func (m Model) deployCmd() tea.Cmd {
 		err := runner.Deploy(ctx, in, func(step string) {
 			steps = append(steps, step)
 		})
-		return deployDoneMsg{err: err, steps: steps}
+		return deployDoneMsg{err: err, steps: steps, commitMsg: in.CommitMsg}
 	}
 }
 
@@ -695,6 +838,9 @@ func (m Model) applyDeployDone(msg deployDoneMsg) (Model, tea.Cmd) {
 	}
 	if len(msg.steps) > 0 {
 		m.runSteps = msg.steps
+	}
+	if msg.commitMsg != "" {
+		m.commitMsg = msg.commitMsg
 	}
 	m.deployErr = msg.err
 	m.mode = modeComplete
@@ -707,7 +853,7 @@ func (m Model) applyDeployDone(msg deployDoneMsg) (Model, tea.Cmd) {
 }
 
 func (m Model) beginRun() (Model, tea.Cmd) {
-	if len(m.formValues) == 0 {
+	if !m.alreadyInit && len(m.formValues) == 0 {
 		m.err = fmt.Errorf("provider survey values are required to write workspace.yaml (complete credentials/region first)")
 		return m, nil
 	}
@@ -717,6 +863,34 @@ func (m Model) beginRun() (Model, tea.Cmd) {
 	m.runSteps = nil
 	m.importClusterID = ""
 	m.mode = modeRunning
+
+	runner := m.runner
+	if runner == nil {
+		runner = upbridge.DefaultRunner()
+	}
+	in := upbridge.RunInput{
+		Flush: upbridge.FlushInput{
+			ProviderID:   m.provider.ID,
+			Values:       copyStringMap(m.formValues),
+			AppDomain:    m.appDomain,
+			Cloud:        m.flow.Cloud,
+			BucketPrefix: m.bucketPrefix,
+			PluralDNS:    m.pluralDNS,
+		},
+		Generate: upbridge.GenerateInput{
+			Cloud:            m.flow.Cloud,
+			CloudCluster:     m.cloudInstance.Name,
+			IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
+		},
+		SkipFlush: m.alreadyInit,
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if shouldExecLiveRunner(runner) {
+		return m, runExecCmd(ctx, runner, in)
+	}
 	return m, tea.Batch(m.spinner.Tick, m.runCmd())
 }
 
@@ -727,16 +901,19 @@ func (m Model) runCmd() tea.Cmd {
 	}
 	in := upbridge.RunInput{
 		Flush: upbridge.FlushInput{
-			ProviderID: m.provider.ID,
-			Values:     copyStringMap(m.formValues),
-			AppDomain:  m.appDomain,
-			Cloud:      m.flow.Cloud,
+			ProviderID:   m.provider.ID,
+			Values:       copyStringMap(m.formValues),
+			AppDomain:    m.appDomain,
+			Cloud:        m.flow.Cloud,
+			BucketPrefix: m.bucketPrefix,
+			PluralDNS:    m.pluralDNS,
 		},
 		Generate: upbridge.GenerateInput{
 			Cloud:            m.flow.Cloud,
 			CloudCluster:     m.cloudInstance.Name,
 			IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
 		},
+		SkipFlush: m.alreadyInit,
 	}
 	ctx := m.ctx
 	if ctx == nil {
@@ -774,6 +951,9 @@ func (m Model) updateSetupGit(action keyAction, key tea.KeyPressMsg) (Model, tea
 	switch action {
 	case keyActionBack:
 		m.err = nil
+		if !m.flow.Cloud {
+			return m.beginPluralSubdomain()
+		}
 		if m.probeWarn != "" {
 			m.mode = modeIgnoreContinue
 			return m, nil
@@ -867,6 +1047,13 @@ func (m Model) updateAppDomain(action keyAction, key tea.KeyPressMsg) (Model, te
 			m.mode = modeSetupGit
 			m.cursor = 0
 			return m, nil
+		}
+		if m.alreadyInit {
+			m.mode = modeAlreadyInit
+			return m, nil
+		}
+		if !m.flow.Cloud {
+			return m.beginPluralSubdomain()
 		}
 		if len(m.formFields) > 0 {
 			m.mode = modeProviderForm
@@ -964,11 +1151,24 @@ func (m Model) chooseIgnorePreflights(ignore bool) (Model, tea.Cmd) {
 		return m.beginLoadInstances()
 	}
 	if m.flow.NeedsProvider() {
-		m.mode = modeSelectProvider
-		m.cursor = 0
-		return m, nil
+		return m.afterCloudOrIgnoreReady()
 	}
 	m.mode = modeCLITip
+	return m, nil
+}
+
+// afterCloudOrIgnoreReady continues after ignore-preflights (self-hosted) or
+// Console login (cloud). If workspace.yaml exists, skip provider/git init.
+func (m Model) afterCloudOrIgnoreReady() (Model, tea.Cmd) {
+	check := m.hasWorkspace
+	if check == nil {
+		check = upbridge.HasWorkspace
+	}
+	if check() {
+		return m.beginAlreadyInit()
+	}
+	m.mode = modeSelectProvider
+	m.cursor = 0
 	return m, nil
 }
 
@@ -1246,9 +1446,7 @@ func (m Model) finishConsoleLogin(newToken string) (Model, tea.Cmd) {
 
 	m.resetConsoleInput()
 	m.err = nil
-	m.mode = modeSelectProvider
-	m.cursor = 0
-	return m, nil
+	return m.afterCloudOrIgnoreReady()
 }
 
 func (m Model) beginProviderForm(p upbridge.Provider) (Model, tea.Cmd) {
@@ -1357,6 +1555,108 @@ func (m Model) applyPreflight(msg preflightMsg) (Model, tea.Cmd) {
 		return m, nil
 	}
 	m.probeWarn = ""
+	return m.beginAfterPreflight()
+}
+
+// beginAfterPreflight continues after successful (or ignored) preflights.
+// Self-hosted mirrors ProjectManifest.Configure before the git Affirm.
+func (m Model) beginAfterPreflight() (Model, tea.Cmd) {
+	if !m.flow.Cloud {
+		return m.beginBucketPrefix()
+	}
+	return m.beginGitStep()
+}
+
+func (m Model) beginBucketPrefix() (Model, tea.Cmd) {
+	m.mode = modeBucketPrefix
+	m.err = nil
+	m.formInput.SetValue(m.bucketPrefix)
+	m.formInput.Placeholder = "e.g. acme"
+	m.formInput.Focus()
+	return m, nil
+}
+
+func (m Model) beginPluralSubdomain() (Model, tea.Cmd) {
+	m.mode = modePluralSubdomain
+	m.err = nil
+	hint := m.pluralDNS
+	if strings.HasSuffix(hint, ".onplural.sh") {
+		hint = strings.TrimSuffix(hint, ".onplural.sh")
+	}
+	m.formInput.SetValue(hint)
+	m.formInput.Placeholder = "e.g. acme"
+	m.formInput.Focus()
+	return m, nil
+}
+
+func (m Model) updateBucketPrefix(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.formInput.Blur()
+		m.err = nil
+		if m.probeWarn != "" {
+			m.mode = modeIgnoreContinue
+			return m, nil
+		}
+		if len(m.formFields) > 0 {
+			m.mode = modeProviderForm
+			m.applyLoadFormField()
+			return m, nil
+		}
+		m.mode = modeSelectProvider
+		return m, nil
+	case keyActionConfirm:
+		return m.confirmBucketPrefix()
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
+}
+
+func (m Model) confirmBucketPrefix() (Model, tea.Cmd) {
+	val := strings.TrimSpace(m.formInput.Value())
+	if err := upbridge.ValidateBucketPrefix(val); err != nil {
+		m.err = err
+		return m, nil
+	}
+	m.bucketPrefix = val
+	m.err = nil
+	m.formInput.Blur()
+	return m.beginPluralSubdomain()
+}
+
+func (m Model) updatePluralSubdomain(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionBack:
+		m.formInput.Blur()
+		m.err = nil
+		return m.beginBucketPrefix()
+	case keyActionConfirm:
+		return m.confirmPluralSubdomain()
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
+}
+
+func (m Model) confirmPluralSubdomain() (Model, tea.Cmd) {
+	sub := strings.TrimSpace(m.formInput.Value())
+	if err := upbridge.ValidatePluralSubdomain(sub); err != nil {
+		m.err = err
+		return m, nil
+	}
+	register := m.registerDomain
+	if register == nil {
+		register = upbridge.RegisterPluralDomain
+	}
+	full, err := register(sub)
+	if err != nil {
+		m.err = err
+		return m, nil
+	}
+	m.pluralDNS = full
+	m.err = nil
+	m.formInput.Blur()
 	return m.beginGitStep()
 }
 
@@ -1402,6 +1702,33 @@ func (m Model) chooseSetupGit(yes bool) (Model, tea.Cmd) {
 func (m Model) chooseSCM(s upbridge.SCMProvider) (Model, tea.Cmd) {
 	m.scm = s
 	m.err = nil
+	m.scmRepo = ""
+	m.mode = modeSCMSetup
+	setup := m.scmSetup
+	useExec := setup == nil
+	if setup == nil {
+		setup = upbridge.SetupSCM
+	}
+	cmd := scmSetupCmd(s.ID, setup, useExec)
+	if useExec {
+		// Terminal is released for oauth/survey — no TUI spinner ticks during Exec.
+		return m, cmd
+	}
+	return m, tea.Batch(m.spinner.Tick, cmd)
+}
+
+func (m Model) applySCMDone(msg scmDoneMsg) (Model, tea.Cmd) {
+	if m.mode != modeSCMSetup {
+		return m, nil
+	}
+	if msg.err != nil {
+		m.err = msg.err
+		m.mode = modeSelectSCM
+		return m, nil
+	}
+	m.scmRepo = msg.repo
+	m.err = nil
+	m.inGitRepo = true
 	return m.afterGitReady()
 }
 

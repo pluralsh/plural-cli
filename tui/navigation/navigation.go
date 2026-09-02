@@ -25,6 +25,7 @@ const (
 	Stacks        Route = "stacks"
 	PullRequests  Route = "pullrequests"
 	Up            Route = "up"
+	Down          Route = "down"
 )
 
 // NavigateMsg requests a top-level route change.
