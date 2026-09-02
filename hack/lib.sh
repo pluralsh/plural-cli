@@ -7,7 +7,7 @@ echodate() {
 
 containerize() {
   local cmd="$1"
-  local image="${CONTAINERIZE_IMAGE:-golang:1.26.5}"
+  local image="${CONTAINERIZE_IMAGE:-golang:1.26.6}"
   local gocache="${CONTAINERIZE_GOCACHE:-/tmp/.gocache}"
   local gomodcache="${CONTAINERIZE_GOMODCACHE:-/tmp/.gomodcache}"
   local skip="${NO_CONTAINERIZE:-}"
