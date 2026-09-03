@@ -69,7 +69,7 @@ func TestStubInstanceLister(t *testing.T) {
 
 func TestNeedsProviderIncludesCloud(t *testing.T) {
 	for _, f := range Flows() {
-		want := f.ID == "self-hosted" || f.ID == "cloud"
+		want := f.ID == "self-hosted" || f.ID == "cloud" || f.ID == "dry-run" || f.ID == "cloud-dry-run"
 		if f.NeedsProvider() != want {
 			t.Fatalf("%s NeedsProvider=%v want %v", f.ID, f.NeedsProvider(), want)
 		}

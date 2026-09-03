@@ -451,7 +451,7 @@ func (m Model) updateSelectProvider(action keyAction, key tea.KeyPressMsg) (Mode
 	switch action {
 	case keyActionBack:
 		m.err = nil
-		if m.flow.ID == "cloud" {
+		if m.flow.Cloud {
 			m.resetConsoleInput()
 			if len(m.instances) > 1 {
 				m.mode = modeSelectInstance
@@ -603,7 +603,7 @@ func (m Model) updateAlreadyInit(action keyAction) (Model, tea.Cmd) {
 		m.formFields = nil
 		m.formValues = nil
 		m.credSummary = ""
-		if m.flow.ID == "cloud" {
+		if m.flow.Cloud {
 			m.resetConsoleInput()
 			if len(m.instances) > 1 {
 				m.mode = modeSelectInstance
@@ -1147,7 +1147,7 @@ func (m Model) chooseIgnorePreflights(ignore bool) (Model, tea.Cmd) {
 	m.ignorePreflights = ignore
 	m.ignoreAsked = true
 	m.err = nil
-	if m.flow.ID == "cloud" {
+	if m.flow.Cloud {
 		return m.beginLoadInstances()
 	}
 	if m.flow.NeedsProvider() {

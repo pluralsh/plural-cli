@@ -161,6 +161,18 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 				next = "Enter to ImportCluster + Generate (skip Flush), then Deploy."
 			}
 		}
+		if m.flow.DryRun {
+			next = "Enter to Flush + Generate only (no Deploy — --dry-run)."
+			if m.flow.Cloud {
+				next = "Enter to Flush + ImportCluster + Generate only (no Deploy — --cloud --dry-run)."
+			}
+			if m.alreadyInit {
+				next = "Enter to Generate only (skip Flush, no Deploy — --dry-run)."
+				if m.flow.Cloud {
+					next = "Enter to ImportCluster + Generate only (skip Flush, no Deploy)."
+				}
+			}
+		}
 		lines = append(lines,
 			"",
 			m.theme.Muted.Render("Equivalent CLI"),
@@ -216,7 +228,8 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		}
 		if m.flow.DryRun {
 			lines = append(lines, "",
-				m.theme.Muted.Render("Dry-run: no Deploy will run."),
+				m.theme.Success.Render("Finished generating the repo, no deployment will occur due to the --dry-run flag"),
+				m.theme.Muted.Render("Equivalent CLI: "+m.cli()),
 			)
 			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
 		}
@@ -571,7 +584,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 	default:
 		intro := []string{
 			m.theme.Muted.Render("Sets up your repository and an initial management cluster."),
-			m.theme.Muted.Render("Only self-hosted continues with the provider survey for now."),
+			m.theme.Muted.Render("Self-hosted and dry-run run the provider survey; cloud paths pick a Console first."),
 			"",
 		}
 		lines := append(intro, m.flowLines(width)...)

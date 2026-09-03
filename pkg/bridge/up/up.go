@@ -16,10 +16,15 @@ type Flow struct {
 }
 
 // NeedsProvider is true when this flow runs the provider survey (CLI GetProvider
-// via HandleInitWithProject). Cloud runs that survey after Console instance pick;
-// dry-run-only stubs still skip it in the TUI for now.
+// via HandleInitWithProject). Cloud / cloud-dry-run run that survey after Console
+// instance pick; self-hosted / dry-run run it directly.
 func (f Flow) NeedsProvider() bool {
-	return f.ID == "self-hosted" || f.ID == "cloud"
+	switch f.ID {
+	case "self-hosted", "cloud", "dry-run", "cloud-dry-run":
+		return true
+	default:
+		return false
+	}
 }
 
 // CLI returns the equivalent plural up invocation for this flow.
@@ -54,13 +59,13 @@ func Flows() []Flow {
 		{
 			ID:     "dry-run",
 			Title:  "Dry-run",
-			Blurb:  "generate repo only (--dry-run) · coming next",
+			Blurb:  "generate repo only (--dry-run) · no deploy",
 			DryRun: true,
 		},
 		{
 			ID:     "cloud-dry-run",
 			Title:  "Cloud · dry-run",
-			Blurb:  "Plural Cloud generate only · coming next",
+			Blurb:  "Plural Cloud generate only (--cloud --dry-run)",
 			Cloud:  true,
 			DryRun: true,
 		},

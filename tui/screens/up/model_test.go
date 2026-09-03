@@ -625,12 +625,81 @@ func TestCloudSkipsDeployAffirm(t *testing.T) {
 	}
 }
 
-func TestDryRunStillShowsCLITip(t *testing.T) {
+func TestDryRunGoesToProvider(t *testing.T) {
 	model := testModel(t)
 	model, _ = model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
+	if model.mode != modeIgnorePreflights || model.SelectedFlow() != "dry-run" || !model.DryRun() {
+		t.Fatalf("after dry-run = mode=%d flow=%q dry=%v", model.mode, model.SelectedFlow(), model.DryRun())
+	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
-	if model.mode != modeCLITip {
-		t.Fatalf("dry-run tip = %d", model.mode)
+	if model.mode != modeSelectProvider || !model.DryRun() {
+		t.Fatalf("dry-run provider = mode=%d dry=%v", model.mode, model.DryRun())
+	}
+}
+
+func TestDryRunSkipsDomainAffirmAndStopsAfterGenerate(t *testing.T) {
+	model := testModel(t)
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
+	model = drainProbe(t, model, cmd)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	if model.mode != modeSelected || !model.DryRun() {
+		t.Fatalf("plan = mode=%d dry=%v", model.mode, model.DryRun())
+	}
+	if strings.Contains(model.View(80, 24), "App domain") {
+		t.Fatal("dry-run plan should omit app domain")
+	}
+	if !strings.Contains(model.View(80, 24), "no Deploy") {
+		t.Fatalf("plan should say no Deploy:\n%s", model.View(80, 24))
+	}
+	runner := model.runner.(*stubRunner)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone || model.runErr != nil {
+		t.Fatalf("done = mode=%d err=%v", model.mode, model.runErr)
+	}
+	if len(runner.calls) != 1 || !runner.calls[0].Generate.IgnorePreflights {
+		t.Fatalf("run = %#v", runner.calls)
+	}
+	if !strings.Contains(model.View(80, 24), "no deployment will occur") {
+		t.Fatalf("done view:\n%s", model.View(80, 24))
+	}
+	// Enter must not start Deploy on dry-run.
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeDone || len(runner.deploys) != 0 {
+		t.Fatalf("dry-run must not deploy: mode=%d deploys=%d", model.mode, len(runner.deploys))
+	}
+}
+
+func TestCloudDryRunLoadsInstancesThenProvider(t *testing.T) {
+	model := testModel(t)
+	model.priorConsole = func() (string, string) {
+		return "https://demo.onplural.sh", "existing-token"
+	}
+	model.instanceLister = fakeInstanceLister{items: []upbridge.ConsoleInstance{
+		{ID: "1", Name: "demo-cloud", URL: "https://demo.onplural.sh"},
+		{ID: "2", Name: "other-cloud", URL: "https://other.onplural.sh"},
+	}}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'x', Text: "x"})
+	if model.SelectedFlow() != "cloud-dry-run" || !model.Cloud() || !model.DryRun() {
+		t.Fatalf("flow=%q cloud=%v dry=%v", model.SelectedFlow(), model.Cloud(), model.DryRun())
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
+	model = drainInstances(t, model)
+	if model.mode != modeSelectInstance {
+		t.Fatalf("expected instance select, got %d err=%v", model.mode, model.err)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeConsoleLogin || model.consoleTokenMode {
+		t.Fatalf("expected use-existing Affirm, mode=%d token=%v", model.mode, model.consoleTokenMode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	if model.mode != modeSelectProvider || !model.DryRun() || model.cloudInstance.Name != "demo-cloud" {
+		t.Fatalf("after login = mode=%d dry=%v inst=%q err=%v", model.mode, model.DryRun(), model.cloudInstance.Name, model.err)
 	}
 }
 
@@ -889,7 +958,7 @@ func TestAlreadyInitializedSkipsProvider(t *testing.T) {
 	}
 }
 
-func goldenModels(t *testing.T) (flow, ignore, provider, form, selected, cliTip, git, scm Model) {
+func goldenModels(t *testing.T) (flow, ignore, provider, form, selected, git, scm Model) {
 	t.Helper()
 	flow = testModel(t)
 	ignore = flow
@@ -908,11 +977,6 @@ func goldenModels(t *testing.T) (flow, ignore, provider, form, selected, cliTip,
 	selected.inGitRepo = true
 	selected.appDomain = ""
 	selected.formValues = map[string]string{"cluster": "demo", "region": "us-east-2"}
-	cliTip = flow
-	cliTip.mode = modeCLITip
-	cliTip.flow = cliTip.flows[2] // dry-run stub tip
-	cliTip.ignorePreflights = true
-	cliTip.ignoreAsked = true
 	git = flow
 	git.mode = modeSetupGit
 	git.flow = git.flows[0]
@@ -927,7 +991,7 @@ func goldenModels(t *testing.T) (flow, ignore, provider, form, selected, cliTip,
 }
 
 func TestUpGoldens(t *testing.T) {
-	flowModel, ignoreModel, providerModel, formModel, selected, cliTip, gitModel, scmModel := goldenModels(t)
+	flowModel, ignoreModel, providerModel, formModel, selected, gitModel, scmModel := goldenModels(t)
 
 	for _, tc := range []struct {
 		name   string
@@ -945,8 +1009,6 @@ func TestUpGoldens(t *testing.T) {
 		{"form-120", formModel, 120, 30},
 		{"selected-80", selected, 80, 24},
 		{"selected-120", selected, 120, 30},
-		{"clitip-80", cliTip, 80, 24},
-		{"clitip-120", cliTip, 120, 30},
 		{"git-80", gitModel, 80, 28},
 		{"git-120", gitModel, 120, 30},
 		{"scm-80", scmModel, 80, 24},
@@ -979,7 +1041,7 @@ func TestWriteUpGoldens(t *testing.T) {
 	if os.Getenv("UPDATE_GOLDEN") == "" {
 		t.Skip("set UPDATE_GOLDEN=1 to refresh fixtures")
 	}
-	flowModel, ignoreModel, providerModel, formModel, selected, cliTip, gitModel, scmModel := goldenModels(t)
+	flowModel, ignoreModel, providerModel, formModel, selected, gitModel, scmModel := goldenModels(t)
 	_ = os.MkdirAll("testdata", 0o755)
 	for _, tc := range []struct {
 		name   string
@@ -997,8 +1059,6 @@ func TestWriteUpGoldens(t *testing.T) {
 		{"form-120", formModel, 120, 30},
 		{"selected-80", selected, 80, 24},
 		{"selected-120", selected, 120, 30},
-		{"clitip-80", cliTip, 80, 24},
-		{"clitip-120", cliTip, 120, 30},
 		{"git-80", gitModel, 80, 28},
 		{"git-120", gitModel, 120, 30},
 		{"scm-80", scmModel, 80, 24},
