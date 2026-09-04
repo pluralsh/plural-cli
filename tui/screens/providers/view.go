@@ -181,7 +181,7 @@ func (m Model) detailLines() []string {
 }
 
 func (m Model) labelValue(label, value string) string {
-	label = label + strings.Repeat(" ", max(1, 12-len(label)))
+	label += strings.Repeat(" ", max(1, 12-len(label)))
 	return label + " " + value
 }
 

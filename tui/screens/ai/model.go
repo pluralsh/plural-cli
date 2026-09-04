@@ -60,9 +60,8 @@ func New(t theme.Theme) Model { return Model{theme: t} }
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		return m.updateKey(msg)
+	if key, ok := msg.(tea.KeyPressMsg); ok {
+		return m.updateKey(key)
 	}
 	return m, nil
 }

@@ -304,13 +304,3 @@ func clampCursor(cursor, count int) int {
 	}
 	return cursor
 }
-
-func clusterLabel(item clustersbridge.Summary) string {
-	if item.Handle != "" {
-		return "@" + item.Handle
-	}
-	if item.Name != "" {
-		return item.Name
-	}
-	return item.ID
-}

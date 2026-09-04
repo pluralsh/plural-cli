@@ -24,7 +24,8 @@ func (m Model) headerStatus() string {
 }
 
 func (m Model) bodyAndHelp(width int) (string, string) {
-	lines := []string{m.theme.Muted.Render("Choose an AI workspace to open its interactive screen."), ""}
+	lines := make([]string, 0, 2+len(items)+2)
+	lines = append(lines, m.theme.Muted.Render("Choose an AI workspace to open its interactive screen."), "")
 	for i, item := range items {
 		cursor := "  "
 		if i == m.cursor {

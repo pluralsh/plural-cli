@@ -958,7 +958,7 @@ func TestFormThenGitAffirmOutsideRepo(t *testing.T) {
 	if model.mode != modeSetupGit {
 		t.Fatalf("expected git affirm after configure, got %d", model.mode)
 	}
-	model, cmd = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	if model.mode != modeSelectSCM {
 		t.Fatalf("expected scm select, got %d", model.mode)
 	}
@@ -1015,12 +1015,9 @@ func TestAlreadyInitializedSkipsProvider(t *testing.T) {
 		t.Fatalf("view:\n%s", model.View(80, 24))
 	}
 
-	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if model.mode != modeEnsuringInit {
 		t.Fatalf("expected ensuring, got %d", model.mode)
-	}
-	if cmd != nil {
-		// spinner tick + ensure — drive ensure msg directly
 	}
 	model, _ = model.Update(ensureInitMsg{})
 	model = drainDomain(t, model)

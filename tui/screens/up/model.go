@@ -295,84 +295,115 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	if next, cmd, ok := m.applyAsync(msg); ok {
+		return next, cmd
+	}
+	return m.updateInput(msg)
+}
+
+func (m Model) applyAsync(msg tea.Msg) (Model, tea.Cmd, bool) {
 	switch msg := msg.(type) {
 	case probeMsg:
-		return m.applyProbe(msg)
+		next, cmd := m.applyProbe(msg)
+		return next, cmd, true
 	case preflightMsg:
-		return m.applyPreflight(msg)
+		next, cmd := m.applyPreflight(msg)
+		return next, cmd, true
 	case optionsMsg:
-		return m.applyOptions(msg)
+		next, cmd := m.applyOptions(msg)
+		return next, cmd, true
 	case domainMsg:
-		return m.applyDomain(msg)
+		next, cmd := m.applyDomain(msg)
+		return next, cmd, true
 	case instancesMsg:
-		return m.applyInstances(msg)
+		next, cmd := m.applyInstances(msg)
+		return next, cmd, true
 	case runDoneMsg:
-		return m.applyRunDone(msg)
+		next, cmd := m.applyRunDone(msg)
+		return next, cmd, true
 	case deployDoneMsg:
-		return m.applyDeployDone(msg)
+		next, cmd := m.applyDeployDone(msg)
+		return next, cmd, true
 	case scmDoneMsg:
-		return m.applySCMDone(msg)
+		next, cmd := m.applySCMDone(msg)
+		return next, cmd, true
 	case ensureInitMsg:
-		return m.applyEnsureInit(msg)
+		next, cmd := m.applyEnsureInit(msg)
+		return next, cmd, true
 	case opLogLineMsg:
 		m.opLog = appendOpLog(m.opLog, msg.line)
 		if m.opLogCh != nil {
-			return m, tea.Batch(m.spinner.Tick, listenOpLog(m.opLogCh))
+			return m, tea.Batch(m.spinner.Tick, listenOpLog(m.opLogCh)), true
 		}
-		return m, nil
+		return m, nil, true
 	case tea.WindowSizeMsg:
 		m.viewH = msg.Height
 		m.viewW = msg.Width
-		return m, nil
+		return m, nil, true
 	case commitNeededMsg:
 		m.mode = modeDeployCommit
 		m.formInput.SetValue("")
 		m.formInput.Placeholder = "commit message (empty to skip)"
 		m.formInput.Focus()
 		m.err = nil
-		return m, nil
+		return m, nil, true
 	case spinner.TickMsg:
-		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying && m.mode != modeSCMSetup && m.mode != modeEnsuringInit {
-			return m, nil
-		}
-		if m.mode == modeAppDomain && (len(m.domainOpts) > 0 || m.formInput.Focused()) {
-			return m, nil
-		}
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
+		return m.applySpinner(msg)
+	default:
+		return m, nil, false
 	}
+}
 
+func (m Model) applySpinner(msg spinner.TickMsg) (Model, tea.Cmd, bool) {
+	if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying && m.mode != modeSCMSetup && m.mode != modeEnsuringInit {
+		return m, nil, true
+	}
+	if m.mode == modeAppDomain && (len(m.domainOpts) > 0 || m.formInput.Focused()) {
+		return m, nil, true
+	}
+	var cmd tea.Cmd
+	m.spinner, cmd = m.spinner.Update(msg)
+	return m, cmd, true
+}
+
+func (m Model) updateInput(msg tea.Msg) (Model, tea.Cmd) {
 	key, ok := msg.(tea.KeyPressMsg)
 	if !ok {
-		switch m.mode {
-		case modeProviderForm:
-			if !m.currentIsSelect() {
-				var cmd tea.Cmd
-				m.formInput, cmd = m.formInput.Update(msg)
-				return m, cmd
-			}
-		case modeAppDomain:
-			if !m.domainIsSelect() {
-				var cmd tea.Cmd
-				m.formInput, cmd = m.formInput.Update(msg)
-				return m, cmd
-			}
-		case modeConsoleLogin:
-			if m.consoleTokenMode {
-				var cmd tea.Cmd
-				m.formInput, cmd = m.formInput.Update(msg)
-				return m, cmd
-			}
-		case modeBucketPrefix, modePluralSubdomain, modeDeployCommit:
+		return m.updateNonKey(msg)
+	}
+	action := actionForKeystroke(key.Keystroke())
+	return m.updateByMode(action, key)
+}
+
+func (m Model) updateNonKey(msg tea.Msg) (Model, tea.Cmd) {
+	switch m.mode {
+	case modeProviderForm:
+		if !m.currentIsSelect() {
 			var cmd tea.Cmd
 			m.formInput, cmd = m.formInput.Update(msg)
 			return m, cmd
 		}
-		return m, nil
+	case modeAppDomain:
+		if !m.domainIsSelect() {
+			var cmd tea.Cmd
+			m.formInput, cmd = m.formInput.Update(msg)
+			return m, cmd
+		}
+	case modeConsoleLogin:
+		if m.consoleTokenMode {
+			var cmd tea.Cmd
+			m.formInput, cmd = m.formInput.Update(msg)
+			return m, cmd
+		}
+	case modeBucketPrefix, modePluralSubdomain, modeDeployCommit:
+		var cmd tea.Cmd
+		m.formInput, cmd = m.formInput.Update(msg)
+		return m, cmd
 	}
-	action := actionForKeystroke(key.Keystroke())
+	return m, nil
+}
 
+func (m Model) updateByMode(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
 	switch m.mode {
 	case modeSelected:
 		return m.updateSelected(action)
@@ -383,14 +414,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case modeDeployCommit:
 		return m.updateDeployCommit(action, key)
 	case modeDone:
-		if m.handleOpLogScroll(action) {
-			return m, nil
-		}
 		return m.updateDone(action)
 	case modeComplete:
-		if m.handleOpLogScroll(action) {
-			return m, nil
-		}
 		return m.updateComplete(action)
 	case modeIgnoreContinue:
 		return m.updateIgnoreContinue(action)
@@ -413,13 +438,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case modeProviderForm:
 		return m.updateProviderForm(action, key)
 	case modeRunPreflights, modeProbing, modeLoadInstances:
-		if action == keyActionBack {
-			if m.mode == modeLoadInstances {
-				return m.updateLoadInstances(action)
-			}
-			return m.updateProbing(action)
-		}
-		return m, nil
+		return m.updateBusy(action)
 	case modeSelectInstance:
 		return m.updateSelectInstance(action, key)
 	case modeConsoleLogin:
@@ -431,6 +450,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	default:
 		return m.updateSelectFlow(action, key)
 	}
+}
+
+func (m Model) updateBusy(action keyAction) (Model, tea.Cmd) {
+	if action != keyActionBack {
+		return m, nil
+	}
+	if m.mode == modeLoadInstances {
+		return m.updateLoadInstances(action)
+	}
+	return m.updateProbing(action)
 }
 
 func (m Model) updateSelectFlow(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
@@ -803,6 +832,9 @@ func (m Model) updateSelected(action keyAction) (Model, tea.Cmd) {
 }
 
 func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
+	if m.handleOpLogScroll(action) {
+		return m, nil
+	}
 	switch action {
 	case keyActionBack:
 		m.mode = modeSelected
@@ -828,6 +860,9 @@ func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
 }
 
 func (m Model) updateComplete(action keyAction) (Model, tea.Cmd) {
+	if m.handleOpLogScroll(action) {
+		return m, nil
+	}
 	if action == keyActionExport {
 		m.saveLogs("up-deploy")
 		return m, nil
@@ -1764,10 +1799,7 @@ func (m Model) beginBucketPrefix() (Model, tea.Cmd) {
 func (m Model) beginPluralSubdomain() (Model, tea.Cmd) {
 	m.mode = modePluralSubdomain
 	m.err = nil
-	hint := m.pluralDNS
-	if strings.HasSuffix(hint, ".onplural.sh") {
-		hint = strings.TrimSuffix(hint, ".onplural.sh")
-	}
+	hint := strings.TrimSuffix(m.pluralDNS, ".onplural.sh")
 	m.formInput.SetValue(hint)
 	m.formInput.Placeholder = "e.g. acme"
 	m.formInput.Focus()

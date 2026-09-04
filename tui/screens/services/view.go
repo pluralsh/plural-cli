@@ -117,24 +117,27 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		lines = append(lines, "", m.theme.Muted.Render("Equivalent CLI"), "  "+m.pending.cli)
 		return page.Panel(m.theme, "Plan (immutable)", lines, width, 12, true), "enter confirm · esc back"
 	case modeOperating:
-		lines := []string{m.theme.Warning.Render("● Running…"), ""}
+		lines := make([]string, 0, 2+len(m.opLog))
+		lines = append(lines, m.theme.Warning.Render("● Running…"), "")
 		lines = append(lines, m.opLog...)
 		return page.Panel(m.theme, "Operation", lines, width, 10, true), "ctrl+c quit"
 	case modeResult:
 		head := m.theme.Success.Render("✓ Success")
 		help := "enter detail · esc back"
-		if m.result == "failed" {
+		switch {
+		case m.result == "failed":
 			head = m.theme.Danger.Render("✗ Failed")
 			help = "enter retry review · esc detail"
-		} else if m.pending.kind == actionDelete {
+		case m.pending.kind == actionDelete:
 			help = "enter list · esc list"
-		} else if m.pending.kind == actionTarball {
+		case m.pending.kind == actionTarball:
 			head = m.theme.Success.Render("✓ Wrote " + m.result)
-		} else if m.pending.kind == actionWorkbench {
+		case m.pending.kind == actionWorkbench:
 			head = m.theme.Muted.Render("CLI equivalent")
 			help = "esc detail"
 		}
-		lines := []string{head, ""}
+		lines := make([]string, 0, 2+len(m.opLog))
+		lines = append(lines, head, "")
 		lines = append(lines, m.opLog...)
 		return page.Panel(m.theme, "Result", lines, width, 12, true), help
 	case modeDeleteConfirm:
@@ -425,7 +428,7 @@ func (m Model) detailLines() []string {
 }
 
 func (m Model) labelValue(label, value string) string {
-	label = label + strings.Repeat(" ", max(1, 12-len(label)))
+	label += strings.Repeat(" ", max(1, 12-len(label)))
 	return label + " " + value
 }
 

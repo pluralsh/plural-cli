@@ -119,45 +119,7 @@ func (m Model) Init() tea.Cmd { return m.welcome.Init() }
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case navigation.NavigateMsg:
-		m.route = msg.Route
-		switch m.route {
-		case navigation.Access:
-			return m, m.access.Init()
-		case navigation.Diagnostics:
-			return m, m.diagnostics.Init()
-		case navigation.Deployments:
-			m.deployments.SetConsoleURL(m.welcome.Snapshot().Console.URL)
-			return m, m.deployments.Init()
-		case navigation.Services:
-			return m, m.services.Init()
-		case navigation.Clusters:
-			return m, m.clusters.Init()
-		case navigation.Repositories:
-			return m, m.repositories.Init()
-		case navigation.Pipelines:
-			return m, m.pipelines.Init()
-		case navigation.Notifications:
-			return m, m.notifications.Init()
-		case navigation.Providers:
-			return m, m.providers.Init()
-		case navigation.Stacks:
-			return m, m.stacks.Init()
-		case navigation.PullRequests:
-			return m, m.pullrequests.Init()
-		case navigation.AI:
-			return m, m.ai.Init()
-		case navigation.Agents:
-			return m, m.agents.Init()
-		case navigation.Workbenches:
-			return m, m.workbenches.Init()
-		case navigation.Up:
-			return m, m.up.Init()
-		case navigation.Down:
-			m.down = m.down.Reset()
-			return m, m.down.Init()
-		default:
-			return m, m.welcome.Init()
-		}
+		return m.navigateTo(msg.Route)
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -171,7 +133,52 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
+	return m.updateActive(msg)
+}
 
+func (m Model) navigateTo(route navigation.Route) (Model, tea.Cmd) {
+	m.route = route
+	switch route {
+	case navigation.Access:
+		return m, m.access.Init()
+	case navigation.Diagnostics:
+		return m, m.diagnostics.Init()
+	case navigation.Deployments:
+		m.deployments.SetConsoleURL(m.welcome.Snapshot().Console.URL)
+		return m, m.deployments.Init()
+	case navigation.Services:
+		return m, m.services.Init()
+	case navigation.Clusters:
+		return m, m.clusters.Init()
+	case navigation.Repositories:
+		return m, m.repositories.Init()
+	case navigation.Pipelines:
+		return m, m.pipelines.Init()
+	case navigation.Notifications:
+		return m, m.notifications.Init()
+	case navigation.Providers:
+		return m, m.providers.Init()
+	case navigation.Stacks:
+		return m, m.stacks.Init()
+	case navigation.PullRequests:
+		return m, m.pullrequests.Init()
+	case navigation.AI:
+		return m, m.ai.Init()
+	case navigation.Agents:
+		return m, m.agents.Init()
+	case navigation.Workbenches:
+		return m, m.workbenches.Init()
+	case navigation.Up:
+		return m, m.up.Init()
+	case navigation.Down:
+		m.down = m.down.Reset()
+		return m, m.down.Init()
+	default:
+		return m, m.welcome.Init()
+	}
+}
+
+func (m Model) updateActive(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch m.route {
 	case navigation.Access:

@@ -53,13 +53,14 @@ func (m Model) bodyAndHelp(width, height int) (string, string) {
 		return page.Panel(m.theme, "Destroy", lines, width, 14, true), "↑/↓ · y/n · enter · esc back"
 	case modeDestroying:
 		panelH, logN := logPanelBudget(height, 5)
-		lines := []string{
-			"Mode  " + m.modeLabel(),
+		lines := make([]string, 0, 5+logN)
+		lines = append(lines,
+			"Mode  "+m.modeLabel(),
 			"",
-			m.spin.View() + " " + m.theme.Muted.Render("Destroying management cluster terraform…"),
+			m.spin.View()+" "+m.theme.Muted.Render("Destroying management cluster terraform…"),
 			m.theme.Muted.Render("Terraform output streams below (TUI stays open)."),
 			"",
-		}
+		)
 		lines = append(lines, m.opLogLines(logN, width)...)
 		return page.Panel(m.theme, "Destroying", lines, width, panelH, true), "↑/↓ · pgup/pgdn scroll · end follow"
 	case modeComplete:
@@ -83,26 +84,27 @@ func (m Model) bodyAndHelp(width, height int) (string, string) {
 		lines = append(lines, m.opLogLines(logN, width)...)
 		return page.Panel(m.theme, "Destroy complete", lines, width, panelH, true), "↑/↓ scroll · e export logs · enter/esc welcome"
 	default:
-		intro := []string{
+		intro := make([]string, 0, 4+len(cloudOptions()))
+		intro = append(intro,
 			m.theme.Muted.Render("Destroys your management cluster and any apps installed on it."),
 			m.theme.Muted.Render("Same as plural down — requires workspace.yaml in the current repo."),
 			"",
-		}
-		lines := append(intro, m.cloudLines(width)...)
+		)
+		intro = append(intro, m.cloudLines(width)...)
 		if m.err != nil {
-			lines = append(lines, "", m.theme.Danger.Render(m.err.Error()))
+			intro = append(intro, "", m.theme.Danger.Render(m.err.Error()))
 		}
 		help := "↑/↓ · 1–2 / s/c · enter · esc welcome"
 		if width < 100 {
 			help = "↑/↓ · enter · esc welcome"
 		}
-		return page.Panel(m.theme, "Destroy mode", lines, width, 12, true), help
+		return page.Panel(m.theme, "Destroy mode", intro, width, 12, true), help
 	}
 }
 
 func (m Model) cloudLines(width int) []string {
 	opts := cloudOptions()
-	var lines []string
+	lines := make([]string, 0, len(opts))
 	for i, o := range opts {
 		prefix := "  "
 		label := fmt.Sprintf("%d  %s   %-14s  %s", i+1, cloudShortcut(o.id), o.title, o.blurb)
@@ -122,15 +124,13 @@ func (m Model) cloudLines(width int) []string {
 
 func (m Model) affirmLines(width int) []string {
 	opts := affirmOptions()
-	var lines []string
+	lines := make([]string, 0, len(opts))
 	for i, o := range opts {
 		prefix := "  "
-		label := fmt.Sprintf("%s  %s", o.title, o.blurb)
+		label := m.theme.Body.Render(o.title) + "  " + m.theme.Muted.Render(o.blurb)
 		if i == m.cursor {
 			prefix = "› "
 			label = m.theme.Title.Render(o.title) + "  " + m.theme.Muted.Render(o.blurb)
-		} else {
-			label = m.theme.Body.Render(o.title) + "  " + m.theme.Muted.Render(o.blurb)
 		}
 		lines = append(lines, ansi.Truncate(prefix+label, max(1, width-4), "…"))
 	}

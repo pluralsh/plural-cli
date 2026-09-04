@@ -112,12 +112,6 @@ func shouldStreamLiveRunner(runner upbridge.Runner) bool {
 	return ok
 }
 
-// shouldExecLiveRunner is kept for tests that asserted the old tea.Exec path.
-// Live work now streams into the TUI instead of releasing the terminal.
-func shouldExecLiveRunner(runner upbridge.Runner) bool {
-	return shouldStreamLiveRunner(runner)
-}
-
 func shouldExecDeploy(runner upbridge.Runner) bool {
 	return shouldStreamLiveRunner(runner)
 }

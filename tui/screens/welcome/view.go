@@ -229,11 +229,12 @@ func (m Model) heroDetails(maxWidth int) []string {
 		}, heroDetailRows)
 	}
 
-	lines := []string{
+	lines := make([]string, 0, 3+8)
+	lines = append(lines,
 		m.heroConsole(),
 		m.heroConsoleURL(maxWidth),
 		m.theme.Title.Render(strings.Repeat("─", max(1, maxWidth))),
-	}
+	)
 	lines = append(lines, m.workspaceDetails(maxWidth)...)
 	return m.padLines(lines, heroDetailRows)
 }

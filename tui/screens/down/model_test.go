@@ -99,7 +99,7 @@ func TestDownCloudShortcut(t *testing.T) {
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	msg := model.destroyCmd(upbridge.DestroyInput{Cloud: true})()
-	model, _ = model.Update(msg)
+	_, _ = model.Update(msg)
 	if len(runner.calls) != 1 || !runner.calls[0].Cloud {
 		t.Fatalf("calls = %#v", runner.calls)
 	}

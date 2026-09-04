@@ -137,7 +137,8 @@ func (m Model) accountLines() []string {
 
 func (m Model) consoleFormLines() []string {
 	labels := []string{"Name", "URL", "Token"}
-	lines := []string{m.theme.Muted.Render("Console is optional; press esc to finish setup without it."), ""}
+	lines := make([]string, 0, 2+len(m.form))
+	lines = append(lines, m.theme.Muted.Render("Console is optional; press esc to finish setup without it."), "")
 	for i := range m.form {
 		marker := "  "
 		if i == m.formIndex {

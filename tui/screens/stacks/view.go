@@ -84,7 +84,8 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		lines = append(lines, "", m.theme.Muted.Render("Equivalent CLI"), "  "+m.pending.cli)
 		return page.Panel(m.theme, "Plan (immutable)", lines, width, 14, true), "enter confirm · esc back"
 	case modeOperating:
-		lines := []string{m.theme.Warning.Render("● Running…"), ""}
+		lines := make([]string, 0, 2+len(m.opLog))
+		lines = append(lines, m.theme.Warning.Render("● Running…"), "")
 		lines = append(lines, m.opLog...)
 		return page.Panel(m.theme, "Operation", lines, width, 10, true), "ctrl+c quit"
 	case modeResult:
@@ -94,7 +95,8 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 			head = m.theme.Danger.Render("✗ Failed")
 			help = "enter retry review · esc detail"
 		}
-		lines := []string{head, ""}
+		lines := make([]string, 0, 2+len(m.opLog))
+		lines = append(lines, head, "")
 		lines = append(lines, m.opLog...)
 		return page.Panel(m.theme, "Result", lines, width, 12, true), help
 	case modeGenBackendForm:
@@ -274,7 +276,7 @@ func formatGit(ref, folder string) string {
 }
 
 func (m Model) labelValue(label, value string) string {
-	label = label + strings.Repeat(" ", max(1, 12-len(label)))
+	label += strings.Repeat(" ", max(1, 12-len(label)))
 	return label + " " + value
 }
 

@@ -304,7 +304,7 @@ func TestListScrollKeepsCursorVisible(t *testing.T) {
 	items := make([]servicesbridge.Summary, 0, 20)
 	for i := 0; i < 20; i++ {
 		items = append(items, servicesbridge.Summary{
-			ID: string(rune('a'+i)), Name: "svc-" + string(rune('a'+i)), Namespace: "default", Status: "HEALTHY",
+			ID: string(rune('a' + i)), Name: "svc-" + string(rune('a'+i)), Namespace: "default", Status: "HEALTHY",
 		})
 	}
 	loader := &fakeLoader{

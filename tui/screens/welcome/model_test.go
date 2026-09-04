@@ -333,7 +333,6 @@ func TestHeroBorderUsesPrimaryColor(t *testing.T) {
 	if !strings.HasPrefix(bottom, border.Render("╰─ ")) || !strings.Contains(bottom, theme.Muted.Render("dev")) {
 		t.Fatalf("wide hero bottom border does not use the primary color: %q", wide)
 	}
-
 }
 
 func TestStatusAdaptsToTerminalColorCapability(t *testing.T) {

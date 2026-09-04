@@ -422,11 +422,12 @@ func (m Model) updateFilter(action keyAction, key tea.KeyPressMsg) (Model, tea.C
 	switch action {
 	case keyActionBack:
 		m.filterInput.Blur()
-		if m.pickingCloneDest {
+		switch {
+		case m.pickingCloneDest:
 			m.mode = modeCloneCluster
-		} else if m.filteringCluster {
+		case m.filteringCluster:
 			m.mode = modeClusters
-		} else {
+		default:
 			m.mode = modeList
 		}
 		return m, nil
@@ -767,9 +768,6 @@ func (m Model) updateForm(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd
 			m.loadFormField()
 		}
 		return m, nil
-	}
-	if key.Text == "d" && key.Mod == tea.ModCtrl {
-		// ignore
 	}
 	if key.Keystroke() == "ctrl+d" {
 		m.formDryRun = !m.formDryRun
