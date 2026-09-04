@@ -153,6 +153,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case navigation.Up:
 			return m, m.up.Init()
 		case navigation.Down:
+			m.down = m.down.Reset()
 			return m, m.down.Init()
 		default:
 			return m, m.welcome.Init()

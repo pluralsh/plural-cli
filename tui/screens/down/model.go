@@ -11,6 +11,7 @@ import (
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/pluralsh/plural-cli/tui/components/oplog"
 	pluralspinner "github.com/pluralsh/plural-cli/tui/components/spinner"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
@@ -33,6 +34,11 @@ const (
 	keyActionDown
 	keyActionConfirm
 	keyActionBack
+	keyActionPgUp
+	keyActionPgDown
+	keyActionHome
+	keyActionEnd
+	keyActionExport
 )
 
 var keyActionKeystrokes = map[keyAction]string{
@@ -40,6 +46,11 @@ var keyActionKeystrokes = map[keyAction]string{
 	keyActionDown:    "down",
 	keyActionConfirm: "enter",
 	keyActionBack:    "esc",
+	keyActionPgUp:    "pgup",
+	keyActionPgDown:  "pgdown",
+	keyActionHome:    "home",
+	keyActionEnd:     "end",
+	keyActionExport:  "e",
 }
 
 func actionForKeystroke(keystroke string) keyAction {
@@ -88,34 +99,62 @@ type destroyDoneMsg struct {
 
 // Model is the Down wizard screen.
 type Model struct {
-	ctx    context.Context
-	theme  theme.Theme
-	runner upbridge.Runner
-	mode   mode
-	cursor int
-	cloud  bool
-	err    error
-	steps  []string
-	spin   spinner.Model
+	ctx           context.Context
+	theme         theme.Theme
+	runner        upbridge.Runner
+	mode          mode
+	cursor        int
+	cloud         bool
+	err           error
+	steps         []string
+	opLog         []string
+	opLogCh       chan string
+	opLogY        int
+	opLogFollow   bool
+	viewH         int
+	viewW         int
+	spin          spinner.Model
+	exportDir     string // tests; empty uses cwd
+	logExportPath string
+	logExportErr  error
 }
 
 // New constructs a Down wizard.
 func New(ctx context.Context, t theme.Theme) Model {
 	return Model{
-		ctx:    ctx,
-		theme:  t,
-		runner: upbridge.DefaultRunner(),
-		mode:   modeSelectCloud,
-		spin:   pluralspinner.New(t),
+		ctx:         ctx,
+		theme:       t,
+		runner:      upbridge.DefaultRunner(),
+		mode:        modeSelectCloud,
+		spin:        pluralspinner.New(t),
+		opLogFollow: true,
 	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
 
+// Reset returns a fresh wizard so a later visit does not show the previous run.
+func (m Model) Reset() Model {
+	next := New(m.ctx, m.theme)
+	next.runner = m.runner
+	next.exportDir = m.exportDir
+	return next
+}
+
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case destroyDoneMsg:
 		return m.applyDestroyDone(msg)
+	case opLogLineMsg:
+		m.opLog = appendOpLog(m.opLog, msg.line)
+		if m.opLogCh != nil {
+			return m, tea.Batch(m.spin.Tick, listenOpLog(m.opLogCh))
+		}
+		return m, nil
+	case tea.WindowSizeMsg:
+		m.viewH = msg.Height
+		m.viewW = msg.Width
+		return m, nil
 	case spinner.TickMsg:
 		if m.mode != modeDestroying {
 			return m, nil
@@ -137,17 +176,71 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 	case modeAffirm:
 		return m.updateAffirm(action, key)
 	case modeDestroying:
-		if action == keyActionBack {
-			return m, nil // terraform running; ignore
-		}
+		m.handleOpLogScroll(action)
 		return m, nil
 	case modeComplete:
-		if action == keyActionBack {
+		if m.handleOpLogScroll(action) {
+			return m, nil
+		}
+		if action == keyActionExport {
+			m.saveLogs("down")
+			return m, nil
+		}
+		if action == keyActionBack || action == keyActionConfirm {
 			return m, navigation.Navigate(navigation.Welcome)
 		}
 		return m, nil
 	}
 	return m, nil
+}
+
+func (m *Model) handleOpLogScroll(action keyAction) bool {
+	window := 20
+	if m.viewH > 0 {
+		_, window = logPanelBudget(m.viewH, 5)
+	}
+	switch action {
+	case keyActionUp:
+		m.scrollOpLog(-1, window)
+		return true
+	case keyActionDown:
+		m.scrollOpLog(1, window)
+		return true
+	case keyActionPgUp:
+		m.scrollOpLog(-window, window)
+		return true
+	case keyActionPgDown:
+		m.scrollOpLog(window, window)
+		return true
+	case keyActionHome:
+		m.opLogFollow = false
+		m.opLogY = 0
+		return true
+	case keyActionEnd:
+		m.opLogFollow = true
+		return true
+	}
+	return false
+}
+
+func (m *Model) scrollOpLog(delta, window int) {
+	if window <= 0 {
+		window = 20
+	}
+	total := len(wrapOpLog(m.opLog, opLogContentWidth(m.viewW)))
+	maxStart := max(0, total-window)
+	if m.opLogFollow {
+		m.opLogY = maxStart
+	}
+	m.opLogFollow = false
+	m.opLogY += delta
+	if m.opLogY < 0 {
+		m.opLogY = 0
+	}
+	if m.opLogY >= maxStart {
+		m.opLogY = maxStart
+		m.opLogFollow = true
+	}
 }
 
 func (m Model) updateSelectCloud(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
@@ -247,6 +340,9 @@ func (m Model) beginDestroy() (Model, tea.Cmd) {
 	m.mode = modeDestroying
 	m.err = nil
 	m.steps = nil
+	m.opLog = nil
+	m.opLogFollow = true
+	m.opLogY = 0
 	runner := m.runner
 	if runner == nil {
 		runner = upbridge.DefaultRunner()
@@ -257,7 +353,9 @@ func (m Model) beginDestroy() (Model, tea.Cmd) {
 	}
 	in := upbridge.DestroyInput{Cloud: m.cloud}
 	if shouldExecLiveRunner(runner) {
-		return m, destroyExecCmd(ctx, runner, in)
+		lines := make(chan string, 256)
+		m.opLogCh = lines
+		return m, tea.Batch(m.spin.Tick, destroyStreamCmd(ctx, runner, in, lines), listenOpLog(lines))
 	}
 	return m, tea.Batch(m.spin.Tick, m.destroyCmd(in))
 }
@@ -282,9 +380,20 @@ func (m Model) destroyCmd(in upbridge.DestroyInput) tea.Cmd {
 
 func (m Model) applyDestroyDone(msg destroyDoneMsg) (Model, tea.Cmd) {
 	m.mode = modeComplete
+	m.opLogCh = nil
+	m.opLogFollow = true
 	m.steps = msg.steps
 	m.err = msg.err
+	if msg.err != nil {
+		m.saveLogs("down")
+	}
 	return m, nil
+}
+
+func (m *Model) saveLogs(kind string) {
+	path, err := oplog.Write(m.exportDir, kind, m.opLog, m.err)
+	m.logExportPath = path
+	m.logExportErr = err
 }
 
 func cloudShortcut(id string) string {

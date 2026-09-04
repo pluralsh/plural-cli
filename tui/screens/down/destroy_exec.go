@@ -2,30 +2,70 @@ package down
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"strings"
+	"sync"
 
 	tea "charm.land/bubbletea/v2"
 
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
 )
 
-// blockingExecCommand runs work after tea.Exec releases the terminal so
-// terraform stdout stays line-oriented instead of fighting Bubble Tea redraws.
-type blockingExecCommand struct {
-	run func() error
+const maxOpLogLines = 500
+
+type opLogLineMsg struct{ line string }
+
+type lineWriter struct {
+	ch  chan<- string
+	mu  sync.Mutex
+	buf strings.Builder
 }
 
-func (c *blockingExecCommand) Run() error {
-	if c.run == nil {
-		return fmt.Errorf("exec run is not configured")
+func (w *lineWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	for _, b := range p {
+		if b == '\n' {
+			w.flushLocked()
+			continue
+		}
+		if b == '\r' {
+			continue
+		}
+		w.buf.WriteByte(b)
 	}
-	return c.run()
+	return len(p), nil
 }
 
-func (c *blockingExecCommand) SetStdin(io.Reader)  {}
-func (c *blockingExecCommand) SetStdout(io.Writer) {}
-func (c *blockingExecCommand) SetStderr(io.Writer) {}
+func (w *lineWriter) flushLocked() {
+	line := strings.TrimRight(w.buf.String(), "\r")
+	w.buf.Reset()
+	if line == "" {
+		return
+	}
+	select {
+	case w.ch <- line:
+	default:
+	}
+}
+
+func (w *lineWriter) Close() {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.buf.Len() > 0 {
+		w.flushLocked()
+	}
+}
+
+func listenOpLog(ch <-chan string) tea.Cmd {
+	return func() tea.Msg {
+		line, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return opLogLineMsg{line: line}
+	}
+}
 
 func shouldExecLiveRunner(runner upbridge.Runner) bool {
 	if runner == nil {
@@ -35,27 +75,31 @@ func shouldExecLiveRunner(runner upbridge.Runner) bool {
 	return ok
 }
 
-func destroyExecCmd(ctx context.Context, runner upbridge.Runner, in upbridge.DestroyInput) tea.Cmd {
+func appendOpLog(lines []string, line string) []string {
+	lines = append(lines, line)
+	if len(lines) > maxOpLogLines {
+		lines = lines[len(lines)-maxOpLogLines:]
+	}
+	return lines
+}
+
+func destroyStreamCmd(ctx context.Context, runner upbridge.Runner, in upbridge.DestroyInput, lines chan string) tea.Cmd {
 	if runner == nil {
 		runner = upbridge.DefaultRunner()
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	var steps []string
-	cmd := &blockingExecCommand{
-		run: func() error {
-			fmt.Println()
-			fmt.Println("=== Plural down · Destroy (terraform) ===")
-			fmt.Println("TUI paused — terraform output uses this terminal.")
-			fmt.Println()
-			return runner.Destroy(ctx, in, func(step string) {
-				steps = append(steps, step)
-				fmt.Printf("\n→ %s\n\n", step)
-			})
-		},
-	}
-	return tea.Exec(cmd, func(err error) tea.Msg {
+	return func() tea.Msg {
+		w := &lineWriter{ch: lines}
+		in.Output = w
+		var steps []string
+		err := runner.Destroy(ctx, in, func(step string) {
+			steps = append(steps, step)
+			_, _ = io.WriteString(w, "→ "+step+"\n")
+		})
+		w.Close()
+		close(lines)
 		return destroyDoneMsg{err: err, steps: steps}
-	})
+	}
 }

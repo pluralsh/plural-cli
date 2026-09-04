@@ -2,34 +2,109 @@ package up
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"strings"
+	"sync"
 
 	tea "charm.land/bubbletea/v2"
 
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
 )
 
-// blockingExecCommand runs arbitrary work after tea.Exec releases the terminal
-// so CLI/terraform stdout stays line-oriented instead of fighting Bubble Tea redraws.
-type blockingExecCommand struct {
-	run func() error
+const maxOpLogLines = 500
+
+type opLogLineMsg struct{ line string }
+
+type commitNeededMsg struct{}
+
+// commitGate blocks Deploy at the commit checkpoint until the TUI replies.
+type commitGate struct {
+	req   chan struct{}
+	reply chan string
 }
 
-func (c *blockingExecCommand) Run() error {
-	if c.run == nil {
-		return fmt.Errorf("exec run is not configured")
+func newCommitGate() *commitGate {
+	return &commitGate{
+		req:   make(chan struct{}),
+		reply: make(chan string),
 	}
-	return c.run()
 }
 
-func (c *blockingExecCommand) SetStdin(io.Reader)  {}
-func (c *blockingExecCommand) SetStdout(io.Writer) {}
-func (c *blockingExecCommand) SetStderr(io.Writer) {}
+func (g *commitGate) Prompt() string {
+	g.req <- struct{}{}
+	return <-g.reply
+}
 
-// shouldExecLiveRunner is true for the live runner (writes os.Stdout).
-// Test stubs keep an in-process Cmd so Update can receive done messages.
-func shouldExecLiveRunner(runner upbridge.Runner) bool {
+// lineWriter splits writes into lines and pushes them onto ch (non-blocking when full).
+type lineWriter struct {
+	ch  chan<- string
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (w *lineWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	for _, b := range p {
+		if b == '\n' {
+			w.flushLocked()
+			continue
+		}
+		if b == '\r' {
+			continue
+		}
+		w.buf.WriteByte(b)
+	}
+	return len(p), nil
+}
+
+func (w *lineWriter) flushLocked() {
+	line := strings.TrimRight(w.buf.String(), "\r")
+	w.buf.Reset()
+	if line == "" {
+		return
+	}
+	select {
+	case w.ch <- line:
+	default:
+		// drop if UI is behind — prefer keeping terraform unblocked
+	}
+}
+
+func (w *lineWriter) Close() {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.buf.Len() > 0 {
+		w.flushLocked()
+	}
+}
+
+func listenOpLog(ch <-chan string) tea.Cmd {
+	return func() tea.Msg {
+		line, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return opLogLineMsg{line: line}
+	}
+}
+
+func listenCommitRequest(g *commitGate) tea.Cmd {
+	if g == nil {
+		return nil
+	}
+	return func() tea.Msg {
+		_, ok := <-g.req
+		if !ok {
+			return nil
+		}
+		return commitNeededMsg{}
+	}
+}
+
+// shouldStreamLiveRunner prefers in-TUI log capture for the live runner.
+// Test stubs keep a simple in-process Cmd (no log channel).
+func shouldStreamLiveRunner(runner upbridge.Runner) bool {
 	if runner == nil {
 		return true
 	}
@@ -37,67 +112,73 @@ func shouldExecLiveRunner(runner upbridge.Runner) bool {
 	return ok
 }
 
-// shouldExecDeploy keeps the older name used by beginDeploy.
+// shouldExecLiveRunner is kept for tests that asserted the old tea.Exec path.
+// Live work now streams into the TUI instead of releasing the terminal.
+func shouldExecLiveRunner(runner upbridge.Runner) bool {
+	return shouldStreamLiveRunner(runner)
+}
+
 func shouldExecDeploy(runner upbridge.Runner) bool {
-	return shouldExecLiveRunner(runner)
+	return shouldStreamLiveRunner(runner)
 }
 
-func deployExecCmd(ctx context.Context, runner upbridge.Runner, in upbridge.DeployInput) tea.Cmd {
+func appendOpLog(lines []string, line string) []string {
+	lines = append(lines, line)
+	if len(lines) > maxOpLogLines {
+		lines = lines[len(lines)-maxOpLogLines:]
+	}
+	return lines
+}
+
+func deployStreamCmd(ctx context.Context, runner upbridge.Runner, in upbridge.DeployInput, lines chan string, gate *commitGate) tea.Cmd {
 	if runner == nil {
 		runner = upbridge.DefaultRunner()
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	var steps []string
-	var committed string
-	in.CommittedMsg = &committed
-	cmd := &blockingExecCommand{
-		run: func() error {
-			fmt.Println()
-			fmt.Println("=== Plural up · Deploy (terraform) ===")
-			fmt.Println("TUI paused — terraform output uses this terminal.")
-			fmt.Println("Commit message is prompted after management terraform (same as plural up).")
-			fmt.Println()
-			return runner.Deploy(ctx, in, func(step string) {
-				steps = append(steps, step)
-				fmt.Printf("\n→ %s\n\n", step)
-			})
-		},
-	}
-	return tea.Exec(cmd, func(err error) tea.Msg {
+	return func() tea.Msg {
+		w := &lineWriter{ch: lines}
+		in.Output = w
+		var steps []string
+		var committed string
+		in.CommittedMsg = &committed
+		if gate != nil {
+			in.PromptCommit = true
+			in.CommitPrompt = gate.Prompt
+		}
+		err := runner.Deploy(ctx, in, func(step string) {
+			steps = append(steps, step)
+			_, _ = io.WriteString(w, "→ "+step+"\n")
+		})
+		w.Close()
+		close(lines)
+		if gate != nil {
+			close(gate.req)
+		}
 		return deployDoneMsg{err: err, steps: steps, commitMsg: committed}
-	})
+	}
 }
 
-func runExecCmd(ctx context.Context, runner upbridge.Runner, in upbridge.RunInput) tea.Cmd {
+func runStreamCmd(ctx context.Context, runner upbridge.Runner, in upbridge.RunInput, lines chan string) tea.Cmd {
 	if runner == nil {
 		runner = upbridge.DefaultRunner()
 	}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	var steps []string
-	var importID string
-	cmd := &blockingExecCommand{
-		run: func() error {
-			fmt.Println()
-			if in.SkipFlush {
-				fmt.Println("=== Plural up · Generate ===")
-			} else {
-				fmt.Println("=== Plural up · Flush + Generate ===")
-			}
-			fmt.Println("TUI paused — generation output uses this terminal.")
-			fmt.Println()
-			res, err := runner.Run(ctx, in, func(step string) {
-				steps = append(steps, step)
-				fmt.Printf("\n→ %s\n\n", step)
-			})
-			importID = res.ImportClusterID
-			return err
-		},
-	}
-	return tea.Exec(cmd, func(err error) tea.Msg {
+	return func() tea.Msg {
+		w := &lineWriter{ch: lines}
+		in.Output = w
+		var steps []string
+		var importID string
+		res, err := runner.Run(ctx, in, func(step string) {
+			steps = append(steps, step)
+			_, _ = io.WriteString(w, "→ "+step+"\n")
+		})
+		importID = res.ImportClusterID
+		w.Close()
+		close(lines)
 		return runDoneMsg{err: err, steps: steps, importClusterID: importID}
-	})
+	}
 }

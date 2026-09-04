@@ -68,8 +68,9 @@ func (c *Context) pruneCloud() error {
 func stateRm(dir, field string) error {
 	cmd := exec.Command("terraform", "state", "rm", field)
 	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	stdout, stderr := commandOutput()
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	return cmd.Run()
 }
 

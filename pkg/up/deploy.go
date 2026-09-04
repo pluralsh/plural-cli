@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"time"
 
@@ -222,8 +221,9 @@ func (tf *terraformCmd) run() (err error) {
 		args := append([]string{tf.cmd}, tf.args...)
 		cmd := exec.Command("terraform", args...)
 		cmd.Dir = tf.dir
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		stdout, stderr := commandOutput()
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
 		err = cmd.Run()
 		if err == nil {
 			return

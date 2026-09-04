@@ -16,7 +16,7 @@ func (m Model) View(width, height int) string {
 		return page.Unsupported(m.theme, width, height)
 	}
 	contentWidth := page.ContentWidth(width)
-	body, help := m.bodyAndHelp(contentWidth)
+	body, help := m.bodyAndHelp(contentWidth, height)
 	return page.Render(m.theme, width, height, "Up", m.headerStatus(), body, help)
 }
 
@@ -78,6 +78,8 @@ func (m Model) headerStatus() string {
 		return m.theme.Success.Render("generated")
 	case modeDeploying:
 		return m.theme.Muted.Render("deploying…")
+	case modeDeployCommit:
+		return m.theme.Muted.Render("commit checkpoint")
 	case modeComplete:
 		if m.deployErr != nil {
 			return m.theme.Danger.Render("deploy failed")
@@ -90,7 +92,7 @@ func (m Model) headerStatus() string {
 	}
 }
 
-func (m Model) bodyAndHelp(width int) (string, string) {
+func (m Model) bodyAndHelp(width, height int) (string, string) {
 	switch m.mode {
 	case modeSelected:
 		lines := []string{
@@ -186,119 +188,96 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		}
 		return page.Panel(m.theme, "Plan", lines, width, 18, true), help
 	case modeRunning:
+		panelH, logN := logPanelBudget(height, 4)
 		lines := []string{
 			m.spinner.View() + " " + m.theme.Muted.Render("Running Flush + Generate…"),
 			"",
-			m.theme.Muted.Render("Terminal is released for generation output (same as plural up)."),
-			m.theme.Muted.Render("Skip / template messages appear below; the wizard resumes when finished."),
-			"",
 		}
-		if len(m.runSteps) == 0 {
-			lines = append(lines, m.theme.Muted.Render("Starting…"))
+		if m.flow.DryRun {
+			lines = append(lines,
+				m.theme.Muted.Render("Dry-run: generate only — output streams below (no Deploy)."),
+				"",
+			)
 		} else {
-			for _, s := range m.runSteps {
-				lines = append(lines, "  · "+s)
-			}
+			lines = append(lines,
+				m.theme.Muted.Render("Terraform / generation output streams below (TUI stays open)."),
+				"",
+			)
 		}
-		return page.Panel(m.theme, "Generating", lines, width, 14, true), "please wait"
+		lines = append(lines, m.opLogLines(logN, width)...)
+		return page.Panel(m.theme, "Generating", lines, width, panelH, true), "↑/↓ · pgup/pgdn scroll · end follow"
 	case modeDone:
+		panelH, logN := logPanelBudget(height, 6)
 		lines := []string{}
 		if m.runErr != nil {
 			lines = append(lines,
-				m.theme.Danger.Render("Generate failed"),
+				m.theme.Danger.Render("Generate failed — scroll logs below, then esc to Plan"),
+				m.theme.Danger.Render(truncate(m.runErr.Error(), max(20, width-4))),
 				"",
-				m.theme.Danger.Render(m.runErr.Error()),
+			)
+		} else if m.flow.DryRun {
+			lines = append(lines,
+				m.theme.Success.Render("✓ Dry-run finished — no Deploy will run"),
+				m.theme.Muted.Render("Scroll logs below · esc returns to Plan"),
 				"",
-				m.theme.Muted.Render("Esc returns to Plan to retry."),
 			)
-			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
-		}
-		lines = append(lines,
-			m.theme.Success.Render("✓ Finished generating the repo"),
-			"",
-		)
-		if m.flow.Cloud {
-			lines = append(lines, "Console  "+m.cloudInstance.Name)
-		}
-		if m.provider.Title != "" {
-			lines = append(lines, "Provider "+m.provider.Title)
-		}
-		for _, s := range m.runSteps {
-			lines = append(lines, m.theme.Muted.Render("  · "+s))
-		}
-		if m.flow.DryRun {
-			lines = append(lines, "",
-				m.theme.Success.Render("Finished generating the repo, no deployment will occur due to the --dry-run flag"),
-				m.theme.Muted.Render("Equivalent CLI: "+m.cli()),
+		} else {
+			lines = append(lines,
+				m.theme.Success.Render("✓ Finished generating the repo"),
+				m.theme.Muted.Render("Scroll logs below · enter Deploy · esc Plan"),
+				"",
 			)
-			return page.Panel(m.theme, "Done", lines, width, 14, true), "esc plan · ctrl+c quit"
 		}
-		lines = append(lines, "",
-			m.theme.Muted.Render("Enter to Deploy (terraform). Commit is prompted after management cluster apply."),
-			m.theme.Muted.Render("Equivalent CLI: "+m.cli()),
-		)
-		return page.Panel(m.theme, "Generated", lines, width, 16, true), "enter deploy · esc plan · ctrl+c quit"
+		lines = append(lines, m.opLogExportHint(width))
+		lines = append(lines, m.opLogScrollHint(width))
+		lines = append(lines, m.opLogLines(logN, width)...)
+		help := "↑/↓ scroll · e export · esc plan"
+		if m.runErr == nil && !m.flow.DryRun {
+			help = "↑/↓ scroll · e export · enter deploy · esc plan"
+		}
+		return page.Panel(m.theme, "Generate complete", lines, width, panelH, true), help
 	case modeDeploying:
+		panelH, logN := logPanelBudget(height, 4)
 		lines := []string{
 			m.spinner.View() + " " + m.theme.Muted.Render("Running Deploy (terraform / import / apps)…"),
 			"",
-			m.theme.Muted.Render("Terminal is released for terraform output (same as plural up)."),
-			m.theme.Muted.Render("After mgmt apply you will be asked for a git commit message, then apps continue."),
+			m.theme.Muted.Render("Terraform output streams below. Commit is prompted after mgmt apply."),
 			"",
 		}
-		if len(m.runSteps) == 0 {
-			lines = append(lines, m.theme.Muted.Render("Starting…"))
-		} else {
-			for _, s := range m.runSteps {
-				lines = append(lines, "  · "+s)
-			}
+		lines = append(lines, m.opLogLines(logN, width)...)
+		return page.Panel(m.theme, "Deploying", lines, width, panelH, true), "↑/↓ · pgup/pgdn scroll · end follow"
+	case modeDeployCommit:
+		panelH, logN := logPanelBudget(height, 6)
+		lines := []string{
+			m.theme.Muted.Render("==> Enter a commit message to push your configuration"),
+			m.theme.Muted.Render("Same checkpoint as plural up (after management terraform)."),
+			"",
+			"› Message",
+			"  " + m.formInput.View(),
+			"",
 		}
-		return page.Panel(m.theme, "Deploying", lines, width, 14, true), "please wait"
+		lines = append(lines, m.opLogLines(logN, width)...)
+		return page.Panel(m.theme, "Commit", lines, width, panelH, true), "enter continue · esc skip commit"
 	case modeComplete:
+		panelH, logN := logPanelBudget(height, 6)
 		lines := []string{}
 		if m.deployErr != nil {
 			lines = append(lines,
-				m.theme.Danger.Render("Deploy failed"),
+				m.theme.Danger.Render("Deploy failed — scroll logs below, then esc to retry"),
+				m.theme.Danger.Render(truncate(m.deployErr.Error(), max(20, width-4))),
 				"",
-				m.theme.Danger.Render(m.deployErr.Error()),
-				"",
-				m.theme.Muted.Render("Esc returns to Generated to retry Deploy."),
 			)
 		} else {
 			lines = append(lines,
 				m.theme.Success.Render("✓ Finished setting up your management cluster!"),
+				m.theme.Muted.Render("Scroll logs below · esc back"),
 				"",
 			)
-			if m.flow.Cloud {
-				lines = append(lines, "Console  "+m.cloudInstance.Name)
-			}
-			if m.provider.Title != "" {
-				lines = append(lines, "Provider "+m.provider.Title)
-			}
-			if m.commitMsg != "" {
-				lines = append(lines, "Commit   "+truncate(m.commitMsg, max(20, width-12)))
-			} else {
-				lines = append(lines, "Commit   (skipped)")
-			}
-			for _, s := range m.runSteps {
-				lines = append(lines, m.theme.Muted.Render("  · "+s))
-			}
-			if m.provider.ID == "byok" && m.flow.Cloud {
-				lines = append(lines, "",
-					m.theme.Muted.Render("BYOK cloud: configure IAM for plrl-deploy-operator/stacks"),
-					m.theme.Muted.Render("(operator reinstall not run from TUI yet)."),
-				)
-			} else {
-				lines = append(lines, "",
-					m.theme.Muted.Render("Use terraform as usual; gitops lives under bootstrap/."),
-				)
-			}
-			lines = append(lines, "",
-				m.theme.Muted.Render("Equivalent CLI"),
-				"  "+m.cli(),
-			)
 		}
-		return page.Panel(m.theme, "Complete", lines, width, 16, true), "esc back · ctrl+c quit"
+		lines = append(lines, m.opLogExportHint(width))
+		lines = append(lines, m.opLogScrollHint(width))
+		lines = append(lines, m.opLogLines(logN, width)...)
+		return page.Panel(m.theme, "Deploy complete", lines, width, panelH, true), "↑/↓ scroll · e export · esc back"
 	case modeCLITip:
 		lines := []string{
 			m.theme.Muted.Render(m.flow.Title + " is not fully wired in the TUI yet."),
@@ -338,7 +317,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		if m.consoleTokenMode {
 			lines := []string{
 				"Instance  " + m.cloudInstance.Name,
-				m.theme.Muted.Render("          "+truncate(m.cloudInstance.URL, max(20, width-12))),
+				m.theme.Muted.Render("          " + truncate(m.cloudInstance.URL, max(20, width-12))),
 				"",
 				m.theme.Muted.Render("Enter your console access token (plural cd login)."),
 				"",
@@ -353,7 +332,7 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		priorURL, _ := m.readPriorConsole()
 		lines := []string{
 			"Instance  " + m.cloudInstance.Name,
-			m.theme.Muted.Render("          "+truncate(m.cloudInstance.URL, max(20, width-12))),
+			m.theme.Muted.Render("          " + truncate(m.cloudInstance.URL, max(20, width-12))),
 			"",
 			m.theme.Muted.Render(fmt.Sprintf("You've already configured your console at %s,", truncate(priorURL, max(24, width-8)))),
 			m.theme.Muted.Render("continue using those credentials?"),
@@ -857,4 +836,112 @@ func (m Model) providerLines(width int) []string {
 		lines = append(lines, ansi.Truncate(row, max(1, width-2), "…"))
 	}
 	return lines
+}
+
+func (m Model) opLogLines(limit, width int) []string {
+	if limit <= 0 {
+		limit = 12
+	}
+	if len(m.opLog) == 0 {
+		return []string{m.theme.Muted.Render("Waiting for output…")}
+	}
+	wrapped := wrapOpLog(m.opLog, width)
+	start := m.opLogStart(limit, len(wrapped))
+	end := start + limit
+	if end > len(wrapped) {
+		end = len(wrapped)
+	}
+	out := make([]string, 0, end-start)
+	for _, line := range wrapped[start:end] {
+		out = append(out, m.theme.Muted.Render(line))
+	}
+	return out
+}
+
+// opLogInnerWidth is the text width inside a page.Panel (borders + padding).
+func opLogInnerWidth(panelWidth int) int {
+	return max(20, panelWidth-4)
+}
+
+func wrapOpLog(lines []string, width int) []string {
+	maxW := opLogInnerWidth(width)
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if line == "" {
+			out = append(out, "")
+			continue
+		}
+		out = append(out, strings.Split(ansi.Wrap(line, maxW, ""), "\n")...)
+	}
+	return out
+}
+
+func opLogContentWidth(termWidth int) int {
+	if termWidth <= 0 {
+		termWidth = page.DefaultWidth
+	}
+	return page.ContentWidth(termWidth)
+}
+
+func (m Model) opLogStart(limit, total int) int {
+	if total == 0 {
+		return 0
+	}
+	maxStart := max(0, total-limit)
+	if m.opLogFollow {
+		return maxStart
+	}
+	if m.opLogY < 0 {
+		return 0
+	}
+	if m.opLogY > maxStart {
+		return maxStart
+	}
+	return m.opLogY
+}
+
+func (m Model) opLogScrollHint(width int) string {
+	if len(m.opLog) == 0 {
+		return m.theme.Muted.Render("No log lines captured.")
+	}
+	limit := 12
+	if m.viewH > 0 {
+		_, limit = logPanelBudget(m.viewH, 5)
+	}
+	wrapped := wrapOpLog(m.opLog, width)
+	start := m.opLogStart(limit, len(wrapped))
+	end := min(len(wrapped), start+limit)
+	label := fmt.Sprintf("Logs  %d–%d / %d", start+1, end, len(wrapped))
+	if m.opLogFollow {
+		label += "  · following"
+	}
+	return m.theme.Muted.Render(ansi.Truncate(label, max(1, width-4), "…"))
+}
+
+func (m Model) opLogExportHint(width int) string {
+	if m.logExportErr != nil {
+		return m.theme.Danger.Render(ansi.Truncate("Could not save logs: "+m.logExportErr.Error()+" · e retry", max(1, width-4), "…"))
+	}
+	if m.logExportPath != "" {
+		return m.theme.Muted.Render(ansi.Truncate("Saved "+m.logExportPath+" · e to save again", max(1, width-4), "…"))
+	}
+	return m.theme.Muted.Render("e exports full logs to a file (ctrl+c quits the TUI)")
+}
+
+// logPanelBudget sizes the streaming log panel to fill most of the terminal.
+// chrome is the number of intro lines above the log (excluding panel borders).
+func logPanelBudget(termHeight, chrome int) (panelHeight, logLines int) {
+	// header (2) + blank (1) + help (1) + min separation (2)
+	panelHeight = termHeight - 6
+	if panelHeight < 18 {
+		panelHeight = 18
+	}
+	if chrome < 0 {
+		chrome = 0
+	}
+	logLines = panelHeight - 2 - chrome
+	if logLines < 12 {
+		logLines = 12
+	}
+	return panelHeight, logLines
 }

@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/samber/lo"
 
@@ -49,21 +51,25 @@ type DeployInput struct {
 	CloudCluster     string
 	ImportClusterID  string
 	IgnorePreflights bool
-	CommitMsg        string  // if set, used at commit checkpoint; empty + !PromptCommit skips
-	PromptCommit     bool    // survey for commit message mid-Deploy (CLI CommitMsg parity)
-	CommittedMsg     *string // optional out: final commit message used (may be empty if skipped)
+	CommitMsg        string        // if set, used at commit checkpoint; empty + !PromptCommit skips
+	PromptCommit     bool          // survey (or CommitPrompt) at commit checkpoint after mgmt terraform
+	CommitPrompt     func() string // optional; when set with PromptCommit, called instead of survey
+	CommittedMsg     *string       // optional out: final commit message used (may be empty if skipped)
+	Output           io.Writer     // optional; terraform + highlight output (TUI log capture)
 }
 
 // DestroyInput tears down the management cluster (plural down).
 type DestroyInput struct {
-	Cloud bool
+	Cloud  bool
+	Output io.Writer // optional; terraform output (TUI log capture)
 }
 
 // RunInput is the Plan → Flush + Generate pipeline.
 type RunInput struct {
 	Flush     FlushInput
 	Generate  GenerateInput
-	SkipFlush bool // true when workspace.yaml already exists (CLI ensureWorkspace path)
+	SkipFlush bool      // true when workspace.yaml already exists (CLI ensureWorkspace path)
+	Output    io.Writer // optional; generation-related stdout (TUI log capture)
 }
 
 // RunResult carries values needed for a later Deploy step.
@@ -89,102 +95,135 @@ func DefaultRunner() Runner { return LiveRunner{} }
 
 // Run flushes the workspace, resolves ImportCluster when cloud, then generates.
 func (LiveRunner) Run(ctx context.Context, in RunInput, progress ProgressFunc) (RunResult, error) {
-	report := progress
-	if report == nil {
-		report = func(string) {}
-	}
-	var result RunResult
-
-	if in.SkipFlush {
-		report("Skipping workspace.yaml write (already initialized)…")
-	} else {
-		report("Writing workspace.yaml…")
-		if err := FlushWorkspace(ctx, in.Flush); err != nil {
-			return result, err
+	return withCommandOutput(in.Output, func() (RunResult, error) {
+		report := progress
+		if report == nil {
+			report = func(string) {}
 		}
-	}
+		var result RunResult
 
-	gen := in.Generate
-	if gen.Cloud && gen.ImportClusterID == "" {
-		report("Resolving management cluster (ImportCluster)…")
-		id, err := ResolveImportCluster(ctx)
-		if err != nil {
-			return result, err
+		if in.SkipFlush {
+			report("Skipping workspace.yaml write (already initialized)…")
+		} else {
+			report("Writing workspace.yaml…")
+			if err := FlushWorkspace(ctx, in.Flush); err != nil {
+				return result, err
+			}
 		}
-		gen.ImportClusterID = id
-	}
-	result.ImportClusterID = gen.ImportClusterID
 
-	report("Generating bootstrap / terraform…")
-	return result, GenerateWorkspace(ctx, gen)
+		gen := in.Generate
+		if gen.Cloud && gen.ImportClusterID == "" {
+			report("Resolving management cluster (ImportCluster)…")
+			id, err := ResolveImportCluster(ctx)
+			if err != nil {
+				return result, err
+			}
+			gen.ImportClusterID = id
+		}
+		result.ImportClusterID = gen.ImportClusterID
+
+		report("Generating bootstrap / terraform…")
+		return result, GenerateWorkspace(ctx, gen)
+	})
 }
 
 // Deploy runs up.Context.Deploy (CreateBucket / terraform / commit / apps).
 func (LiveRunner) Deploy(ctx context.Context, in DeployInput, progress ProgressFunc) error {
-	report := progress
-	if report == nil {
-		report = func(string) {}
-	}
+	return withCommandOutputErr(in.Output, func() error {
+		report := progress
+		if report == nil {
+			report = func(string) {}
+		}
 
-	provider.SetCloudFlag(in.Cloud)
-	report("Building deploy context…")
-	upCtx, err := pkgup.Build(in.Cloud)
-	if err != nil {
-		return err
-	}
-	upCtx.IgnorePreflights(in.IgnorePreflights)
-
-	if in.Cloud {
-		id := in.ImportClusterID
-		if id == "" {
-			report("Resolving management cluster (ImportCluster)…")
-			id, err = ResolveImportCluster(ctx)
-			if err != nil {
-				return err
-			}
-		}
-		upCtx.SetImportCluster(id)
-		upCtx.CloudCluster = in.CloudCluster
-	}
-
-	report("Deploying management cluster…")
-	return upCtx.Deploy(func() error {
-		msg := strings.TrimSpace(in.CommitMsg)
-		if msg == "" && in.PromptCommit {
-			report("Commit checkpoint — enter a commit message…")
-			msg = promptCommitMessage()
-		}
-		if in.CommittedMsg != nil {
-			*in.CommittedMsg = msg
-		}
-		if msg == "" {
-			report("Skipping git commit (empty message)…")
-			return nil
-		}
-		report("Pushing git commit…")
-		root, err := git.Root()
+		provider.SetCloudFlag(in.Cloud)
+		report("Building deploy context…")
+		upCtx, err := pkgup.Build(in.Cloud)
 		if err != nil {
 			return err
 		}
-		return git.Sync(root, msg, false)
+		upCtx.IgnorePreflights(in.IgnorePreflights)
+
+		if in.Cloud {
+			id := in.ImportClusterID
+			if id == "" {
+				report("Resolving management cluster (ImportCluster)…")
+				id, err = ResolveImportCluster(ctx)
+				if err != nil {
+					return err
+				}
+			}
+			upCtx.SetImportCluster(id)
+			upCtx.CloudCluster = in.CloudCluster
+		}
+
+		report("Deploying management cluster…")
+		return upCtx.Deploy(func() error {
+			msg := strings.TrimSpace(in.CommitMsg)
+			if msg == "" && in.PromptCommit {
+				report("Commit checkpoint — enter a commit message…")
+				if in.CommitPrompt != nil {
+					msg = strings.TrimSpace(in.CommitPrompt())
+				} else {
+					msg = promptCommitMessage()
+				}
+			}
+			if in.CommittedMsg != nil {
+				*in.CommittedMsg = msg
+			}
+			if msg == "" {
+				report("Skipping git commit (empty message)…")
+				return nil
+			}
+			report("Pushing git commit…")
+			root, err := git.Root()
+			if err != nil {
+				return err
+			}
+			return git.Sync(root, msg, false)
+		})
 	})
 }
 
 // Destroy tears down the management cluster (plural down).
 func (LiveRunner) Destroy(ctx context.Context, in DestroyInput, progress ProgressFunc) error {
 	_ = ctx
-	report := func(step string) {
-		if progress != nil {
-			progress(step)
+	return withCommandOutputErr(in.Output, func() error {
+		report := func(step string) {
+			if progress != nil {
+				progress(step)
+			}
 		}
+		report("Building destroy context…")
+		upCtx, err := pkgup.Build(in.Cloud)
+		if err != nil {
+			return err
+		}
+		report("Destroying management cluster terraform…")
+		return upCtx.Destroy()
+	})
+}
+
+func withCommandOutput[T any](w io.Writer, fn func() (T, error)) (T, error) {
+	if w == nil {
+		return fn()
 	}
-	report("Building destroy context…")
-	upCtx, err := pkgup.Build(in.Cloud)
-	if err != nil {
-		return err
-	}
-	report("Destroying management cluster terraform…")
-	return upCtx.Destroy()
+	prevOut, prevErr := color.Output, color.Error
+	pkgup.SetCommandOutput(w, w)
+	color.Output = w
+	color.Error = w
+	defer func() {
+		pkgup.SetCommandOutput(nil, nil)
+		color.Output = prevOut
+		color.Error = prevErr
+	}()
+	return fn()
+}
+
+func withCommandOutputErr(w io.Writer, fn func() error) error {
+	_, err := withCommandOutput(w, func() (struct{}, error) {
+		return struct{}{}, fn()
+	})
+	return err
 }
 
 // FlushWorkspace builds ProjectManifest from survey values and writes workspace.yaml.

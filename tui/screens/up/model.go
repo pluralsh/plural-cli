@@ -13,6 +13,7 @@ import (
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/tui/components/oplog"
 	pluralspinner "github.com/pluralsh/plural-cli/tui/components/spinner"
 	"github.com/pluralsh/plural-cli/tui/navigation"
 	"github.com/pluralsh/plural-cli/tui/theme"
@@ -29,22 +30,23 @@ const (
 	modeSelectProvider
 	modeProbing
 	modeProviderForm
-	modeRunPreflights  // provider.Preflights() after survey
-	modeIgnoreContinue // failed check + --ignore-preflights → Enter to continue
-	modeBucketPrefix   // self-hosted Configure bucket naming
+	modeRunPreflights   // provider.Preflights() after survey
+	modeIgnoreContinue  // failed check + --ignore-preflights → Enter to continue
+	modeBucketPrefix    // self-hosted Configure bucket naming
 	modePluralSubdomain // self-hosted ConfigureNetwork onplural.sh
-	modeAlreadyInit    // workspace.yaml present — skip provider/git init
-	modeEnsuringInit   // ensureWorkspace (domain / branch / gitignore)
-	modeSetupGit       // CLI Affirm: setup git repo here? (Y/n)
-	modeSelectSCM      // scm.Setup: github / gitlab / bitbucket
-	modeSCMSetup       // tea.Exec: device login + create + clone
-	modeAppDomain      // askAppDomain parity
-	modeAffirmDeploy   // common.AffirmUp before deploy
-	modeSelected       // Plan summary
-	modeRunning        // Flush + Generate
-	modeDone           // generate finished (or failed)
-	modeDeploying      // up.Context.Deploy (commit prompt mid-Deploy at checkpoint)
-	modeComplete       // deploy finished
+	modeAlreadyInit     // workspace.yaml present — skip provider/git init
+	modeEnsuringInit    // ensureWorkspace (domain / branch / gitignore)
+	modeSetupGit        // CLI Affirm: setup git repo here? (Y/n)
+	modeSelectSCM       // scm.Setup: github / gitlab / bitbucket
+	modeSCMSetup        // tea.Exec: device login + create + clone
+	modeAppDomain       // askAppDomain parity
+	modeAffirmDeploy    // common.AffirmUp before deploy
+	modeSelected        // Plan summary
+	modeRunning         // Flush + Generate
+	modeDone            // generate finished (or failed)
+	modeDeploying       // up.Context.Deploy (commit prompt mid-Deploy at checkpoint)
+	modeDeployCommit    // mid-Deploy commit message (TUI textinput; deploy goroutine blocked)
+	modeComplete        // deploy finished
 	modeCLITip
 )
 
@@ -56,6 +58,11 @@ const (
 	keyActionDown
 	keyActionConfirm
 	keyActionBack
+	keyActionPgUp
+	keyActionPgDown
+	keyActionHome
+	keyActionEnd
+	keyActionExport
 )
 
 var keyActionKeystrokes = map[keyAction]string{
@@ -63,6 +70,11 @@ var keyActionKeystrokes = map[keyAction]string{
 	keyActionDown:    "down",
 	keyActionConfirm: "enter",
 	keyActionBack:    "esc",
+	keyActionPgUp:    "pgup",
+	keyActionPgDown:  "pgdown",
+	keyActionHome:    "home",
+	keyActionEnd:     "end",
+	keyActionExport:  "e",
 }
 
 func actionForKeystroke(keystroke string) keyAction {
@@ -206,6 +218,16 @@ type Model struct {
 	importClusterID  string
 	commitMsg        string
 	deployErr        error
+	opLog            []string    // terraform / generate lines shown in-TUI
+	opLogCh          chan string // active stream (nil when idle)
+	opLogY           int         // first visible log line when not following
+	opLogFollow      bool        // stick to bottom while streaming / after End
+	viewH            int         // last known terminal height (for scroll window)
+	viewW            int         // last known terminal width (for wrap-aware scroll)
+	commitGate       *commitGate // mid-deploy commit prompt bridge
+	exportDir        string      // tests; empty uses cwd
+	logExportPath    string
+	logExportErr     error
 
 	formInput     textinput.Model
 	formFields    []upbridge.FormField
@@ -259,6 +281,7 @@ func NewWithProber(ctx context.Context, t theme.Theme, prober upbridge.Prober) M
 		gitChecker:     upbridge.InGitRepo,
 		instanceLister: upbridge.DefaultInstanceLister(),
 		runner:         upbridge.DefaultRunner(),
+		opLogFollow:    true,
 		priorConsole: func() (string, string) {
 			c := upbridge.ReadPriorConsole()
 			return c.Url, c.Token
@@ -291,6 +314,23 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m.applySCMDone(msg)
 	case ensureInitMsg:
 		return m.applyEnsureInit(msg)
+	case opLogLineMsg:
+		m.opLog = appendOpLog(m.opLog, msg.line)
+		if m.opLogCh != nil {
+			return m, tea.Batch(m.spinner.Tick, listenOpLog(m.opLogCh))
+		}
+		return m, nil
+	case tea.WindowSizeMsg:
+		m.viewH = msg.Height
+		m.viewW = msg.Width
+		return m, nil
+	case commitNeededMsg:
+		m.mode = modeDeployCommit
+		m.formInput.SetValue("")
+		m.formInput.Placeholder = "commit message (empty to skip)"
+		m.formInput.Focus()
+		m.err = nil
+		return m, nil
 	case spinner.TickMsg:
 		if m.mode != modeProbing && m.mode != modeAppDomain && m.mode != modeRunPreflights && m.mode != modeLoadInstances && m.mode != modeRunning && m.mode != modeDeploying && m.mode != modeSCMSetup && m.mode != modeEnsuringInit {
 			return m, nil
@@ -324,7 +364,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.formInput, cmd = m.formInput.Update(msg)
 				return m, cmd
 			}
-		case modeBucketPrefix, modePluralSubdomain:
+		case modeBucketPrefix, modePluralSubdomain, modeDeployCommit:
 			var cmd tea.Cmd
 			m.formInput, cmd = m.formInput.Update(msg)
 			return m, cmd
@@ -336,11 +376,21 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch m.mode {
 	case modeSelected:
 		return m.updateSelected(action)
-	case modeRunning, modeDeploying, modeSCMSetup, modeEnsuringInit:
-		return m, nil // ignore keys while running / SCM oauth / ensure
+	case modeRunning, modeDeploying:
+		return m.updateOpLogScroll(action)
+	case modeSCMSetup, modeEnsuringInit:
+		return m, nil // ignore keys while SCM oauth / ensure
+	case modeDeployCommit:
+		return m.updateDeployCommit(action, key)
 	case modeDone:
+		if m.handleOpLogScroll(action) {
+			return m, nil
+		}
 		return m.updateDone(action)
 	case modeComplete:
+		if m.handleOpLogScroll(action) {
+			return m, nil
+		}
 		return m.updateComplete(action)
 	case modeIgnoreContinue:
 		return m.updateIgnoreContinue(action)
@@ -758,6 +808,14 @@ func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
 		m.mode = modeSelected
 		m.runErr = nil
 		m.runSteps = nil
+		m.opLog = nil
+		m.opLogFollow = true
+		m.opLogY = 0
+		m.logExportPath = ""
+		m.logExportErr = nil
+		return m, nil
+	case keyActionExport:
+		m.saveLogs("up-generate")
 		return m, nil
 	case keyActionConfirm:
 		if m.runErr != nil || m.flow.DryRun {
@@ -770,6 +828,10 @@ func (m Model) updateDone(action keyAction) (Model, tea.Cmd) {
 }
 
 func (m Model) updateComplete(action keyAction) (Model, tea.Cmd) {
+	if action == keyActionExport {
+		m.saveLogs("up-deploy")
+		return m, nil
+	}
 	if action == keyActionBack {
 		m.mode = modeDone
 		m.deployErr = nil
@@ -778,30 +840,102 @@ func (m Model) updateComplete(action keyAction) (Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m Model) updateOpLogScroll(action keyAction) (Model, tea.Cmd) {
+	m.handleOpLogScroll(action)
+	return m, nil
+}
+
+// handleOpLogScroll updates scroll state. Returns true if the action was a scroll key.
+func (m *Model) handleOpLogScroll(action keyAction) bool {
+	window := m.opLogWindow()
+	switch action {
+	case keyActionUp:
+		m.scrollOpLog(-1, window)
+		return true
+	case keyActionDown:
+		m.scrollOpLog(1, window)
+		return true
+	case keyActionPgUp:
+		m.scrollOpLog(-window, window)
+		return true
+	case keyActionPgDown:
+		m.scrollOpLog(window, window)
+		return true
+	case keyActionHome:
+		m.opLogFollow = false
+		m.opLogY = 0
+		return true
+	case keyActionEnd:
+		m.opLogFollow = true
+		return true
+	}
+	return false
+}
+
+func (m Model) opLogWindow() int {
+	_, n := logPanelBudget(m.viewH, 4)
+	return n
+}
+
+func (m *Model) scrollOpLog(delta, window int) {
+	if window <= 0 {
+		window = 20
+	}
+	total := len(wrapOpLog(m.opLog, opLogContentWidth(m.viewW)))
+	maxStart := max(0, total-window)
+	if m.opLogFollow {
+		m.opLogY = maxStart
+	}
+	m.opLogFollow = false
+	m.opLogY += delta
+	if m.opLogY < 0 {
+		m.opLogY = 0
+	}
+	if m.opLogY >= maxStart {
+		m.opLogY = maxStart
+		m.opLogFollow = true
+	}
+}
+
 func (m Model) beginDeploy() (Model, tea.Cmd) {
 	m.mode = modeDeploying
 	m.deployErr = nil
 	m.runSteps = nil
+	m.opLog = nil
+	m.opLogFollow = true
+	m.opLogY = 0
+	m.logExportPath = ""
+	m.logExportErr = nil
 	m.err = nil
 	m.commitMsg = ""
 	runner := m.runner
 	if runner == nil {
 		runner = upbridge.DefaultRunner()
 	}
-	live := shouldExecDeploy(runner)
+	live := shouldStreamLiveRunner(runner)
 	in := upbridge.DeployInput{
 		Cloud:            m.flow.Cloud,
 		CloudCluster:     m.cloudInstance.Name,
 		ImportClusterID:  m.importClusterID,
 		IgnorePreflights: m.ignorePreflights || m.flow.DryRun,
-		PromptCommit:     live, // survey at commit checkpoint after mgmt terraform
+		CommitMsg:        m.commitMsg,
+		PromptCommit:     false,
 	}
 	ctx := m.ctx
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	if live {
-		return m, deployExecCmd(ctx, runner, in)
+		lines := make(chan string, 256)
+		gate := newCommitGate()
+		m.opLogCh = lines
+		m.commitGate = gate
+		return m, tea.Batch(
+			m.spinner.Tick,
+			deployStreamCmd(ctx, runner, in, lines, gate),
+			listenOpLog(lines),
+			listenCommitRequest(gate),
+		)
 	}
 	return m, tea.Batch(m.spinner.Tick, m.deployCmd())
 }
@@ -833,9 +967,12 @@ func (m Model) deployCmd() tea.Cmd {
 }
 
 func (m Model) applyDeployDone(msg deployDoneMsg) (Model, tea.Cmd) {
-	if m.mode != modeDeploying {
+	if m.mode != modeDeploying && m.mode != modeDeployCommit {
 		return m, nil
 	}
+	m.opLogCh = nil
+	m.commitGate = nil
+	m.formInput.Blur()
 	if len(msg.steps) > 0 {
 		m.runSteps = msg.steps
 	}
@@ -844,12 +981,42 @@ func (m Model) applyDeployDone(msg deployDoneMsg) (Model, tea.Cmd) {
 	}
 	m.deployErr = msg.err
 	m.mode = modeComplete
+	m.opLogFollow = true
 	if msg.err != nil {
 		m.err = msg.err
+		m.saveLogs("up-deploy")
 	} else {
 		m.err = nil
 	}
 	return m, nil
+}
+
+func (m Model) updateDeployCommit(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {
+	switch action {
+	case keyActionConfirm:
+		msg := strings.TrimSpace(m.formInput.Value())
+		m.commitMsg = msg
+		m.formInput.Blur()
+		m.mode = modeDeploying
+		gate := m.commitGate
+		if gate != nil {
+			go func() { gate.reply <- msg }()
+		}
+		return m, tea.Batch(m.spinner.Tick, listenCommitRequest(gate))
+	case keyActionBack:
+		// empty commit = skip (same as CLI empty message)
+		m.formInput.SetValue("")
+		m.formInput.Blur()
+		m.mode = modeDeploying
+		gate := m.commitGate
+		if gate != nil {
+			go func() { gate.reply <- "" }()
+		}
+		return m, tea.Batch(m.spinner.Tick, listenCommitRequest(gate))
+	}
+	var cmd tea.Cmd
+	m.formInput, cmd = m.formInput.Update(key)
+	return m, cmd
 }
 
 func (m Model) beginRun() (Model, tea.Cmd) {
@@ -861,6 +1028,9 @@ func (m Model) beginRun() (Model, tea.Cmd) {
 	m.runErr = nil
 	m.deployErr = nil
 	m.runSteps = nil
+	m.opLog = nil
+	m.opLogFollow = true
+	m.opLogY = 0
 	m.importClusterID = ""
 	m.mode = modeRunning
 
@@ -888,8 +1058,10 @@ func (m Model) beginRun() (Model, tea.Cmd) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if shouldExecLiveRunner(runner) {
-		return m, runExecCmd(ctx, runner, in)
+	if shouldStreamLiveRunner(runner) {
+		lines := make(chan string, 256)
+		m.opLogCh = lines
+		return m, tea.Batch(m.spinner.Tick, runStreamCmd(ctx, runner, in, lines), listenOpLog(lines))
 	}
 	return m, tea.Batch(m.spinner.Tick, m.runCmd())
 }
@@ -932,18 +1104,31 @@ func (m Model) applyRunDone(msg runDoneMsg) (Model, tea.Cmd) {
 	if m.mode != modeRunning {
 		return m, nil
 	}
+	m.opLogCh = nil
 	if len(msg.steps) > 0 {
 		m.runSteps = msg.steps
 	}
 	m.importClusterID = msg.importClusterID
 	m.runErr = msg.err
 	m.mode = modeDone
+	m.opLogFollow = true // jump to end so latest output is visible
 	if msg.err != nil {
 		m.err = msg.err
+		m.saveLogs("up-generate")
 	} else {
 		m.err = nil
 	}
 	return m, nil
+}
+
+func (m *Model) saveLogs(kind string) {
+	runErr := m.runErr
+	if kind == "up-deploy" {
+		runErr = m.deployErr
+	}
+	path, err := oplog.Write(m.exportDir, kind, m.opLog, runErr)
+	m.logExportPath = path
+	m.logExportErr = err
 }
 
 func (m Model) updateSetupGit(action keyAction, key tea.KeyPressMsg) (Model, tea.Cmd) {

@@ -2,6 +2,7 @@ package up
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,6 +80,7 @@ func testModel(t *testing.T) Model {
 	}
 	model.hasWorkspace = func() bool { return false }
 	model.ensureWorkspace = func() error { return nil }
+	model.exportDir = t.TempDir()
 	return model
 }
 
@@ -99,6 +101,7 @@ func testModelOutsideGit(t *testing.T, prober upbridge.Prober) Model {
 	}
 	model.hasWorkspace = func() bool { return false }
 	model.ensureWorkspace = func() error { return nil }
+	model.exportDir = t.TempDir()
 	return model
 }
 
@@ -665,7 +668,7 @@ func TestDryRunSkipsDomainAffirmAndStopsAfterGenerate(t *testing.T) {
 	if len(runner.calls) != 1 || !runner.calls[0].Generate.IgnorePreflights {
 		t.Fatalf("run = %#v", runner.calls)
 	}
-	if !strings.Contains(model.View(80, 24), "no deployment will occur") {
+	if !strings.Contains(model.View(80, 24), "no Deploy will run") {
 		t.Fatalf("done view:\n%s", model.View(80, 24))
 	}
 	// Enter must not start Deploy on dry-run.
@@ -761,6 +764,9 @@ func TestPlanRunErrorShowsDone(t *testing.T) {
 	if !strings.Contains(model.View(80, 24), "Generate failed") {
 		t.Fatalf("view:\n%s", model.View(80, 24))
 	}
+	if model.logExportPath == "" {
+		t.Fatal("expected auto-export on generate error")
+	}
 }
 
 func TestCloudPlanRunPassesCloudFlags(t *testing.T) {
@@ -839,6 +845,89 @@ func TestDeployErrorShowsComplete(t *testing.T) {
 	}
 	if !strings.Contains(model.View(80, 24), "Deploy failed") {
 		t.Fatalf("view:\n%s", model.View(80, 24))
+	}
+	if model.logExportPath == "" {
+		t.Fatal("expected auto-export on deploy error")
+	}
+	// Stay on complete until esc so logs remain reviewable.
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeComplete {
+		t.Fatalf("enter must not leave failed complete, mode=%d", model.mode)
+	}
+}
+
+func TestOpLogScrollOnDone(t *testing.T) {
+	model := testModel(t)
+	model.mode = modeDone
+	model.viewH = 24
+	model.opLogFollow = true
+	for i := 0; i < 40; i++ {
+		model.opLog = append(model.opLog, fmt.Sprintf("line-%02d", i))
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyHome})
+	if model.opLogFollow || model.opLogY != 0 {
+		t.Fatalf("home: follow=%v y=%d", model.opLogFollow, model.opLogY)
+	}
+	if start := model.opLogStart(12, 40); start != 0 {
+		t.Fatalf("home start=%d", start)
+	}
+	before := model.opLogY
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	if model.opLogY <= before {
+		t.Fatalf("pgdown should advance y: before=%d after=%d", before, model.opLogY)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnd})
+	if !model.opLogFollow {
+		t.Fatal("end should follow")
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+	if model.opLogFollow {
+		t.Fatal("up should stop follow")
+	}
+	view := model.View(80, 24)
+	if !strings.Contains(view, "line-") {
+		t.Fatalf("expected scrollable logs in view:\n%s", view)
+	}
+}
+
+func TestDoneKeepsLogsUntilContinue(t *testing.T) {
+	model := selectAWSForm(t)
+	model.formInput.SetValue("demo")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = finishToSelected(t, model)
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model = drainRun(t, model, nil)
+	if model.mode != modeDone {
+		t.Fatalf("mode=%d", model.mode)
+	}
+	model.opLog = []string{"alpha-log", "beta-log", "gamma-log"}
+	view := model.View(80, 24)
+	if !strings.Contains(view, "Finished generating") || !strings.Contains(view, "alpha-log") {
+		t.Fatalf("done should keep logs visible:\n%s", view)
+	}
+	// Arrow scroll must not advance to Deploy.
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+	if model.mode != modeDone {
+		t.Fatalf("scroll left mode=%d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeDeploying {
+		t.Fatalf("enter should start deploy, mode=%d", model.mode)
+	}
+}
+
+func TestOpLogLinesUsePanelWidth(t *testing.T) {
+	model := testModel(t)
+	model.mode = modeDone
+	long := strings.Repeat("abcdefghij", 20)
+	model.opLog = []string{long}
+	view := ansi.Strip(model.View(160, 24))
+	if !strings.Contains(view, strings.Repeat("abcdefghij", 12)) {
+		t.Fatalf("expected wrapped log to keep the start of the line, got:\n%s", view)
+	}
+	if !strings.Contains(view, long[len(long)-40:]) {
+		t.Fatalf("expected long log line to wrap instead of truncate, got:\n%s", view)
 	}
 }
 
