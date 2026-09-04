@@ -33,10 +33,16 @@ func (*fakeAuthClient) GrabAccessToken(context.Context) (string, error) {
 	return "access-token", nil
 }
 
-type memoryAccessRepository struct{ state State }
+type memoryAccessRepository struct {
+	state   State
+	saveErr error
+}
 
 func (r *memoryAccessRepository) Load(context.Context) (State, error) { return r.state, nil }
 func (r *memoryAccessRepository) Save(_ context.Context, state State) error {
+	if r.saveErr != nil {
+		return r.saveErr
+	}
 	r.state = state
 	return nil
 }
@@ -132,6 +138,56 @@ func TestActiveConsolePrefersRegistryThenLegacy(t *testing.T) {
 	_, _, err = empty.ActiveConsole(t.Context())
 	if !bridge.IsCode(err, bridge.ErrorUnauthenticated) {
 		t.Fatalf("missing console error = %v", err)
+	}
+}
+
+func TestCompleteDeviceLoginSaveFailureRestoresExistingCredential(t *testing.T) {
+	profileID := stableID("app", "personal", "dev@example.com", "app.plural.sh")
+	repository := &memoryAccessRepository{
+		state: State{
+			Profiles:        []Profile{{ID: profileID, Name: "personal", Email: "dev@example.com", Endpoint: "app.plural.sh"}},
+			ActiveProfileID: profileID,
+		},
+		saveErr: errors.New("disk full"),
+	}
+	credentials := &memoryCredentials{values: map[string]string{profileID: "old-token"}}
+	service := NewService(repository, credentials, bridge.NewAuthService(fakeAuthFactory{&fakeAuthClient{}}, time.Millisecond), nil)
+	if _, err := service.CompleteDeviceLogin(t.Context(), "personal", DeviceAuthorization{DeviceToken: "device"}, "app.plural.sh"); err == nil {
+		t.Fatal("CompleteDeviceLogin() expected save error")
+	}
+	if credentials.values[profileID] != "old-token" {
+		t.Fatalf("credential = %q, want restored old-token", credentials.values[profileID])
+	}
+}
+
+func TestCompleteDeviceLoginSaveFailureDropsNewCredential(t *testing.T) {
+	repository := &memoryAccessRepository{saveErr: errors.New("disk full")}
+	credentials := &memoryCredentials{}
+	service := NewService(repository, credentials, bridge.NewAuthService(fakeAuthFactory{&fakeAuthClient{}}, time.Millisecond), nil)
+	if _, err := service.CompleteDeviceLogin(t.Context(), "personal", DeviceAuthorization{DeviceToken: "device"}, "app.plural.sh"); err == nil {
+		t.Fatal("CompleteDeviceLogin() expected save error")
+	}
+	if len(credentials.values) != 0 {
+		t.Fatalf("new credential was not rolled back: %#v", credentials.values)
+	}
+}
+
+func TestAddConsoleProfileSaveFailureRestoresExistingCredential(t *testing.T) {
+	profileID := stableID("console", "production", "https://console.example.com")
+	repository := &memoryAccessRepository{
+		state: State{
+			ConsoleProfiles: []ConsoleProfile{{ID: profileID, Name: "production", URL: "https://console.example.com"}},
+			ActiveConsoleID: profileID,
+		},
+		saveErr: errors.New("disk full"),
+	}
+	credentials := &memoryCredentials{values: map[string]string{profileID: "old-token"}}
+	service := NewService(repository, credentials, nil, nil)
+	if _, err := service.AddConsoleProfile(t.Context(), "production", "https://console.example.com", "new-token"); err == nil {
+		t.Fatal("AddConsoleProfile() expected save error")
+	}
+	if credentials.values[profileID] != "old-token" {
+		t.Fatalf("credential = %q, want restored old-token", credentials.values[profileID])
 	}
 }
 

@@ -127,6 +127,54 @@ func TestConsoleTokenIsMasked(t *testing.T) {
 	}
 }
 
+func TestReloadClampsCursors(t *testing.T) {
+	model := New(t.Context(), &fakeManager{}, theme.New(colorprofile.ASCII))
+	model.appCursor = 5
+	model.consoleCursor = 3
+	model, _ = model.Update(loadedMsg{snapshot: accessbridge.Snapshot{State: accessbridge.State{
+		Profiles:        []accessbridge.Profile{{ID: "app-a"}, {ID: "app-b"}},
+		ConsoleProfiles: []accessbridge.ConsoleProfile{{ID: "console-a"}},
+	}}})
+	if model.appCursor != 0 {
+		t.Fatalf("appCursor = %d after shorter reload, want 0", model.appCursor)
+	}
+	if model.consoleCursor != 0 {
+		t.Fatalf("consoleCursor = %d after shorter reload, want 0", model.consoleCursor)
+	}
+	_, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("confirm after reload produced no command")
+	}
+	cmd()
+}
+
+func TestPreviousPanelMovesBackward(t *testing.T) {
+	manager := &fakeManager{snapshot: accessbridge.Snapshot{State: accessbridge.State{
+		Profiles:        []accessbridge.Profile{{ID: "app-a"}},
+		ConsoleProfiles: []accessbridge.ConsoleProfile{{ID: "console-a"}},
+	}}}
+	model := loadedModel(t, manager)
+	if model.panel != 0 {
+		t.Fatalf("initial panel = %d", model.panel)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyTab})
+	if model.panel != 1 {
+		t.Fatalf("tab panel = %d, want 1", model.panel)
+	}
+	shiftTab := tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift}
+	if shiftTab.Keystroke() != "shift+tab" {
+		t.Fatalf("shift+tab keystroke = %q", shiftTab.Keystroke())
+	}
+	model, _ = model.Update(shiftTab)
+	if model.panel != 0 {
+		t.Fatalf("shift+tab panel = %d, want 0", model.panel)
+	}
+	model, _ = model.Update(shiftTab)
+	if model.panel != 1 {
+		t.Fatalf("shift+tab wrap panel = %d, want 1", model.panel)
+	}
+}
+
 func TestDeviceLoginCanBeCancelledBeforeGlobalQuit(t *testing.T) {
 	model := loadedModel(t, &fakeManager{})
 	model, _ = model.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})

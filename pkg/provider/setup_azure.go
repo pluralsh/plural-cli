@@ -21,28 +21,28 @@ func (azureSetup) Schema() []SetupField {
 func (s azureSetup) Probe(ctx context.Context) (SetupResult, error) {
 	subID, tenID, subName, err := GetAzureAccount()
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure login (az account show): %w", err)
+		return SetupResult{}, fmt.Errorf("azure login (az account show): %w", err)
 	}
 	user, err := GetAzureUser()
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure user (az ad signed-in-user show): %w", err)
+		return SetupResult{}, fmt.Errorf("azure user (az ad signed-in-user show): %w", err)
 	}
 	clients, err := GetClientSet(subID)
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure clients: %w", err)
+		return SetupResult{}, fmt.Errorf("azure clients: %w", err)
 	}
 
 	locations, err := AzureLocations(ctx, clients.Subscriptions, subID)
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure locations: %w", err)
+		return SetupResult{}, fmt.Errorf("azure locations: %w", err)
 	}
 	groups, err := AzureResourceGroupChoices(ctx, clients.Groups)
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure resource groups: %w", err)
+		return SetupResult{}, fmt.Errorf("azure resource groups: %w", err)
 	}
 	accounts, err := AzureStorageAccountChoices(ctx, clients.Accounts)
 	if err != nil {
-		return SetupResult{}, fmt.Errorf("Azure storage accounts: %w", err)
+		return SetupResult{}, fmt.Errorf("azure storage accounts: %w", err)
 	}
 
 	fields := s.Schema()
@@ -58,6 +58,9 @@ func (s azureSetup) Probe(ctx context.Context) (SetupResult, error) {
 }
 
 func (azureSetup) Options(ctx context.Context, fieldKey string, _ map[string]string) ([]string, error) {
+	if fieldKey != "location" && fieldKey != "resourceGroup" && fieldKey != "storageAccount" {
+		return nil, nil
+	}
 	subID, _, _, err := GetAzureAccount()
 	if err != nil {
 		return nil, err
@@ -71,10 +74,8 @@ func (azureSetup) Options(ctx context.Context, fieldKey string, _ map[string]str
 		return AzureLocations(ctx, clients.Subscriptions, subID)
 	case "resourceGroup":
 		return AzureResourceGroupChoices(ctx, clients.Groups)
-	case "storageAccount":
-		return AzureStorageAccountChoices(ctx, clients.Accounts)
 	default:
-		return nil, nil
+		return AzureStorageAccountChoices(ctx, clients.Accounts)
 	}
 }
 

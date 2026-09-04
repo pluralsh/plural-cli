@@ -121,17 +121,19 @@ func (s *Service) CompleteDeviceLogin(ctx context.Context, name string, authoriz
 	if profile.Name == "" {
 		profile.Name = "default"
 	}
-	if err := s.credentials.Set(ctx, profile.ID, session.Credential); err != nil {
+	rollback, err := s.replaceCredential(ctx, profile.ID, session.Credential)
+	if err != nil {
 		return Profile{}, err
 	}
 	state, err := s.repository.Load(ctx)
 	if err != nil {
+		rollback()
 		return Profile{}, err
 	}
 	state.Profiles = upsertProfile(state.Profiles, profile)
 	state.ActiveProfileID = profile.ID
 	if err := s.repository.Save(ctx, state); err != nil {
-		_ = s.credentials.Delete(ctx, profile.ID)
+		rollback()
 		return Profile{}, err
 	}
 	s.StopImpersonating()
@@ -148,19 +150,21 @@ func (s *Service) AddConsoleProfile(ctx context.Context, name, rawURL, token str
 		profile.Name = "default"
 	}
 	if strings.TrimSpace(token) == "" {
-		return ConsoleProfile{}, errors.New("Console token is required")
+		return ConsoleProfile{}, errors.New("console token is required")
 	}
-	if err := s.credentials.Set(ctx, profile.ID, token); err != nil {
+	rollback, err := s.replaceCredential(ctx, profile.ID, token)
+	if err != nil {
 		return ConsoleProfile{}, err
 	}
 	state, err := s.repository.Load(ctx)
 	if err != nil {
+		rollback()
 		return ConsoleProfile{}, err
 	}
 	state.ConsoleProfiles = upsertConsole(state.ConsoleProfiles, profile)
 	state.ActiveConsoleID = profile.ID
 	if err := s.repository.Save(ctx, state); err != nil {
-		_ = s.credentials.Delete(ctx, profile.ID)
+		rollback()
 		return ConsoleProfile{}, err
 	}
 	return profile, nil
@@ -172,7 +176,7 @@ func (s *Service) ActivateProfile(ctx context.Context, id string) error {
 		return err
 	}
 	if _, ok := findProfile(state.Profiles, id); !ok {
-		return fmt.Errorf("Plural App profile %q not found", id)
+		return fmt.Errorf("plural app profile %q not found", id)
 	}
 	state.ActiveProfileID = id
 	s.StopImpersonating()
@@ -185,7 +189,7 @@ func (s *Service) ActivateConsole(ctx context.Context, id string) error {
 		return err
 	}
 	if _, ok := findConsole(state.ConsoleProfiles, id); !ok {
-		return fmt.Errorf("Console profile %q not found", id)
+		return fmt.Errorf("console profile %q not found", id)
 	}
 	state.ActiveConsoleID = id
 	return s.repository.Save(ctx, state)
@@ -255,6 +259,25 @@ func (s *Service) Impersonate(ctx context.Context, email string) error {
 
 func (s *Service) StopImpersonating() { s.mu.Lock(); s.acting = nil; s.mu.Unlock() }
 
+// replaceCredential overwrites a stored secret and returns a rollback that
+// restores the previous value when the profile already existed. Deleting on
+// every failed save would wipe credentials for profiles that remain in the
+// registry after a registry write fails.
+func (s *Service) replaceCredential(ctx context.Context, id, value string) (func(), error) {
+	previous, getErr := s.credentials.Get(ctx, id)
+	existed := getErr == nil
+	if err := s.credentials.Set(ctx, id, value); err != nil {
+		return nil, err
+	}
+	return func() {
+		if existed {
+			_ = s.credentials.Set(ctx, id, previous)
+			return
+		}
+		_ = s.credentials.Delete(ctx, id)
+	}, nil
+}
+
 func findProfile(values []Profile, id string) (Profile, bool) {
 	for _, value := range values {
 		if value.ID == id {
@@ -299,7 +322,7 @@ func normalizeAppEndpoint(endpoint string) string {
 func normalizeConsoleURL(raw string) (string, error) {
 	parsed, err := url.Parse(strings.TrimSpace(raw))
 	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
-		return "", errors.New("Console URL must be an absolute https URL")
+		return "", errors.New("console URL must be an absolute https URL")
 	}
 	parsed.Path = strings.TrimSuffix(parsed.Path, "/")
 	return parsed.String(), nil

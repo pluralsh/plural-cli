@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	defaultListLimit int64 = 50
-	defaultPageSize        = 10
+	defaultListLimit = int64(50)
+	defaultPageSize  = 10
 )
 
 var errNoConsole = errors.New("connect a Console profile before browsing agent runs")

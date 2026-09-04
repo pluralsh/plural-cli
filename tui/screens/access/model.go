@@ -150,6 +150,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.err = msg.err
 		if msg.err == nil {
 			m.snapshot = msg.snapshot
+			m.appCursor = clampCursor(m.appCursor, len(m.snapshot.State.Profiles))
+			m.consoleCursor = clampCursor(m.consoleCursor, len(m.snapshot.State.ConsoleProfiles))
 		}
 		return m, nil
 	case changedMsg:
@@ -252,7 +254,7 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 	case keyActionNextPanel:
 		m.panel = (m.panel + 1) % 2
 	case keyActionPreviousPanel:
-		m.panel = (m.panel + 1) % 2
+		m.panel = (m.panel - 1 + 2) % 2
 	case keyActionMoveUp:
 		m = m.move(-1)
 	case keyActionMoveDown:

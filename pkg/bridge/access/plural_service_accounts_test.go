@@ -22,7 +22,12 @@ func TestPluralServiceAccountSourceUsesActiveBaseCredential(t *testing.T) {
 		if !strings.Contains(string(body), `"serviceAccount":true`) || !strings.Contains(string(body), `"q":"deploy"`) {
 			t.Fatalf("request body = %s", body)
 		}
-		return &http.Response{StatusCode: 200, Status: "200 OK", Body: io.NopCloser(strings.NewReader(`{"data":{"users":{"edges":[{"node":{"id":"sa-1","email":"deploy@example.com"}}]}}}`)), Header: make(http.Header)}, nil
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Status:     "200 OK",
+			Body:       io.NopCloser(strings.NewReader(`{"data":{"users":{"edges":[{"node":{"id":"sa-1","email":"deploy@example.com"}}]}}}`)),
+			Header:     make(http.Header),
+		}, nil
 	})}
 	source := PluralServiceAccountSource{Credentials: credentials, Client: client}
 	accounts, err := source.ListServiceAccounts(context.Background(), Profile{ID: "app", Endpoint: "app.plural.sh"}, "deploy")
