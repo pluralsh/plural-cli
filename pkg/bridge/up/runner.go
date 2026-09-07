@@ -244,14 +244,9 @@ func FlushWorkspace(ctx context.Context, in FlushInput) error {
 	if err != nil {
 		return err
 	}
-	if err := writeWorkspaceSilent(pm, in.Cloud, cluster, in.BucketPrefix, in.PluralDNS); err != nil {
-		return err
-	}
-	if d := strings.TrimSpace(in.AppDomain); d != "" {
-		pm.AppDomain = d
-		return pm.Write(manifest.ProjectManifestPath())
-	}
-	return nil
+	pm.AppDomain = strings.TrimSpace(in.AppDomain)
+	pm.AppDomainConfigured = true
+	return writeWorkspaceSilent(pm, in.Cloud, cluster, in.BucketPrefix, in.PluralDNS)
 }
 
 func projectManifestFromSurvey(ctx context.Context, providerID string, values map[string]string, cloud bool, conf config.Config) (*manifest.ProjectManifest, error) {

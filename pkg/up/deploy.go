@@ -48,7 +48,7 @@ func (c *Context) runCheckpoint(current, checkpoint string, fn func() error) err
 	if current == "" || priorities[checkpoint] > priorities[current] {
 		err := fn()
 		if err == nil {
-			c.Manifest.Checkpoint = checkpoint
+			return c.completeCheckpoint(checkpoint)
 		}
 		return err
 	}
@@ -56,6 +56,11 @@ func (c *Context) runCheckpoint(current, checkpoint string, fn func() error) err
 	utils.Highlight("Skipping checkpoint %s, ran up to %s previously\n", checkpoint, current)
 
 	return nil
+}
+
+func (c *Context) completeCheckpoint(checkpoint string) error {
+	c.Manifest.Checkpoint = checkpoint
+	return c.Manifest.Flush()
 }
 
 func (c *Context) Deploy(commit func() error) error {

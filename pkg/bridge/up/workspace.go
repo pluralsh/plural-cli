@@ -14,13 +14,14 @@ import (
 
 // ExistingWorkspace is the subset of workspace.yaml the TUI needs when skipping init.
 type ExistingWorkspace struct {
-	ProviderID   string
-	Cluster      string
-	Region       string
-	Project      string
-	BucketPrefix string
-	PluralDNS    string
-	AppDomain    string
+	ProviderID          string
+	Cluster             string
+	Region              string
+	Project             string
+	BucketPrefix        string
+	PluralDNS           string
+	AppDomain           string
+	AppDomainConfigured bool
 }
 
 // HasWorkspace reports whether ./workspace.yaml (or project-root workspace.yaml) exists.
@@ -36,12 +37,13 @@ func LoadExistingWorkspace() (ExistingWorkspace, error) {
 		return ExistingWorkspace{}, err
 	}
 	ws := ExistingWorkspace{
-		ProviderID:   api.NormalizeProvider(pm.Provider),
-		Cluster:      strings.TrimSpace(pm.Cluster),
-		Region:       strings.TrimSpace(pm.Region),
-		Project:      strings.TrimSpace(pm.Project),
-		BucketPrefix: strings.TrimSpace(pm.BucketPrefix),
-		AppDomain:    strings.TrimSpace(pm.AppDomain),
+		ProviderID:          api.NormalizeProvider(pm.Provider),
+		Cluster:             strings.TrimSpace(pm.Cluster),
+		Region:              strings.TrimSpace(pm.Region),
+		Project:             strings.TrimSpace(pm.Project),
+		BucketPrefix:        strings.TrimSpace(pm.BucketPrefix),
+		AppDomain:           strings.TrimSpace(pm.AppDomain),
+		AppDomainConfigured: manifest.AppDomainAlreadyConfigured(pm),
 	}
 	if pm.Network != nil {
 		ws.PluralDNS = strings.TrimSpace(pm.Network.Subdomain)
@@ -53,6 +55,15 @@ func LoadExistingWorkspace() (ExistingWorkspace, error) {
 		return ExistingWorkspace{}, fmt.Errorf("workspace.yaml is missing cluster")
 	}
 	return ws, nil
+}
+
+// PersistAppDomain records the domain prompt answer on an existing workspace.yaml.
+func PersistAppDomain(domain string) error {
+	pm, err := manifest.FetchProject()
+	if err != nil {
+		return err
+	}
+	return pm.PersistAppDomain(domain)
 }
 
 // EnsureExistingWorkspace mirrors Plural.ensureWorkspace: Plural DNS check, branch context, gitignore.

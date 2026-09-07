@@ -13,6 +13,7 @@ import (
 	upbridge "github.com/pluralsh/plural-cli/pkg/bridge/up"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	"github.com/pluralsh/plural-cli/pkg/provider"
+	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/pluralsh/plural-cli/tui/components/oplog"
 	pluralspinner "github.com/pluralsh/plural-cli/tui/components/spinner"
 	"github.com/pluralsh/plural-cli/tui/navigation"
@@ -191,16 +192,17 @@ type Model struct {
 	ignorePreflights bool
 	ignoreAsked      bool
 
-	credSummary string
-	probeWarn   string // shown when continuing after ignored preflight failure
-	inGitRepo   bool
-	scm         upbridge.SCMProvider
-	scms        []upbridge.SCMProvider
-	scmRepo     string
-	appDomain   string
-	domainOpts  []string
-	domainNote  string // zone fetch ignored (CLI "ignoring domain setup...")
-	spinner     spinner.Model
+	credSummary         string
+	probeWarn           string // shown when continuing after ignored preflight failure
+	inGitRepo           bool
+	scm                 upbridge.SCMProvider
+	scms                []upbridge.SCMProvider
+	scmRepo             string
+	appDomain           string
+	appDomainConfigured bool
+	domainOpts          []string
+	domainNote          string // zone fetch ignored (CLI "ignoring domain setup...")
+	spinner             spinner.Model
 
 	bucketPrefix string // self-hosted Configure
 	pluralDNS    string // full subdomain.onplural.sh
@@ -244,9 +246,10 @@ type Model struct {
 	// registerDomain stubs CreateDomain in tests; nil uses upbridge.RegisterPluralDomain.
 	registerDomain func(subdomain string) (fullDomain string, err error)
 	// hasWorkspace / loadWorkspace / ensureWorkspace stub the skip-init path in tests.
-	hasWorkspace    func() bool
-	loadWorkspace   func() (upbridge.ExistingWorkspace, error)
-	ensureWorkspace func() error
+	hasWorkspace     func() bool
+	loadWorkspace    func() (upbridge.ExistingWorkspace, error)
+	ensureWorkspace  func() error
+	persistAppDomain func(domain string) error
 }
 
 // New creates the Up wizard starting at setup-flow selection.
@@ -633,6 +636,7 @@ func (m Model) beginAlreadyInit() (Model, tea.Cmd) {
 	m.bucketPrefix = ws.BucketPrefix
 	m.pluralDNS = ws.PluralDNS
 	m.appDomain = ws.AppDomain
+	m.appDomainConfigured = ws.AppDomainConfigured
 	m.provider = providerFromID(m.providers, ws.ProviderID)
 	m.formValues = formValuesFromWorkspace(ws)
 	m.formFields = upbridge.ProviderFormFields(ws.ProviderID)
@@ -1959,6 +1963,12 @@ func (m Model) afterGitReady() (Model, tea.Cmd) {
 }
 
 func (m Model) beginAppDomain() (Model, tea.Cmd) {
+	if skip, ok := utils.GetEnvBoolValue("PLURAL_UP_SKIP_APP_DOMAIN"); ok && skip {
+		return m.beginAffirmDeploy()
+	}
+	if m.appDomainConfigured || strings.TrimSpace(m.appDomain) != "" {
+		return m.beginAffirmDeploy()
+	}
 	m.mode = modeAppDomain
 	m.appDomain = ""
 	m.domainOpts = nil
@@ -2052,9 +2062,24 @@ func (m Model) confirmAppDomain() (Model, tea.Cmd) {
 	} else {
 		m.appDomain = strings.TrimSpace(m.formInput.Value())
 	}
+	m.appDomainConfigured = true
 	m.formInput.Blur()
 	m.err = nil
+	if err := m.persistAppDomainChoice(m.appDomain); err != nil {
+		m.err = err
+		return m, nil
+	}
 	return m.beginAffirmDeploy()
+}
+
+func (m Model) persistAppDomainChoice(domain string) error {
+	if m.persistAppDomain != nil {
+		return m.persistAppDomain(domain)
+	}
+	if m.alreadyInit {
+		return upbridge.PersistAppDomain(domain)
+	}
+	return nil
 }
 
 func (m Model) beginAffirmDeploy() (Model, tea.Cmd) {

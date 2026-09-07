@@ -80,6 +80,7 @@ func testModel(t *testing.T) Model {
 	}
 	model.hasWorkspace = func() bool { return false }
 	model.ensureWorkspace = func() error { return nil }
+	model.persistAppDomain = func(string) error { return nil }
 	model.exportDir = t.TempDir()
 	return model
 }
@@ -101,6 +102,7 @@ func testModelOutsideGit(t *testing.T, prober upbridge.Prober) Model {
 	}
 	model.hasWorkspace = func() bool { return false }
 	model.ensureWorkspace = func() error { return nil }
+	model.persistAppDomain = func(string) error { return nil }
 	model.exportDir = t.TempDir()
 	return model
 }
@@ -1041,6 +1043,73 @@ func TestAlreadyInitializedSkipsProvider(t *testing.T) {
 	}
 	if !runner.calls[0].SkipFlush {
 		t.Fatalf("expected SkipFlush, got %#v", runner.calls[0])
+	}
+}
+
+func TestAlreadyInitializedSkipsAppDomain(t *testing.T) {
+	model := testModel(t)
+	model.hasWorkspace = func() bool { return true }
+	model.loadWorkspace = func() (upbridge.ExistingWorkspace, error) {
+		return upbridge.ExistingWorkspace{
+			ProviderID:          "aws",
+			Cluster:             "demo",
+			Region:              "us-east-2",
+			BucketPrefix:        "acme",
+			PluralDNS:           "acme.onplural.sh",
+			AppDomain:           "apps.example.com",
+			AppDomainConfigured: true,
+		}, nil
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	if model.mode != modeAlreadyInit {
+		t.Fatalf("expected already-init, mode=%d", model.mode)
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(ensureInitMsg{})
+	if model.mode != modeAffirmDeploy {
+		t.Fatalf("expected deploy affirm after skipping domain, got %d appDomain=%q", model.mode, model.appDomain)
+	}
+	if model.appDomain != "apps.example.com" {
+		t.Fatalf("appDomain = %q", model.appDomain)
+	}
+}
+
+func TestAlreadyInitPersistsAppDomainOnConfirm(t *testing.T) {
+	var persisted string
+	model := testModel(t)
+	model.hasWorkspace = func() bool { return true }
+	model.loadWorkspace = func() (upbridge.ExistingWorkspace, error) {
+		return upbridge.ExistingWorkspace{
+			ProviderID:   "aws",
+			Cluster:      "demo",
+			Region:       "us-east-2",
+			BucketPrefix: "acme",
+			PluralDNS:    "acme.onplural.sh",
+		}, nil
+	}
+	model.persistAppDomain = func(domain string) error {
+		persisted = domain
+		return nil
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: 'i', Text: "i"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(ensureInitMsg{})
+	model = drainDomain(t, model)
+	if model.mode != modeAppDomain {
+		t.Fatalf("expected app domain, got %d", model.mode)
+	}
+	model.formInput.SetValue("apps.example.com")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if persisted != "apps.example.com" {
+		t.Fatalf("persisted = %q", persisted)
+	}
+	if !model.appDomainConfigured {
+		t.Fatal("expected appDomainConfigured")
+	}
+	if model.mode != modeAffirmDeploy {
+		t.Fatalf("mode = %d", model.mode)
 	}
 }
 

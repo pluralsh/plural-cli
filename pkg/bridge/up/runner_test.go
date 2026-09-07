@@ -46,6 +46,9 @@ func TestFlushWorkspaceAWSWritesManifest(t *testing.T) {
 	if pm.AppDomain != "apps.example.com" {
 		t.Fatalf("appDomain = %q", pm.AppDomain)
 	}
+	if !pm.AppDomainConfigured {
+		t.Fatal("expected AppDomainConfigured")
+	}
 	if pm.Bucket == "" || pm.BucketPrefix != "demo" {
 		t.Fatalf("bucket=%q prefix=%q", pm.Bucket, pm.BucketPrefix)
 	}
@@ -91,6 +94,33 @@ func TestFlushWorkspaceSelfHostedBucket(t *testing.T) {
 	}
 	if pm.Network == nil || pm.Network.Subdomain != "acme.onplural.sh" || !pm.Network.PluralDns {
 		t.Fatalf("network = %#v", pm.Network)
+	}
+}
+
+func TestFlushWorkspacePersistsSkippedDomain(t *testing.T) {
+	dir := t.TempDir()
+	prev, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(prev) })
+
+	if err := FlushWorkspace(context.Background(), FlushInput{
+		ProviderID: api.ProviderAWS,
+		Values:     map[string]string{"cluster": "demo", "region": "us-east-2"},
+		Cloud:      true,
+	}); err != nil {
+		t.Fatalf("FlushWorkspace: %v", err)
+	}
+	pm, err := manifest.ReadProject(filepath.Join(dir, "workspace.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !pm.AppDomainConfigured {
+		t.Fatal("expected AppDomainConfigured after skipped domain")
+	}
+	if pm.AppDomain != "" {
+		t.Fatalf("appDomain = %q", pm.AppDomain)
 	}
 }
 
