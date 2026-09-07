@@ -62,35 +62,42 @@ type ProjectManifest struct {
 	BucketPrefix      string `yaml:"bucketPrefix"`
 	Context           map[string]interface{}
 	AppDomain         string `yaml:"appDomain,omitempty"`
+	// AppDomainConfigured is true after the app-domain prompt was answered,
+	// including when the user chose None. AppDomain alone cannot represent
+	// that skip: an empty value is omitted from workspace.yaml, so it looks
+	// the same as never asked.
+	AppDomainConfigured bool `yaml:"appDomainConfigured,omitempty"`
 }
 
 func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
-		Cluster           string                 `json:"cluster"`
-		Bucket            string                 `json:"bucket"`
-		Project           string                 `json:"project"`
-		Provider          string                 `json:"provider"`
-		Region            string                 `json:"region"`
-		Owner             *Owner                 `json:"owner"`
-		Network           *NetworkConfig         `json:"network"`
-		AvailabilityZones []string               `json:"availabilityZones"`
-		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
-		Context           map[string]interface{} `json:"context"`
-		AppDomain         string                 `json:"appDomain,omitempty"`
+		Cluster             string                 `json:"cluster"`
+		Bucket              string                 `json:"bucket"`
+		Project             string                 `json:"project"`
+		Provider            string                 `json:"provider"`
+		Region              string                 `json:"region"`
+		Owner               *Owner                 `json:"owner"`
+		Network             *NetworkConfig         `json:"network"`
+		AvailabilityZones   []string               `json:"availabilityZones"`
+		BucketPrefix        string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
+		Context             map[string]interface{} `json:"context"`
+		AppDomain           string                 `json:"appDomain,omitempty"`
+		AppDomainConfigured bool                   `json:"appDomainConfigured,omitempty"`
 	}{
-		Cluster:           pm.Cluster,
-		Bucket:            pm.Bucket,
-		Project:           pm.Project,
-		Provider:          pm.Provider,
-		Region:            pm.Region,
-		Owner:             pm.Owner,
-		Network:           pm.Network,
-		AvailabilityZones: pm.AvailabilityZones,
-		BucketPrefix:      pm.BucketPrefix,
-		Context:           pm.Context,
-		AppDomain:         pm.AppDomain,
+		Cluster:             pm.Cluster,
+		Bucket:              pm.Bucket,
+		Project:             pm.Project,
+		Provider:            pm.Provider,
+		Region:              pm.Region,
+		Owner:               pm.Owner,
+		Network:             pm.Network,
+		AvailabilityZones:   pm.AvailabilityZones,
+		BucketPrefix:        pm.BucketPrefix,
+		Context:             pm.Context,
+		AppDomain:           pm.AppDomain,
+		AppDomainConfigured: pm.AppDomainConfigured,
 	})
 }
 
