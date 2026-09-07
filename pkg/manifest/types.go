@@ -50,19 +50,23 @@ type NetworkConfig struct {
 }
 
 type ProjectManifest struct {
-	Cluster             string
-	Bucket              string
-	Project             string
-	Provider            string
-	Region              string
-	Owner               *Owner
-	Network             *NetworkConfig
-	Checkpoint          string `yaml:"checkpoint,omitempty"`
-	AvailabilityZones   []string
-	BucketPrefix        string `yaml:"bucketPrefix"`
-	Context             map[string]interface{}
-	AppDomain           string `yaml:"appDomain,omitempty"`
-	AppDomainConfigured bool   `yaml:"appDomainConfigured,omitempty"`
+	Cluster           string
+	Bucket            string
+	Project           string
+	Provider          string
+	Region            string
+	Owner             *Owner
+	Network           *NetworkConfig
+	Checkpoint        string `yaml:"checkpoint,omitempty"`
+	AvailabilityZones []string
+	BucketPrefix      string `yaml:"bucketPrefix"`
+	Context           map[string]interface{}
+	AppDomain         string `yaml:"appDomain,omitempty"`
+	// AppDomainConfigured is true after the app-domain prompt was answered,
+	// including when the user chose None. AppDomain alone cannot represent
+	// that skip: an empty value is omitted from workspace.yaml, so it looks
+	// the same as never asked.
+	AppDomainConfigured bool `yaml:"appDomainConfigured,omitempty"`
 }
 
 func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
