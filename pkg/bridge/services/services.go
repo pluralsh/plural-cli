@@ -4,6 +4,8 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -37,15 +39,51 @@ type ServiceError struct {
 	Message string
 }
 
+// ConfigEntry is one service configuration name/value pair.
+type ConfigEntry struct {
+	Name  string
+	Value string
+}
+
+// Component is one deployed Kubernetes object on the service.
+type Component struct {
+	ID        string
+	Name      string
+	Namespace string
+	Kind      string
+	Version   string
+	State     string
+	Synced    bool
+}
+
+// Repository is the git repository backing a service, without credentials.
+type Repository struct {
+	ID         string
+	URL        string
+	AuthMethod string
+	Health     string
+	Error      string
+}
+
 // Detail is the credential-free detail payload for a service deployment.
+// Fields match `plural cd services describe`.
 type Detail struct {
 	Summary
+	Version       string
+	Tarball       string
+	DeletedAt     string
+	DryRun        bool
+	Templated     bool
 	ClusterID     string
 	ClusterName   string
 	ClusterHandle string
+	RevisionID    string
 	RevisionSHA   string
 	RevisionRef   string
-	Components    int
+	KustomizePath string
+	Repository    *Repository
+	Configuration []ConfigEntry
+	Components    []Component
 	Synced        int
 	Errors        []ServiceError
 }
@@ -234,11 +272,18 @@ func detailFromExtended(service *gqlclient.ServiceDeploymentExtended) Detail {
 			Namespace: service.Namespace,
 			Status:    string(service.Status),
 		},
-		Components: len(service.Components),
+		Version:   service.Version,
+		Tarball:   derefString(service.Tarball),
+		DeletedAt: derefString(service.DeletedAt),
+		DryRun:    derefBool(service.DryRun, false),
+		Templated: derefBool(service.Templated, true),
 	}
 	if service.Git != nil {
 		detail.GitRef = service.Git.Ref
 		detail.GitFolder = service.Git.Folder
+	}
+	if service.Kustomize != nil {
+		detail.KustomizePath = service.Kustomize.Path
 	}
 	if service.Cluster != nil {
 		detail.ClusterID = service.Cluster.ID
@@ -248,6 +293,7 @@ func detailFromExtended(service *gqlclient.ServiceDeploymentExtended) Detail {
 		}
 	}
 	if service.Revision != nil {
+		detail.RevisionID = service.Revision.ID
 		if service.Revision.Sha != nil {
 			detail.RevisionSHA = *service.Revision.Sha
 		}
@@ -258,10 +304,55 @@ func detailFromExtended(service *gqlclient.ServiceDeploymentExtended) Detail {
 			detail.RevisionRef = service.Revision.Git.Ref
 		}
 	}
+	if service.Repository != nil {
+		repo := &Repository{ID: service.Repository.ID, URL: service.Repository.URL}
+		if service.Repository.AuthMethod != nil {
+			repo.AuthMethod = string(*service.Repository.AuthMethod)
+		}
+		if service.Repository.Health != nil {
+			repo.Health = string(*service.Repository.Health)
+		}
+		if service.Repository.Error != nil {
+			repo.Error = *service.Repository.Error
+		}
+		detail.Repository = repo
+	}
+	if len(service.Configuration) > 0 {
+		detail.Configuration = make([]ConfigEntry, 0, len(service.Configuration))
+		for _, conf := range service.Configuration {
+			if conf == nil {
+				continue
+			}
+			detail.Configuration = append(detail.Configuration, ConfigEntry{Name: conf.Name, Value: conf.Value})
+		}
+		sort.Slice(detail.Configuration, func(i, j int) bool {
+			return detail.Configuration[i].Name < detail.Configuration[j].Name
+		})
+	}
+	detail.Components = make([]Component, 0, len(service.Components))
 	for _, component := range service.Components {
-		if component != nil && component.Synced {
+		if component == nil {
+			continue
+		}
+		item := Component{
+			ID:     component.ID,
+			Name:   component.Name,
+			Kind:   fmt.Sprint(component.Kind),
+			Synced: component.Synced,
+		}
+		if component.Namespace != nil {
+			item.Namespace = *component.Namespace
+		}
+		if component.Version != nil {
+			item.Version = *component.Version
+		}
+		if component.State != nil {
+			item.State = string(*component.State)
+		}
+		if item.Synced {
 			detail.Synced++
 		}
+		detail.Components = append(detail.Components, item)
 	}
 	for _, item := range service.Errors {
 		if item == nil {
@@ -270,6 +361,20 @@ func detailFromExtended(service *gqlclient.ServiceDeploymentExtended) Detail {
 		detail.Errors = append(detail.Errors, ServiceError{Source: item.Source, Message: item.Message})
 	}
 	return detail
+}
+
+func derefString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+func derefBool(value *bool, fallback bool) bool {
+	if value == nil {
+		return fallback
+	}
+	return *value
 }
 
 func matchesQuery(summary Summary, query string) bool {

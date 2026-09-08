@@ -50,6 +50,8 @@ const (
 	keyActionConnectConsole
 	keyActionCreate
 	keyActionBackground
+	keyActionPgUp
+	keyActionPgDown
 )
 
 var keyActionKeystrokes = map[keyAction][]string{
@@ -64,6 +66,8 @@ var keyActionKeystrokes = map[keyAction][]string{
 	keyActionConnectConsole: {"c"},
 	keyActionCreate:         {"a"},
 	keyActionBackground:     {"b"},
+	keyActionPgUp:           {"pgup"},
+	keyActionPgDown:         {"pgdown"},
 }
 
 func actionForKeystroke(keystroke string) keyAction {
@@ -127,6 +131,7 @@ type Model struct {
 
 	detail       servicesbridge.Detail
 	detailID     string
+	detailOffset int
 	listCursor   int
 	listAfter    *string
 	listFilter   string
@@ -313,6 +318,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		if msg.err == nil {
 			m.detail = msg.detail
 			m.actionCursor = 0
+			m.detailOffset = 0
 			m.mode = modeDetail
 		}
 		return m, nil
@@ -470,6 +476,7 @@ func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
 		return m, nil
 	}
 	if action == keyActionRefresh && m.detailID != "" {
+		m.detailOffset = 0
 		return m, m.beginDetail(m.detailID)
 	}
 	actions := detailActions()
@@ -485,6 +492,14 @@ func (m Model) updateDetail(action keyAction, text string) (Model, tea.Cmd) {
 		return m, nil
 	case keyActionMoveDown:
 		m.actionCursor = clampCursor(m.actionCursor+1, len(actions))
+		return m, nil
+	case keyActionPgUp:
+		m.detailOffset = max(0, m.detailOffset-6)
+		return m, nil
+	case keyActionPgDown:
+		visible := 6
+		maxOff := max(0, len(m.detailLines())-visible)
+		m.detailOffset = min(m.detailOffset+visible, maxOff)
 		return m, nil
 	case keyActionConfirm:
 		return m.openAction(actions[m.actionCursor])

@@ -37,13 +37,24 @@ func TestServicesGoldens(t *testing.T) {
 	detail.mode = modeDetail
 	detail.detail = servicesbridge.Detail{
 		Summary:       servicesbridge.Summary{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY", GitRef: "main", GitFolder: "services/api"},
+		Version:       "0.1.4",
+		Tarball:       "https://console.acme.io/tarball/api",
+		DryRun:        false,
+		Templated:     true,
 		ClusterHandle: "prod-eu",
 		ClusterName:   "production",
+		RevisionID:    "rev-91ca",
 		RevisionSHA:   "91ca21f0deadbeef",
 		RevisionRef:   "main",
-		Components:    14,
-		Synced:        13,
-		Errors:        []servicesbridge.ServiceError{{Source: "Deployment/api", Message: "exceeded rollout deadline"}},
+		KustomizePath: "overlays/prod",
+		Repository:    &servicesbridge.Repository{ID: "repo-1", URL: "https://github.com/acme/fleet.git", AuthMethod: "SSH", Health: "PULLABLE"},
+		Configuration: []servicesbridge.ConfigEntry{{Name: "cluster", Value: "prod"}, {Name: "replicas", Value: "3"}},
+		Components: []servicesbridge.Component{
+			{Name: "api", Kind: "Deployment", Namespace: "default", State: "RUNNING", Synced: true},
+			{Name: "api", Kind: "Service", Namespace: "default", State: "RUNNING", Synced: true},
+		},
+		Synced: 2,
+		Errors: []servicesbridge.ServiceError{{Source: "Deployment/api", Message: "exceeded rollout deadline"}},
 	}
 
 	for _, tc := range []struct {
@@ -119,13 +130,24 @@ func TestWriteServicesGoldens(t *testing.T) {
 	detail.mode = modeDetail
 	detail.detail = servicesbridge.Detail{
 		Summary:       servicesbridge.Summary{ID: "1", Name: "api", Namespace: "default", Status: "HEALTHY", GitRef: "main", GitFolder: "services/api"},
+		Version:       "0.1.4",
+		Tarball:       "https://console.acme.io/tarball/api",
+		DryRun:        false,
+		Templated:     true,
 		ClusterHandle: "prod-eu",
 		ClusterName:   "production",
+		RevisionID:    "rev-91ca",
 		RevisionSHA:   "91ca21f0deadbeef",
 		RevisionRef:   "main",
-		Components:    14,
-		Synced:        13,
-		Errors:        []servicesbridge.ServiceError{{Source: "Deployment/api", Message: "exceeded rollout deadline"}},
+		KustomizePath: "overlays/prod",
+		Repository:    &servicesbridge.Repository{ID: "repo-1", URL: "https://github.com/acme/fleet.git", AuthMethod: "SSH", Health: "PULLABLE"},
+		Configuration: []servicesbridge.ConfigEntry{{Name: "cluster", Value: "prod"}, {Name: "replicas", Value: "3"}},
+		Components: []servicesbridge.Component{
+			{Name: "api", Kind: "Deployment", Namespace: "default", State: "RUNNING", Synced: true},
+			{Name: "api", Kind: "Service", Namespace: "default", State: "RUNNING", Synced: true},
+		},
+		Synced: 2,
+		Errors: []servicesbridge.ServiceError{{Source: "Deployment/api", Message: "exceeded rollout deadline"}},
 	}
 	_ = os.MkdirAll("testdata", 0o755)
 	for _, tc := range []struct {

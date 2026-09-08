@@ -108,6 +108,10 @@ func TestSelectClusterThenOpenService(t *testing.T) {
 	if model.mode != modeDetail || model.detail.ClusterHandle != "prod-eu" {
 		t.Fatalf("detail state = %#v", model.detail)
 	}
+	view = model.View(80, 24)
+	if !strings.Contains(view, "Describe") {
+		t.Fatalf("detail view missing describe panel:\n%s", view)
+	}
 
 	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEsc})
 	if model.mode != modeList {
@@ -180,6 +184,45 @@ func TestNextPrevPage(t *testing.T) {
 	model, _ = model.Update(cmd())
 	if model.after != nil || len(model.prevCursors) != 0 {
 		t.Fatalf("after prev after=%v prev=%v", model.after, model.prevCursors)
+	}
+}
+
+func TestDetailViewShowsDescribeFields(t *testing.T) {
+	model := New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
+	model.loading = false
+	model.mode = modeDetail
+	model.detail = servicesbridge.Detail{
+		Summary:       servicesbridge.Summary{ID: "svc-1", Name: "api", Namespace: "default", Status: "FAILED", GitRef: "main", GitFolder: "services/api"},
+		Version:       "0.1.4",
+		Tarball:       "https://console.example.com/tarball",
+		DryRun:        true,
+		Templated:     true,
+		ClusterHandle: "prod-eu",
+		ClusterName:   "production",
+		RevisionID:    "rev-1",
+		RevisionSHA:   "abc123ff",
+		KustomizePath: "overlays/prod",
+		Repository:    &servicesbridge.Repository{ID: "repo-1", URL: "https://github.com/acme/fleet.git", AuthMethod: "SSH", Health: "PULLABLE"},
+		Configuration: []servicesbridge.ConfigEntry{{Name: "replicas", Value: "3"}},
+		Components:    []servicesbridge.Component{{Name: "api", Kind: "Deployment", Namespace: "default", State: "RUNNING", Synced: true}},
+		Synced:        1,
+		Errors:        []servicesbridge.ServiceError{{Source: "Deployment/api", Message: "rollout timed out"}},
+	}
+	view := model.View(120, 30)
+	for _, want := range []string{"Describe", "Actions", "Kick", "Edit", "Clone", "Tarball", "svc-1", "0.1.4"} {
+		if !strings.Contains(view, want) {
+			t.Fatalf("detail view missing %q:\n%s", want, view)
+		}
+	}
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	if model.detailOffset == 0 {
+		t.Fatal("pgdown did not scroll describe panel")
+	}
+	scrolled := model.View(120, 30)
+	for _, want := range []string{"overlays/prod", "PULLABLE"} {
+		if !strings.Contains(scrolled, want) {
+			t.Fatalf("scrolled describe missing %q:\n%s", want, scrolled)
+		}
 	}
 }
 

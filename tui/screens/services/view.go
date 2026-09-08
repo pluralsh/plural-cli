@@ -17,7 +17,7 @@ func (m Model) View(width, height int) string {
 	}
 	contentWidth := page.ContentWidth(width)
 	status := m.headerStatus()
-	body, help := m.bodyAndHelp(contentWidth)
+	body, help := m.bodyAndHelp(contentWidth, height)
 	title := "Services"
 	switch m.mode {
 	case modeReview, modeOperating, modeResult:
@@ -91,7 +91,7 @@ func (m Model) headerStatus() string {
 	}
 }
 
-func (m Model) bodyAndHelp(width int) (string, string) {
+func (m Model) bodyAndHelp(width, height int) (string, string) {
 	if m.mode == modeFilter {
 		title := "Filter services"
 		hint := "Filter by name, namespace, status, or git path."
@@ -184,11 +184,25 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		}
 		return page.Panel(m.theme, "Workbench", lines, width, 10, true), "tab mode · enter · esc detail"
 	case modeDetail:
-		summary := page.Panel(m.theme, "Summary", m.detailLines(), width, 9, false)
-		actions := page.Panel(m.theme, "Actions", m.actionLines(width), width, 8, true)
-		help := "↑/↓ actions · enter · k e c t m d · r refresh · esc list"
+		actionsH := 8
+		summaryH := max(9, height-actionsH-6)
+		lines := m.detailLines()
+		inner := max(1, summaryH-2)
+		offset := m.detailOffset
+		if maxOff := max(0, len(lines)-inner); offset > maxOff {
+			offset = maxOff
+		}
+		if offset < 0 {
+			offset = 0
+		}
+		if offset > 0 {
+			lines = lines[offset:]
+		}
+		summary := page.Panel(m.theme, "Describe", lines, width, summaryH, false)
+		actions := page.Panel(m.theme, "Actions", m.actionLines(width), width, actionsH, true)
+		help := "↑/↓ actions · enter · k e c t m d · pgup/pgdn describe · r refresh · esc list"
 		if width < 100 {
-			help = "↑/↓ · enter · letters · r · esc"
+			help = "↑/↓ · enter · k e c t m d · pgup/pgdn · r · esc"
 		}
 		return summary + "\n\n" + actions, help
 	case modeClusters:
@@ -389,6 +403,38 @@ func (m Model) detailLines() []string {
 	if m.err != nil {
 		return []string{m.theme.Danger.Render("✗ Unable to load service"), m.theme.Danger.Render(m.err.Error())}
 	}
+	d := m.detail
+	status := m.statusBadge(d.Status)
+	if d.DeletedAt != "" {
+		status = m.theme.Danger.Render("Terminating") + m.theme.Muted.Render(" · "+d.DeletedAt)
+	}
+	tarball := d.Tarball
+	if tarball == "" {
+		tarball = "<none>"
+	}
+	lines := []string{
+		m.labelValue("Id", none(d.ID)),
+		m.labelValue("Name", none(d.Name)),
+		m.labelValue("Namespace", none(d.Namespace)),
+		m.labelValue("Version", none(d.Version)),
+		m.labelValue("Status", status),
+		m.labelValue("Cluster", m.detailCluster()),
+		m.labelValue("Dry run", fmt.Sprintf("%v", d.DryRun)),
+		m.labelValue("Templated", fmt.Sprintf("%v", d.Templated)),
+		m.labelValue("Tarball", tarball),
+	}
+	lines = append(lines, m.detailGitLines()...)
+	if d.KustomizePath != "" {
+		lines = append(lines, m.labelValue("Kustomize", d.KustomizePath))
+	}
+	lines = append(lines, m.detailRepoLines()...)
+	lines = append(lines, m.detailConfigLines()...)
+	lines = append(lines, m.detailComponentLines()...)
+	lines = append(lines, m.detailErrorLines()...)
+	return lines
+}
+
+func (m Model) detailCluster() string {
 	cluster := m.detail.ClusterName
 	if m.detail.ClusterHandle != "" {
 		cluster = "@" + m.detail.ClusterHandle
@@ -399,32 +445,131 @@ func (m Model) detailLines() []string {
 	if cluster == "" {
 		cluster = clusterLabel(m.cluster)
 	}
-	revision := m.detail.RevisionSHA
-	if m.detail.RevisionRef != "" {
-		revision = m.detail.RevisionRef
-		if m.detail.RevisionSHA != "" {
-			revision += " · " + shortSHA(m.detail.RevisionSHA)
-		}
-	}
-	if revision == "" {
-		revision = "—"
-	}
-	git := strings.TrimSpace(m.detail.GitRef + " / " + m.detail.GitFolder)
+	return none(cluster)
+}
+
+func (m Model) detailGitLines() []string {
+	d := m.detail
+	git := strings.TrimSpace(d.GitRef + " / " + d.GitFolder)
 	if git == " / " || git == "" {
 		git = "—"
 	}
-	lines := []string{
-		m.labelValue("Status", m.statusBadge(m.detail.Status)),
-		m.labelValue("Namespace", m.detail.Namespace),
-		m.labelValue("Cluster", cluster),
-		m.labelValue("Revision", revision),
-		m.labelValue("Git", git),
-		m.labelValue("Components", fmt.Sprintf("%d / %d synced", m.detail.Synced, m.detail.Components)),
+	lines := []string{m.labelValue("Git", git)}
+	if d.GitRef != "" || d.GitFolder != "" {
+		if d.GitRef != "" {
+			lines = append(lines, m.indentValue("Ref", d.GitRef))
+		}
+		if d.GitFolder != "" {
+			lines = append(lines, m.indentValue("Folder", d.GitFolder))
+		}
 	}
-	if len(m.detail.Errors) > 0 {
-		lines = append(lines, m.theme.Danger.Render(fmt.Sprintf("%d errors", len(m.detail.Errors))))
+	revision := d.RevisionID
+	if d.RevisionSHA != "" && d.RevisionSHA != d.RevisionID {
+		if revision != "" {
+			revision += " · " + shortSHA(d.RevisionSHA)
+		} else {
+			revision = shortSHA(d.RevisionSHA)
+		}
+	}
+	if d.RevisionRef != "" {
+		if revision != "" {
+			revision += " · " + d.RevisionRef
+		} else {
+			revision = d.RevisionRef
+		}
+	}
+	if revision != "" {
+		lines = append(lines, m.labelValue("Revision", revision))
 	}
 	return lines
+}
+
+func (m Model) detailRepoLines() []string {
+	repo := m.detail.Repository
+	if repo == nil {
+		return nil
+	}
+	lines := []string{m.labelValue("Repository", none(repo.URL))}
+	if repo.ID != "" {
+		lines = append(lines, m.indentValue("Id", repo.ID))
+	}
+	if repo.AuthMethod != "" {
+		lines = append(lines, m.indentValue("Auth", repo.AuthMethod))
+	}
+	if repo.Health != "" {
+		lines = append(lines, m.indentValue("Health", repo.Health))
+	}
+	if repo.Error != "" {
+		lines = append(lines, m.indentValue("Error", m.theme.Danger.Render(repo.Error)))
+	}
+	return lines
+}
+
+func (m Model) detailConfigLines() []string {
+	if len(m.detail.Configuration) == 0 {
+		return []string{m.labelValue("Config", "<none>")}
+	}
+	lines := []string{m.labelValue("Config", "")}
+	for _, entry := range m.detail.Configuration {
+		value := strings.ReplaceAll(entry.Value, "\n", " ")
+		lines = append(lines, m.indentValue(entry.Name, none(value)))
+	}
+	return lines
+}
+
+func (m Model) detailComponentLines() []string {
+	total := len(m.detail.Components)
+	if total == 0 {
+		return []string{m.labelValue("Components", "<none>")}
+	}
+	lines := []string{m.labelValue("Components", fmt.Sprintf("%d / %d synced", m.detail.Synced, total))}
+	lines = append(lines, m.theme.Muted.Render("    "+pad("NAME", 16)+pad("KIND", 14)+pad("NS", 12)+pad("STATE", 10)+"SYNC"))
+	for _, c := range m.detail.Components {
+		ns := c.Namespace
+		if ns == "" {
+			ns = "-"
+		}
+		state := c.State
+		if state == "" {
+			state = "-"
+		}
+		synced := "false"
+		if c.Synced {
+			synced = "true"
+		}
+		row := "    " + pad(none(c.Name), 16) + pad(none(c.Kind), 14) + pad(ns, 12) + pad(state, 10) + synced
+		lines = append(lines, row)
+	}
+	return lines
+}
+
+func (m Model) detailErrorLines() []string {
+	if len(m.detail.Errors) == 0 {
+		return []string{m.labelValue("Errors", "<none>")}
+	}
+	lines := []string{m.theme.Danger.Render(fmt.Sprintf("Errors      %d", len(m.detail.Errors)))}
+	for _, item := range m.detail.Errors {
+		source := item.Source
+		if source == "" {
+			source = "—"
+		}
+		lines = append(lines, m.theme.Danger.Render("    "+source))
+		if item.Message != "" {
+			lines = append(lines, m.theme.Muted.Render("      "+item.Message))
+		}
+	}
+	return lines
+}
+
+func (m Model) indentValue(label, value string) string {
+	return "    " + m.labelValue(label, value)
+}
+
+func none(value string) string {
+	if strings.TrimSpace(value) == "" {
+		return "—"
+	}
+	return value
 }
 
 func (m Model) labelValue(label, value string) string {

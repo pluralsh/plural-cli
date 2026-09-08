@@ -1,14 +1,15 @@
   Plural  Services · api                                               HEALTHY
   ────────────────────────────────────────────────────────────────────────────
 
-  ╭─ Summary ────────────────────────────────────────────────────────────────╮
-  │ Status       HEALTHY                                                     │
+  ╭─ Describe ───────────────────────────────────────────────────────────────╮
+  │ Id           1                                                           │
+  │ Name         api                                                         │
   │ Namespace    default                                                     │
+  │ Version      0.1.4                                                       │
+  │ Status       HEALTHY                                                     │
   │ Cluster      @prod-eu · production                                       │
-  │ Revision     main · 91ca21f0                                             │
-  │ Git          main / services/api                                         │
-  │ Components   13 / 14 synced                                              │
-  │ 1 errors                                                                 │
+  │ Dry run      false                                                       │
+  │ …                                                                        │
   ╰──────────────────────────────────────────────────────────────────────────╯
 
   ╭─ › Actions ──────────────────────────────────────────────────────────────╮
@@ -20,5 +21,4 @@
   │   d  Delete      remove service  [destructive]                           │
   ╰──────────────────────────────────────────────────────────────────────────╯
 
-
-  ↑/↓ · enter · letters · r · esc
+  ↑/↓ · enter · k e c t m d · pgup/pgdn · r · esc

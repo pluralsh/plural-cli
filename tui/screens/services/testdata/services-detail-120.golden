@@ -1,14 +1,21 @@
   Plural  Services · api                                                                                       HEALTHY
   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  ╭─ Summary ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │ Status       HEALTHY                                                                                             │
+  ╭─ Describe ───────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ Id           1                                                                                                   │
+  │ Name         api                                                                                                 │
   │ Namespace    default                                                                                             │
+  │ Version      0.1.4                                                                                               │
+  │ Status       HEALTHY                                                                                             │
   │ Cluster      @prod-eu · production                                                                               │
-  │ Revision     main · 91ca21f0                                                                                     │
+  │ Dry run      false                                                                                               │
+  │ Templated    true                                                                                                │
+  │ Tarball      https://console.acme.io/tarball/api                                                                 │
   │ Git          main / services/api                                                                                 │
-  │ Components   13 / 14 synced                                                                                      │
-  │ 1 errors                                                                                                         │
+  │     Ref          main                                                                                            │
+  │     Folder       services/api                                                                                    │
+  │ Revision     rev-91ca · 91ca21f0 · main                                                                          │
+  │ …                                                                                                                │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
   ╭─ › Actions ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -20,11 +27,4 @@
   │   d  Delete      remove service  [destructive]                                                                   │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-
-
-
-
-
-
-
-  ↑/↓ actions · enter · k e c t m d · r refresh · esc list
+  ↑/↓ actions · enter · k e c t m d · pgup/pgdn describe · r refresh · esc list

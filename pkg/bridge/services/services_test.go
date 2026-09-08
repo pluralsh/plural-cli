@@ -131,14 +131,37 @@ func TestListPages(t *testing.T) {
 func TestGetMapsDetail(t *testing.T) {
 	handle := "prod-eu"
 	sha := "abc123"
+	tarball := "https://console.example.com/tarball/svc-1"
+	deleted := "2026-09-08T10:00:00Z"
+	ns := "default"
+	version := "apps/v1"
+	state := gqlclient.ComponentStateRunning
+	health := gqlclient.GitHealthPullable
+	auth := gqlclient.AuthMethodSSH
+	dryRun := false
+	templated := true
+	kustomize := "overlays/prod"
 	api := &fakeAPI{detail: &gqlclient.ServiceDeploymentExtended{
-		ID: "svc-1", Name: "api", Namespace: "default", Status: gqlclient.ServiceDeploymentStatusFailed,
-		Git:      &gqlclient.GitRefFragment{Ref: "main", Folder: "services/api"},
-		Cluster:  &gqlclient.BaseClusterFragment{Name: "prod", Handle: &handle},
-		Revision: &gqlclient.RevisionFragment{ID: "rev-1", Sha: &sha, Git: &gqlclient.RevisionFragment_Git{Ref: "main"}},
+		ID: "svc-1", Name: "api", Namespace: "default", Version: "0.1.4",
+		Status:    gqlclient.ServiceDeploymentStatusFailed,
+		Tarball:   &tarball,
+		DeletedAt: &deleted,
+		DryRun:    &dryRun,
+		Templated: &templated,
+		Git:       &gqlclient.GitRefFragment{Ref: "main", Folder: "services/api"},
+		Kustomize: &gqlclient.KustomizeFragment{Path: kustomize},
+		Cluster:   &gqlclient.BaseClusterFragment{Name: "prod", Handle: &handle},
+		Revision:  &gqlclient.RevisionFragment{ID: "rev-1", Sha: &sha, Git: &gqlclient.RevisionFragment_Git{Ref: "main"}},
+		Repository: &gqlclient.GitRepositoryFragment{
+			ID: "repo-1", URL: "https://github.com/acme/fleet.git", AuthMethod: &auth, Health: &health,
+		},
+		Configuration: []*gqlclient.ServiceDeploymentExtended_Configuration{
+			{Name: "cluster", Value: "prod"},
+			{Name: "replicas", Value: "3"},
+		},
 		Components: []*gqlclient.ServiceDeploymentExtended_Components{
-			{Synced: true},
-			{Synced: false},
+			{ID: "cmp-1", Name: "api", Namespace: &ns, Kind: "Deployment", Version: &version, State: &state, Synced: true},
+			{ID: "cmp-2", Name: "api", Kind: "Service", Synced: false},
 		},
 		Errors: []*gqlclient.ErrorFragment{{Source: "sync", Message: "rollout timed out"}},
 	}}
@@ -150,8 +173,23 @@ func TestGetMapsDetail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
-	if detail.ClusterHandle != "prod-eu" || detail.RevisionSHA != "abc123" || detail.Components != 2 || detail.Synced != 1 {
-		t.Fatalf("detail = %#v", detail)
+	if detail.ClusterHandle != "prod-eu" || detail.RevisionSHA != "abc123" || detail.RevisionID != "rev-1" {
+		t.Fatalf("revision/cluster = %#v", detail)
+	}
+	if detail.Version != "0.1.4" || detail.Tarball == "" || !detail.Templated || detail.DryRun || detail.DeletedAt == "" {
+		t.Fatalf("identity = %#v", detail)
+	}
+	if detail.KustomizePath != "overlays/prod" || detail.Repository == nil || detail.Repository.URL == "" {
+		t.Fatalf("git = %#v", detail)
+	}
+	if len(detail.Configuration) != 2 || detail.Configuration[0].Name != "cluster" {
+		t.Fatalf("configuration = %#v", detail.Configuration)
+	}
+	if len(detail.Components) != 2 || detail.Synced != 1 || detail.Components[0].Kind != "Deployment" {
+		t.Fatalf("components = %#v", detail.Components)
+	}
+	if len(detail.Errors) != 1 || detail.Errors[0].Source != "sync" {
+		t.Fatalf("errors = %#v", detail.Errors)
 	}
 }
 
