@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// ProviderName identifies a source-control host used to build pull request URLs.
 type ProviderName string
 
 const (
@@ -14,6 +15,7 @@ const (
 	ProviderBitbucket ProviderName = "bitbucket"
 )
 
+// PullRequestProvider extracts a pull request number from a commit subject.
 type PullRequestProvider interface {
 	Name() ProviderName
 	Supports(host string) bool

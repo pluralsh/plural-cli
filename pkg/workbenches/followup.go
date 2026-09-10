@@ -1,3 +1,4 @@
+// Package workbenches implements Console workbench PR follow-up, shared by CLI and TUI.
 package workbenches
 
 import (
@@ -5,20 +6,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pluralsh/plural-cli/pkg/console"
+	consoleclient "github.com/pluralsh/console/go/client"
 )
 
 const pullRequestNotFoundError = "pull request not found"
 
+// Enqueuer queues a follow-up prompt against the workbench job for a pull request.
+type Enqueuer interface {
+	EnqueueWorkbenchPRFollowup(url, prompt string, deferBy time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)
+}
+
+// PullRequestURLResolver turns CLI pull-request flags into a canonical URL.
 type PullRequestURLResolver interface {
 	Resolve(options PullRequestOptions) (string, error)
 }
 
+// PRFollowupService queues a follow-up prompt for the workbench job on a PR.
 type PRFollowupService struct {
-	client   console.ConsoleClient
+	client   Enqueuer
 	resolver PullRequestURLResolver
 }
 
+// PRFollowupOptions are the inputs for Create.
 type PRFollowupOptions struct {
 	Prompt      string
 	DeferBy     time.Duration
@@ -26,6 +35,7 @@ type PRFollowupOptions struct {
 	SkipMissing bool
 }
 
+// PRFollowupResult is the queued follow-up returned by Console.
 type PRFollowupResult struct {
 	PromptID        string `json:"promptId"`
 	PullRequestURL  string `json:"pullRequestUrl"`
@@ -33,10 +43,12 @@ type PRFollowupResult struct {
 	Skipped         bool   `json:"skipped"`
 }
 
-func NewPRFollowupService(client console.ConsoleClient, resolver PullRequestURLResolver) *PRFollowupService {
+// NewPRFollowupService constructs a follow-up service.
+func NewPRFollowupService(client Enqueuer, resolver PullRequestURLResolver) *PRFollowupService {
 	return &PRFollowupService{client: client, resolver: resolver}
 }
 
+// Create resolves the pull request and queues the follow-up prompt.
 func (s *PRFollowupService) Create(options PRFollowupOptions) (PRFollowupResult, error) {
 	if strings.TrimSpace(options.Prompt) == "" {
 		return PRFollowupResult{}, fmt.Errorf("prompt cannot be empty")

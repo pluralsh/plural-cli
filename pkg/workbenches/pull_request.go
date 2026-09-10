@@ -8,6 +8,7 @@ import (
 	"github.com/samber/lo"
 )
 
+// PullRequestOptions are the CLI flags used to identify a pull request.
 type PullRequestOptions struct {
 	URL      string
 	Commit   string
@@ -15,6 +16,7 @@ type PullRequestOptions struct {
 	Provider string
 }
 
+// PullRequestResolver infers a pull request URL from git metadata or an explicit URL.
 type PullRequestResolver struct {
 	repository PullRequestRepository
 	providers  []PullRequestProvider
@@ -25,6 +27,7 @@ type repositoryAddress struct {
 	host string
 }
 
+// NewPullRequestResolver builds a resolver. A nil repository uses git.
 func NewPullRequestResolver(repository PullRequestRepository) *PullRequestResolver {
 	if repository == nil {
 		repository = GitPullRequestRepository{}
@@ -36,6 +39,7 @@ func NewPullRequestResolver(repository PullRequestRepository) *PullRequestResolv
 	}
 }
 
+// Resolve returns an explicit PR URL or infers one from git HEAD / origin.
 func (r *PullRequestResolver) Resolve(options PullRequestOptions) (string, error) {
 	if options.URL != "" && options.Commit != "" {
 		return "", fmt.Errorf("url and commit cannot be used together")

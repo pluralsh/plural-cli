@@ -16,6 +16,7 @@ import (
 
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/test/mocks"
+	pkgworkbenches "github.com/pluralsh/plural-cli/pkg/workbenches"
 )
 
 func TestCommandShape(t *testing.T) {
@@ -117,7 +118,7 @@ func TestHandlePRFollowupRejectsEmptyWorkbenchJobURL(t *testing.T) {
 }
 
 func TestPRFollowupResultJSON(t *testing.T) {
-	result := PRFollowupResult{
+	result := pkgworkbenches.PRFollowupResult{
 		PromptID:        "prompt-1",
 		PullRequestURL:  "https://github.com/pluralsh/plural-cli/pull/5078",
 		WorkbenchJobURL: "https://console.example.com/workbenches/jobs/job-1",
@@ -153,7 +154,7 @@ func prFollowupContext(t *testing.T, args ...string) *cli.Context {
 	flags.String("commit", "", "")
 	flags.String("base-url", "", "")
 	flags.String("prompt", "", "")
-	flags.String("provider", string(ProviderAuto), "")
+	flags.String("provider", string(pkgworkbenches.ProviderAuto), "")
 	flags.String("defer", "0s", "")
 	flags.String("output", "raw", "")
 	flags.String("o", "raw", "")
