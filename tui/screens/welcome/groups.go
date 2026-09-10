@@ -30,7 +30,7 @@ func welcomeGroups() []group {
 		{id: groupDeployments, number: "3", shortcut: "d", title: "CD / Deployments", blurb: "clusters · services · repos", route: navigation.Deployments},
 		{id: groupAccess, number: "4", shortcut: "a", title: "Access", blurb: "login · profiles · Console", route: navigation.Access},
 		{id: groupDiagnose, number: "5", shortcut: "g", title: "Diagnose", blurb: "local context · checks", route: navigation.Diagnostics},
-		{id: groupAI, number: "6", shortcut: "i", title: "AI", blurb: "agents · workbenches", route: navigation.AI},
+		{id: groupAI, number: "6", shortcut: "i", title: "AI", blurb: "chat · agents · workbenches", route: navigation.AI},
 		{id: groupHelp, number: "7", shortcut: "?", title: "Help", blurb: "shortcuts · about"},
 	}
 }

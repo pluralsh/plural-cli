@@ -3,8 +3,9 @@ package agents
 
 import (
 	"context"
+	"errors"
+	"io"
 	"os"
-	"os/exec"
 	"strings"
 
 	"charm.land/bubbles/v2/textinput"
@@ -40,20 +41,22 @@ type detailMsg struct {
 type resumedMsg struct{ err error }
 
 type Model struct {
-	ctx       context.Context
-	loader    agentsbridge.Loader
-	theme     theme.Theme
-	mode      mode
-	loading   bool
-	err       error
-	needsAuth bool
-	request   uint64
-	page      agentsbridge.Page
-	cursor    int
-	filter    string
-	input     textinput.Model
-	detail    agentsbridge.Detail
-	result    string
+	ctx        context.Context
+	loader     agentsbridge.Loader
+	theme      theme.Theme
+	mode       mode
+	loading    bool
+	err        error
+	needsAuth  bool
+	request    uint64
+	page       agentsbridge.Page
+	cursor     int
+	filter     string
+	input      textinput.Model
+	detail     agentsbridge.Detail
+	result     string
+	execResume bool
+	getwd      func() (string, error)
 }
 
 func New(ctx context.Context, loader agentsbridge.Loader, t theme.Theme) Model {
@@ -65,7 +68,7 @@ func New(ctx context.Context, loader agentsbridge.Loader, t theme.Theme) Model {
 	styles.Focused.Text, styles.Focused.Prompt, styles.Focused.Placeholder = t.Body, t.Title, t.Muted
 	styles.Blurred = styles.Focused
 	input.SetStyles(styles)
-	return Model{ctx: ctx, loader: loader, theme: t, input: input}
+	return Model{ctx: ctx, loader: loader, theme: t, input: input, execResume: true, getwd: os.Getwd}
 }
 
 func (m Model) Init() tea.Cmd { return func() tea.Msg { return initMsg{} } }
@@ -163,16 +166,17 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 		case "enter":
 			path := strings.TrimSpace(m.input.Value())
 			if path == "" {
-				m.err = &bridge.Error{Code: bridge.ErrorInvalid, Err: context.Canceled}
+				path = m.workingDirectory()
+			}
+			if path == "" {
+				m.err = errors.New("enter the path to an existing clone of " + m.detail.Repository)
 				return m, nil
 			}
 			m.input.Blur()
 			m.loading = true
+			m.err = nil
 			m.result = "Launching agent resume for " + m.detail.ID + " in " + path
-			command := exec.Command("plural", "agents", "resume", m.detail.ID)
-			command.Dir = path
-			command.Env = os.Environ()
-			return m, tea.ExecProcess(command, func(err error) tea.Msg { return resumedMsg{err: err} })
+			return m, m.beginResume(path)
 		}
 		var cmd tea.Cmd
 		m.input, cmd = m.input.Update(key)
@@ -190,8 +194,14 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 			m.mode = modeList
 		case "r":
 			m.mode = modeRepoPath
-			m.input.SetValue(".")
-			m.input.Placeholder = "existing local clone"
+			m.err = nil
+			cwd := m.workingDirectory()
+			m.input.CharLimit = 1024
+			m.input.SetValue(cwd)
+			m.input.Placeholder = cwd
+			if m.input.Placeholder == "" {
+				m.input.Placeholder = "absolute path to existing clone"
+			}
 			m.input.Focus()
 		}
 		return m, nil
@@ -223,6 +233,49 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 		return m, m.beginList()
 	}
 	return m, nil
+}
+
+func (m Model) beginResume(path string) tea.Cmd {
+	if m.loader == nil {
+		return func() tea.Msg { return resumedMsg{err: errors.New("agent services are unavailable")} }
+	}
+	id, prRef, loader, ctx := m.detail.ID, m.detail.PRRef, m.loader, m.ctx
+	run := func() error { return loader.Resume(ctx, id, path, prRef) }
+	if !m.execResume {
+		return func() tea.Msg { return resumedMsg{err: run()} }
+	}
+	return tea.Exec(&resumeExecCommand{run: run}, func(err error) tea.Msg {
+		return resumedMsg{err: err}
+	})
+}
+
+// resumeExecCommand runs RestoreAndResume after the TUI releases the terminal
+// so the provider agent can use stdin/stdout.
+type resumeExecCommand struct {
+	run func() error
+}
+
+func (c *resumeExecCommand) Run() error {
+	if c.run == nil {
+		return errors.New("agent resume is not configured")
+	}
+	return c.run()
+}
+
+func (c *resumeExecCommand) SetStdin(io.Reader)  {}
+func (c *resumeExecCommand) SetStdout(io.Writer) {}
+func (c *resumeExecCommand) SetStderr(io.Writer) {}
+
+func (m Model) workingDirectory() string {
+	getwd := m.getwd
+	if getwd == nil {
+		getwd = os.Getwd
+	}
+	dir, err := getwd()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(dir)
 }
 
 func clamp(cursor, count int) int {

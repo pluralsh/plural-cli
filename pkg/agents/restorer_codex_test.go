@@ -138,3 +138,108 @@ func TestCodexRestorerPrepareUsesExistingSessionWhenOverwriteDenied(t *testing.T
 	assertFileContent(t, existing, `{"type":"session_meta","payload":{"id":"session-id","timestamp":"2026-06-01T10:00:00Z"}}`)
 	assertNotExists(t, filepath.Join(codexHome, "sessions", "2026", "06", "02", "session.jsonl"))
 }
+
+func TestCodexResumeInvocationDisablesCwdFilterAndSetsHome(t *testing.T) {
+	codexHome := t.TempDir()
+	t.Setenv("CODEX_HOME", codexHome)
+	repo := t.TempDir()
+	abs, err := filepath.Abs(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	home, env, args, err := (&CodexRestorer{}).resumeInvocation(&PreparedSession{
+		RepoPath:  repo,
+		SessionID: "01a08034-e9fb-7a00-baba-df7d0660e69f",
+	})
+	if err != nil {
+		t.Fatalf("resumeInvocation returned error: %v", err)
+	}
+	if home != codexHome {
+		t.Fatalf("expected home %q, got %q", codexHome, home)
+	}
+	if len(env) != 1 || env[0] != "CODEX_HOME="+codexHome {
+		t.Fatalf("expected CODEX_HOME env, got %v", env)
+	}
+	want := []string{"resume", "--all", "01a08034-e9fb-7a00-baba-df7d0660e69f", "-C", abs}
+	if len(args) != len(want) {
+		t.Fatalf("expected args %v, got %v", want, args)
+	}
+	for i := range want {
+		if args[i] != want[i] {
+			t.Fatalf("expected args %v, got %v", want, args)
+		}
+	}
+}
+
+func TestCodexConfigDirUsesSnapHome(t *testing.T) {
+	userHome := t.TempDir()
+	t.Setenv("HOME", userHome)
+	t.Setenv("CODEX_HOME", "")
+	snapHome := filepath.Join(userHome, "snap", "codex", "current")
+	if err := os.MkdirAll(snapHome, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(snapHome, "config.toml"), []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	orig := lookPath
+	t.Cleanup(func() { lookPath = orig })
+	lookPath = func(string) (string, error) {
+		return "/snap/bin/codex", nil
+	}
+
+	got, err := (&CodexRestorer{}).configDir()
+	if err != nil {
+		t.Fatalf("configDir returned error: %v", err)
+	}
+	if got != snapHome {
+		t.Fatalf("expected snap home %q, got %q", snapHome, got)
+	}
+}
+
+func TestCodexConfigDirFallsBackToDotCodex(t *testing.T) {
+	userHome := t.TempDir()
+	t.Setenv("HOME", userHome)
+	t.Setenv("CODEX_HOME", "")
+
+	orig := lookPath
+	t.Cleanup(func() { lookPath = orig })
+	lookPath = func(string) (string, error) {
+		return "/usr/local/bin/codex", nil
+	}
+
+	got, err := (&CodexRestorer{}).configDir()
+	if err != nil {
+		t.Fatalf("configDir returned error: %v", err)
+	}
+	want := filepath.Join(userHome, ".codex")
+	if got != want {
+		t.Fatalf("expected %q, got %q", want, got)
+	}
+}
+
+func TestSnapCodexHome(t *testing.T) {
+	userHome := t.TempDir()
+	if got := snapCodexHome("/usr/bin/codex", userHome); got != "" {
+		t.Fatalf("expected empty for non-snap binary, got %q", got)
+	}
+
+	current := filepath.Join(userHome, "snap", "codex", "current")
+	if err := os.MkdirAll(current, 0755); err != nil {
+		t.Fatal(err)
+	}
+	got := snapCodexHome("/snap/bin/codex", userHome)
+	if got != current {
+		t.Fatalf("expected %q when snap dir exists, got %q", current, got)
+	}
+
+	if err := os.WriteFile(filepath.Join(current, "config.toml"), []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
+	got = snapCodexHome("/snap/bin/codex", userHome)
+	if got != current {
+		t.Fatalf("expected %q when config exists, got %q", current, got)
+	}
+}

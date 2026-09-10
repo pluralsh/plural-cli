@@ -43,14 +43,27 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		return page.Panel(m.theme, "Console required", []string{"Connect a Console profile to browse agent runs.", "", "Press c to open Access."}, width, 7, true), "c connect · esc AI hub"
 	}
 	if m.mode == modeRepoPath {
-		return page.Panel(m.theme, "Choose local clone", []string{"Existing clone for " + m.detail.Repository, "", m.input.View()}, width, 7, true), "enter continue · esc cancel"
+		cwd := m.workingDirectory()
+		lines := []string{
+			"Existing clone for " + m.detail.Repository,
+			"Current dir  " + value(cwd),
+			"",
+			m.input.View(),
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(errorText(m.err)))
+		}
+		return page.Panel(m.theme, "Choose local clone", lines, width, 9, true), "enter use path · esc cancel"
 	}
 	if m.mode == modeResult {
 		lines := []string{m.theme.Success.Render("✓ Resume complete"), "", m.result}
 		if m.err != nil {
-			lines = []string{m.theme.Danger.Render("✗ Resume failed"), "", m.err.Error()}
+			wrapped := wrapLines(errorText(m.err), max(1, width-4))
+			lines = make([]string, 0, 2+len(wrapped))
+			lines = append(lines, m.theme.Danger.Render("✗ Resume failed"), "")
+			lines = append(lines, wrapped...)
 		}
-		return page.Panel(m.theme, "Agent resume", lines, width, 9, true), "enter/esc detail"
+		return page.Panel(m.theme, "Agent resume", lines, width, 12, true), "enter/esc detail"
 	}
 	if m.mode == modeDetail {
 		lines := []string{
@@ -63,6 +76,9 @@ func (m Model) bodyAndHelp(width int) (string, string) {
 		}
 		if len(m.detail.PullRequests) > 1 {
 			lines = append(lines, "", fmt.Sprintf("%d pull request branches available", len(m.detail.PullRequests)))
+		}
+		if m.err != nil {
+			lines = append(lines, "", m.theme.Danger.Render(errorText(m.err)))
 		}
 		return page.Panel(m.theme, "Run detail", lines, width, 12, true), "r resume interactively · esc list"
 	}
@@ -107,4 +123,30 @@ func repoName(v string) string {
 		return v[i+1:]
 	}
 	return v
+}
+
+func wrapLines(text string, width int) []string {
+	if width < 1 {
+		width = 1
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return []string{"no error details were returned"}
+	}
+	out := make([]string, 0, strings.Count(text, "\n")+1)
+	for _, line := range strings.Split(text, "\n") {
+		out = append(out, strings.Split(ansi.Wrap(line, width, ""), "\n")...)
+	}
+	return out
+}
+
+func errorText(err error) string {
+	if err == nil {
+		return ""
+	}
+	text := strings.TrimSpace(err.Error())
+	if text == "" || text == "<nil>" {
+		return fmt.Sprintf("%T", err)
+	}
+	return text
 }

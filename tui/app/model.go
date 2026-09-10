@@ -9,6 +9,7 @@ import (
 
 	accessbridge "github.com/pluralsh/plural-cli/pkg/bridge/access"
 	agentsbridge "github.com/pluralsh/plural-cli/pkg/bridge/agents"
+	aibridge "github.com/pluralsh/plural-cli/pkg/bridge/ai"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
 	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
@@ -54,6 +55,7 @@ type Dependencies struct {
 	PullRequests  pullrequestsbridge.Loader
 	Agents        agentsbridge.Loader
 	Workbenches   workbenchesbridge.Loader
+	AI            aibridge.Client
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -101,7 +103,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		providers:     providersscreen.New(ctx, dependencies.Providers, t),
 		stacks:        stacksscreen.New(ctx, dependencies.Stacks, t),
 		pullrequests:  pullrequestsscreen.New(ctx, dependencies.PullRequests, t),
-		ai:            aiscreen.New(t),
+		ai:            aiscreen.New(ctx, dependencies.AI, t),
 		agents:        agentsscreen.New(ctx, dependencies.Agents, t),
 		workbenches:   workbenchesscreen.New(ctx, dependencies.Workbenches, t),
 		up:            upscreen.New(ctx, t),
@@ -128,6 +130,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.route == navigation.Access && m.access.HasCancellableOperation() {
 				var cmd tea.Cmd
 				m.access, cmd = m.access.Update(msg)
+				return m, cmd
+			}
+			if m.route == navigation.AI && m.ai.HasCancellableOperation() {
+				var cmd tea.Cmd
+				m.ai, cmd = m.ai.Update(msg)
 				return m, cmd
 			}
 			return m, tea.Quit

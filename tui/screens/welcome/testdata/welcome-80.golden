@@ -16,7 +16,7 @@
   │   3  d   CD / Deployments    clusters · services · repos                 │
   │   4  a   Access              login · profiles · Console                  │
   │   5  g   Diagnose            local context · checks                      │
-  │   6  i   AI                  agents · workbenches                        │
+  │   6  i   AI                  chat · agents · workbenches                 │
   │   7  ?   Help                shortcuts · about                           │
   │                                                                          │
   │ Setup · Agents · Develop — later                                         │

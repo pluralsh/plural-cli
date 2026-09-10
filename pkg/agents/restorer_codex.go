@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -66,11 +67,78 @@ func (r *CodexRestorer) Prepare(_ context.Context, opts RestoreOptions) (*Prepar
 }
 
 func (r *CodexRestorer) Resume(ctx context.Context, prepared *PreparedSession) error {
-	return r.resume(ctx, prepared, nil, "codex", "resume", prepared.SessionID, "-C", ".")
+	_, env, args, err := r.resumeInvocation(prepared)
+	if err != nil {
+		return err
+	}
+	return r.resume(ctx, prepared, env, "codex", args...)
+}
+
+func (r *CodexRestorer) resumeInvocation(prepared *PreparedSession) (home string, env, args []string, err error) {
+	home, err = r.configDir()
+	if err != nil {
+		return "", nil, nil, err
+	}
+	repo := "."
+	if prepared != nil && strings.TrimSpace(prepared.RepoPath) != "" {
+		repo = prepared.RepoPath
+		if abs, absErr := filepath.Abs(repo); absErr == nil {
+			repo = abs
+		}
+	}
+	args = []string{"resume", "--all"}
+	if prepared != nil && strings.TrimSpace(prepared.SessionID) != "" {
+		args = append(args, prepared.SessionID)
+	}
+	args = append(args, "-C", repo)
+	return home, []string{"CODEX_HOME=" + home}, args, nil
 }
 
 func (r *CodexRestorer) configDir() (string, error) {
-	return r.baseRestorer.configDir("CODEX_HOME", ".codex")
+	if dir := strings.TrimSpace(os.Getenv("CODEX_HOME")); dir != "" {
+		return dir, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("resolve home directory: %w", err)
+	}
+	if path, err := lookPath("codex"); err == nil {
+		if dir := snapCodexHome(path, home); dir != "" {
+			return dir, nil
+		}
+	}
+	return filepath.Join(home, ".codex"), nil
+}
+
+// lookPath locates executables on PATH. Tests replace it.
+var lookPath = exec.LookPath
+
+// snapCodexHome returns the snap-confined Codex home when `codex` is a snap
+// binary. Snap stores config.toml at ~/snap/codex/current, not ~/.codex.
+func snapCodexHome(codexPath, userHome string) string {
+	if !strings.Contains(filepath.ToSlash(codexPath), "/snap/") {
+		return ""
+	}
+	current := filepath.Join(userHome, "snap", "codex", "current")
+	common := filepath.Join(userHome, "snap", "codex", "common")
+	for _, candidate := range []string{current, common} {
+		if looksLikeCodexHome(candidate) {
+			return candidate
+		}
+	}
+	if info, err := os.Stat(current); err == nil && info.IsDir() {
+		return current
+	}
+	return ""
+}
+
+func looksLikeCodexHome(dir string) bool {
+	for _, name := range []string{"config.toml", "auth.json"} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *CodexRestorer) archivedSessionFile(sessionsDir, sessionID string) (string, error) {

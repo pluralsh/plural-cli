@@ -50,6 +50,7 @@ type Page struct {
 type Loader interface {
 	List(context.Context, *string, string) (Page, error)
 	Get(context.Context, string) (Detail, error)
+	Resume(ctx context.Context, id, repoPath, prRef string) error
 }
 
 type ConsoleResolver interface {
@@ -66,6 +67,7 @@ type ClientFactory func(token, url string) (API, error)
 type Service struct {
 	resolve   ConsoleResolver
 	newClient ClientFactory
+	session   Session
 	pageSize  int
 }
 
