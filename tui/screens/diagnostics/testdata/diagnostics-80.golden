@@ -1,0 +1,24 @@
+  Plural  Diagnostics                                    ✓ local context ready
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ Local context ──────────────────────────────────────────────────────────╮
+  │ Plural App   ✓ OK             alex@acme.io                               │
+  │ Console      ✓ OK             https://console.acme.io                    │
+  │ Workspace    ✓ OK             /work/path/to/a/very/long/workspace        │
+  │ Kubernetes   ✓ OK             plural-platform-prod                       │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+  ╭─ › Checks ───────────────────────────────────────────────────────────────╮
+  │ ! WARN  workspace owner does not match the active identity               │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+  r refresh · esc back · ctrl+c quit

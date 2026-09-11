@@ -1,0 +1,30 @@
+  Plural  Notifications                                                                                        3 sinks
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Notification sinks ───────────────────────────────────────────────────────────────────────────────────────────╮
+  │   NAME                     TYPE     URL                                                                          │
+  │ › ops-slack                SLACK    https://hooks.slack.com/services/T/B/x                                       │
+  │   ops-teams                TEAMS    https://teams.example/webhook                                                │
+  │   plural-inbox             PLURAL   —                                                                            │
+  │                                                                                                                  │
+  │ page · n next                                                                                                    │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+  ↑/↓ select · enter open · / filter · n/p page · r refresh · esc back

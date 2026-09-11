@@ -27,7 +27,12 @@ func Setup() (string, error) {
 	if err := survey.AskOne(prompt, &provider, survey.WithValidator(survey.Required)); err != nil {
 		return "", err
 	}
+	return SetupProvider(provider)
+}
 
+// SetupProvider runs scm auth + create repo + clone for a chosen provider id
+// (github / gitlab / bitbucket). Used by the TUI after the SCM select screen.
+func SetupProvider(provider string) (string, error) {
 	var prov Provider
 	switch provider {
 	case "github":
@@ -37,7 +42,7 @@ func Setup() (string, error) {
 	case "bitbucket":
 		prov = &Bitbucket{}
 	default:
-		return "", nil
+		return "", fmt.Errorf("unknown scm provider %q", provider)
 	}
 
 	if err := prov.Init(); err != nil {

@@ -1,0 +1,30 @@
+  Plural  Services                                                                               3 services · @prod-eu
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Services · @prod-eu ──────────────────────────────────────────────────────────────────────────────────────────╮
+  │   NAME                         NAMESPACE      STATUS     GIT                                                     │
+  │ › api                          default        HEALTHY    main services/api                                       │
+  │   worker                       jobs           FAILED     main services/worker                                    │
+  │   canary                       default        SYNCED     release services/canary                                 │
+  │                                                                                                                  │
+  │ page · n next                                                                                                    │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+  ↑/↓ · j/k · enter detail · a create · / filter · n/p page · r refresh · esc

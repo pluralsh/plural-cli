@@ -1,0 +1,30 @@
+  Plural  Up                                                                                       step · scm provider
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › SCM provider ─────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │ Select the SCM provider to use for your repository:                                                              │
+  │ Same first prompt as scm.Setup() in plural up.                                                                   │
+  │                                                                                                                  │
+  │ › 1  g   GitHub      authenticate · create repo · clone                                                          │
+  │   2  l   GitLab      authenticate · create repo · clone                                                          │
+  │   3  b   Bitbucket   authenticate · create repo · clone                                                          │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ↑/↓ · 1–3 / letter · enter · esc git

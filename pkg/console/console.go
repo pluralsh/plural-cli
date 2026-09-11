@@ -18,6 +18,15 @@ type consoleClient struct {
 	token  string
 }
 
+type WorkbenchJob struct {
+	ID          string `json:"id"`
+	Prompt      string `json:"prompt"`
+	Status      string `json:"status"`
+	WorkbenchID string `json:"workbench_id"`
+	InsertedAt  string `json:"inserted_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 type ConsoleClient interface {
 	Url() string
 	ExtUrl() string
@@ -41,9 +50,12 @@ type ConsoleClient interface {
 	GetClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	DeleteClusterService(serviceId string) (*consoleclient.DeleteServiceDeployment, error)
 	ListProviders() (*consoleclient.ListProviders, error)
+	GetProvider(id string) (*consoleclient.ClusterProviderFragment, error)
 	CreateProviderCredentials(name string, attr consoleclient.ProviderCredentialAttributes) (*consoleclient.CreateProviderCredential, error)
 	DeleteProviderCredentials(id string) (*consoleclient.DeleteProviderCredential, error)
 	SavePipeline(name string, attrs consoleclient.PipelineAttributes) (*consoleclient.PipelineFragmentMinimal, error)
+	ListPipelines() (*consoleclient.GetPipelines, error)
+	GetPipeline(id string) (*consoleclient.PipelineFragment, error)
 	CreatePipelineContext(id string, attrs consoleclient.PipelineContextAttributes) (*consoleclient.PipelineContextFragment, error)
 	GetPipelineContext(id string) (*consoleclient.PipelineContextFragment, error)
 	CreateCluster(attributes consoleclient.ClusterAttributes) (*consoleclient.CreateCluster, error)
@@ -53,6 +65,7 @@ type ConsoleClient interface {
 	GetServiceContext(name string) (*consoleclient.ServiceContextFragment, error)
 	KickClusterService(serviceId, serviceName, clusterName *string) (*consoleclient.ServiceDeploymentExtended, error)
 	ListNotificationSinks(after *string, first *int64) (*consoleclient.ListNotificationSinks_NotificationSinks, error)
+	GetNotificationSink(id string) (*consoleclient.NotificationSinkFragment, error)
 	CreateNotificationSinks(attr consoleclient.NotificationSinkAttributes) (*consoleclient.NotificationSinkFragment, error)
 	UpdateDeploymentSettings(attr consoleclient.DeploymentSettingsAttributes) (*consoleclient.UpdateDeploymentSettings, error)
 	GetGlobalSettings() (*consoleclient.DeploymentSettingsFragment, error)
@@ -63,12 +76,19 @@ type ConsoleClient interface {
 	CreatePullRequest(id string, branch, context *string) (*consoleclient.PullRequestFragment, error)
 	CreateWorkbenchPRFollowup(url, prompt string) (string, error)
 	EnqueueWorkbenchPRFollowup(url, prompt string, deferBy time.Duration) (*consoleclient.EnqueueWorkbenchPrFollowup_EnqueueWorkbenchPrFollowup, error)
+	ListWorkbenches(after *string, first *int64, query *string) (*consoleclient.ListWorkbenches_Workbenches, error)
+	GetWorkbench(id string) (*consoleclient.WorkbenchFragment, error)
+	ListWorkbenchJobs(workbenchID string, page, perPage int) ([]WorkbenchJob, error)
+	CreateQueuedPrompt(jobID, prompt string, dequeueAt time.Time) (*consoleclient.QueuedPromptFragment, error)
 	GetPrAutomationByName(name string) (*consoleclient.PrAutomationFragment, error)
+	ListPrAutomations() (*consoleclient.ListPrAutomations, error)
+	GetPrAutomation(id string) (*consoleclient.PrAutomationFragment, error)
 	CreateBootstrapToken(attributes consoleclient.BootstrapTokenAttributes) (string, error)
 	CreateClusterRegistration(attributes consoleclient.ClusterRegistrationCreateAttributes) (*consoleclient.ClusterRegistrationFragment, error)
 	IsClusterRegistrationComplete(machineID string) (bool, *consoleclient.ClusterRegistrationFragment)
 	GetUser(email string) (*consoleclient.UserFragment, error)
 	ListStacks() (*consoleclient.ListInfrastructureStacks, error)
+	GetStack(id string) (*consoleclient.InfrastructureStackFragment, error)
 }
 
 type authedTransport struct {

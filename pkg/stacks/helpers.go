@@ -4,20 +4,24 @@ import (
 	"fmt"
 
 	gqlclient "github.com/pluralsh/console/go/client"
-
-	"github.com/pluralsh/plural-cli/pkg/console"
 )
 
-func GetTerraformStateUrls(client console.ConsoleClient, stackID string) (*gqlclient.TerraformStateUrls, error) {
+// StackRunsLister is the Console surface needed to resolve terraform backend URLs.
+type StackRunsLister interface {
+	ListStackRuns(stackID string) (*gqlclient.ListStackRuns, error)
+}
+
+func GetTerraformStateUrls(client StackRunsLister, stackID string) (*gqlclient.TerraformStateUrls, error) {
 	stackRuns, err := client.ListStackRuns(stackID)
 	if err != nil {
 		return nil, err
 	}
 
-	if stackRuns.InfrastructureStack == nil ||
+	if stackRuns == nil ||
+		stackRuns.InfrastructureStack == nil ||
 		stackRuns.InfrastructureStack.Runs == nil ||
 		len(stackRuns.InfrastructureStack.Runs.Edges) == 0 {
-		return nil, nil
+		return nil, fmt.Errorf("no terraform state urls found for stack %s", stackID)
 	}
 
 	stateUrls := toTerraformStateUrls(stackRuns.InfrastructureStack.Runs.Edges)
@@ -30,8 +34,11 @@ func GetTerraformStateUrls(client console.ConsoleClient, stackID string) (*gqlcl
 
 func toTerraformStateUrls(stackRuns []*gqlclient.ListStackRuns_InfrastructureStack_Runs_Edges) *gqlclient.TerraformStateUrls {
 	for _, edge := range stackRuns {
+		if edge == nil || edge.Node == nil {
+			continue
+		}
 		run := edge.Node
-		if run.Type != gqlclient.StackTypeTerraform || run.StateUrls.Terraform == nil {
+		if run.Type != gqlclient.StackTypeTerraform || run.StateUrls == nil || run.StateUrls.Terraform == nil {
 			continue
 		}
 

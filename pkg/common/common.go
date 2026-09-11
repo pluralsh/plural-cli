@@ -1,19 +1,21 @@
 package common
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/browser"
 	"github.com/urfave/cli"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
+	"github.com/pluralsh/plural-cli/pkg/bridge"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
 	"github.com/pluralsh/plural-cli/pkg/provider"
@@ -25,7 +27,9 @@ import (
 )
 
 var (
-	loggedIn = false
+	loggedIn       = false
+	newAuthService = func() *bridge.AuthService { return bridge.NewAuthService(bridge.PluralAuthFactory{}, 0) }
+	openLoginURL   = browser.OpenURL
 )
 
 func HandleLogin(c *cli.Context) error {
@@ -39,77 +43,68 @@ func HandleLogin(c *cli.Context) error {
 	conf := &config.Config{}
 	conf.Token = ""
 	conf.Endpoint = c.String("endpoint")
-	client := api.FromConfig(conf)
+	auth := newAuthService()
+	ctx := context.Background()
 	persist := c.Command.Name == "login"
 
 	if config.Exists() {
 		conf := config.Read()
 		if Affirm(fmt.Sprintf("It looks like your current Plural user is %s, use this profile?", conf.Email), "PLURAL_LOGIN_AFFIRM_CURRENT_USER") {
-			client = api.FromConfig(&conf)
-			return postLogin(&conf, client, c, persist)
+			return establishLogin(ctx, auth, &conf, c.String("service-account"), persist)
 		}
 	}
 
-	device, err := client.DeviceLogin()
+	device, err := auth.BeginDeviceLogin(ctx, conf.Endpoint)
 	if err != nil {
-		return api.GetErrorResponse(err, "DeviceLogin")
+		return authError(err)
 	}
 
-	fmt.Printf("logging into Plural at %s\n", device.LoginUrl)
-	if err := browser.OpenURL(device.LoginUrl); err != nil {
-		fmt.Printf("Open %s in your browser to proceed\n", device.LoginUrl)
+	fmt.Printf("logging into Plural at %s\n", device.LoginURL)
+	if err := openLoginURL(device.LoginURL); err != nil {
+		fmt.Printf("Open %s in your browser to proceed\n", device.LoginURL)
 	}
 
-	var jwt string
-	for {
-		result, err := client.PollLoginToken(device.DeviceToken)
-		if err == nil {
-			jwt = result
-			break
-		}
-
-		time.Sleep(2 * time.Second)
+	jwt, err := auth.AwaitDeviceLogin(ctx, conf.Endpoint, device.DeviceToken)
+	if err != nil {
+		return authError(err)
 	}
 
 	conf.Token = jwt
 	conf.ReportErrors = Affirm("Would you be willing to report any errors to Plural to help with debugging?", "PLURAL_LOGIN_AFFIRM_REPORT_ERRORS")
-	client = api.FromConfig(conf)
-	return postLogin(conf, client, c, persist)
+	return establishLogin(ctx, auth, conf, c.String("service-account"), persist)
 }
 
-func postLogin(conf *config.Config, client api.Client, c *cli.Context, persist bool) error {
-	me, err := client.Me()
-	if err != nil {
-		return api.GetErrorResponse(err, "Me")
-	}
-
-	conf.Email = me.Email
-	fmt.Printf("\nLogged in as %s!\n", me.Email)
-
-	saEmail := c.String("service-account")
-	if saEmail != "" {
-		jwt, email, err := client.ImpersonateServiceAccount(saEmail)
-		if err != nil {
-			return api.GetErrorResponse(err, "ImpersonateServiceAccount")
+func establishLogin(ctx context.Context, auth *bridge.AuthService, conf *config.Config, serviceAccount string, persist bool) error {
+	profiles := bridge.LegacyProfileStore{}
+	session, err := auth.EstablishSession(ctx, conf.Endpoint, conf.Token, serviceAccount, persist, func(event bridge.AuthEvent) {
+		switch event.Kind {
+		case bridge.AuthEventIdentified:
+			conf.Email = event.Email
+			fmt.Printf("\nLogged in as %s!\n", event.Email)
+		case bridge.AuthEventImpersonated:
+			conf.Email = event.Email
+			conf.Token = event.Credential
+			fmt.Printf("Assumed service account %s\n", serviceAccount)
+			_ = profiles.Activate(ctx, conf)
 		}
-
-		conf.Email = email
-		conf.Token = jwt
-		fmt.Printf("Assumed service account %s\n", saEmail)
-		config.SetConfig(conf)
-		client = api.FromConfig(conf)
-		if !persist {
-			return nil
-		}
-	}
-
-	accessToken, err := client.GrabAccessToken()
+	})
 	if err != nil {
-		return api.GetErrorResponse(err, "GrabAccessToken")
+		return authError(err)
 	}
 
-	conf.Token = accessToken
-	return conf.Flush()
+	conf.Email = session.EffectiveEmail
+	conf.Token = session.Credential
+	if session.Impersonated && !persist {
+		return profiles.Activate(ctx, conf)
+	}
+	return profiles.Persist(ctx, conf)
+}
+
+func authError(err error) error {
+	if appErr, ok := errors.AsType[*bridge.Error](err); ok {
+		return api.GetErrorResponse(appErr.Err, string(appErr.Operation))
+	}
+	return err
 }
 func Preflights(c *cli.Context) error {
 	_, err := RunPreflights(c)
@@ -201,8 +196,7 @@ func IsUUIDv4(input string) bool {
 func GetIdAndName(input string) (id, name *string) {
 	switch {
 	case strings.HasPrefix(input, "@"):
-		h := strings.Trim(input, "@")
-		name = &h
+		name = new(strings.Trim(input, "@"))
 	case IsUUIDv4(input):
 		id = &input
 	default:

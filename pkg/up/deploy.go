@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"time"
 
@@ -49,7 +48,7 @@ func (c *Context) runCheckpoint(current, checkpoint string, fn func() error) err
 	if current == "" || priorities[checkpoint] > priorities[current] {
 		err := fn()
 		if err == nil {
-			c.Manifest.Checkpoint = checkpoint
+			return c.completeCheckpoint(checkpoint)
 		}
 		return err
 	}
@@ -57,6 +56,11 @@ func (c *Context) runCheckpoint(current, checkpoint string, fn func() error) err
 	utils.Highlight("Skipping checkpoint %s, ran up to %s previously\n", checkpoint, current)
 
 	return nil
+}
+
+func (c *Context) completeCheckpoint(checkpoint string) error {
+	c.Manifest.Checkpoint = checkpoint
+	return c.Manifest.Flush()
 }
 
 func (c *Context) Deploy(commit func() error) error {
@@ -222,8 +226,9 @@ func (tf *terraformCmd) run() (err error) {
 		args := append([]string{tf.cmd}, tf.args...)
 		cmd := exec.Command("terraform", args...)
 		cmd.Dir = tf.dir
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		stdout, stderr := commandOutput()
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
 		err = cmd.Run()
 		if err == nil {
 			return

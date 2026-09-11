@@ -1,0 +1,24 @@
+  ╭─ Plural ───────────────────────────────────── ✓ personal · alex@acme.io ─╮
+  │                    │ ✓ Console                                           │
+  │    ███████   ██    │ URL       https://console.acme.io                   │
+  │    ██        ██    │ ─────────────────────────────────────────────────── │
+  │    ██   ██   ██    │ ✓ Workspace · plrl-dev-aws · /work/path/...         │
+  │    ██        ██    │ Provider  aws · eu-west-1                           │
+  │    ██   ███████    │ Owner     sebastian@plural.sh                       │
+  │                    │                                                     │
+  ╰─ v0.13.0 ────────────────────────────────────────────────────────────────╯
+
+
+  ╭─ Choose an area ─────────────────────────────────────────────────────────╮
+  │ › 1  u   Up                  bootstrap · management cluster              │
+  │   2  x   Down                destroy · management cluster                │
+  │   3  d   CD / Deployments    clusters · services · repos                 │
+  │   4  a   Access              login · profiles · Console                  │
+  │   5  g   Diagnose            local context · checks                      │
+  │   6  i   AI                  chat · agents · workbenches                 │
+  │   7  e   Edge                image · flash                               │
+  │   8  ?   Help                shortcuts · about                           │
+  │                                                                          │
+  │ Setup · Agents · Develop — later                                         │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+    1–8 open · letter shortcut · ↑/↓ · enter · ctrl+c quit

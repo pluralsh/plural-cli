@@ -57,7 +57,7 @@ func (c *Context) Generate(gitRef string) (dir string, err error) {
 
 	for _, tpl := range tpls {
 		if utils.Exists(tpl.to) && !tpl.overwrite {
-			fmt.Printf("%s already exists, skipping for now...\n", tpl.to)
+			_, _ = fmt.Fprintf(commandStdoutWriter(), "%s already exists, skipping for now...\n", tpl.to)
 			continue
 		}
 

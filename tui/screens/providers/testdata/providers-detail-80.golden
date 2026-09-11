@@ -1,0 +1,24 @@
+  Plural  Providers · aws-west                                             aws
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Summary ──────────────────────────────────────────────────────────────╮
+  │ Name         aws-west                                                    │
+  │ Cloud        aws                                                         │
+  │ Namespace    infra                                                       │
+  │ Editable     true                                                        │
+  │ Repo         https://github.com/acme/infra                               │
+  │ Service      infra/provider                                              │
+  │ ID           pr1                                                         │
+  │                                                                          │
+  │ Credentials                                                              │
+  │   aws-creds  infra · Secret                                              │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+  r refresh · esc list · ctrl+c quit

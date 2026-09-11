@@ -1,0 +1,24 @@
+  Plural  CD / Deployments                             https://console.acme.io
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Resources ────────────────────────────────────────────────────────────╮
+  │ › 1  s   Services        browse · kick · create · …                      │
+  │   2  c   Clusters        list · describe                                 │
+  │   3  r   Repositories    list · describe                                 │
+  │   4  p   Pipelines       list · describe                                 │
+  │   5  n   Notifications   list · describe                                 │
+  │   6  v   Providers       list · describe                                 │
+  │   7  t   Stacks          browse · gen-backend                            │
+  │   8  u   Pull requests   browse · create · trigger · …                   │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+  ╭─ Connection ─────────────────────────────────────────────────────────────╮
+  │ Console   https://console.acme.io                                        │
+  │ Tip       plural cd … remains the automation API                         │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+  1–8 / letter · enter open · esc welcome · ctrl+c quit
