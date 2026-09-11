@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -78,4 +79,58 @@ func TestGetErrorResponse(t *testing.T) {
 	for _, err := range []error{errors.New("connection refused"), errors.New(`{"message":"unrelated"}`)} {
 		assert.Same(t, err, api.GetErrorResponse(err, "GetCluster"))
 	}
+}
+
+func TestClientsPreserveTransportErrors(t *testing.T) {
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = originalTransport })
+
+	for _, transportErr := range []error{errors.New("connection refused"), context.Canceled, context.DeadlineExceeded} {
+		t.Run(transportErr.Error(), func(t *testing.T) {
+			http.DefaultTransport = roundTripperFunc(func(*http.Request) (*http.Response, error) {
+				return nil, transportErr
+			})
+			apiClient := api.FromConfig(&config.Config{Endpoint: "api.example.com", Token: "token"})
+			consoleClient, err := console.NewConsoleClient("token", "https://console.example.com")
+			require.NoError(t, err)
+
+			_, apiErr := apiClient.Me()
+			_, consoleErr := consoleClient.ListClusters()
+			for _, err := range []error{apiErr, consoleErr} {
+				require.Error(t, err)
+				assert.ErrorIs(t, err, transportErr)
+				assert.Contains(t, err.Error(), transportErr.Error())
+				var response *clientv2.ErrorResponse
+				assert.False(t, errors.As(err, &response))
+				assert.Same(t, err, api.GetErrorResponse(err, "ListClusters"))
+			}
+		})
+	}
+}
+
+func TestClientsSuccessfulResponses(t *testing.T) {
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = originalTransport })
+	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		body := `{"data":{"me":{"id":"user-1","email":"user@example.com"}}}`
+		if req.URL.Host == "console.example.com" {
+			body = `{"data":{"clusters":{"edges":[]}}}`
+		}
+		return &http.Response{StatusCode: http.StatusOK, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body))}, nil
+	})
+
+	apiClient := api.FromConfig(&config.Config{Endpoint: "api.example.com", Token: "token"})
+	me, err := apiClient.Me()
+	require.NoError(t, err)
+	require.NotNil(t, me)
+	assert.Equal(t, "user-1", me.Id)
+	assert.Equal(t, "user@example.com", me.Email)
+
+	consoleClient, err := console.NewConsoleClient("token", "https://console.example.com")
+	require.NoError(t, err)
+	clusters, err := consoleClient.ListClusters()
+	require.NoError(t, err)
+	require.NotNil(t, clusters)
+	require.NotNil(t, clusters.Clusters)
+	assert.Empty(t, clusters.Clusters.Edges)
 }
