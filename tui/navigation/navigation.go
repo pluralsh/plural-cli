@@ -26,6 +26,7 @@ const (
 	PullRequests  Route = "pullrequests"
 	Up            Route = "up"
 	Down          Route = "down"
+	Edge          Route = "edge"
 )
 
 // NavigateMsg requests a top-level route change.

@@ -11,6 +11,7 @@ import (
 	agentsbridge "github.com/pluralsh/plural-cli/pkg/bridge/agents"
 	aibridge "github.com/pluralsh/plural-cli/pkg/bridge/ai"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	edgebridge "github.com/pluralsh/plural-cli/pkg/bridge/edge"
 	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
 	providersbridge "github.com/pluralsh/plural-cli/pkg/bridge/providers"
@@ -28,6 +29,7 @@ import (
 	deploymentsscreen "github.com/pluralsh/plural-cli/tui/screens/deployments"
 	diagnosticsscreen "github.com/pluralsh/plural-cli/tui/screens/diagnostics"
 	downscreen "github.com/pluralsh/plural-cli/tui/screens/down"
+	edgescreen "github.com/pluralsh/plural-cli/tui/screens/edge"
 	notificationsscreen "github.com/pluralsh/plural-cli/tui/screens/notifications"
 	pipelinesscreen "github.com/pluralsh/plural-cli/tui/screens/pipelines"
 	providersscreen "github.com/pluralsh/plural-cli/tui/screens/providers"
@@ -56,6 +58,7 @@ type Dependencies struct {
 	Agents        agentsbridge.Loader
 	Workbenches   workbenchesbridge.Loader
 	AI            aibridge.Client
+	Edge          edgebridge.Loader
 }
 
 // Model is the root TUI model. It owns global input and delegates screen state
@@ -84,6 +87,7 @@ type Model struct {
 	workbenches   workbenchesscreen.Model
 	up            upscreen.Model
 	down          downscreen.Model
+	edge          edgescreen.Model
 	route         navigation.Route
 }
 
@@ -108,6 +112,7 @@ func New(ctx context.Context, t theme.Theme, dependencies Dependencies) Model {
 		workbenches:   workbenchesscreen.New(ctx, dependencies.Workbenches, t),
 		up:            upscreen.New(ctx, t),
 		down:          downscreen.New(ctx, t),
+		edge:          edgescreen.New(ctx, dependencies.Edge, t),
 		route:         navigation.Welcome,
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c"),
@@ -180,6 +185,8 @@ func (m Model) navigateTo(route navigation.Route) (Model, tea.Cmd) {
 	case navigation.Down:
 		m.down = m.down.Reset()
 		return m, m.down.Init()
+	case navigation.Edge:
+		return m, m.edge.Init()
 	default:
 		return m, m.welcome.Init()
 	}
@@ -220,6 +227,8 @@ func (m Model) updateActive(msg tea.Msg) (Model, tea.Cmd) {
 		m.up, cmd = m.up.Update(msg)
 	case navigation.Down:
 		m.down, cmd = m.down.Update(msg)
+	case navigation.Edge:
+		m.edge, cmd = m.edge.Update(msg)
 	default:
 		m.welcome, cmd = m.welcome.Update(msg)
 	}

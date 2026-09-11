@@ -89,6 +89,11 @@ func TestModelRoutesScreensWithoutRebuildingShell(t *testing.T) {
 	if routed.route != navigation.Down || !strings.Contains(routed.View().Content, "Destroy mode") {
 		t.Fatalf("down route/view = %q\n%s", routed.route, routed.View().Content)
 	}
+	updated, _ = model.Update(navigation.NavigateMsg{Route: navigation.Edge})
+	routed = updated.(Model)
+	if routed.route != navigation.Edge || !strings.Contains(routed.View().Content, "Edge commands") {
+		t.Fatalf("edge route/view = %q\n%s", routed.route, routed.View().Content)
+	}
 }
 
 func TestModelRoutesAIDedicatedScreen(t *testing.T) {

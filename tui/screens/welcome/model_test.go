@@ -213,6 +213,17 @@ func TestWelcomeArrowAndEnterOpensDiagnose(t *testing.T) {
 	}
 }
 
+func TestWelcomeOpensEdgeFromShortcut(t *testing.T) {
+	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
+	model, cmd := model.Update(tea.KeyPressMsg{Code: 'e', Text: "e"})
+	if cmd == nil {
+		t.Fatal("selecting Edge did not emit navigation")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Edge {
+		t.Fatalf("route = %q, want edge", got)
+	}
+}
+
 func TestWelcomeHelpIsStub(t *testing.T) {
 	model := New(t.Context(), nil, theme.New(colorprofile.ASCII))
 	model, cmd := model.Update(tea.KeyPressMsg{Code: '?', Text: "?"})

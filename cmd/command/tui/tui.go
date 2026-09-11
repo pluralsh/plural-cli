@@ -11,6 +11,7 @@ import (
 	agentsbridge "github.com/pluralsh/plural-cli/pkg/bridge/agents"
 	aibridge "github.com/pluralsh/plural-cli/pkg/bridge/ai"
 	clustersbridge "github.com/pluralsh/plural-cli/pkg/bridge/clusters"
+	edgebridge "github.com/pluralsh/plural-cli/pkg/bridge/edge"
 	notificationsbridge "github.com/pluralsh/plural-cli/pkg/bridge/notifications"
 	pipelinesbridge "github.com/pluralsh/plural-cli/pkg/bridge/pipelines"
 	providersbridge "github.com/pluralsh/plural-cli/pkg/bridge/providers"
@@ -41,6 +42,7 @@ func Command() cli.Command {
 		agents := agentsbridge.NewService(access)
 		workbenches := workbenchesbridge.NewService(access)
 		ai := aibridge.NewService()
+		edge := edgebridge.NewService(access)
 		return tuiapp.Run(ctx, os.Stdin, os.Stdout, tuiapp.Dependencies{
 			Welcome:       welcome,
 			Access:        access,
@@ -55,6 +57,7 @@ func Command() cli.Command {
 			Agents:        agents,
 			Workbenches:   workbenches,
 			AI:            ai,
+			Edge:          edge,
 		})
 	})
 }

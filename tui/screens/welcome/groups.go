@@ -11,6 +11,7 @@ const (
 	groupAccess
 	groupDiagnose
 	groupAI
+	groupEdge
 	groupHelp
 )
 
@@ -31,6 +32,7 @@ func welcomeGroups() []group {
 		{id: groupAccess, number: "4", shortcut: "a", title: "Access", blurb: "login · profiles · Console", route: navigation.Access},
 		{id: groupDiagnose, number: "5", shortcut: "g", title: "Diagnose", blurb: "local context · checks", route: navigation.Diagnostics},
 		{id: groupAI, number: "6", shortcut: "i", title: "AI", blurb: "chat · agents · workbenches", route: navigation.AI},
-		{id: groupHelp, number: "7", shortcut: "?", title: "Help", blurb: "shortcuts · about"},
+		{id: groupEdge, number: "7", shortcut: "e", title: "Edge", blurb: "image · flash", route: navigation.Edge},
+		{id: groupHelp, number: "8", shortcut: "?", title: "Help", blurb: "shortcuts · about"},
 	}
 }
