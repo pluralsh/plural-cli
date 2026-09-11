@@ -2,15 +2,16 @@ package api
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	rawclient "github.com/Yamashou/gqlgenc/clientv2"
-	"github.com/pkg/errors"
 	"github.com/pluralsh/gqlclient"
 
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	clierrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
 
 type authedTransport struct {
@@ -79,7 +80,7 @@ func FromConfig(conf *config.Config) Client {
 	}
 
 	return &client{
-		pluralClient: gqlclient.NewClient(&httpClient, conf.Url(), nil),
+		pluralClient: gqlclient.NewClient(&httpClient, conf.Url(), nil, clierrors.GraphQLInterceptor),
 		config:       *conf,
 		ctx:          context.Background(),
 		httpClient:   &httpClient,
@@ -91,23 +92,9 @@ func GetErrorResponse(err error, methodName string) error {
 		return nil
 	}
 	utils.LogError().Println(err)
-	errResponse := &rawclient.ErrorResponse{}
-	newErr := json.Unmarshal([]byte(err.Error()), errResponse)
-	if newErr != nil {
+	var errResponse *rawclient.ErrorResponse
+	if !errors.As(err, &errResponse) {
 		return err
 	}
-
-	errList := errors.New(methodName)
-	if errResponse.GqlErrors != nil {
-		for _, err := range *errResponse.GqlErrors {
-			errList = errors.Wrap(errList, err.Message)
-		}
-		errList = errors.Wrap(errList, "GraphQL error")
-	}
-	if errResponse.NetworkError != nil {
-		errList = errors.Wrap(errList, errResponse.NetworkError.Message)
-		errList = errors.Wrap(errList, "Network error")
-	}
-
-	return errList
+	return fmt.Errorf("%s: %w", methodName, clierrors.GraphQL(err))
 }

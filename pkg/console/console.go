@@ -8,6 +8,7 @@ import (
 	"time"
 
 	consoleclient "github.com/pluralsh/console/go/client"
+	clierrors "github.com/pluralsh/plural-cli/pkg/utils/errors"
 )
 
 type consoleClient struct {
@@ -93,7 +94,7 @@ func NewConsoleClient(token, url string) (ConsoleClient, error) {
 		url:    NormalizeUrl(url),
 		extUrl: NormalizeExtUrl(url),
 		token:  token,
-		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil, consoleclient.PersistedQueryInterceptor),
+		client: consoleclient.NewClient(&httpClient, NormalizeUrl(url), nil, clierrors.GraphQLInterceptor, consoleclient.PersistedQueryInterceptor),
 		ctx:    context.Background(),
 	}, nil
 }
