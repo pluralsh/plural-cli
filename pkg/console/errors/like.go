@@ -22,8 +22,11 @@ func Like(err error, msg string) bool {
 }
 
 func isLike(err *client.ErrorResponse, msg string) bool {
+	if err == nil || err.GqlErrors == nil {
+		return false
+	}
 	for _, g := range *err.GqlErrors {
-		if strings.Contains(g.Message, msg) {
+		if g != nil && strings.Contains(g.Message, msg) {
 			return true
 		}
 	}
