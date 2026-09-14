@@ -1,6 +1,7 @@
 package console
 
 import (
+	"fmt"
 	"strings"
 
 	gqlclient "github.com/pluralsh/console/go/client"
@@ -51,6 +52,35 @@ func (c *consoleClient) SavePipeline(name string, attrs gqlclient.PipelineAttrib
 	}
 
 	return result.SavePipeline, nil
+}
+
+func (c *consoleClient) ListPipelines() (*gqlclient.GetPipelines, error) {
+	result, err := c.client.GetPipelines(c.ctx, nil)
+	if err != nil {
+		return nil, api.GetErrorResponse(err, "GetPipelines")
+	}
+	return result, nil
+}
+
+// GetPipeline returns a full PipelineFragment. The generated GetPipeline query only
+// returns id/name, so this resolves detail from the list query instead.
+func (c *consoleClient) GetPipeline(id string) (*gqlclient.PipelineFragment, error) {
+	result, err := c.ListPipelines()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || result.Pipelines == nil {
+		return nil, fmt.Errorf("pipeline %s was not found", id)
+	}
+	for _, edge := range result.Pipelines.Edges {
+		if edge == nil || edge.Node == nil {
+			continue
+		}
+		if edge.Node.ID == id {
+			return edge.Node, nil
+		}
+	}
+	return nil, fmt.Errorf("pipeline %s was not found", id)
 }
 
 func (c *consoleClient) CreatePipelineContext(id string, attrs gqlclient.PipelineContextAttributes) (*gqlclient.PipelineContextFragment, error) {

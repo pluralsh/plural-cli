@@ -248,6 +248,11 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 		return fmt.Errorf("project manifest is required to set app domain")
 	}
 
+	if manifest.AppDomainAlreadyConfigured(project) {
+		utils.Highlight("App domain already configured, skipping...\n")
+		return nil
+	}
+
 	var domain string
 
 	switch project.Provider {
@@ -256,7 +261,7 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 		if err != nil {
 			utils.Error("Failed to fetch hosted zones from AWS: %s\n", err)
 			fmt.Println("ignoring domain setup...")
-			break
+			return nil
 		}
 
 		if err := survey.AskOne(
@@ -274,12 +279,12 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 		if err != nil {
 			utils.Error("Failed to fetch DNS zones from Azure: %s\n", err)
 			fmt.Println("ignoring domain setup...")
-			break
+			return nil
 		}
 
 		// Skip domain setup if no DNS zones exist in the resource group.
 		if len(dnsZones) == 0 {
-			break
+			return nil
 		}
 
 		if err := survey.AskOne(
@@ -311,8 +316,8 @@ func askAppDomain(project *manifest.ProjectManifest) error {
 
 func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 	if lo.IsEmpty(domain) {
-		// No domain was provided, domain checks and setup can be skipped.
-		return nil
+		// Persist the skip so resume does not re-prompt.
+		return project.PersistAppDomain("")
 	}
 
 	if project.Provider == api.ProviderGCP {
@@ -357,9 +362,7 @@ func processAppDomain(domain string, project *manifest.ProjectManifest) error {
 		project.Context["ManagedZone"] = managedZone
 	}
 
-	// Save the domain and other changes to the project manifest.
-	project.AppDomain = domain
-	return project.Flush()
+	return project.PersistAppDomain(domain)
 }
 
 func getCluster(cd *cdpkg.Plural) (id string, err error) {

@@ -1,0 +1,24 @@
+  Plural  Pull requests · cluster-create                               cluster
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ Summary ────────────────────────────────────────────────────────────────╮
+  │ Name         cluster-create                                              │
+  │ Title        Create cluster                                              │
+  │ Addon        cluster                                                     │
+  │ Identifier   ops/cluster-create                                          │
+  │ ID           pra1                                                        │
+  │ Message      Opens a PR to provision a new cluster                       │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+  ╭─ › Actions ──────────────────────────────────────────────────────────────╮
+  │ › c  Create       open PR from automation                                │
+  │   t  Trigger      name · configuration · branch                          │
+  │   m  Template     local file · apply tree  CLI                           │
+  │   e  Test         local CRD  CLI                                         │
+  │   o  Contracts    contract suite  CLI                                    │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+  ↑/↓ · enter · letters · r · esc

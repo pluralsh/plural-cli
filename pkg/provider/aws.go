@@ -72,6 +72,18 @@ var (
 	}
 )
 
+// AWSRegions returns the region list used by plural up / provider init.
+func AWSRegions() []string {
+	out := make([]string, len(awsRegions))
+	copy(out, awsRegions)
+	return out
+}
+
+// AWSProfileName returns the active AWS CLI profile name.
+func AWSProfileName() string {
+	return getAWSProfileName()
+}
+
 func mkAWS(conf config.Config, dryRun bool) (provider *AWSProvider, err error) {
 	ctx := context.Background()
 	provider = &AWSProvider{}

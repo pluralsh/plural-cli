@@ -36,4 +36,6 @@ vendor/
 
 # Agents
 .codex/
+.claude/
 AGENTS.md
+CLAUDE.md
