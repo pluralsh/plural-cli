@@ -25,19 +25,26 @@ func (m Model) title() string {
 		return "Edge · image"
 	case modeFlashForm, modeFlashDevices, modeFlashDevicePath, modeFlashConfirm, modeFlashRunning, modeFlashResult:
 		return "Edge · flash"
+	case modeBootstrapForm, modeBootstrapReview, modeBootstrapRunning, modeBootstrapResult:
+		return "Edge · bootstrap"
+	case modeDownloadForm, modeDownloadReview, modeDownloadRunning, modeDownloadResult:
+		return "Edge · download"
 	default:
 		return "Edge"
 	}
 }
 
 func (m Model) status() string {
-	if m.mode == modeImageRunning {
+	switch m.mode {
+	case modeImageRunning:
 		return m.theme.Warning.Render("◌ building image")
-	}
-	if m.mode == modeFlashRunning {
+	case modeFlashRunning:
 		return m.theme.Warning.Render("◌ flashing")
-	}
-	if m.mode == modeImageResult || m.mode == modeFlashResult {
+	case modeBootstrapRunning:
+		return m.theme.Warning.Render("◌ bootstrapping")
+	case modeDownloadRunning:
+		return m.theme.Warning.Render("◌ downloading")
+	case modeImageResult, modeFlashResult, modeBootstrapResult, modeDownloadResult:
 		if m.err != nil {
 			return m.theme.Danger.Render("✗ failed")
 		}
@@ -81,6 +88,51 @@ func (m Model) bodyAndHelp(width, height int) (string, string) {
 		return m.viewRunning(width, height, "Building", "Running plural edge image…", "Docker / image output streams below (TUI stays open).")
 	case modeImageResult:
 		return m.viewResult(width, height, "Image complete", "✓ Image saved", "✗ Image build failed", "Output  "+display(m.imageOptions().OutputDir))
+	case modeBootstrapForm:
+		fields := bootstrapFields()
+		field := fields[m.field]
+		m.inputs[m.field].SetWidth(max(8, width-8))
+		return page.Panel(m.theme, field.label, []string{
+			m.theme.Muted.Render(fmt.Sprintf("Same as plural edge bootstrap --%s  (%d/%d)", field.key, m.field+1, len(fields))),
+			"",
+			m.inputs[m.field].View(),
+		}, width, 8, true), "enter next · esc back"
+	case modeBootstrapReview:
+		opts := m.bootstrapOptions()
+		lines := []string{
+			"Machine ID  " + display(opts.MachineID),
+			"Helm chart  " + display(opts.ChartLoc),
+			"",
+			m.theme.Muted.Render("Waits for device registration in Console, then installs the agent"),
+			m.theme.Muted.Render("into the current kubeconfig (same as plural edge bootstrap)."),
+		}
+		return page.Panel(m.theme, "Review bootstrap", lines, width, 10, true), "enter bootstrap · esc edit"
+	case modeBootstrapRunning:
+		return m.viewRunning(width, height, "Bootstrapping", "Running plural edge bootstrap…", "Waits for Console registration, then installs the agent. Logs stream below.")
+	case modeBootstrapResult:
+		return m.viewResult(width, height, "Bootstrap complete", "✓ Cluster registered and agent installed", "✗ Bootstrap failed", "Machine  "+display(m.bootstrapOptions().MachineID))
+	case modeDownloadForm:
+		fields := downloadFields()
+		field := fields[m.field]
+		m.inputs[m.field].SetWidth(max(8, width-8))
+		return page.Panel(m.theme, field.label, []string{
+			m.theme.Muted.Render(fmt.Sprintf("Same as plural edge download --%s  (%d/%d)", field.key, m.field+1, len(fields))),
+			"",
+			m.inputs[m.field].View(),
+		}, width, 8, true), "enter next · esc back"
+	case modeDownloadReview:
+		opts := m.downloadOptions()
+		lines := []string{
+			"OCI URL        " + display(opts.OCIURL),
+			"Destination    " + display(opts.To),
+			"",
+			m.theme.Muted.Render("Pulls the OCI image and unpacks it (same as plural edge download)."),
+		}
+		return page.Panel(m.theme, "Review download", lines, width, 10, true), "enter download · esc edit"
+	case modeDownloadRunning:
+		return m.viewRunning(width, height, "Downloading", "Running plural edge download…", "OCI pull / unpack output streams below.")
+	case modeDownloadResult:
+		return m.viewResult(width, height, "Download complete", "✓ Image unpacked", "✗ Download failed", "Destination  "+display(m.downloadOptions().To))
 	case modeFlashForm:
 		m.inputs[0].SetWidth(max(8, width-8))
 		lines := []string{
@@ -129,22 +181,18 @@ func (m Model) bodyAndHelp(width, height int) (string, string) {
 		return m.viewResult(width, height, "Flash complete", "✓ Image flashed", "✗ Flash failed", "Device  "+display(m.flashOptions().Device))
 	default:
 		lines := []string{
-			m.theme.Muted.Render("Prepare a Raspberry Pi image, then write it to a disk."),
+			m.theme.Muted.Render("Prepare a Raspberry Pi image, flash it, bootstrap the device, or download an OCI image."),
 			"",
 		}
-		items := []struct{ number, title, blurb string }{
-			{"1", "image", "build Kairos ARM image (Docker)"},
-			{"2", "flash", "write image onto a storage device"},
-		}
-		for i, item := range items {
+		for i, item := range hubItems() {
 			cursor := "  "
 			if i == m.cursor {
 				cursor = "› "
 			}
-			row := fmt.Sprintf("%s%s  %-8s %s", cursor, item.number, item.title, item.blurb)
+			row := fmt.Sprintf("%s%s  %-10s %s", cursor, item.number, item.title, item.blurb)
 			lines = append(lines, ansi.Truncate(row, width-2, "…"))
 		}
-		return page.Panel(m.theme, "Edge commands", lines, width, 10, true), "↑/↓ select · enter open · 1-2 shortcut · esc welcome"
+		return page.Panel(m.theme, "Edge commands", lines, width, 12, true), "↑/↓ select · enter open · 1-4 shortcut · esc welcome"
 	}
 }
 
@@ -303,7 +351,7 @@ func (m Model) viewResult(width, height int, title, ok, fail, detail string) (st
 			"",
 		)
 		if m.needsAuth {
-			lines = append(lines, m.theme.Muted.Render("Press c to open Access, or retry with a cloud-config path."), "")
+			lines = append(lines, m.theme.Muted.Render(m.resultAuthHint()), "")
 		}
 	} else {
 		lines = append(lines,
@@ -328,6 +376,13 @@ func display(v string) string {
 		return "—"
 	}
 	return v
+}
+
+func (m Model) resultAuthHint() string {
+	if m.mode == modeImageResult {
+		return "Press c to open Access, or retry with a cloud-config path."
+	}
+	return "Press c to open Access and connect a Console profile."
 }
 
 func secret(v string) string {

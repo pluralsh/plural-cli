@@ -1,8 +1,9 @@
-// Package edge implements the TUI wizard for plural edge image and flash.
+// Package edge implements the TUI wizard for plural edge image, flash, bootstrap, and download.
 package edge
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
@@ -33,11 +34,20 @@ const (
 	modeFlashConfirm
 	modeFlashRunning
 	modeFlashResult
+	modeBootstrapForm
+	modeBootstrapReview
+	modeBootstrapRunning
+	modeBootstrapResult
+	modeDownloadForm
+	modeDownloadReview
+	modeDownloadRunning
+	modeDownloadResult
 )
 
 type field struct {
 	key, label, placeholder string
 	password                bool
+	required                bool
 }
 
 type doneMsg struct {
@@ -66,6 +76,29 @@ func flashFields() []field {
 	return []field{
 		{key: "image", label: "Image file", placeholder: "path to kairos.img"},
 		{key: "device", label: "Storage device", placeholder: "/dev/sdX"},
+	}
+}
+
+func bootstrapFields() []field {
+	return []field{
+		{key: "machine-id", label: "Machine ID", placeholder: "unique id of the edge device", required: true},
+		{key: "chart-loc", label: "Helm chart", placeholder: "optional URL or path"},
+	}
+}
+
+func downloadFields() []field {
+	return []field{
+		{key: "oci-url", label: "OCI URL", placeholder: "required", required: true},
+		{key: "to", label: "Destination", placeholder: "directory to unpack into"},
+	}
+}
+
+func hubItems() []struct{ number, title, blurb string } {
+	return []struct{ number, title, blurb string }{
+		{"1", "image", "build Kairos ARM image (Docker)"},
+		{"2", "flash", "write image onto a storage device"},
+		{"3", "bootstrap", "register device and install agent"},
+		{"4", "download", "pull and extract an OCI image"},
 	}
 }
 
@@ -139,6 +172,10 @@ func newInputs(t theme.Theme, fields []field) []textinput.Model {
 			input.SetValue("rpi5")
 		case "username":
 			input.SetValue("plural")
+		case "to":
+			if wd, err := os.Getwd(); err == nil {
+				input.SetValue(wd)
+			}
 		}
 		inputs[i] = input
 	}
@@ -173,6 +210,91 @@ func (m Model) startFlash() Model {
 		m.imageSuggested = true
 	}
 	return m
+}
+
+func (m Model) startBootstrap() Model {
+	m.mode = modeBootstrapForm
+	m.err = nil
+	m.needsAuth = false
+	m.field = 0
+	m.inputs = newInputs(m.theme, bootstrapFields())
+	return m
+}
+
+func (m Model) startDownload() Model {
+	m.mode = modeDownloadForm
+	m.err = nil
+	m.needsAuth = false
+	m.field = 0
+	m.inputs = newInputs(m.theme, downloadFields())
+	return m
+}
+
+func (m Model) openHubItem(index int) Model {
+	switch index {
+	case 1:
+		return m.startFlash()
+	case 2:
+		return m.startBootstrap()
+	case 3:
+		return m.startDownload()
+	default:
+		return m.startImage()
+	}
+}
+
+func (m Model) isRunning() bool {
+	switch m.mode {
+	case modeImageRunning, modeFlashRunning, modeBootstrapRunning, modeDownloadRunning:
+		return true
+	}
+	return false
+}
+
+func (m Model) isForm() bool {
+	switch m.mode {
+	case modeImageForm, modeFlashForm, modeFlashDevicePath, modeBootstrapForm, modeDownloadForm:
+		return true
+	}
+	return false
+}
+
+func (m Model) resultKind() string {
+	switch m.mode {
+	case modeFlashResult:
+		return "flash"
+	case modeBootstrapResult:
+		return "bootstrap"
+	case modeDownloadResult:
+		return "download"
+	default:
+		return "image"
+	}
+}
+
+func (m Model) updateReview(key tea.KeyPressMsg, back mode) (Model, tea.Cmd) {
+	stroke := key.Keystroke()
+	if stroke == "esc" {
+		m.mode = back
+		m.field = len(m.inputs) - 1
+		if m.field >= 0 {
+			m.inputs[m.field].Focus()
+		}
+		return m, nil
+	}
+	if stroke == "enter" {
+		var cmd tea.Cmd
+		switch back {
+		case modeImageForm:
+			cmd = m.beginImage()
+		case modeBootstrapForm:
+			cmd = m.beginBootstrap()
+		case modeDownloadForm:
+			cmd = m.beginDownload()
+		}
+		return m, cmd
+	}
+	return m, nil
 }
 
 func (m Model) defaultFlashImage() string {
@@ -218,10 +340,39 @@ func (m Model) flashOptions() pkgedge.FlashOptions {
 	return pkgedge.FlashOptions{Image: value("image"), Device: value("device")}
 }
 
+func (m Model) bootstrapOptions() pkgedge.BootstrapOptions {
+	value := func(key string) string {
+		for i, field := range bootstrapFields() {
+			if field.key == key && i < len(m.inputs) {
+				return strings.TrimSpace(m.inputs[i].Value())
+			}
+		}
+		return ""
+	}
+	return pkgedge.BootstrapOptions{MachineID: value("machine-id"), ChartLoc: value("chart-loc")}
+}
+
+func (m Model) downloadOptions() pkgedge.DownloadOptions {
+	value := func(key string) string {
+		for i, field := range downloadFields() {
+			if field.key == key && i < len(m.inputs) {
+				return strings.TrimSpace(m.inputs[i].Value())
+			}
+		}
+		return ""
+	}
+	return pkgedge.DownloadOptions{OCIURL: value("oci-url"), To: value("to")}
+}
+
 func (m *Model) prepareRun(kind string) {
-	if kind == "flash" {
+	switch kind {
+	case "flash":
 		m.mode = modeFlashRunning
-	} else {
+	case "bootstrap":
+		m.mode = modeBootstrapRunning
+	case "download":
+		m.mode = modeDownloadRunning
+	default:
 		m.mode = modeImageRunning
 	}
 	m.err = nil
@@ -288,6 +439,48 @@ func (m Model) flashWorkCmd(lines chan string, progress chan flashProgressMsg) t
 	}
 }
 
+func (m *Model) beginBootstrap() tea.Cmd {
+	m.prepareRun("bootstrap")
+	lines := make(chan string, 4096)
+	m.opLogCh = lines
+	return tea.Batch(m.spin.Tick, m.bootstrapWorkCmd(lines), listenOpLog(lines))
+}
+
+func (m *Model) beginDownload() tea.Cmd {
+	m.prepareRun("download")
+	lines := make(chan string, 4096)
+	m.opLogCh = lines
+	return tea.Batch(m.spin.Tick, m.downloadWorkCmd(lines), listenOpLog(lines))
+}
+
+func (m Model) bootstrapWorkCmd(lines chan string) tea.Cmd {
+	request, loader, ctx, options := m.request, m.loader, m.ctx, m.bootstrapOptions()
+	return func() tea.Msg {
+		var err error
+		if loader != nil {
+			err = loader.Bootstrap(ctx, options, func(line string) { sendLog(lines, line) })
+		}
+		if lines != nil {
+			close(lines)
+		}
+		return doneMsg{err: err, request: request, kind: "bootstrap"}
+	}
+}
+
+func (m Model) downloadWorkCmd(lines chan string) tea.Cmd {
+	request, loader, ctx, options := m.request, m.loader, m.ctx, m.downloadOptions()
+	return func() tea.Msg {
+		var err error
+		if loader != nil {
+			err = loader.Download(ctx, options, func(line string) { sendLog(lines, line) })
+		}
+		if lines != nil {
+			close(lines)
+		}
+		return doneMsg{err: err, request: request, kind: "download"}
+	}
+}
+
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case doneMsg:
@@ -299,9 +492,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.opLogCh = nil
 		m.progressCh = nil
 		m.opLogFollow = true
-		if msg.kind == "flash" {
+		switch msg.kind {
+		case "flash":
 			m.mode = modeFlashResult
-		} else {
+		case "bootstrap":
+			m.mode = modeBootstrapResult
+		case "download":
+			m.mode = modeDownloadResult
+		default:
 			m.mode = modeImageResult
 		}
 		if msg.err != nil {
@@ -329,7 +527,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.viewW = msg.Width
 		return m, nil
 	case spinner.TickMsg:
-		if m.mode != modeImageRunning && m.mode != modeFlashRunning {
+		if !m.isRunning() {
 			return m, nil
 		}
 		var cmd tea.Cmd
@@ -338,7 +536,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m.updateKey(msg)
 	}
-	if (m.mode == modeImageForm || m.mode == modeFlashForm || m.mode == modeFlashDevicePath) && len(m.inputs) > 0 {
+	if m.isForm() && len(m.inputs) > 0 {
 		var cmd tea.Cmd
 		m.inputs[m.field], cmd = m.inputs[m.field].Update(msg)
 		return m, cmd
@@ -362,35 +560,33 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 				m.cursor--
 			}
 		case "down", "j":
-			if m.cursor < 1 {
+			if m.cursor < len(hubItems())-1 {
 				m.cursor++
 			}
 		case "enter":
-			if m.cursor == 0 {
-				return m.startImage(), nil
-			}
-			return m.startFlash(), nil
+			return m.openHubItem(m.cursor), nil
 		case "1":
 			return m.startImage(), nil
 		case "2":
 			return m.startFlash(), nil
+		case "3":
+			return m.startBootstrap(), nil
+		case "4":
+			return m.startDownload(), nil
 		}
 		return m, nil
 	case modeImageForm:
 		return m.updateForm(key, imageFields(), modeHub, modeImageReview)
 	case modeImageReview:
-		if stroke == "esc" {
-			m.mode = modeImageForm
-			m.field = len(m.inputs) - 1
-			if m.field >= 0 {
-				m.inputs[m.field].Focus()
-			}
-			return m, nil
-		}
-		if stroke == "enter" {
-			return m, m.beginImage()
-		}
-		return m, nil
+		return m.updateReview(key, modeImageForm)
+	case modeBootstrapForm:
+		return m.updateForm(key, bootstrapFields(), modeHub, modeBootstrapReview)
+	case modeBootstrapReview:
+		return m.updateReview(key, modeBootstrapForm)
+	case modeDownloadForm:
+		return m.updateForm(key, downloadFields(), modeHub, modeDownloadReview)
+	case modeDownloadReview:
+		return m.updateReview(key, modeDownloadForm)
 	case modeFlashForm:
 		return m.updateFlashImage(key)
 	case modeFlashDevices:
@@ -418,19 +614,15 @@ func (m Model) updateKey(key tea.KeyPressMsg) (Model, tea.Cmd) {
 			return m, m.beginFlash()
 		}
 		return m, nil
-	case modeImageRunning, modeFlashRunning:
+	case modeImageRunning, modeFlashRunning, modeBootstrapRunning, modeDownloadRunning:
 		m.handleOpLogScroll(stroke)
 		return m, nil
-	case modeImageResult, modeFlashResult:
+	case modeImageResult, modeFlashResult, modeBootstrapResult, modeDownloadResult:
 		if m.handleOpLogScroll(stroke) {
 			return m, nil
 		}
 		if stroke == "e" {
-			kind := "image"
-			if m.mode == modeFlashResult {
-				kind = "flash"
-			}
-			m.saveLogs(kind)
+			m.saveLogs(m.resultKind())
 			return m, nil
 		}
 		if m.needsAuth && stroke == "c" {
@@ -465,6 +657,9 @@ func (m Model) updateForm(key tea.KeyPressMsg, fields []field, back, next mode) 
 		m.inputs[m.field].Focus()
 		return m, nil
 	case "enter":
+		if fields[m.field].required && strings.TrimSpace(m.inputs[m.field].Value()) == "" {
+			return m, nil
+		}
 		m.inputs[m.field].Blur()
 		if m.field+1 < len(fields) {
 			m.field++

@@ -1,4 +1,4 @@
-// Package edge exposes Console-backed edge image build and flash for the TUI.
+// Package edge exposes Console-backed edge image build, flash, bootstrap, and download for the TUI.
 package edge
 
 import (
@@ -6,9 +6,11 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/pluralsh/plural-cli/pkg/bridge"
+	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	pkgedge "github.com/pluralsh/plural-cli/pkg/edge"
 )
@@ -21,6 +23,7 @@ type ConsoleResolver interface {
 
 type API interface {
 	pkgedge.ConsoleAPI
+	pkgedge.BootstrapAPI
 }
 
 type ClientFactory func(token, url string) (API, error)
@@ -28,12 +31,16 @@ type ClientFactory func(token, url string) (API, error)
 type Loader interface {
 	BuildImage(ctx context.Context, options pkgedge.ImageOptions, log func(string)) error
 	Flash(ctx context.Context, options pkgedge.FlashOptions, log func(string)) error
+	Bootstrap(ctx context.Context, options pkgedge.BootstrapOptions, log func(string)) error
+	Download(ctx context.Context, options pkgedge.DownloadOptions, log func(string)) error
 }
 
 type Service struct {
 	resolve   ConsoleResolver
 	newClient ClientFactory
 	flash     func(pkgedge.FlashOptions) error
+	install   pkgedge.InstallOperatorFunc
+	download  func(pkgedge.DownloadOptions, func(string)) error
 }
 
 func NewService(resolve ConsoleResolver) *Service {
@@ -42,7 +49,8 @@ func NewService(resolve ConsoleResolver) *Service {
 		newClient: func(token, url string) (API, error) {
 			return console.NewConsoleClient(token, url)
 		},
-		flash: pkgedge.Flash,
+		flash:    pkgedge.Flash,
+		download: pkgedge.Download,
 	}
 }
 
@@ -115,6 +123,51 @@ func (s *Service) Flash(ctx context.Context, options pkgedge.FlashOptions, log f
 		flash = pkgedge.Flash
 	}
 	return flash(options)
+}
+
+func (s *Service) Bootstrap(ctx context.Context, options pkgedge.BootstrapOptions, log func(string)) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	api, err := s.client(ctx)
+	if err != nil {
+		return err
+	}
+	install := s.install
+	if install == nil {
+		install = operatorInstaller(api)
+	}
+	return pkgedge.Bootstrap(ctx, api, install, options, log)
+}
+
+func (s *Service) Download(ctx context.Context, options pkgedge.DownloadOptions, log func(string)) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	download := s.download
+	if download == nil {
+		download = pkgedge.Download
+	}
+	return download(options, log)
+}
+
+func operatorInstaller(api API) pkgedge.InstallOperatorFunc {
+	return func(url, token, chartLoc, clusterID string) error {
+		prev, had := os.LookupEnv("PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS")
+		_ = os.Setenv("PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS", "true")
+		defer func() {
+			if had {
+				_ = os.Setenv("PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS", prev)
+			} else {
+				_ = os.Unsetenv("PLURAL_INSTALL_AGENT_CONFIRM_IF_EXISTS")
+			}
+		}()
+		p := &pluralclient.Plural{}
+		if cc, ok := api.(console.ConsoleClient); ok {
+			p.ConsoleClient = cc
+		}
+		return p.DoInstallOperator(url, token, "", chartLoc, clusterID)
+	}
 }
 
 func scanLines(r io.Reader, log func(string)) {

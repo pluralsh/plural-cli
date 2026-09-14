@@ -2,15 +2,9 @@ package edge
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"time"
 
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/pluralsh/plural-cli/pkg/console"
 	pkgedge "github.com/pluralsh/plural-cli/pkg/edge"
 	"github.com/pluralsh/plural-cli/pkg/utils"
@@ -49,50 +43,20 @@ func (p *Plural) handleEdgeImage(c *cli.Context) error {
 }
 
 func (p *Plural) handleEdgeDownload(c *cli.Context) error {
-	var err error
-
 	outputDir := c.String("to")
-	url := c.String("oci-url")
-
 	if outputDir == "" {
+		var err error
 		outputDir, err = os.Getwd()
 		if err != nil {
 			return err
 		}
 	}
 
-	return unpackImage(outputDir, url)
-}
-
-func unpackImage(outputDir, ociUrl string) error {
 	done := make(chan struct{})
 	defer close(done)
-
 	utils.Highlight("unpacking image contents to %s   ", outputDir)
-	imageDir := filepath.Join(outputDir, "build")
-	if !utils.IsDir(imageDir) {
-		if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
-			return err
-		}
-	}
-
-	ref, err := name.ParseReference(ociUrl)
-	if err != nil {
-		return err
-	}
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
-	if err != nil {
-		return err
-	}
-	reader := mutate.Extract(img)
-	defer func(reader io.ReadCloser) {
-		err := reader.Close()
-		if err != nil {
-			utils.Error("%s", err.Error())
-		}
-	}(reader)
 	go progress(done)
-	return utils.Untar(outputDir, reader)
+	return pkgedge.Download(pkgedge.DownloadOptions{OCIURL: c.String("oci-url"), To: outputDir}, func(string) {})
 }
 
 func progress(done <-chan struct{}) {

@@ -18,8 +18,10 @@ import (
 )
 
 type fakeLoader struct {
-	image pkgedge.ImageOptions
-	flash pkgedge.FlashOptions
+	image     pkgedge.ImageOptions
+	flash     pkgedge.FlashOptions
+	bootstrap pkgedge.BootstrapOptions
+	download  pkgedge.DownloadOptions
 }
 
 func (f *fakeLoader) BuildImage(_ context.Context, options pkgedge.ImageOptions, log func(string)) error {
@@ -37,6 +39,20 @@ func (f *fakeLoader) Flash(_ context.Context, options pkgedge.FlashOptions, log 
 	}
 	return nil
 }
+func (f *fakeLoader) Bootstrap(_ context.Context, options pkgedge.BootstrapOptions, log func(string)) error {
+	f.bootstrap = options
+	if log != nil {
+		log("waiting for registration to be completed")
+	}
+	return nil
+}
+func (f *fakeLoader) Download(_ context.Context, options pkgedge.DownloadOptions, log func(string)) error {
+	f.download = options
+	if log != nil {
+		log("unpacking image contents to " + options.To)
+	}
+	return nil
+}
 
 func drainWork(t *testing.T, model Model) Model {
 	t.Helper()
@@ -46,6 +62,10 @@ func drainWork(t *testing.T, model Model) Model {
 		msg = model.imageWorkCmd(nil)()
 	case modeFlashRunning:
 		msg = model.flashWorkCmd(nil, nil)()
+	case modeBootstrapRunning:
+		msg = model.bootstrapWorkCmd(nil)()
+	case modeDownloadRunning:
+		msg = model.downloadWorkCmd(nil)()
 	default:
 		t.Fatalf("expected running, got %d", model.mode)
 	}
@@ -56,7 +76,7 @@ func drainWork(t *testing.T, model Model) Model {
 func TestHubOpensImageAndFlash(t *testing.T) {
 	model := New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
 	got := normalizeView(model.View(80, 24))
-	if !strings.Contains(got, "Edge commands") || !strings.Contains(got, "image") || !strings.Contains(got, "flash") {
+	if !strings.Contains(got, "Edge commands") || !strings.Contains(got, "image") || !strings.Contains(got, "flash") || !strings.Contains(got, "bootstrap") || !strings.Contains(got, "download") {
 		t.Fatalf("hub missing commands:\n%s", got)
 	}
 	model, _ = model.Update(tea.KeyPressMsg{Code: '1', Text: "1"})
@@ -70,6 +90,20 @@ func TestHubOpensImageAndFlash(t *testing.T) {
 	model = New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
 	model, _ = model.Update(tea.KeyPressMsg{Code: '2', Text: "2"})
 	if model.mode != modeFlashForm {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	model = New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
+	if model.mode != modeBootstrapForm {
+		t.Fatalf("mode = %d", model.mode)
+	}
+	got = normalizeView(model.View(80, 24))
+	if !strings.Contains(got, "plural edge bootstrap") {
+		t.Fatalf("bootstrap form missing CLI hint:\n%s", got)
+	}
+	model = New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
+	if model.mode != modeDownloadForm {
 		t.Fatalf("mode = %d", model.mode)
 	}
 }
@@ -263,6 +297,12 @@ func (e *errLoader) BuildImage(context.Context, pkgedge.ImageOptions, func(strin
 func (e *errLoader) Flash(context.Context, pkgedge.FlashOptions, func(string)) error {
 	return e.err
 }
+func (e *errLoader) Bootstrap(context.Context, pkgedge.BootstrapOptions, func(string)) error {
+	return e.err
+}
+func (e *errLoader) Download(context.Context, pkgedge.DownloadOptions, func(string)) error {
+	return e.err
+}
 
 func TestHubEscReturnsToWelcome(t *testing.T) {
 	model := New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
@@ -343,4 +383,107 @@ func normalizeView(view string) string {
 		lines[i] = strings.TrimRight(lines[i], " ")
 	}
 	return strings.Join(lines, "\n")
+}
+
+func TestBootstrapReviewQueuesRun(t *testing.T) {
+	loader := &fakeLoader{}
+	model := New(t.Context(), loader, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
+	model.inputs[0].SetValue("pi-42")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model.inputs[1].SetValue("oci://chart")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeBootstrapReview {
+		t.Fatalf("expected review, got %d", model.mode)
+	}
+	got := normalizeView(model.View(80, 24))
+	if !strings.Contains(got, "pi-42") || !strings.Contains(got, "oci://chart") {
+		t.Fatalf("review missing values:\n%s", got)
+	}
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("review did not start bootstrap")
+	}
+	if model.mode != modeBootstrapRunning {
+		t.Fatalf("expected running, got %d", model.mode)
+	}
+	got = normalizeView(model.View(80, 24))
+	if !strings.Contains(got, "Running plural edge bootstrap") {
+		t.Fatalf("running view:\n%s", got)
+	}
+	model = drainWork(t, model)
+	if model.mode != modeBootstrapResult || loader.bootstrap.MachineID != "pi-42" || loader.bootstrap.ChartLoc != "oci://chart" {
+		t.Fatalf("bootstrap options = %#v mode=%d", loader.bootstrap, model.mode)
+	}
+}
+
+func TestBootstrapEmptyMachineIDStaysOnForm(t *testing.T) {
+	model := New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeBootstrapForm || model.field != 0 {
+		t.Fatalf("mode=%d field=%d", model.mode, model.field)
+	}
+}
+
+func TestBootstrapUnauthenticatedOffersAccess(t *testing.T) {
+	loader := &errLoader{err: &bridge.Error{Code: bridge.ErrorUnauthenticated, Err: errors.New("connect a Console profile")}}
+	model := New(t.Context(), loader, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '3', Text: "3"})
+	model.inputs[0].SetValue("pi-42")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("review did not start bootstrap")
+	}
+	model = drainWork(t, model)
+	if !model.needsAuth || model.mode != modeBootstrapResult {
+		t.Fatalf("needsAuth=%v mode=%d", model.needsAuth, model.mode)
+	}
+	got := normalizeView(model.View(80, 24))
+	if !strings.Contains(got, "Press c to open Access") {
+		t.Fatalf("missing connect hint:\n%s", got)
+	}
+	_, cmd = model.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
+	if cmd == nil {
+		t.Fatal("c did not navigate")
+	}
+	if got := cmd().(navigation.NavigateMsg).Route; got != navigation.Access {
+		t.Fatalf("route = %s", got)
+	}
+}
+
+func TestDownloadReviewQueuesRun(t *testing.T) {
+	loader := &fakeLoader{}
+	model := New(t.Context(), loader, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
+	model.inputs[0].SetValue("ghcr.io/pluralsh/edge:latest")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	model.inputs[1].SetValue("/tmp/edge-img")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeDownloadReview {
+		t.Fatalf("expected review, got %d", model.mode)
+	}
+	model, cmd := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("review did not start download")
+	}
+	if model.mode != modeDownloadRunning {
+		t.Fatalf("expected running, got %d", model.mode)
+	}
+	model = drainWork(t, model)
+	if model.mode != modeDownloadResult || loader.download.OCIURL != "ghcr.io/pluralsh/edge:latest" || loader.download.To != "/tmp/edge-img" {
+		t.Fatalf("download options = %#v mode=%d", loader.download, model.mode)
+	}
+}
+
+func TestDownloadEmptyOCIURLStaysOnForm(t *testing.T) {
+	model := New(t.Context(), &fakeLoader{}, theme.New(colorprofile.ASCII))
+	model, _ = model.Update(tea.KeyPressMsg{Code: '4', Text: "4"})
+	model.inputs[0].SetValue("")
+	model, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if model.mode != modeDownloadForm || model.field != 0 {
+		t.Fatalf("mode=%d field=%d", model.mode, model.field)
+	}
 }

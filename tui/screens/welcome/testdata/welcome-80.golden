@@ -16,7 +16,7 @@
   │   4  a   Access              login · profiles · Console                  │
   │   5  g   Diagnose            local context · checks                      │
   │   6  i   AI                  chat · agents · workbenches                 │
-  │   7  e   Edge                image · flash                               │
+  │   7  e   Edge                image · flash · bootstrap · download        │
   │   8  ?   Help                shortcuts · about                           │
   │                                                                          │
   │ Setup · Agents · Develop — later                                         │
