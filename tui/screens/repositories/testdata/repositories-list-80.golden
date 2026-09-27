@@ -1,0 +1,24 @@
+  Plural  Repositories                                          3 repositories
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Repositories ─────────────────────────────────────────────────────────╮
+  │   URL                                              HEALTH     ERROR      │
+  │ › git@github.com:acme/infra.git                    PULLABLE   —          │
+  │   https://github.com/acme/apps.git                 FAILED     auth fail… │
+  │   git@gitlab.com:acme/charts.git                   PULLABLE   —          │
+  │                                                                          │
+  │ page · n next                                                            │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+  ↑/↓ · enter · / · n/p page · esc back

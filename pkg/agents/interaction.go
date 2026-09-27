@@ -58,6 +58,31 @@ func (SurveyInteraction) Confirm(message string, def bool) (bool, error) {
 	return confirmed, nil
 }
 
+// AcceptingInteraction answers restore confirmations without prompting. The TUI
+// resume flow uses this so survey does not steal the path-entry Enter key and
+// fail with an empty or interrupt error.
+type AcceptingInteraction struct{}
+
+func (AcceptingInteraction) Confirm(string, bool) (bool, error) { return true, nil }
+
+func (AcceptingInteraction) Select(_ string, options []string) (string, error) {
+	if len(options) == 0 {
+		return "", fmt.Errorf("no options to select")
+	}
+	return options[0], nil
+}
+
+func (AcceptingInteraction) Directory(_, def string) (string, error) {
+	if strings.TrimSpace(def) == "" {
+		return "", fmt.Errorf("directory path is required")
+	}
+	expanded, err := homedir.Expand(def)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Abs(expanded)
+}
+
 func (SurveyInteraction) Select(message string, options []string) (string, error) {
 	var selected string
 	if err := survey.AskOne(&survey.Select{

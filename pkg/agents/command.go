@@ -1,8 +1,10 @@
 package agents
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -35,8 +37,16 @@ func (in *executable) Run(ctx context.Context, command string, args ...string) e
 	cmd.Env = append(os.Environ(), in.env...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	var stderr bytes.Buffer
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+	if err := cmd.Run(); err != nil {
+		text := strings.TrimSpace(stderr.String())
+		if text == "" {
+			return fmt.Errorf("%s: %w", cmd.String(), err)
+		}
+		return fmt.Errorf("%s: %w\n%s", cmd.String(), err, text)
+	}
+	return nil
 }
 
 func (in *executable) Output(ctx context.Context, command string, args ...string) (string, error) {

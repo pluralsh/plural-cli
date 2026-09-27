@@ -11,6 +11,7 @@ import (
 	pluralclient "github.com/pluralsh/plural-cli/pkg/client"
 	"github.com/pluralsh/plural-cli/pkg/common"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	pkgworkbenches "github.com/pluralsh/plural-cli/pkg/workbenches"
 )
 
 type outputFormat string
@@ -93,7 +94,7 @@ func (w *Workbenches) prFollowupCommand() cli.Command {
 			cli.StringFlag{
 				Name:  "provider",
 				Usage: "source control provider (auto, github, gitlab, or bitbucket)",
-				Value: string(ProviderAuto),
+				Value: string(pkgworkbenches.ProviderAuto),
 			},
 			cli.StringFlag{
 				Name:  "defer",
@@ -132,12 +133,12 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 		return err
 	}
 
-	service := NewPRFollowupService(w.ConsoleClient, NewPullRequestResolver(nil))
-	result, err := service.Create(PRFollowupOptions{
+	service := pkgworkbenches.NewPRFollowupService(w.ConsoleClient, pkgworkbenches.NewPullRequestResolver(nil))
+	result, err := service.Create(pkgworkbenches.PRFollowupOptions{
 		Prompt:      ctx.String("prompt"),
 		DeferBy:     deferBy,
 		SkipMissing: ctx.Bool("skip-missing"),
-		PullRequest: PullRequestOptions{
+		PullRequest: pkgworkbenches.PullRequestOptions{
 			URL:      ctx.String("url"),
 			Commit:   ctx.String("commit"),
 			BaseURL:  ctx.String("base-url"),
@@ -151,7 +152,7 @@ func (w *Workbenches) handlePRFollowup(ctx *cli.Context) error {
 	return w.writePRFollowupResult(output, result)
 }
 
-func (w *Workbenches) writePRFollowupResult(output outputFormat, result PRFollowupResult) error {
+func (w *Workbenches) writePRFollowupResult(output outputFormat, result pkgworkbenches.PRFollowupResult) error {
 	switch output {
 	case outputFormatRaw:
 		if result.Skipped {

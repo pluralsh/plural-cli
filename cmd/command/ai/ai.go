@@ -9,11 +9,10 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/pluralsh/plural-cli/pkg/api"
+	aibridge "github.com/pluralsh/plural-cli/pkg/bridge/ai"
 	"github.com/pluralsh/plural-cli/pkg/utils"
 	"github.com/urfave/cli"
 )
-
-const intro = "What can we do to help you with Plural, using open source, or kubernetes?"
 
 type Plural struct {
 	client.Plural
@@ -33,16 +32,16 @@ func Command(clients client.Plural) cli.Command {
 
 func (p *Plural) aiHelp(c *cli.Context) error {
 	p.InitPluralClient()
-	chat := []*api.ChatMessage{{Role: "system", Content: intro}}
+	chat := []*api.ChatMessage{{Role: aibridge.RoleSystem, Content: aibridge.Intro}}
 	utils.Success("Plural AI:\n")
-	fmt.Printf("%s\n\n", intro)
+	fmt.Printf("%s\n\n", aibridge.Intro)
 
 	for {
 		prompt, err := utils.ReadLine(color.New(color.FgYellow).Sprintf("You:\n"))
 		if err != nil {
 			return err
 		}
-		chat = append(chat, &api.ChatMessage{Role: "user", Content: prompt})
+		chat = append(chat, &api.ChatMessage{Role: aibridge.RoleUser, Content: prompt})
 		fmt.Print("\n")
 
 		utils.Success("Plural AI:\n")

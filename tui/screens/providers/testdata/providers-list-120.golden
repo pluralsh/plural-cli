@@ -1,0 +1,30 @@
+  Plural  Providers                                                                                        3 providers
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Providers ────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │   NAME                     CLOUD      EDITABLE REPO                                                              │
+  │ › aws-west                 aws        true     https://github.com/acme/infra                                     │
+  │   gcp-east                 gcp        false    —                                                                 │
+  │   azure-central            azure      —        https://github.com/acme/azure                                     │
+  │                                                                                                                  │
+  │ page · n next                                                                                                    │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  │                                                                                                                  │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+
+
+
+
+  ↑/↓ select · enter open · / filter · n/p page · r refresh · esc back

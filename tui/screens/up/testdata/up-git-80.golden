@@ -1,0 +1,28 @@
+  Plural  Up                                             step · git repository
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Git repository ───────────────────────────────────────────────────────╮
+  │ Preflight checks failed, but continuing because --ignore-preflights was… │
+  │ Please note that you may encounter issues later on during provisioning.  │
+  │ Warning: AWS credentials: failed                                         │
+  │                                                                          │
+  │ You're attempting to setup plural outside a git repository. Would you l… │
+  │ Same Affirm as plural up / init (PLURAL_INIT_AFFIRM_SETUP_REPO).         │
+  │                                                                          │
+  │ › [x] y   Yes   create a git repo here (default)                         │
+  │   [ ] n   No    cancel — clone a repo first                              │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+
+
+
+  ↑/↓ · y/n · enter · esc back

@@ -1,0 +1,24 @@
+  Plural  Identity & connections                               ✓ context ready
+  ────────────────────────────────────────────────────────────────────────────
+
+  ╭─ › Plural App profiles ───────────╮ ╭─ Console profiles ─────────────────╮
+  │ › personal  ACTIVE                │ │   production  ACTIVE               │
+  │     alex@acme.io                  │ │     https://console.acme.io        │
+  │   consulting                      │ │   staging                          │
+  │     alex@consulting.dev           │ │     https://console.staging.acme.… │
+  │                                   │ │                                    │
+  │                                   │ │                                    │
+  ╰───────────────────────────────────╯ ╰────────────────────────────────────╯
+
+  ╭─ Effective context ──────────────────────────────────────────────────────╮
+  │ Base account  alex@acme.io via personal                                  │
+  │ Acting as     deploy@acme.io · session only                              │
+  │ Console       production · https://console.acme.io                       │
+  │                                                                          │
+  ╰──────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+  tab panel · ↑/↓ select · enter use · n App · c Console · i act as · esc back

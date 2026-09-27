@@ -76,6 +76,22 @@ func (pm *ProjectManifest) Flush() error {
 	return pm.Write(ProjectManifestPath())
 }
 
+// AppDomainAlreadyConfigured reports whether the app-domain prompt was already answered.
+// Older manifests that only set AppDomain are treated as configured.
+func AppDomainAlreadyConfigured(pm *ProjectManifest) bool {
+	if pm == nil {
+		return false
+	}
+	return pm.AppDomainConfigured || pm.AppDomain != ""
+}
+
+// PersistAppDomain records the domain choice (including skip) and flushes workspace.yaml.
+func (pm *ProjectManifest) PersistAppDomain(domain string) error {
+	pm.AppDomain = domain
+	pm.AppDomainConfigured = true
+	return pm.Flush()
+}
+
 func (man *Manifest) Write(path string) error {
 	versioned := &VersionedManifest{
 		ApiVersion: "plural.sh/v1alpha1",

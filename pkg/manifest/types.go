@@ -50,47 +50,50 @@ type NetworkConfig struct {
 }
 
 type ProjectManifest struct {
-	Cluster           string
-	Bucket            string
-	Project           string
-	Provider          string
-	Region            string
-	Owner             *Owner
-	Network           *NetworkConfig
-	Checkpoint        string `yaml:"checkpoint,omitempty"`
-	AvailabilityZones []string
-	BucketPrefix      string `yaml:"bucketPrefix"`
-	Context           map[string]interface{}
-	AppDomain         string `yaml:"appDomain,omitempty"`
+	Cluster             string
+	Bucket              string
+	Project             string
+	Provider            string
+	Region              string
+	Owner               *Owner
+	Network             *NetworkConfig
+	Checkpoint          string `yaml:"checkpoint,omitempty"`
+	AvailabilityZones   []string
+	BucketPrefix        string `yaml:"bucketPrefix"`
+	Context             map[string]interface{}
+	AppDomain           string `yaml:"appDomain,omitempty"`
+	AppDomainConfigured bool   `yaml:"appDomainConfigured,omitempty"`
 }
 
 func (pm *ProjectManifest) MarshalJSON() ([]byte, error) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 
 	return json.Marshal(&struct {
-		Cluster           string                 `json:"cluster"`
-		Bucket            string                 `json:"bucket"`
-		Project           string                 `json:"project"`
-		Provider          string                 `json:"provider"`
-		Region            string                 `json:"region"`
-		Owner             *Owner                 `json:"owner"`
-		Network           *NetworkConfig         `json:"network"`
-		AvailabilityZones []string               `json:"availabilityZones"`
-		BucketPrefix      string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
-		Context           map[string]interface{} `json:"context"`
-		AppDomain         string                 `json:"appDomain,omitempty"`
+		Cluster             string                 `json:"cluster"`
+		Bucket              string                 `json:"bucket"`
+		Project             string                 `json:"project"`
+		Provider            string                 `json:"provider"`
+		Region              string                 `json:"region"`
+		Owner               *Owner                 `json:"owner"`
+		Network             *NetworkConfig         `json:"network"`
+		AvailabilityZones   []string               `json:"availabilityZones"`
+		BucketPrefix        string                 `yaml:"bucketPrefix" json:"bucketPrefix"`
+		Context             map[string]interface{} `json:"context"`
+		AppDomain           string                 `json:"appDomain,omitempty"`
+		AppDomainConfigured bool                   `json:"appDomainConfigured,omitempty"`
 	}{
-		Cluster:           pm.Cluster,
-		Bucket:            pm.Bucket,
-		Project:           pm.Project,
-		Provider:          pm.Provider,
-		Region:            pm.Region,
-		Owner:             pm.Owner,
-		Network:           pm.Network,
-		AvailabilityZones: pm.AvailabilityZones,
-		BucketPrefix:      pm.BucketPrefix,
-		Context:           pm.Context,
-		AppDomain:         pm.AppDomain,
+		Cluster:             pm.Cluster,
+		Bucket:              pm.Bucket,
+		Project:             pm.Project,
+		Provider:            pm.Provider,
+		Region:              pm.Region,
+		Owner:               pm.Owner,
+		Network:             pm.Network,
+		AvailabilityZones:   pm.AvailabilityZones,
+		BucketPrefix:        pm.BucketPrefix,
+		Context:             pm.Context,
+		AppDomain:           pm.AppDomain,
+		AppDomainConfigured: pm.AppDomainConfigured,
 	})
 }
 
