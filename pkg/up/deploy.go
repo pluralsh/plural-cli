@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/samber/lo"
@@ -74,15 +75,23 @@ func (c *Context) Deploy(commit func() error) error {
 	defer c.Manifest.Flush()
 
 	if err := c.runCheckpoint(c.Manifest.Checkpoint, "init", func() error {
-		if !c.Cloud {
+		if err := runAll([]terraformCmd{
+			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
+		}); err != nil {
+			return err
+		}
+
+		// Only collide-check when Terraform does not already manage the bucket,
+		// so a partial apply can be resumed after the bucket was created.
+		if !c.Cloud && !consoleObjectStoreInTfState("./terraform/mgmt") {
 			if checker, ok := c.Provider.(interface{ EnsureConsoleObjectStoreAvailable() error }); ok {
 				if err := checker.EnsureConsoleObjectStoreAvailable(); err != nil {
 					return err
 				}
 			}
 		}
+
 		return runAll([]terraformCmd{
-			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},
 		})
 	}); err != nil {
@@ -206,6 +215,18 @@ func runAll(cmds []terraformCmd) error {
 	}
 
 	return nil
+}
+
+// consoleObjectStoreInTfState reports whether the console S3 bucket is already
+// tracked in the management terraform state (e.g. after a partial apply).
+func consoleObjectStoreInTfState(dir string) bool {
+	cmd := exec.Command("terraform", "state", "list")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(out), "aws_s3_bucket.console")
 }
 
 func (tf *terraformCmd) outputs() (map[string]Output, error) {

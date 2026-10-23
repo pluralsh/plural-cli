@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/smithy-go"
 	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 
@@ -189,7 +191,21 @@ func (aws *AWSProvider) EnsureConsoleObjectStoreAvailable() error {
 	if err == nil {
 		return fmt.Errorf("console object store bucket %s already exists; choose a different cluster name or delete the bucket", name)
 	}
-	return nil
+
+	var notFound *s3Types.NotFound
+	if errors.As(err, &notFound) {
+		return nil
+	}
+
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		switch apiErr.ErrorCode() {
+		case "NotFound", "NoSuchBucket":
+			return nil
+		}
+	}
+
+	return fmt.Errorf("failed to check console object store bucket %s: %w", name, err)
 }
 
 func (aws *AWSProvider) KubeConfig() error {
