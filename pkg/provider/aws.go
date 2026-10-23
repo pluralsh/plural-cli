@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/smithy-go"
 	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 
@@ -169,6 +171,41 @@ func getAwsConfig(ctx context.Context) (aws.Config, error) {
 
 func (aws *AWSProvider) CreateBucket() error {
 	return aws.mkBucket(aws.bucket)
+}
+
+// ConsoleObjectStoreBucket returns the deterministic S3 bucket name used by
+// bootstrap terraform for console agent runs / workbench filesystem.
+func (aws *AWSProvider) ConsoleObjectStoreBucket() string {
+	name := strings.ToLower(strings.ReplaceAll(fmt.Sprintf("%s-console-%s", aws.Cluster(), aws.Project()), "_", "-"))
+	if len(name) > 63 {
+		name = name[:63]
+	}
+	return name
+}
+
+// EnsureConsoleObjectStoreAvailable fails if the console object-store bucket
+// already exists so terraform can create it without a name collision.
+func (aws *AWSProvider) EnsureConsoleObjectStoreAvailable() error {
+	name := aws.ConsoleObjectStoreBucket()
+	_, err := aws.storageClient.HeadBucket(*aws.goContext, &s3.HeadBucketInput{Bucket: &name})
+	if err == nil {
+		return fmt.Errorf("console object store bucket %s already exists; choose a different cluster name or delete the bucket", name)
+	}
+
+	var notFound *s3Types.NotFound
+	if errors.As(err, &notFound) {
+		return nil
+	}
+
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		switch apiErr.ErrorCode() {
+		case "NotFound", "NoSuchBucket":
+			return nil
+		}
+	}
+
+	return fmt.Errorf("failed to check console object store bucket %s: %w", name, err)
 }
 
 func (aws *AWSProvider) KubeConfig() error {
