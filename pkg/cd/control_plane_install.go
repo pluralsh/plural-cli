@@ -43,7 +43,7 @@ type consoleValues struct {
 	Secrets secrets `yaml:"secrets"`
 }
 
-func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (string, error) {
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name, objectStoreBucket, objectStoreRegion string) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
 	existing := consoleValues{}
@@ -106,6 +106,11 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 		"postgresUrl":   dsn,
 		"provider":      prov.Name(),
 		"clusterIssuer": "plural",
+	}
+
+	if objectStoreBucket != "" {
+		configuration["objectStoreBucket"] = objectStoreBucket
+		configuration["objectStoreRegion"] = objectStoreRegion
 	}
 
 	if ingressClass := utils.ToString(prov.Context()["IngressClass"]); ingressClass != "" {

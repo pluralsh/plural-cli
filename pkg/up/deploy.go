@@ -74,6 +74,13 @@ func (c *Context) Deploy(commit func() error) error {
 	defer c.Manifest.Flush()
 
 	if err := c.runCheckpoint(c.Manifest.Checkpoint, "init", func() error {
+		if !c.Cloud {
+			if checker, ok := c.Provider.(interface{ EnsureConsoleObjectStoreAvailable() error }); ok {
+				if err := checker.EnsureConsoleObjectStoreAvailable(); err != nil {
+					return err
+				}
+			}
+		}
 		return runAll([]terraformCmd{
 			{dir: "./terraform/mgmt", cmd: "init", args: []string{"-upgrade"}},
 			{dir: "./terraform/mgmt", cmd: "apply", args: []string{"-auto-approve"}, retries: 1},

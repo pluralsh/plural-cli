@@ -100,6 +100,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "dsn", Usage: "The Postgres DSN to use for database connections", Required: true},
 				cli.StringFlag{Name: "name", Usage: "The name given to the cluster", Required: true},
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
+				cli.StringFlag{Name: "object-store-bucket", Usage: "S3 bucket for console object store (agent runs / workbench fs)"},
+				cli.StringFlag{Name: "object-store-region", Usage: "AWS region for the console object store bucket"},
 			},
 		},
 		{
@@ -241,7 +243,15 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"))
+	vals, err := cd.ControlPlaneValues(
+		conf,
+		c.String("file"),
+		c.String("domain"),
+		c.String("dsn"),
+		c.String("name"),
+		c.String("object-store-bucket"),
+		c.String("object-store-region"),
+	)
 	if err != nil {
 		return err
 	}
