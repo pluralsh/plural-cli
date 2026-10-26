@@ -217,8 +217,8 @@ func runAll(cmds []terraformCmd) error {
 	return nil
 }
 
-// consoleObjectStoreInTfState reports whether the console S3 bucket is already
-// tracked in the management terraform state (e.g. after a partial apply).
+// consoleObjectStoreInTfState reports whether the console object-store bucket is
+// already tracked in the management terraform state (e.g. after a partial apply).
 func consoleObjectStoreInTfState(dir string) bool {
 	cmd := exec.Command("terraform", "state", "list")
 	cmd.Dir = dir
@@ -226,7 +226,9 @@ func consoleObjectStoreInTfState(dir string) bool {
 	if err != nil {
 		return false
 	}
-	return strings.Contains(string(out), "aws_s3_bucket.console")
+	state := string(out)
+	return strings.Contains(state, "aws_s3_bucket.console") ||
+		strings.Contains(state, "google_storage_bucket.console")
 }
 
 func (tf *terraformCmd) outputs() (map[string]Output, error) {

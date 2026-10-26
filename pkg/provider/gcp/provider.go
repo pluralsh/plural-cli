@@ -3,9 +3,11 @@ package gcp
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"cloud.google.com/go/storage"
@@ -162,6 +164,36 @@ func (in *Provider) KubeContext() string {
 
 func (in *Provider) CreateBucket() error {
 	return utilerr.ErrorWrap(in.createBucket(in.bucket), fmt.Sprintf("Failed to create terraform state bucket %s", in.Bucket()))
+}
+
+// ConsoleObjectStoreBucket returns the deterministic GCS bucket name used by
+// bootstrap terraform for console agent runs / workbench filesystem.
+func (in *Provider) ConsoleObjectStoreBucket() string {
+	name := strings.ToLower(strings.ReplaceAll(fmt.Sprintf("%s-console-%s", in.Cluster(), in.Project()), "_", "-"))
+	if len(name) > 63 {
+		name = name[:63]
+	}
+	return name
+}
+
+// EnsureConsoleObjectStoreAvailable fails if the console object-store bucket
+// already exists so terraform can create it without a name collision.
+func (in *Provider) EnsureConsoleObjectStoreAvailable() error {
+	name := in.ConsoleObjectStoreBucket()
+	storageClient, err := StorageClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = storageClient.Bucket(name).Attrs(context.Background())
+	if err == nil {
+		return fmt.Errorf("console object store bucket %s already exists; choose a different cluster name or delete the bucket", name)
+	}
+	if errors.Is(err, storage.ErrBucketNotExist) {
+		return nil
+	}
+
+	return fmt.Errorf("failed to check console object store bucket %s: %w", name, err)
 }
 
 func (in *Provider) Context() map[string]interface{} {
