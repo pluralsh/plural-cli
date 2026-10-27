@@ -51,7 +51,10 @@ func Setup() (string, error) {
 
 	time.Sleep(3 * time.Second)
 	utils.Highlight("Cloning the repo locally...\n")
-	auth, _ := git.SSHAuth("git", ctx.priv, "")
+	auth, err := git.SSHAuth("git", ctx.priv, "")
+	if err != nil {
+		return "", fmt.Errorf("invalid SSH private key: %w", err)
+	}
 	if _, err := git.Clone(auth, ctx.url, ctx.repoName); err != nil {
 		return "", err
 	}

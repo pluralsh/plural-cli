@@ -228,7 +228,8 @@ func consoleObjectStoreInTfState(dir string) bool {
 	}
 	state := string(out)
 	return strings.Contains(state, "aws_s3_bucket.console") ||
-		strings.Contains(state, "google_storage_bucket.console")
+		strings.Contains(state, "google_storage_bucket.console") ||
+		strings.Contains(state, "azurerm_storage_account.console")
 }
 
 func (tf *terraformCmd) outputs() (map[string]Output, error) {
