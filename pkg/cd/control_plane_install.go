@@ -11,11 +11,14 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	pollytemplate "github.com/pluralsh/console/go/polly/template"
+	"k8s.io/client-go/dynamic"
+	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
 	"github.com/pluralsh/plural-cli/pkg/config"
 	"github.com/pluralsh/plural-cli/pkg/crypto"
+	"github.com/pluralsh/plural-cli/pkg/kubernetes"
 	"github.com/pluralsh/plural-cli/pkg/manifest"
 	"github.com/pluralsh/plural-cli/pkg/provider"
 	"github.com/pluralsh/plural-cli/pkg/template"
@@ -26,6 +29,9 @@ import (
 const (
 	templateUrl = "https://raw.githubusercontent.com/pluralsh/console/master/templates/values.yaml.liquid"
 	tplUrl      = "https://raw.githubusercontent.com/pluralsh/console/master/templates/values.yaml.tpl"
+
+	noClusterIssuer     = "(none)"
+	defaultIngressClass = "nginx"
 )
 
 type secrets struct {
@@ -43,7 +49,7 @@ type consoleValues struct {
 	Secrets secrets `yaml:"secrets"`
 }
 
-func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (string, error) {
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssuer, ingressClass string) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
 	existing := consoleValues{}
@@ -105,10 +111,13 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name string) (str
 		"pluralToken":   conf.Token,
 		"postgresUrl":   dsn,
 		"provider":      prov.Name(),
-		"clusterIssuer": "plural",
+		"clusterIssuer": clusterIssuer,
 	}
 
-	if ingressClass := utils.ToString(prov.Context()["IngressClass"]); ingressClass != "" {
+	if ingressClass == "" {
+		ingressClass = utils.ToString(prov.Context()["IngressClass"])
+	}
+	if ingressClass != "" {
 		configuration["ingressClass"] = ingressClass
 	}
 
@@ -202,6 +211,11 @@ func CreateControlPlane(conf config.Config) (string, error) {
 		return "", err
 	}
 
+	clusterIssuer, ingressClass, err := askIngressSettings()
+	if err != nil {
+		return "", err
+	}
+
 	randoms := map[string]string{}
 	randoms["erlang"] = crypto.RandString(64)
 	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
@@ -213,14 +227,19 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	}
 
 	configuration := map[string]string{
-		"consoleDns":  resp.Console,
-		"kasDns":      resp.KubeProxy,
-		"aesKey":      utils.GenAESKey(),
-		"adminName":   me.Email,
-		"adminEmail":  me.Email,
-		"clusterName": resp.ClusterName,
-		"pluralToken": conf.Token,
-		"postgresUrl": resp.PostgresDsn,
+		"consoleDns":   resp.Console,
+		"kasDns":       resp.KubeProxy,
+		"aesKey":       utils.GenAESKey(),
+		"adminName":    me.Email,
+		"adminEmail":   me.Email,
+		"clusterName":  resp.ClusterName,
+		"pluralToken":  conf.Token,
+		"postgresUrl":  resp.PostgresDsn,
+		"ingressClass": ingressClass,
+	}
+	// liquid treats "" as truthy, so only set the issuer when one was picked
+	if clusterIssuer != "" {
+		configuration["clusterIssuer"] = clusterIssuer
 	}
 	for k, v := range randoms {
 		configuration[k] = v
@@ -244,6 +263,43 @@ func CreateControlPlane(conf config.Config) (string, error) {
 
 	res, err := pollytemplate.RenderLiquid(tpl, bindings)
 	return string(res), err
+}
+
+// askIngressSettings lets the user pick a cluster issuer and ingress class from the current cluster,
+// falling back to free text when they can't be listed.
+func askIngressSettings() (clusterIssuer, ingressClass string, err error) {
+	var issuers, classes []string
+	if kubeConf, err := kubernetes.KubeConfig(); err == nil {
+		if dyn, err := dynamic.NewForConfig(kubeConf); err == nil {
+			issuers, _ = kubernetes.ClusterIssuers(dyn)
+		}
+		if cs, err := k8sclient.NewForConfig(kubeConf); err == nil {
+			classes, _ = kubernetes.IngressClasses(cs)
+		}
+	}
+
+	if len(issuers) > 0 {
+		issuers = append(issuers, noClusterIssuer)
+	}
+	clusterIssuer, err = selectOrInput("Select the cert-manager cluster issuer for the console ingresses (leave blank for none):", issuers, "")
+	if err != nil {
+		return
+	}
+	if clusterIssuer == noClusterIssuer {
+		clusterIssuer = ""
+	}
+
+	ingressClass, err = selectOrInput("Select the ingress class for the console ingresses:", classes, defaultIngressClass)
+	return
+}
+
+func selectOrInput(message string, options []string, def string) (res string, err error) {
+	var prompt survey.Prompt = &survey.Input{Message: message, Default: def}
+	if len(options) > 0 {
+		prompt = &survey.Select{Message: message, Options: options}
+	}
+	err = survey.AskOne(prompt, &res)
+	return
 }
 
 func fetchTemplate(url string) (res []byte, err error) {

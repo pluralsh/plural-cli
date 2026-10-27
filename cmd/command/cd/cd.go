@@ -100,6 +100,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "dsn", Usage: "The Postgres DSN to use for database connections", Required: true},
 				cli.StringFlag{Name: "name", Usage: "The name given to the cluster", Required: true},
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
+				cli.StringFlag{Name: "cluster-issuer", Usage: "The cert-manager cluster issuer to annotate ingresses with", Value: "plural"},
+				cli.StringFlag{Name: "ingress-class", Usage: "The ingress class to use for ingresses, defaults to the provider's ingress class"},
 			},
 		},
 		{
@@ -241,7 +243,7 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"))
+	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"), c.String("cluster-issuer"), c.String("ingress-class"))
 	if err != nil {
 		return err
 	}
