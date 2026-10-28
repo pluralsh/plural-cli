@@ -115,7 +115,7 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssu
 	}
 
 	if ingressClass == "" {
-		ingressClass = utils.ToString(prov.Context()["IngressClass"])
+		ingressClass = contextIngressClass(prov.Context())
 	}
 	if ingressClass != "" {
 		configuration["ingressClass"] = ingressClass
@@ -263,6 +263,12 @@ func CreateControlPlane(conf config.Config) (string, error) {
 
 	res, err := pollytemplate.RenderLiquid(tpl, bindings)
 	return string(res), err
+}
+
+// contextIngressClass reads IngressClass from the provider context; utils.ToString would turn a missing key into "<nil>".
+func contextIngressClass(ctx map[string]interface{}) string {
+	ingressClass, _ := ctx["IngressClass"].(string)
+	return ingressClass
 }
 
 // askIngressSettings lets the user pick a cluster issuer and ingress class from the current cluster,
