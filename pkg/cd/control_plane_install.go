@@ -43,7 +43,19 @@ type consoleValues struct {
 	Secrets secrets `yaml:"secrets"`
 }
 
-func ControlPlaneValues(conf config.Config, file, domain, dsn, name, objectStoreBucket, objectStoreRegion string) (string, error) {
+// ObjectStoreOpts holds cloud-specific console object-store settings for
+// control-plane values. Only one provider's fields should be set.
+type ObjectStoreOpts struct {
+	S3Bucket          string
+	S3Region          string
+	AzureAccount      string
+	AzureContainer    string
+	AzureClientId     string
+	GcsBucket         string
+	GcsServiceAccount string
+}
+
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name string, objectStore ObjectStoreOpts) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
 	existing := consoleValues{}
@@ -108,9 +120,22 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name, objectStore
 		"clusterIssuer": "plural",
 	}
 
-	if objectStoreBucket != "" {
-		configuration["objectStoreBucket"] = objectStoreBucket
-		configuration["objectStoreRegion"] = objectStoreRegion
+	if objectStore.S3Bucket != "" {
+		configuration["objectStoreBucket"] = objectStore.S3Bucket
+		configuration["objectStoreRegion"] = objectStore.S3Region
+	}
+	if objectStore.AzureAccount != "" {
+		configuration["objectStoreAzureStorageAccount"] = objectStore.AzureAccount
+		configuration["objectStoreAzureContainer"] = objectStore.AzureContainer
+		if objectStore.AzureClientId != "" {
+			configuration["objectStoreAzureClientId"] = objectStore.AzureClientId
+		}
+	}
+	if objectStore.GcsBucket != "" {
+		configuration["objectStoreGcsBucket"] = objectStore.GcsBucket
+		if objectStore.GcsServiceAccount != "" {
+			configuration["objectStoreGcsServiceAccount"] = objectStore.GcsServiceAccount
+		}
 	}
 
 	if ingressClass := utils.ToString(prov.Context()["IngressClass"]); ingressClass != "" {

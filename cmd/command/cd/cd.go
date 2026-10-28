@@ -102,6 +102,11 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
 				cli.StringFlag{Name: "object-store-bucket", Usage: "S3 bucket for console object store (agent runs / workbench fs)"},
 				cli.StringFlag{Name: "object-store-region", Usage: "AWS region for the console object store bucket"},
+				cli.StringFlag{Name: "object-store-azure-storage-account", Usage: "Azure storage account for console object store"},
+				cli.StringFlag{Name: "object-store-azure-container", Usage: "Azure blob container for console object store"},
+				cli.StringFlag{Name: "object-store-azure-client-id", Usage: "Azure UAMI client id for console object-store workload identity"},
+				cli.StringFlag{Name: "object-store-gcs-bucket", Usage: "GCS bucket for console object store"},
+				cli.StringFlag{Name: "object-store-gcs-service-account", Usage: "GCP service account email for console object-store workload identity"},
 			},
 		},
 		{
@@ -249,8 +254,15 @@ func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 		c.String("domain"),
 		c.String("dsn"),
 		c.String("name"),
-		c.String("object-store-bucket"),
-		c.String("object-store-region"),
+		cd.ObjectStoreOpts{
+			S3Bucket:          c.String("object-store-bucket"),
+			S3Region:          c.String("object-store-region"),
+			AzureAccount:      c.String("object-store-azure-storage-account"),
+			AzureContainer:    c.String("object-store-azure-container"),
+			AzureClientId:     c.String("object-store-azure-client-id"),
+			GcsBucket:         c.String("object-store-gcs-bucket"),
+			GcsServiceAccount: c.String("object-store-gcs-service-account"),
+		},
 	)
 	if err != nil {
 		return err
