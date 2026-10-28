@@ -32,9 +32,9 @@ func SSHAuth(user, pem, passphrase string) (transport.AuthMethod, error) {
 	hostKeyCallback := cryptossh.InsecureIgnoreHostKey()
 	keys, err := ssh.NewPublicKeys(user, []byte(pem), passphrase)
 	if err != nil {
-		return keys, err
+		return nil, fmt.Errorf("failed to parse SSH private key: %w", err)
 	}
 
 	keys.HostKeyCallback = hostKeyCallback
-	return keys, err
+	return keys, nil
 }

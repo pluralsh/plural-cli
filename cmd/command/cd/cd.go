@@ -102,6 +102,13 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
 				cli.StringFlag{Name: "cluster-issuer", Usage: "The cert-manager cluster issuer to annotate ingresses with", Value: "plural"},
 				cli.StringFlag{Name: "ingress-class", Usage: "The ingress class to use for ingresses, defaults to the provider's ingress class"},
+				cli.StringFlag{Name: "object-store-bucket", Usage: "S3 bucket for console object store (agent runs / workbench fs)"},
+				cli.StringFlag{Name: "object-store-region", Usage: "AWS region for the console object store bucket"},
+				cli.StringFlag{Name: "object-store-azure-storage-account", Usage: "Azure storage account for console object store"},
+				cli.StringFlag{Name: "object-store-azure-container", Usage: "Azure blob container for console object store"},
+				cli.StringFlag{Name: "object-store-azure-client-id", Usage: "Azure UAMI client id for console object-store workload identity"},
+				cli.StringFlag{Name: "object-store-gcs-bucket", Usage: "GCS bucket for console object store"},
+				cli.StringFlag{Name: "object-store-gcs-service-account", Usage: "GCP service account email for console object-store workload identity"},
 			},
 		},
 		{
@@ -243,7 +250,24 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"), c.String("cluster-issuer"), c.String("ingress-class"))
+	vals, err := cd.ControlPlaneValues(
+		conf,
+		c.String("file"),
+		c.String("domain"),
+		c.String("dsn"),
+		c.String("name"),
+		c.String("cluster-issuer"),
+		c.String("ingress-class"),
+		cd.ObjectStoreOpts{
+			S3Bucket:          c.String("object-store-bucket"),
+			S3Region:          c.String("object-store-region"),
+			AzureAccount:      c.String("object-store-azure-storage-account"),
+			AzureContainer:    c.String("object-store-azure-container"),
+			AzureClientId:     c.String("object-store-azure-client-id"),
+			GcsBucket:         c.String("object-store-gcs-bucket"),
+			GcsServiceAccount: c.String("object-store-gcs-service-account"),
+		},
+	)
 	if err != nil {
 		return err
 	}

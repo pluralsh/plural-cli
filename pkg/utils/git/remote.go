@@ -11,6 +11,9 @@ import (
 )
 
 func Clone(auth transport.AuthMethod, url, path string) (*gogit.Repository, error) {
+	if auth == nil {
+		return nil, fmt.Errorf("git clone requires authentication; provide a valid SSH private key or HTTPS credentials")
+	}
 	return gogit.PlainClone(path, false, &gogit.CloneOptions{
 		Auth:     auth,
 		URL:      url,

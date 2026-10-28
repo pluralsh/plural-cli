@@ -193,7 +193,7 @@ func (c *Context) backfillSSH(url string, console map[string]interface{}, ctx *m
 
 	var deployKey string
 	prompt := &survey.Select{
-		Message: "Select a file containing a read-only deploy key for this repo (use tab to list files in the directory):",
+		Message: "Select a file containing a private SSH deploy key for this repo (not a .pub file; use tab to list files):",
 		Options: files,
 	}
 
@@ -271,7 +271,10 @@ func verifySSHKey(key, url string) error {
 		}
 	}(dir)
 
-	auth, _ := git.SSHAuth(getGitUsername(url), key, "")
+	auth, err := git.SSHAuth(getGitUsername(url), key, "")
+	if err != nil {
+		return fmt.Errorf("invalid SSH private key (did you select a .pub file?): %w", err)
+	}
 	if _, err := git.Clone(auth, url, dir); err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -180,6 +181,50 @@ func (az *AzureProvider) CreateBucket() error {
 	}
 
 	return nil
+}
+
+// ConsoleObjectStoreStorageAccount returns the deterministic Azure storage
+// account name used by bootstrap terraform for console object store.
+func (az *AzureProvider) ConsoleObjectStoreStorageAccount() string {
+	sub := utils.ToString(az.Context()["SubscriptionId"])
+	raw := strings.ToLower(az.Cluster() + "console" + strings.ReplaceAll(sub, "-", ""))
+	var b strings.Builder
+	for _, r := range raw {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		}
+	}
+	name := b.String()
+	if len(name) > 24 {
+		name = name[:24]
+	}
+	return name
+}
+
+// EnsureConsoleObjectStoreAvailable fails if the console object-store storage
+// account name is already taken so terraform can create it without a collision.
+func (az *AzureProvider) EnsureConsoleObjectStoreAvailable() error {
+	name := az.ConsoleObjectStoreStorageAccount()
+	if az.clients == nil || az.clients.Accounts == nil {
+		return fmt.Errorf("azure storage client is not initialized")
+	}
+
+	resp, err := az.clients.Accounts.CheckNameAvailability(context.Background(), armstorage.AccountCheckNameAvailabilityParameters{
+		Name: to.Ptr(name),
+		Type: to.Ptr("Microsoft.Storage/storageAccounts"),
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to check console object store storage account %s: %w", name, err)
+	}
+	if resp.NameAvailable != nil && *resp.NameAvailable {
+		return nil
+	}
+
+	reason := ""
+	if resp.Message != nil {
+		reason = *resp.Message
+	}
+	return fmt.Errorf("console object store storage account %s is unavailable; choose a different cluster name or delete the account: %s", name, reason)
 }
 
 func (az *AzureProvider) createContainer(bucket string) (err error) {
