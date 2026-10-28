@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -13,6 +14,7 @@ import (
 	pollytemplate "github.com/pluralsh/console/go/polly/template"
 	"k8s.io/client-go/dynamic"
 	k8sclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
@@ -33,6 +35,9 @@ const (
 	noClusterIssuer     = "(none)"
 	defaultIngressClass = "nginx"
 )
+
+// discoveryTimeout bounds each cluster lookup so an unresponsive API server falls back to manual input.
+var discoveryTimeout = 5 * time.Second
 
 type secrets struct {
 	AesKey string `yaml:"aes_key"`
@@ -276,12 +281,7 @@ func contextIngressClass(ctx map[string]interface{}) string {
 func askIngressSettings() (clusterIssuer, ingressClass string, err error) {
 	var issuers, classes []string
 	if kubeConf, err := kubernetes.KubeConfig(); err == nil {
-		if dyn, err := dynamic.NewForConfig(kubeConf); err == nil {
-			issuers, _ = kubernetes.ClusterIssuers(dyn)
-		}
-		if cs, err := k8sclient.NewForConfig(kubeConf); err == nil {
-			classes, _ = kubernetes.IngressClasses(cs)
-		}
+		issuers, classes = listIngressOptions(kubeConf)
 	}
 
 	if len(issuers) > 0 {
@@ -296,6 +296,19 @@ func askIngressSettings() (clusterIssuer, ingressClass string, err error) {
 	}
 
 	ingressClass, err = selectOrInput("Select the ingress class for the console ingresses:", classes, defaultIngressClass)
+	return
+}
+
+// listIngressOptions lists cluster issuers and ingress classes, returning empty lists on any error or timeout.
+func listIngressOptions(kubeConf *rest.Config) (issuers, classes []string) {
+	conf := rest.CopyConfig(kubeConf)
+	conf.Timeout = discoveryTimeout
+	if dyn, err := dynamic.NewForConfig(conf); err == nil {
+		issuers, _ = kubernetes.ClusterIssuers(dyn)
+	}
+	if cs, err := k8sclient.NewForConfig(conf); err == nil {
+		classes, _ = kubernetes.IngressClasses(cs)
+	}
 	return
 }
 
