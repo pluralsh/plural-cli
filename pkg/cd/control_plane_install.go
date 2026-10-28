@@ -6,15 +6,18 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/AlecAivazis/survey/v2"
 	pollytemplate "github.com/pluralsh/console/go/polly/template"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/dynamic"
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/pluralsh/plural-cli/pkg/api"
 	"github.com/pluralsh/plural-cli/pkg/bundle"
@@ -36,7 +39,7 @@ const (
 	defaultIngressClass = "nginx"
 )
 
-// discoveryTimeout bounds each cluster lookup so an unresponsive API server falls back to manual input.
+// discoveryTimeout bounds cluster lookups so an unresponsive API server or credential plugin falls back to manual input.
 var discoveryTimeout = 5 * time.Second
 
 type secrets struct {
@@ -119,6 +122,11 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssu
 		"clusterIssuer": clusterIssuer,
 	}
 
+	for _, val := range []string{clusterIssuer, ingressClass} {
+		if err := validateResourceName(val); err != nil {
+			return "", err
+		}
+	}
 	if ingressClass == "" {
 		ingressClass = contextIngressClass(prov.Context())
 	}
@@ -284,10 +292,13 @@ func askIngressSettings() (clusterIssuer, ingressClass string, err error) {
 		issuers, classes = listIngressOptions(kubeConf)
 	}
 
+	issuerMsg := "Enter the cert-manager cluster issuer for the console ingresses (leave blank for none):"
 	if len(issuers) > 0 {
-		issuers = append(issuers, noClusterIssuer)
+		// first option is the select's default, so Enter means no issuer
+		issuers = append([]string{noClusterIssuer}, issuers...)
+		issuerMsg = "Select the cert-manager cluster issuer for the console ingresses:"
 	}
-	clusterIssuer, err = selectOrInput("Select the cert-manager cluster issuer for the console ingresses (leave blank for none):", issuers, "")
+	clusterIssuer, err = selectOrInput(issuerMsg, issuers, "")
 	if err != nil {
 		return
 	}
@@ -295,30 +306,66 @@ func askIngressSettings() (clusterIssuer, ingressClass string, err error) {
 		clusterIssuer = ""
 	}
 
-	ingressClass, err = selectOrInput("Select the ingress class for the console ingresses:", classes, defaultIngressClass)
+	classMsg := "Enter the ingress class for the console ingresses:"
+	if len(classes) > 0 {
+		classMsg = "Select the ingress class for the console ingresses:"
+	}
+	ingressClass, err = selectOrInput(classMsg, classes, defaultIngressClass)
 	return
 }
 
-// listIngressOptions lists cluster issuers and ingress classes, returning empty lists on any error or timeout.
-func listIngressOptions(kubeConf *rest.Config) (issuers, classes []string) {
+// listIngressOptions lists cluster issuers and ingress classes, returning empty lists on any error or after discoveryTimeout.
+func listIngressOptions(kubeConf *rest.Config) ([]string, []string) {
 	conf := rest.CopyConfig(kubeConf)
-	conf.Timeout = discoveryTimeout
-	if dyn, err := dynamic.NewForConfig(conf); err == nil {
-		issuers, _ = kubernetes.ClusterIssuers(dyn)
+	if conf.ExecProvider != nil {
+		// CopyConfig shares ExecProvider; copy it so credential plugins can't prompt over the survey UI
+		exec := *conf.ExecProvider
+		exec.InteractiveMode = clientcmdapi.NeverExecInteractiveMode
+		conf.ExecProvider = &exec
 	}
-	if cs, err := k8sclient.NewForConfig(conf); err == nil {
-		classes, _ = kubernetes.IngressClasses(cs)
+
+	// shortcut: on timeout the goroutine is abandoned until the CLI exits, fine for a one-shot command
+	var issuers, classes []string
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if dyn, err := dynamic.NewForConfig(conf); err == nil {
+			issuers, _ = kubernetes.ClusterIssuers(dyn)
+		}
+		if cs, err := k8sclient.NewForConfig(conf); err == nil {
+			classes, _ = kubernetes.IngressClasses(cs)
+		}
+	}()
+
+	select {
+	case <-done:
+		return issuers, classes
+	case <-time.After(discoveryTimeout):
+		return nil, nil
 	}
-	return
 }
 
 func selectOrInput(message string, options []string, def string) (res string, err error) {
-	var prompt survey.Prompt = &survey.Input{Message: message, Default: def}
 	if len(options) > 0 {
-		prompt = &survey.Select{Message: message, Options: options}
+		err = survey.AskOne(&survey.Select{Message: message, Options: options}, &res)
+		return
 	}
-	err = survey.AskOne(prompt, &res)
+	// only free text needs checking; select options come from the cluster
+	err = survey.AskOne(&survey.Input{Message: message, Default: def}, &res, survey.WithValidator(func(ans interface{}) error {
+		return validateResourceName(utils.ToString(ans))
+	}))
 	return
+}
+
+// validateResourceName accepts an empty value or a valid Kubernetes resource name, since these values are rendered into YAML as-is.
+func validateResourceName(val string) error {
+	if val == "" {
+		return nil
+	}
+	if errs := validation.IsDNS1123Subdomain(val); len(errs) > 0 {
+		return fmt.Errorf("%q is not a valid Kubernetes resource name: %s", val, strings.Join(errs, ", "))
+	}
+	return nil
 }
 
 func fetchTemplate(url string) (res []byte, err error) {
