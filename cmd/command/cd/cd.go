@@ -100,6 +100,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "dsn", Usage: "The Postgres DSN to use for database connections", Required: true},
 				cli.StringFlag{Name: "name", Usage: "The name given to the cluster", Required: true},
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
+				cli.StringFlag{Name: "cluster-issuer", Usage: "The cert-manager cluster issuer to annotate ingresses with", Value: "plural"},
+				cli.StringFlag{Name: "ingress-class", Usage: "The ingress class to use for ingresses, defaults to the provider's ingress class"},
 				cli.StringFlag{Name: "object-store-bucket", Usage: "S3 bucket for console object store (agent runs / workbench fs)"},
 				cli.StringFlag{Name: "object-store-region", Usage: "AWS region for the console object store bucket"},
 				cli.StringFlag{Name: "object-store-azure-storage-account", Usage: "Azure storage account for console object store"},
@@ -254,6 +256,8 @@ func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 		c.String("domain"),
 		c.String("dsn"),
 		c.String("name"),
+		c.String("cluster-issuer"),
+		c.String("ingress-class"),
 		cd.ObjectStoreOpts{
 			S3Bucket:          c.String("object-store-bucket"),
 			S3Region:          c.String("object-store-region"),
