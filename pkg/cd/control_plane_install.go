@@ -57,7 +57,7 @@ type consoleValues struct {
 	Secrets secrets `yaml:"secrets"`
 }
 
-func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssuer, ingressClass string) (string, error) {
+func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssuer, ingressClass, privateCAURL, privateCAFile string) (string, error) {
 	consoleDns := fmt.Sprintf("console.%s", domain)
 	kasDns := fmt.Sprintf("kas.%s", domain)
 	existing := consoleValues{}
@@ -120,6 +120,16 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssu
 		"postgresUrl":   dsn,
 		"provider":      prov.Name(),
 		"clusterIssuer": clusterIssuer,
+	}
+
+	if privateCAURL != "" || privateCAFile != "" {
+		merged, err := ResolvePrivateCABundle(privateCAURL, privateCAFile)
+		if err != nil {
+			return "", err
+		}
+		if merged != "" {
+			configuration["privateCaPem"] = IndentPEM(merged, 6)
+		}
 	}
 
 	for _, val := range []string{clusterIssuer, ingressClass} {
@@ -229,6 +239,11 @@ func CreateControlPlane(conf config.Config) (string, error) {
 		return "", err
 	}
 
+	privateCaPem, err := askPrivateCA()
+	if err != nil {
+		return "", err
+	}
+
 	randoms := map[string]string{}
 	randoms["erlang"] = crypto.RandString(64)
 	for _, key := range []string{"jwt", "adminPassword", "kasApi", "kasPrivateApi", "kasRedis"} {
@@ -253,6 +268,9 @@ func CreateControlPlane(conf config.Config) (string, error) {
 	// liquid treats "" as truthy, so only set the issuer when one was picked
 	if clusterIssuer != "" {
 		configuration["clusterIssuer"] = clusterIssuer
+	}
+	if privateCaPem != "" {
+		configuration["privateCaPem"] = privateCaPem
 	}
 	for k, v := range randoms {
 		configuration[k] = v
