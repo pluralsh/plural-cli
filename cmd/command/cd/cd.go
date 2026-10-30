@@ -102,6 +102,8 @@ func Commands(clients client.Plural, helmConfiguration *action.Configuration) []
 				cli.StringFlag{Name: "file", Usage: "The file to dump values to", Required: true},
 				cli.StringFlag{Name: "cluster-issuer", Usage: "The cert-manager cluster issuer to annotate ingresses with", Value: "plural"},
 				cli.StringFlag{Name: "ingress-class", Usage: "The ingress class to use for ingresses, defaults to the provider's ingress class"},
+				cli.StringFlag{Name: "private-ca-url", Usage: "HTTPS host using your private PKI; downloads the cert chain and merges public roots into certs"},
+				cli.StringFlag{Name: "private-ca-file", Usage: "PEM file with your private CA/chain; merged with public roots into certs"},
 			},
 		},
 		{
@@ -243,7 +245,17 @@ func (p *Plural) handleInstallControlPlane(_ *cli.Context) error {
 func (p *Plural) handlePrintControlPlaneValues(c *cli.Context) error {
 	p.InitPluralClient()
 	conf := config.Read()
-	vals, err := cd.ControlPlaneValues(conf, c.String("file"), c.String("domain"), c.String("dsn"), c.String("name"), c.String("cluster-issuer"), c.String("ingress-class"))
+	vals, err := cd.ControlPlaneValues(
+		conf,
+		c.String("file"),
+		c.String("domain"),
+		c.String("dsn"),
+		c.String("name"),
+		c.String("cluster-issuer"),
+		c.String("ingress-class"),
+		c.String("private-ca-url"),
+		c.String("private-ca-file"),
+	)
 	if err != nil {
 		return err
 	}
