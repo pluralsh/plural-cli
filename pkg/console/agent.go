@@ -1,6 +1,7 @@
 package console
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/url"
@@ -13,12 +14,19 @@ import (
 	"github.com/pluralsh/console/go/polly/algorithms"
 	"github.com/pluralsh/plural-cli/pkg/helm"
 	"github.com/pluralsh/plural-cli/pkg/utils"
+	"github.com/samber/lo"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/kube"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -27,6 +35,8 @@ const (
 	ReleaseName       = "deploy-operator"
 	RepoUrl           = "https://pluralsh.github.io/deployment-operator"
 	OperatorNamespace = "plrl-deploy-operator"
+
+	crdFieldManager = "helm"
 )
 
 func fetchVendoredAgentChart(consoleURL string) (string, string, error) {
@@ -160,12 +170,69 @@ func installAgent(config *action.Configuration, chart *chart.Chart, namespace st
 }
 
 func upgradeAgent(config *action.Configuration, chart *chart.Chart, namespace string, values map[string]interface{}) error {
+	if err := syncCRDs(config, chart); err != nil {
+		return err
+	}
+
 	fmt.Println("upgrading deployment operator...")
 	client := action.NewUpgrade(config)
 	client.Namespace = namespace
 	client.Timeout = time.Minute * 5
 	_, err := client.Run(ReleaseName, chart, values)
 	return err
+}
+
+// syncCRDs server-side applies the chart's crds/ directory, which helm upgrade never touches.
+// Client-side apply can't be used since some CRDs exceed the 256KB last-applied-configuration annotation limit.
+func syncCRDs(config *action.Configuration, chart *chart.Chart) error {
+	crds := chart.CRDObjects()
+	if len(crds) == 0 {
+		return nil
+	}
+
+	fmt.Printf("syncing %d deployment operator CRDs...\n", len(crds))
+	applied := kube.ResourceList{}
+	for _, crd := range crds {
+		resources, err := config.KubeClient.Build(bytes.NewBuffer(crd.File.Data), false)
+		if err != nil {
+			return fmt.Errorf("failed to build CRD %s: %w", crd.Name, err)
+		}
+
+		for _, info := range resources {
+			data, err := runtime.Encode(unstructured.UnstructuredJSONScheme, info.Object)
+			if err != nil {
+				return fmt.Errorf("failed to encode CRD %s: %w", info.Name, err)
+			}
+
+			obj, err := resource.NewHelper(info.Client, info.Mapping).
+				WithFieldManager(crdFieldManager).
+				Patch(info.Namespace, info.Name, types.ApplyPatchType, data, &metav1.PatchOptions{Force: lo.ToPtr(true)})
+			if err != nil {
+				return fmt.Errorf("failed to apply CRD %s: %w", info.Name, err)
+			}
+
+			if err := info.Refresh(obj, true); err != nil {
+				return err
+			}
+			applied = append(applied, info)
+		}
+	}
+
+	if err := config.KubeClient.Wait(applied, 60*time.Second); err != nil {
+		return fmt.Errorf("failed waiting for CRDs to be established: %w", err)
+	}
+
+	// Newly added CRDs won't be in the cached discovery data used to render the upgrade.
+	if discoveryClient, err := config.RESTClientGetter.ToDiscoveryClient(); err == nil && discoveryClient != nil {
+		discoveryClient.Invalidate()
+	}
+	if restMapper, err := config.RESTClientGetter.ToRESTMapper(); err == nil {
+		if resettable, ok := restMapper.(meta.ResettableRESTMapper); ok {
+			resettable.Reset()
+		}
+	}
+
+	return nil
 }
 
 func UninstallAgent(namespace string) error {
