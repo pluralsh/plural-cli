@@ -38,7 +38,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/gofrs/flock v0.13.0
 	github.com/google/go-containerregistry v0.21.7
-	github.com/google/go-github/v45 v45.2.0
+	github.com/google/go-github/v50 v50.2.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-bexpr v0.1.16
 	github.com/json-iterator/go v1.1.12
@@ -65,7 +65,7 @@ require (
 	github.com/urfave/cli v1.22.17
 	github.com/yuin/gopher-lua v1.1.2
 	gitlab.com/gitlab-org/api/client-go v1.46.0
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/term v0.47.0
 	golang.org/x/text v0.43.0
@@ -74,7 +74,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.1
-	helm.sh/helm/v3 v3.21.2
+	helm.sh/helm/v3 v3.21.4
 	k8s.io/api v0.36.2
 	k8s.io/apimachinery v0.36.2
 	k8s.io/cli-runtime v0.36.2
