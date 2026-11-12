@@ -1,6 +1,6 @@
 module github.com/pluralsh/plural-cli
 
-go 1.27.3
+go 1.27.4
 
 require (
 	cloud.google.com/go/compute v1.64.0
@@ -65,7 +65,7 @@ require (
 	github.com/urfave/cli v1.22.17
 	github.com/yuin/gopher-lua v1.1.2
 	gitlab.com/gitlab-org/api/client-go v1.46.0
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/term v0.47.0
 	golang.org/x/text v0.43.0
