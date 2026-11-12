@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	semverlib "github.com/Masterminds/semver/v3"
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v83/github"
 )
 
 type Versions []*semverlib.Version
