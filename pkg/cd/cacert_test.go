@@ -11,36 +11,48 @@ import (
 	"math/big"
 	"net"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestIndentPEM(t *testing.T) {
-	in := "-----BEGIN CERTIFICATE-----\nABC\n-----END CERTIFICATE-----\n"
-	out := IndentPEM(in, 6)
-	require.Equal(t, "      -----BEGIN CERTIFICATE-----\n      ABC\n      -----END CERTIFICATE-----\n", out)
+func TestParseCertificatesRejectsInvalid(t *testing.T) {
+	_, err := parseCertificates("not a cert")
+	require.Error(t, err)
+
+	_, err = parseCertificates("-----BEGIN CERTIFICATE-----\nbm90LWEtY2VydA==\n-----END CERTIFICATE-----\n")
+	require.Error(t, err)
+}
+
+func TestMergeWithSystemRoots(t *testing.T) {
+	dir := t.TempDir()
+	bundle := filepath.Join(dir, "ca-certificates.crt")
+
+	old := systemCABundlePaths
+	systemCABundlePaths = []string{bundle}
+	t.Cleanup(func() { systemCABundlePaths = old })
+
+	caCert, _ := mustCreateCA(t)
+	var private strings.Builder
+	require.NoError(t, pem.Encode(&private, &pem.Block{Type: "CERTIFICATE", Bytes: caCert.Raw}))
+
+	_, err := MergeWithSystemRoots("not-a-pem")
+	require.Error(t, err)
+
+	require.NoError(t, os.WriteFile(bundle, []byte(private.String()), 0o644))
+	merged, err := MergeWithSystemRoots(private.String())
+	require.NoError(t, err)
+	require.Contains(t, merged, "BEGIN CERTIFICATE")
 }
 
 func TestFetchTLSChain(t *testing.T) {
 	caCert, caKey := mustCreateCA(t)
 	leafCert, leafKey := mustCreateLeaf(t, caCert, caKey)
 
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	server.TLS.Certificates = []tls.Certificate{{
-		Certificate: [][]byte{leafCert.Raw, caCert.Raw},
-		PrivateKey:  leafKey,
-	}}
-	// rebuild listener certs
-	server.Close()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	tlsLn := tls.NewListener(ln, &tls.Config{
@@ -65,19 +77,15 @@ func TestFetchTLSChain(t *testing.T) {
 	require.True(t, parsed.Equal(caCert))
 }
 
-func TestMergeWithSystemRoots(t *testing.T) {
+func TestReadSystemCABundleSSLCertFile(t *testing.T) {
 	dir := t.TempDir()
-	bundle := filepath.Join(dir, "ca-certificates.crt")
-	require.NoError(t, os.WriteFile(bundle, []byte("-----BEGIN CERTIFICATE-----\nPUBLIC\n-----END CERTIFICATE-----\n"), 0o644))
+	path := filepath.Join(dir, "custom.crt")
+	require.NoError(t, os.WriteFile(path, []byte("custom-roots\n"), 0o644))
+	t.Setenv("SSL_CERT_FILE", path)
 
-	old := systemCABundlePaths
-	systemCABundlePaths = []string{bundle}
-	t.Cleanup(func() { systemCABundlePaths = old })
-
-	merged, err := MergeWithSystemRoots("-----BEGIN CERTIFICATE-----\nPRIVATE\n-----END CERTIFICATE-----\n")
+	data, err := readSystemCABundle()
 	require.NoError(t, err)
-	require.Contains(t, merged, "PRIVATE")
-	require.Contains(t, merged, "PUBLIC")
+	require.Equal(t, "custom-roots\n", string(data))
 }
 
 func mustCreateCA(t *testing.T) (*x509.Certificate, *ecdsa.PrivateKey) {

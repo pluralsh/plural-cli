@@ -128,7 +128,7 @@ func ControlPlaneValues(conf config.Config, file, domain, dsn, name, clusterIssu
 			return "", err
 		}
 		if merged != "" {
-			configuration["privateCaPem"] = IndentPEM(merged, 6)
+			configuration["privateCaPem"] = merged
 		}
 	}
 

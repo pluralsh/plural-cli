@@ -1,8 +1,10 @@
 package cd
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"net"
@@ -22,6 +24,9 @@ var systemCABundlePaths = []string{
 
 // FetchTLSChain dials host (OpenSSL s_client -showcerts style) and returns PEM
 // for intermediates/roots presented by the peer. The leaf certificate is skipped.
+//
+// TLS verification is intentionally skipped so we can extract the private PKI
+// chain from a host that is not yet trusted by this machine.
 func FetchTLSChain(rawURL string) (string, error) {
 	hostPort, err := tlsDialAddress(rawURL)
 	if err != nil {
@@ -32,6 +37,7 @@ func FetchTLSChain(rawURL string) (string, error) {
 		&net.Dialer{Timeout: 10 * time.Second},
 		"tcp",
 		hostPort,
+		// #nosec G402 -- intentional: discover private CA chain from a host not yet trusted locally
 		&tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12},
 	)
 	if err != nil {
@@ -80,11 +86,49 @@ func tlsDialAddress(raw string) (string, error) {
 	return net.JoinHostPort(host, port), nil
 }
 
-// MergeWithSystemRoots appends OS/browser-trusted roots to privatePEM.
+// parseCertificates decodes and parses all CERTIFICATE PEM blocks.
+func parseCertificates(pemData string) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	rest := []byte(pemData)
+	for {
+		var block *pem.Block
+		block, rest = pem.Decode(rest)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("parse certificate PEM: %w", err)
+		}
+		certs = append(certs, cert)
+	}
+	if len(certs) == 0 {
+		return nil, fmt.Errorf("no valid CERTIFICATE PEM blocks found")
+	}
+	return certs, nil
+}
+
+// certificateFingerprints returns SHA-256 fingerprints for display/confirmation.
+func certificateFingerprints(certs []*x509.Certificate) []string {
+	out := make([]string, 0, len(certs))
+	for _, cert := range certs {
+		sum := sha256.Sum256(cert.Raw)
+		out = append(out, strings.ToUpper(hex.EncodeToString(sum[:])))
+	}
+	return out
+}
+
+// MergeWithSystemRoots validates privatePEM and appends OS/browser-trusted roots.
 func MergeWithSystemRoots(privatePEM string) (string, error) {
 	privatePEM = strings.TrimSpace(privatePEM)
 	if privatePEM == "" {
 		return "", fmt.Errorf("empty private CA PEM")
+	}
+	if _, err := parseCertificates(privatePEM); err != nil {
+		return "", fmt.Errorf("invalid private CA PEM: %w", err)
 	}
 	roots, err := readSystemCABundle()
 	if err != nil {
@@ -101,27 +145,23 @@ func MergeWithSystemRoots(privatePEM string) (string, error) {
 }
 
 func readSystemCABundle() ([]byte, error) {
+	if path := os.Getenv("SSL_CERT_FILE"); path != "" {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("read SSL_CERT_FILE %q: %w", path, err)
+		}
+		if len(data) == 0 {
+			return nil, fmt.Errorf("SSL_CERT_FILE %q is empty", path)
+		}
+		return data, nil
+	}
 	for _, path := range systemCABundlePaths {
 		data, err := os.ReadFile(path)
 		if err == nil && len(data) > 0 {
 			return data, nil
 		}
 	}
-	// last resort: ensure SystemCertPool works even if we cannot export PEMs
-	if pool, err := x509.SystemCertPool(); err == nil && pool != nil {
-		return nil, fmt.Errorf("found a system cert pool but no PEM bundle file; set SSL_CERT_FILE or provide a full merged bundle via --private-ca-file")
-	}
-	return nil, fmt.Errorf("could not locate a system CA bundle (tried %s)", strings.Join(systemCABundlePaths, ", "))
-}
-
-// IndentPEM indents every line for embedding under a YAML `|` block.
-func IndentPEM(pemData string, spaces int) string {
-	pad := strings.Repeat(" ", spaces)
-	lines := strings.Split(strings.TrimRight(pemData, "\n"), "\n")
-	for i, line := range lines {
-		lines[i] = pad + line
-	}
-	return strings.Join(lines, "\n") + "\n"
+	return nil, fmt.Errorf("could not locate a system CA bundle (tried SSL_CERT_FILE and %s)", strings.Join(systemCABundlePaths, ", "))
 }
 
 // ResolvePrivateCABundle builds a merged CA PEM from optional URL and/or file.
@@ -146,9 +186,9 @@ func ResolvePrivateCABundle(caURL, caFile string) (string, error) {
 	return MergeWithSystemRoots(private)
 }
 
-// askPrivateCA prompts whether to configure a private CA and returns an indented
-// merged PEM suitable for values templates, or empty if skipped.
-func askPrivateCA() (indentedPEM string, err error) {
+// askPrivateCA prompts whether to configure a private CA and returns a PEM
+// suitable for values templates (templates indent under data: |).
+func askPrivateCA() (pemData string, err error) {
 	var usePrivate bool
 	if err = survey.AskOne(&survey.Confirm{
 		Message: "Are you using a private / internal CA that console and agents must trust?",
@@ -184,6 +224,26 @@ func askPrivateCA() (indentedPEM string, err error) {
 		if err != nil {
 			return "", err
 		}
+		certs, err := parseCertificates(private)
+		if err != nil {
+			return "", err
+		}
+		fps := certificateFingerprints(certs)
+		fmt.Println("Downloaded CA certificate fingerprints (SHA-256):")
+		for i, fp := range fps {
+			subject := certs[i].Subject.String()
+			fmt.Printf("  %d. %s\n     %s\n", i+1, subject, fp)
+		}
+		var confirm bool
+		if err = survey.AskOne(&survey.Confirm{
+			Message: "Trust these CA certificates end-to-end for console and agents?",
+			Default: false,
+		}, &confirm); err != nil {
+			return "", err
+		}
+		if !confirm {
+			return "", fmt.Errorf("private CA download was not confirmed")
+		}
 	default:
 		var path string
 		if err = survey.AskOne(&survey.Input{
@@ -198,9 +258,5 @@ func askPrivateCA() (indentedPEM string, err error) {
 		private = string(data)
 	}
 
-	merged, err := MergeWithSystemRoots(private)
-	if err != nil {
-		return "", err
-	}
-	return IndentPEM(merged, 6), nil
+	return MergeWithSystemRoots(private)
 }
