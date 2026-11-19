@@ -64,7 +64,9 @@ func TestFetchTLSChain(t *testing.T) {
 	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})}
-	go srv.Serve(tlsLn)
+	go func() {
+		_ = srv.Serve(tlsLn)
+	}()
 	defer srv.Close()
 
 	pemChain, err := FetchTLSChain("https://" + ln.Addr().String())
