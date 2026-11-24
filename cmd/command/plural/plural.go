@@ -8,6 +8,7 @@ import (
 	"github.com/pluralsh/plural-cli/cmd/command/clone"
 	"github.com/pluralsh/plural-cli/cmd/command/config"
 	cryptocmd "github.com/pluralsh/plural-cli/cmd/command/crypto"
+	"github.com/pluralsh/plural-cli/cmd/command/devbox"
 	"github.com/pluralsh/plural-cli/cmd/command/down"
 	"github.com/pluralsh/plural-cli/cmd/command/edge"
 	cmdinit "github.com/pluralsh/plural-cli/cmd/command/init"
@@ -104,7 +105,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 	app.Usage = "Tooling to manage your installed plural applications"
 	app.EnableBashCompletion = true
 	app.Flags = globalFlags()
-	commands := make([]cli.Command, 0, 16+len(plural.getCommands()))
+	commands := make([]cli.Command, 0, 17+len(plural.getCommands()))
 	commands = append(commands,
 		api.Command(plural.Plural),
 		agentscmd.Command(plural.Plural),
@@ -112,6 +113,7 @@ func CreateNewApp(plural *Plural) *cli.App {
 		cd.Command(plural.Plural, plural.HelmConfiguration),
 		config.Command(),
 		cryptocmd.Command(plural.Plural),
+		devbox.Command(),
 		clone.Command(),
 		down.Command(),
 		edge.Command(plural.Plural, plural.HelmConfiguration),
